@@ -6802,8 +6802,8 @@
       {
         "num": 6,
         "title": "Çıktıyı Sıkıştır, Olasılık Yorumu Kazan",
-        "method": "Logistic Regression",
-        "what": "Least squares çıktısını sigmoid fonksiyonuyla [0,1]'e sıkıştır — artık olasılık yorumu var, outlier etkisi azaldı. Cross-entropy loss ile optimize edilir, gradient descent gerekiyor.",
+        "method": "Logistic Regression + Sigmoid",
+        "what": "Least squares çıktısını sigmoid fonksiyonuyla [0,1]'e sıkıştır — artık olasılık yorumu var, outlier etkisi azaldı. Cross-entropy loss ile optimize edilir, gradient descent gerekiyor. Sigmoid neden? σ(z) = 1/(1+e⁻ᶻ) — herhangi bir gerçel sayıyı (0,1) arasına sıkıştırır, her noktada diferansiyellenebilir, p = 0.5 eşiği doğal karar sınırı verir. Ama z'nin mutlak değeri büyüdükçe gradient sıfıra yaklaşır (doygunlaşır) — bu vanishing gradient sorununa yol açar, bu yüzden derin ağların hidden layer'larında sigmoid artık kullanılmıyor, ReLU tercih ediliyor.",
         "problems": [
           "Hâlâ linear sınır — linearly separable olmayan problemler (XOR gibi) çözülemiyor",
           "Feature engineering hâlâ gerekiyor"
@@ -6849,9 +6849,22 @@
       },
       {
         "num": 10,
+        "title": "Kayıp Fonksiyonlarını Karşılaştır",
+        "method": "Loss Functions — MSE · Cross-Entropy · Hinge · Exponential",
+        "what": "Her öğrenme algoritması bir kayıp fonksiyonu minimize eder — bu seçim modelin hassasiyetini, gradient davranışını ve outlier toleransını doğrudan belirler. MSE (Karesel Hata): L = (1/n)Σ(y−ŷ)² — büyük hataları karesel cezalandırır, outlier'a aşırı hassas. Regresyon için doğal ama sınıflandırma için kötü: çıktı sınırsız ve gradient davranışı ideal değil. Cross-Entropy (Log Loss): Sınıflandırma standardı. Binary: L = −[y·log(p) + (1−y)·log(1−p)]. Modelin tahmini ne kadar 'şaşırdı' sorusuna cevap verir. Sigmoid ile kombinasyonu güzel gradient üretir — MSE+sigmoid vanishing gradient'a uğrar, cross-entropy+sigmoid vermez, bu yüzden logistic regression ve neural network'ler cross-entropy kullanır. Multi-class için Softmax + Categorical Cross-Entropy: L = −Σyₖ·log(pₖ). Softmax: softmax(z)ₖ = eᶻᵏ/Σeᶻʲ — tüm sınıf skorlarını toplamı 1 olan olasılık dağılımına dönüştürür; biri artınca diğerleri azalır (competitive normalization), sigmoid'in çok sınıflı genellemesi değil. Hinge Loss: L = Σmax(0, 1−y·f(x)). SVM'nin kaybı — doğru sınıflandırılmış ve margin içindeyse sıfır kayıp, sadece support vector'lar gradient üretiyor. Exponential Loss: L = Σexp(−y·f(x)). AdaBoost'un minimize ettiği kayıp. Büyük hataları çok agresif cezalandırır — AdaBoost'un gürültülü etiketlere hassasiyetinin sebebi bu.",
+        "problems": [
+          "Regresyon → MSE, Sınıflandırma → Cross-Entropy, Margin-based → Hinge: doğru eşleştirme önemli",
+          "MSE+sigmoid sınıflandırmada kötü gradient verir — cross-entropy+sigmoid çok daha sağlıklı",
+          "Exponential loss outlier'a en hassas olan — AdaBoost'un gürültüye zayıflığının matematiksel sebebi",
+          "Softmax büyük logit farklarında nümerik instability — pratikte log-softmax ile stabilize edilir"
+        ],
+        "next": "Feature'ları da modelin öğrenmesi gerekiyor → Neural Networks"
+      },
+      {
+        "num": 11,
         "title": "Feature'ları da Öğren",
         "method": "Multi-Layer Perceptron (MLP) + Backpropagation",
-        "what": "Basis function'ları elle seçmek yerine, verinin bize öğretmesine izin ver. MLP her katmanda non-linear dönüşümler uygulayarak hiyerarşik feature'lar öğreniyor. Teorik olarak universal approximator. Backpropagation ile gradient chain rule üzerinden tüm ağırlıklar güncelleniyor.",
+        "what": "Basis function'ları elle seçmek yerine, verinin bize öğretmesine izin ver. MLP her katmanda non-linear dönüşümler uygulayarak hiyerarşik feature'lar öğreniyor. Teorik olarak universal approximator. Backpropagation ile gradient chain rule üzerinden tüm ağırlıklar güncelleniyor. Aktivasyon fonksiyonu kritik: sigmoid doygunlaşıp vanishing gradient'a yol açıyor, tanh biraz daha iyi ama aynı sorun var. ReLU (max(0,z)) bunu çözüyor — z > 0 için gradient sabit 1, hesaplama ucuz, derin ağlarda standart. Çıktı katmanında ise problem tipine göre: ikili sınıflandırma için sigmoid + binary cross-entropy, çok sınıflı için softmax + categorical cross-entropy, regresyon için linear + MSE.",
         "problems": [
           "Sığ ağlar yeterince güçlü değil — derin yapmak gerekiyor",
           "Vanishing gradient: gradyanlar geri gittikçe katmanlar boyu küçülüyor, ilk katmanlar öğrenemiyor",
@@ -6861,7 +6874,7 @@
         "next": "Image için spatial yapıyı kullanan mimari gerekiyor"
       },
       {
-        "num": 11,
+        "num": 12,
         "title": "Spatial Yapıyı Kullan",
         "method": "Convolutional Neural Networks (CNN)",
         "what": "Weight sharing (aynı filtre tüm image üzerinde kaydır) ve local connectivity ile parametre sayısı dramatik düşüyor. İlk katmanlar edge, sonrakiler texture, derin katmanlar obje parçaları öğreniyor. AlexNet (2012) ImageNet'te fark yaratarak CNN çağını başlattı.",
@@ -6873,7 +6886,7 @@
         "next": "Derinliği artırmanın önündeki engeli kaldırmak gerekiyor"
       },
       {
-        "num": 12,
+        "num": 13,
         "title": "Derinlik Engelini Aş",
         "method": "ResNet — Residual Connections",
         "what": "Eğer derin katmanlar öğrenemiyorsa, en azından identity mapping yapsın — skip connection ile girdi direkt çıktıya ekleniyor. Ağ artık 'ne öğreneceğini' değil 'ne ekleyeceğini' öğreniyor (residual). Gradient highway etkisi sayesinde 100+ katlı ağlar başarıyla eğitildi.",
@@ -6884,7 +6897,7 @@
         "next": "Sequential veri için özel mimari gerekiyor"
       },
       {
-        "num": 13,
+        "num": 14,
         "title": "Metni Temsil Et",
         "method": "Word Embeddings (Word2Vec)",
         "what": "One-hot encoding çok boyutlu ve anlamsız — 'kral' ile 'kraliçe' arasında hiçbir ilişki yok. Word2Vec kelimeleri dense vektörlere map eder, anlamsal ilişkileri yakalar. 'kral − erkek + kadın ≈ kraliçe' gibi vector arithmetic çalışıyor.",
@@ -6896,7 +6909,7 @@
         "next": "Sıralı yapıyı ve context'i işleyen model gerekiyor"
       },
       {
-        "num": 14,
+        "num": 15,
         "title": "Sırayı Öğren",
         "method": "Recurrent Neural Networks (RNN)",
         "what": "Önceki adımların bilgisi hidden state üzerinden taşınıyor. Metin, ses, zaman serisi gibi sıralı veriler için doğal yapı. Her adımda hem girdi hem önceki state kullanılıyor.",
@@ -6908,7 +6921,7 @@
         "next": "Uzun bağımlılıkları tutabilen hafıza mekanizması gerekiyor"
       },
       {
-        "num": 15,
+        "num": 16,
         "title": "Uzun Hafızayı Koru",
         "method": "LSTM + GRU + Seq2Seq with Attention",
         "what": "Kapı mekanizması (forget, input, output gate) ile hangi bilginin tutulacağını, hangisinin unutulacağını ağ öğreniyor. Cell state sayesinde gradient'ler uzun süre taşınabiliyor. Seq2Seq mimarisi makine çevirisi için encoder-decoder yapısı. Attention: decoder her adımda encoder'ın tüm state'lerine bakıp hangisine odaklanacağını öğreniyor.",
@@ -6920,7 +6933,7 @@
         "next": "Sequential yapıyı tamamen ortadan kaldır, her şeyi paralel yap"
       },
       {
-        "num": 16,
+        "num": 17,
         "title": "Her Şeyi Paralel Yap",
         "method": "Transformer — Self-Attention",
         "what": "RNN'i tamamen at, sadece attention kullan. Her token tüm diğer tokenlarla paralel olarak ilişki kuruyor. Self-attention: aynı sequence içindeki tokenlar arası ilişki. Multi-head attention birden fazla farklı ilişki tipini aynı anda öğreniyor. Positional encoding ile sıra bilgisi ekleniyor. BERT ve GPT bu mimarinin üzerine inşa edildi.",
@@ -6934,11 +6947,12 @@
       "↓  Non-Parametric · varsayımsız ama boyuta ölçeklenmiyor",
       "↓  MoG + EM · esnek ama pahalı ve yavaş",
       "↓  Linear Discriminants · direkt sınır bul ama linear",
-      "↓  Logistic Regression · olasılık yorumu ama hâlâ linear",
+      "↓  Logistic Regression · sigmoid ile olasılık yorumu ama hâlâ linear",
       "↓  Basis Functions · non-linear ama elle seçim",
       "↓  SVM + Kernel · optimal margin + kernel trick ama feature öğrenemiyor",
       "↓  AdaBoost · ensemble gücü ama hâlâ dışarıdan feature",
-      "↓  MLP · feature'ları öğren ama spatial kör, vanishing gradient",
+      "↓  Loss Functions · MSE · Cross-Entropy · Hinge · Exponential — kayıp seçimi davranışı belirler",
+      "↓  MLP · feature'ları öğren, ReLU+Softmax, ama spatial kör, vanishing gradient",
       "↓  CNN · spatial yapı + weight sharing ama çok derin = degradation",
       "↓  ResNet · residual ile derinlik engeli aşıldı",
       "↓  Word2Vec · semantic embedding ama context-free",
