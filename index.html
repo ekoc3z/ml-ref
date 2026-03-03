@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ML Reference — RWTH 2023</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<style>
+:root {
+  --bg:#0f1117;
+  --panel:#161b27;
+  --sidebar:#12151e;
+  --card:#1c2130;
+  --border:#2a3047;
+  --border-hover:#818cf8;
+  --accent:#818cf8;
+  --accent-bg:#3730a3;
+  --accent-light:#c7d2fe;
+  --text:#dde3f5;
+  --muted:#8a95b0;
+  --code-bg:#0b1020;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh}
+
+/* SIDEBAR */
+#sidebar{width:230px;background:var(--sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:50;transition:transform .25s;overflow-y:auto}
+.sidebar-hdr{padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
+.sidebar-hdr h2{font-size:15px;font-weight:700;color:var(--accent-light)}
+.sidebar-hdr p{font-size:11px;color:var(--muted);margin-top:2px}
+#sidebar-close{display:none;position:absolute;top:10px;right:10px;background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer}
+.nav-btn{display:flex;align-items:center;gap:10px;width:100%;padding:10px 16px;border:none;background:none;color:var(--muted);font-size:12px;cursor:pointer;text-align:left;border-left:3px solid transparent;transition:background .15s,color .15s,border-color .15s}
+.nav-btn:hover{background:#1c2130;color:var(--text)}
+.nav-btn.active{background:#1c2130;color:var(--accent-light);border-left-color:var(--accent)}
+.nav-icon{font-size:15px;width:20px;text-align:center;flex-shrink:0}
+.nav-label{flex:1;font-weight:600}
+.nav-num{font-size:10px;color:var(--muted);opacity:.6;margin-right:2px}
+.nav-count{font-size:10px;background:#1c2130;padding:2px 7px;border-radius:999px;color:var(--muted)}
+.sidebar-foot{padding:12px;border-top:1px solid var(--border);flex-shrink:0;margin-top:auto}
+.sidebar-foot button{width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);background:#1c2130;color:var(--text);cursor:pointer;font-size:12px;margin-bottom:6px}
+.sidebar-foot button:hover{border-color:var(--accent)}
+.sidebar-foot .hint{font-size:11px;color:var(--muted);line-height:1.6;margin-top:4px}
+
+/* HAMBURGER */
+#hamburger{display:none;position:fixed;top:10px;left:10px;z-index:60;background:var(--panel);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:20px;padding:6px 10px;cursor:pointer}
+
+/* MAIN */
+#main{margin-left:230px;flex:1;display:flex;flex-direction:column;min-width:0}
+header{position:sticky;top:0;z-index:10;background:rgba(15,17,23,.93);backdrop-filter:blur(6px);border-bottom:1px solid var(--border);padding:12px 16px}
+.section-header{display:none}
+.section-header.active{display:block}
+.hdr-title{font-size:15px;font-weight:700;margin-bottom:8px;color:var(--accent-light)}
+.hdr-sub{font-size:11px;color:var(--muted);margin-top:-4px;margin-bottom:8px}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button,select,input[type=search]{background:#1c2130;color:#fff;border:1px solid var(--border);border-radius:8px;padding:7px 12px;cursor:pointer;font-size:12px}
+input[type=search]{min-width:180px;outline:none}
+input[type=search]:focus{border-color:var(--accent)}
+select{cursor:pointer}
+button:hover{border-color:#3a4060}
+button.active{background:var(--accent-bg);border-color:var(--accent)}
+.pill{font-size:11px;background:#1c2130;padding:4px 10px;border-radius:999px;color:var(--muted);border:1px solid var(--border);cursor:default}
+
+/* CARD GRID */
+#card-grid{padding:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
+.cat-heading{grid-column:1/-1;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;padding:14px 0 6px 10px;border-bottom:1px solid var(--border);margin-bottom:4px;border-left:3px solid currentColor}
+.card{background:var(--card);border:1px solid var(--border);border-left:3px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;transition:border-color .15s,box-shadow .15s,transform .15s}
+.card:hover{border-top-color:var(--border-hover);border-right-color:var(--border-hover);border-bottom-color:var(--border-hover);transform:translateY(-2px);box-shadow:0 6px 24px rgba(0,0,0,.4)}
+.card-title{font-size:13px;font-weight:700;color:var(--text)}
+.card-summary{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.55;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.card-ctx{font-size:10px;color:var(--muted);margin-top:8px;opacity:.65;font-style:italic}
+/* legacy: formula preview for old-format cards */
+.card-formula{font-size:10px;font-family:'SF Mono',Consolas,'Courier New',monospace;background:var(--code-bg);padding:4px 8px;border-radius:6px;margin-top:8px;color:#b8cde8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* CHAPTER CATEGORY COLORS */
+.card-cat-Foundations.ch01,.cat-hdr-Foundations.ch01         {--cc:#7ec8fa}
+.card-cat-Model-Complexity,.cat-hdr-Model-Complexity         {--cc:#60a5fa}
+.card-cat-Evaluation,.cat-hdr-Evaluation                     {--cc:#93c5fd}
+.card-cat-Optimization.ch01,.cat-hdr-Optimization.ch01       {--cc:#bfdbfe}
+.card-cat-Foundations.ch02,.cat-hdr-Foundations.ch02         {--cc:#4ade80}
+.card-cat-Classification,.cat-hdr-Classification             {--cc:#86efac}
+.card-cat-Gaussian-Models,.cat-hdr-Gaussian-Models           {--cc:#a7f3d0}
+.card-cat-Comparison.ch02,.cat-hdr-Comparison.ch02           {--cc:#6ee7b7}
+.card-cat-Foundations.ch03,.cat-hdr-Foundations.ch03         {--cc:#f59e0b}
+.card-cat-Parameter-Estimation,.cat-hdr-Parameter-Estimation {--cc:#fbbf24}
+.card-cat-Gaussian-Estimation,.cat-hdr-Gaussian-Estimation   {--cc:#fcd34d}
+.card-cat-Mixture-Models,.cat-hdr-Mixture-Models             {--cc:#fde68a}
+.card-cat-Linear-Models,.cat-hdr-Linear-Models               {--cc:#a5b4fc}
+.card-cat-Learning-Algorithms,.cat-hdr-Learning-Algorithms   {--cc:#818cf8}
+.card-cat-Probabilistic-Models,.cat-hdr-Probabilistic-Models {--cc:#c4b5fd}
+.card-cat-Comparison.ch04,.cat-hdr-Comparison.ch04           {--cc:#ddd6fe}
+.card-cat-Hard-Margin-SVM,.cat-hdr-Hard-Margin-SVM           {--cc:#f0abfc}
+.card-cat-Soft-Margin-SVM,.cat-hdr-Soft-Margin-SVM           {--cc:#e879f9}
+.card-cat-Kernel-Methods,.cat-hdr-Kernel-Methods             {--cc:#d946ef}
+.card-cat-Comparison.ch05,.cat-hdr-Comparison.ch05           {--cc:#f5d0fe}
+.card-cat-Foundations.ch06,.cat-hdr-Foundations.ch06         {--cc:#fb923c}
+.card-cat-Algorithm,.cat-hdr-Algorithm                       {--cc:#f97316}
+.card-cat-Weak-Learners,.cat-hdr-Weak-Learners               {--cc:#fdba74}
+.card-cat-Theory,.cat-hdr-Theory                             {--cc:#fed7aa}
+.card-cat-Foundations.ch07,.cat-hdr-Foundations.ch07         {--cc:#2dd4bf}
+.card-cat-Building-Blocks.ch07,.cat-hdr-Building-Blocks.ch07 {--cc:#34d399}
+.card-cat-Architecture.ch07,.cat-hdr-Architecture.ch07       {--cc:#6ee7b7}
+.card-cat-Training.ch07,.cat-hdr-Training.ch07               {--cc:#a7f3d0}
+.card-cat-Training-Issues,.cat-hdr-Training-Issues           {--cc:#fca5a5}
+.card-cat-Regularization.ch07,.cat-hdr-Regularization.ch07   {--cc:#86efac}
+.card-cat-Gradient-Methods,.cat-hdr-Gradient-Methods         {--cc:#fcd34d}
+.card-cat-Adaptive-Methods,.cat-hdr-Adaptive-Methods         {--cc:#fde68a}
+.card-cat-Learning-Rate,.cat-hdr-Learning-Rate               {--cc:#fef08a}
+.card-cat-Regularization.ch08,.cat-hdr-Regularization.ch08   {--cc:#fef9c3}
+.card-cat-Building-Blocks.ch09,.cat-hdr-Building-Blocks.ch09 {--cc:#f87171}
+.card-cat-Architecture.ch09,.cat-hdr-Architecture.ch09       {--cc:#fca5a5}
+.card-cat-Training.ch09,.cat-hdr-Training.ch09               {--cc:#fecaca}
+.card-cat-Practical,.cat-hdr-Practical                       {--cc:#fee2e2}
+.card-cat-Foundations.ch10,.cat-hdr-Foundations.ch10         {--cc:#86efac}
+.card-cat-Word2Vec,.cat-hdr-Word2Vec                         {--cc:#4ade80}
+.card-cat-Training.ch10,.cat-hdr-Training.ch10               {--cc:#bbf7d0}
+.card-cat-GloVe,.cat-hdr-GloVe                               {--cc:#a7f3d0}
+.card-cat-Properties,.cat-hdr-Properties                     {--cc:#d1fae5}
+.card-cat-Advanced,.cat-hdr-Advanced                         {--cc:#6ee7b7}
+.card-cat-Architecture.ch11,.cat-hdr-Architecture.ch11       {--cc:#c084fc}
+.card-cat-Training.ch11,.cat-hdr-Training.ch11               {--cc:#a855f7}
+.card-cat-Problems,.cat-hdr-Problems                         {--cc:#fca5a5}
+.card-cat-LSTM,.cat-hdr-LSTM                                  {--cc:#d8b4fe}
+.card-cat-GRU,.cat-hdr-GRU                                   {--cc:#e9d5ff}
+.card-cat-Applications,.cat-hdr-Applications                 {--cc:#f3e8ff}
+.card-cat-Attention.ch11,.cat-hdr-Attention.ch11             {--cc:#c4b5fd}
+.card-cat-Attention.ch12,.cat-hdr-Attention.ch12             {--cc:#67e8f9}
+.card-cat-Architecture.ch12,.cat-hdr-Architecture.ch12       {--cc:#22d3ee}
+.card-cat-Pretrained-Models,.cat-hdr-Pretrained-Models       {--cc:#a5f3fc}
+.card-cat-Comparison.ch12,.cat-hdr-Comparison.ch12           {--cc:#cffafe}
+
+/* IDA — Image Data Analysis course colours */
+.card-cat-Fundamentals,.cat-hdr-Fundamentals                 {--cc:#fda4af}
+.card-cat-Filtering,.cat-hdr-Filtering                       {--cc:#fb7185}
+.card-cat-Morphology,.cat-hdr-Morphology                     {--cc:#f43f5e}
+.card-cat-Frequency,.cat-hdr-Frequency                       {--cc:#e11d48}
+.card-cat-Foundations.ida03,.cat-hdr-Foundations.ida03       {--cc:#f97316}
+.card-cat-Architecture.ida03,.cat-hdr-Architecture.ida03     {--cc:#fb923c}
+.card-cat-Training.ida03,.cat-hdr-Training.ida03             {--cc:#fdba74}
+.card-cat-Classical,.cat-hdr-Classical                       {--cc:#a3e635}
+.card-cat-Deep-Detection,.cat-hdr-Deep-Detection             {--cc:#84cc16}
+.card-cat-Instance,.cat-hdr-Instance                         {--cc:#65a30d}
+.card-cat-Biology,.cat-hdr-Biology                           {--cc:#4d7c0f}
+.card-cat-Assignment,.cat-hdr-Assignment                     {--cc:#14b8a6}
+.card-cat-Deep-Tracking,.cat-hdr-Deep-Tracking               {--cc:#0d9488}
+.card-cat-Motivation,.cat-hdr-Motivation                     {--cc:#38bdf8}
+.card-cat-Transformers,.cat-hdr-Transformers                 {--cc:#0ea5e9}
+.card-cat-Medical,.cat-hdr-Medical                           {--cc:#7dd3fc}
+.card-cat-Foundation,.cat-hdr-Foundation                     {--cc:#bae6fd}
+.card-cat-Pretraining,.cat-hdr-Pretraining                   {--cc:#e0f2fe}
+.card-cat-Representation,.cat-hdr-Representation             {--cc:#c084fc}
+.card-cat-Generative,.cat-hdr-Generative                     {--cc:#a855f7}
+.card-cat-GAN,.cat-hdr-GAN                                   {--cc:#9333ea}
+.card-cat-Conditional,.cat-hdr-Conditional                   {--cc:#7e22ce}
+.card-cat-Architecture.ida09,.cat-hdr-Architecture.ida09     {--cc:#c084fc}
+.card-cat-Architecture.ida12,.cat-hdr-Architecture.ida12     {--cc:#a855f7}
+.card-cat-Interpretability,.cat-hdr-Interpretability         {--cc:#4ade80}
+.card-cat-Dimensionality,.cat-hdr-Dimensionality             {--cc:#86efac}
+
+/* Python & DSA course colours */
+.card-cat-Basics.py01,.cat-hdr-Basics.py01                   {--cc:#7ec8fa}
+.card-cat-Control-Flow,.cat-hdr-Control-Flow                  {--cc:#6ee7b7}
+.card-cat-Lists,.cat-hdr-Lists                                {--cc:#a7f3d0}
+.card-cat-Strings,.cat-hdr-Strings                            {--cc:#fde68a}
+.card-cat-Dicts,.cat-hdr-Dicts                                {--cc:#fcd34d}
+.card-cat-Sets,.cat-hdr-Sets                                  {--cc:#fca5a5}
+.card-cat-Functions,.cat-hdr-Functions                        {--cc:#c4b5fd}
+.card-cat-Classes,.cat-hdr-Classes                            {--cc:#a78bfa}
+.card-cat-Collections,.cat-hdr-Collections                    {--cc:#818cf8}
+.card-cat-Errors,.cat-hdr-Errors                              {--cc:#f87171}
+.card-cat-I-O,.cat-hdr-I-O                                    {--cc:#fb923c}
+.card-cat-Array,.cat-hdr-Array                                {--cc:#38bdf8}
+.card-cat-TwoPtr,.cat-hdr-TwoPtr                              {--cc:#0ea5e9}
+.card-cat-Stack.py02,.cat-hdr-Stack.py02                      {--cc:#7dd3fc}
+.card-cat-BinSearch,.cat-hdr-BinSearch                        {--cc:#bae6fd}
+.card-cat-SlidWin,.cat-hdr-SlidWin                            {--cc:#6ee7b7}
+.card-cat-LinkedList,.cat-hdr-LinkedList                      {--cc:#86efac}
+.card-cat-Tree,.cat-hdr-Tree                                  {--cc:#4ade80}
+.card-cat-Trie,.cat-hdr-Trie                                  {--cc:#a3e635}
+.card-cat-Heap,.cat-hdr-Heap                                  {--cc:#facc15}
+.card-cat-Backtrack,.cat-hdr-Backtrack                        {--cc:#fb923c}
+.card-cat-Graph,.cat-hdr-Graph                                {--cc:#f97316}
+.card-cat-AdvGraph,.cat-hdr-AdvGraph                          {--cc:#ef4444}
+.card-cat-DP,.cat-hdr-DP                                      {--cc:#ec4899}
+.card-cat-Greedy,.cat-hdr-Greedy                              {--cc:#d946ef}
+.card-cat-Math.py02,.cat-hdr-Math.py02                        {--cc:#a855f7}
+.card-cat-Bit,.cat-hdr-Bit                                    {--cc:#7c3aed}
+.card-cat-Arrays,.cat-hdr-Arrays                              {--cc:#67e8f9}
+.card-cat-Indexing,.cat-hdr-Indexing                          {--cc:#22d3ee}
+.card-cat-Operations,.cat-hdr-Operations                      {--cc:#06b6d4}
+.card-cat-MathStats,.cat-hdr-MathStats                        {--cc:#0891b2}
+.card-cat-Shapes,.cat-hdr-Shapes                              {--cc:#0e7490}
+.card-cat-LinAlg,.cat-hdr-LinAlg                              {--cc:#155e75}
+.card-cat-Random,.cat-hdr-Random                              {--cc:#a5f3fc}
+.card-cat-Basics.py04,.cat-hdr-Basics.py04                    {--cc:#fbbf24}
+.card-cat-Styling,.cat-hdr-Styling                            {--cc:#f59e0b}
+.card-cat-PlotTypes,.cat-hdr-PlotTypes                        {--cc:#d97706}
+.card-cat-Subplots,.cat-hdr-Subplots                          {--cc:#b45309}
+.card-cat-Workflow,.cat-hdr-Workflow                          {--cc:#34d399}
+.card-cat-Models,.cat-hdr-Models                              {--cc:#10b981}
+.card-cat-Preprocessing,.cat-hdr-Preprocessing                {--cc:#059669}
+.card-cat-Tensors,.cat-hdr-Tensors                            {--cc:#f97316}
+.card-cat-Training.py06,.cat-hdr-Training.py06                {--cc:#ea580c}
+.card-cat-Complexity,.cat-hdr-Complexity                      {--cc:#94a3b8}
+
+/* Code block */
+.sec-code{background:var(--code-bg,#0b1020);border:1px solid var(--border);border-radius:6px;padding:12px 14px;font-family:'Fira Code','Cascadia Code','Courier New',monospace;font-size:12px;color:#e2e8f0;white-space:pre;overflow-x:auto;line-height:1.6;display:block;margin:0}
+
+/* ── Summary / Chain page ─────────────────────────────── */
+#summary-page{padding:24px 28px;max-width:860px;margin:0 auto}
+.sum-title{font-size:1.35rem;font-weight:800;color:var(--accent);margin-bottom:4px}
+.sum-sub{font-size:.8rem;color:var(--muted);margin-bottom:28px}
+.chain-step{display:flex;gap:0;margin-bottom:0}
+.chain-left{display:flex;flex-direction:column;align-items:center;width:48px;flex-shrink:0}
+.chain-num{width:36px;height:36px;border-radius:50%;background:var(--accent);color:#fff;font-weight:800;font-size:.8rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;z-index:1}
+.chain-line{width:2px;background:var(--border);flex:1;min-height:20px}
+.chain-last .chain-line{background:transparent}
+.chain-body{flex:1;padding:0 0 28px 14px}
+.chain-method{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--accent);opacity:.7;margin-bottom:4px}
+.chain-title{font-size:1rem;font-weight:700;color:var(--text);margin-bottom:8px}
+.chain-what{font-size:.82rem;color:var(--muted);line-height:1.6;margin-bottom:10px}
+.chain-problems{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px;margin-bottom:8px}
+.chain-problems li{font-size:.78rem;color:#f87171;padding:4px 10px;background:rgba(248,113,113,.08);border-left:2px solid #f87171;border-radius:0 4px 4px 0}
+.chain-next{font-size:.76rem;color:#4ade80;padding:5px 10px;background:rgba(74,222,128,.07);border-left:2px solid #4ade80;border-radius:0 4px 4px 0;margin-top:4px}
+.bigpicture{margin-top:8px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px 22px}
+.bigpicture h3{font-size:.75rem;font-weight:800;text-transform:uppercase;letter-spacing:1.4px;color:var(--accent);opacity:.6;margin-bottom:12px}
+.bp-line{font-size:.8rem;color:var(--text);line-height:1.9;font-family:'Fira Code','Cascadia Code',monospace}
+.bp-arrow{color:var(--accent);opacity:.5}
+
+/* IDA sidebar course separator */
+.course-divider{padding:10px 16px 4px;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:1.8px;color:var(--accent);opacity:.5;border-top:1px solid var(--border);margin-top:4px}
+
+.card[class*="card-cat-"]  { border-left-color: var(--cc, var(--border)) }
+.cat-heading[class*="cat-hdr-"] { color: var(--cc, var(--muted)) }
+.card-tag{display:inline-block;font-size:10px;padding:2px 8px;border-radius:999px;margin-top:8px;font-weight:600;background:#1a2540;color:var(--cc,var(--muted))}
+
+/* POPUP */
+.popup-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.75);display:flex;justify-content:center;align-items:center;z-index:100;opacity:0;visibility:hidden;transition:opacity .2s,visibility .2s}
+.popup-overlay.show{opacity:1;visibility:visible}
+.popup-box{background:#1a2038;border:1px solid var(--border);border-radius:16px;padding:26px;max-width:720px;width:94%;max-height:90vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.6)}
+.popup-title{font-size:18px;font-weight:700;color:var(--accent-light);margin-bottom:3px}
+.popup-meta{font-size:11px;color:var(--muted);margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap}
+.popup-meta .p-cat{text-transform:uppercase;letter-spacing:.5px}
+.popup-meta .p-ctx{font-style:italic;opacity:.8}
+
+/* Section rendering */
+.sec-block{margin-bottom:18px}
+.sec-heading{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--accent-light);opacity:.7;margin-bottom:7px}
+.sec-text{font-size:13px;line-height:1.7;color:#c8d5ec}
+.sec-formula{font-family:'SF Mono',Consolas,'Courier New',monospace;background:var(--code-bg);border:1px solid #1e3050;border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:12px 14px;font-size:12px;color:#b8cde8;overflow-x:auto;line-height:2}
+.sec-formula .katex-display{margin:.3em 0;overflow-x:auto;overflow-y:hidden}
+.sec-formula .katex{font-size:1.05em;color:#dde3f5}
+.katex-display>.katex{text-align:left!important;padding-left:8px}
+.sec-list{list-style:none;padding:0}
+.sec-list li{font-size:13px;color:#c8d5ec;line-height:1.65;padding:3px 0 3px 14px;position:relative}
+.sec-list li::before{content:"›";position:absolute;left:0;color:var(--accent);font-weight:700}
+.sec-table{width:100%;border-collapse:collapse;font-size:12px}
+.sec-table th{background:#111827;color:var(--accent-light);padding:7px 10px;text-align:left;font-weight:700;border-bottom:2px solid var(--border)}
+.sec-table td{padding:7px 10px;border-bottom:1px solid var(--border);color:#c8d5ec;vertical-align:top}
+.sec-table tr:last-child td{border-bottom:none}
+.sec-table tr:nth-child(even) td{background:rgba(255,255,255,.02)}
+.sec-compare{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sec-cmp-box{background:#111827;border:1px solid var(--border);border-radius:8px;padding:12px}
+.sec-cmp-title{font-size:11px;font-weight:700;color:var(--accent-light);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}
+.sec-cmp-pts{list-style:none;padding:0}
+.sec-cmp-pts li{font-size:12px;color:#c8d5ec;line-height:1.65;padding:2px 0 2px 12px;position:relative}
+.sec-cmp-pts li::before{content:"·";position:absolute;left:0;color:var(--accent)}
+.sec-note-box{background:#1e1800;border:1px solid #352e00;border-radius:8px;padding:11px 14px}
+.sec-note-box .sec-text{font-size:12px;color:#fcd34d}
+.sec-insight-box{background:#141a28;border-left:3px solid #34d399;border-radius:0 8px 8px 0;padding:11px 14px}
+
+/* legacy popup fields */
+.popup-lbl{font-size:10px;color:var(--accent-light);opacity:.6;text-transform:uppercase;letter-spacing:.6px;font-weight:700;margin-bottom:5px}
+.popup-formula{font-family:'SF Mono',Consolas,'Courier New',monospace;background:var(--code-bg);border:1px solid #1e3050;border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:12px 14px;font-size:12px;color:#b8cde8;white-space:pre;overflow-x:auto;margin-bottom:14px;line-height:1.7}
+.popup-desc{font-size:13px;line-height:1.65;color:#c8d5ec;margin-bottom:12px}
+.popup-intuition{font-size:13px;line-height:1.7;color:#c8d5ec;background:#141a28;border-left:3px solid #34d399;border-radius:0 8px 8px 0;padding:11px 14px;margin-bottom:12px}
+.popup-notes{font-size:12px;color:#fcd34d;background:#1e1800;border:1px solid #352e00;border-radius:8px;padding:9px 13px;line-height:1.6}
+.popup-summary{font-size:13.5px;line-height:1.75;color:#c8d5ec;margin-bottom:14px;font-style:italic}
+.popup-divider{border:none;border-top:1px solid var(--border);margin:0 0 18px}
+.popup-close-btn{margin-top:18px;width:100%;padding:10px;background:var(--accent-bg);border:none;border-radius:8px;color:#fff;font-size:14px;cursor:pointer}
+.popup-close-btn:hover{background:var(--accent)}
+
+.footer-text{text-align:center;color:var(--muted);font-size:11px;padding:12px;margin-top:auto;border-top:1px solid var(--border)}
+
+/* CHAPTER OVERVIEW PANEL */
+.ch-overview-panel{padding:18px 22px 16px;border-bottom:1px solid var(--border);background:#0d1320}
+.ch-ov-inner{max-width:920px}
+.ch-ov-label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1.3px;color:var(--accent-light);opacity:.55;margin-bottom:14px;display:flex;align-items:center;gap:10px;cursor:default}
+.ch-ov-label::after{content:'';flex:1;height:1px;background:var(--border)}
+.ch-ov-body p{font-size:13px;line-height:1.85;color:#c5d3ea;margin-bottom:14px}
+.ch-ov-body p:last-child{margin-bottom:0}
+.ch-ov-body .katex-display{margin:.4em 0;overflow-x:auto}
+
+/* MOBILE */
+@media(max-width:768px){
+  #sidebar{transform:translateX(-100%)}
+  #sidebar.open{transform:translateX(0)}
+  #sidebar-close{display:block}
+  #hamburger{display:block}
+  #main{margin-left:0}
+  #card-grid{padding:10px;gap:8px;grid-template-columns:repeat(auto-fill,minmax(175px,1fr))}
+  button,select,input[type=search]{padding:5px 8px;font-size:11px}
+  .sec-compare{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<nav id="sidebar">
+  <div class="sidebar-hdr">
+    <h2>ML Reference</h2>
+    <p>RWTH · Machine Learning 2023</p>
+    <button id="sidebar-close" onclick="closeSidebar()">&#10005;</button>
+  </div>
+
+  <button class="nav-btn" data-sec="summary" onclick="switchSection('summary');closeSidebar()" style="border-left:3px solid var(--accent);margin-bottom:8px">
+    <span class="nav-icon">📖</span><span class="nav-num" style="font-size:.6rem">ÖZT</span>
+    <span class="nav-label">Ders Özeti</span>
+  </button>
+
+  <button class="nav-btn active" data-sec="ch01" onclick="switchSection('ch01');closeSidebar()">
+    <span class="nav-icon">🔭</span><span class="nav-num">01</span>
+    <span class="nav-label">Introduction</span>
+    <span class="nav-count" id="cnt-ch01">0</span>
+  </button>
+  <button class="nav-btn" data-sec="ch02" onclick="switchSection('ch02');closeSidebar()">
+    <span class="nav-icon">🎲</span><span class="nav-num">02</span>
+    <span class="nav-label">Bayes Decision Theory</span>
+    <span class="nav-count" id="cnt-ch02">0</span>
+  </button>
+  <button class="nav-btn" data-sec="ch03" onclick="switchSection('ch03');closeSidebar()">
+    <span class="nav-icon">📊</span><span class="nav-num">03</span>
+    <span class="nav-label">Density Estimation</span>
+    <span class="nav-count" id="cnt-ch03">0</span>
+  </button>
+  <button class="nav-btn" data-sec="ch04" onclick="switchSection('ch04');closeSidebar()">
+    <span class="nav-icon">📐</span><span class="nav-num">04</span>
+    <span class="nav-label">Linear Discriminants</span>
+    <span class="nav-count" id="cnt-ch04">0</span>
+  </button>
+  <button class="nav-btn" data-sec="ch05" onclick="switchSection('ch05');closeSidebar()">
+    <span class="nav-icon">⚡</span><span class="nav-num">05</span>
+    <span class="nav-label">SVMs</span>
+    <span class="nav-count" id="cnt-ch05">0</span>
+  </button>
+  <button class="nav-btn" data-sec="ch06" onclick="switchSection('ch06');closeSidebar()">
+    <span class="nav-icon">🚀</span><span class="nav-num">06</span>
+    <span class="nav-label">AdaBoost</span>
+    <span class="nav-count" id="cnt-ch06">0</span>
+  </button>
+  <button class="nav-btn" data-sec="ch07" onclick="switchSection('ch07');closeSidebar()">
+    <span class="nav-icon">🧠</span><span class="nav-num">07</span>
+    <span class="nav-label">Neural Networks</span>
+    <span class="nav-count" id="cnt-ch07">0</span>
+  </button>
+  <button class="nav-btn" data-sec="ch08" onclick="switchSection('ch08');closeSidebar()">
+    <span class="nav-icon">⚙️</span><span class="nav-num">08</span>
+    <span class="nav-label">Optimization</span>
+    <span class="nav-count" id="cnt-ch08">0</span>
+  </button>
+  <button class="nav-btn" data-sec="ch09" onclick="switchSection('ch09');closeSidebar()">
+    <span class="nav-icon">👁</span><span class="nav-num">09</span>
+    <span class="nav-label">CNNs</span>
+    <span class="nav-count" id="cnt-ch09">0</span>
+  </button>
+  <button class="nav-btn" data-sec="ch10" onclick="switchSection('ch10');closeSidebar()">
+    <span class="nav-icon">💬</span><span class="nav-num">10</span>
+    <span class="nav-label">Word Embeddings</span>
+    <span class="nav-count" id="cnt-ch10">0</span>
+  </button>
+  <button class="nav-btn" data-sec="ch11" onclick="switchSection('ch11');closeSidebar()">
+    <span class="nav-icon">🔄</span><span class="nav-num">11</span>
+    <span class="nav-label">RNNs</span>
+    <span class="nav-count" id="cnt-ch11">0</span>
+  </button>
+  <button class="nav-btn" data-sec="ch12" onclick="switchSection('ch12');closeSidebar()">
+    <span class="nav-icon">✨</span><span class="nav-num">12</span>
+    <span class="nav-label">Transformers</span>
+    <span class="nav-count" id="cnt-ch12">0</span>
+  </button>
+
+  <div class="course-divider">IDA · Image Data Analysis</div>
+
+  <button class="nav-btn" data-sec="ida01" onclick="switchSection('ida01');closeSidebar()">
+    <span class="nav-icon">🖼</span><span class="nav-num">01</span>
+    <span class="nav-label">Introduction</span>
+    <span class="nav-count" id="cnt-ida01">0</span>
+  </button>
+  <button class="nav-btn" data-sec="ida02" onclick="switchSection('ida02');closeSidebar()">
+    <span class="nav-icon">🔧</span><span class="nav-num">02</span>
+    <span class="nav-label">Basic Toolbox</span>
+    <span class="nav-count" id="cnt-ida02">0</span>
+  </button>
+  <button class="nav-btn" data-sec="ida03" onclick="switchSection('ida03');closeSidebar()">
+    <span class="nav-icon">🧠</span><span class="nav-num">03</span>
+    <span class="nav-label">DL Crash Course</span>
+    <span class="nav-count" id="cnt-ida03">0</span>
+  </button>
+  <button class="nav-btn" data-sec="ida04" onclick="switchSection('ida04');closeSidebar()">
+    <span class="nav-icon">🎯</span><span class="nav-num">04</span>
+    <span class="nav-label">Object Detection</span>
+    <span class="nav-count" id="cnt-ida04">0</span>
+  </button>
+  <button class="nav-btn" data-sec="ida05" onclick="switchSection('ida05');closeSidebar()">
+    <span class="nav-icon">✂️</span><span class="nav-num">05</span>
+    <span class="nav-label">Segmentation</span>
+    <span class="nav-count" id="cnt-ida05">0</span>
+  </button>
+  <button class="nav-btn" data-sec="ida06" onclick="switchSection('ida06');closeSidebar()">
+    <span class="nav-icon">🏃</span><span class="nav-num">06</span>
+    <span class="nav-label">Object Tracking</span>
+    <span class="nav-count" id="cnt-ida06">0</span>
+  </button>
+  <button class="nav-btn" data-sec="ida07" onclick="switchSection('ida07');closeSidebar()">
+    <span class="nav-icon">👀</span><span class="nav-num">07</span>
+    <span class="nav-label">Attention / ViT</span>
+    <span class="nav-count" id="cnt-ida07">0</span>
+  </button>
+  <button class="nav-btn" data-sec="ida08" onclick="switchSection('ida08');closeSidebar()">
+    <span class="nav-icon">🔭</span><span class="nav-num">08</span>
+    <span class="nav-label">Image Transformers</span>
+    <span class="nav-count" id="cnt-ida08">0</span>
+  </button>
+  <button class="nav-btn" data-sec="ida09" onclick="switchSection('ida09');closeSidebar()">
+    <span class="nav-icon">☁️</span><span class="nav-num">09</span>
+    <span class="nav-label">Point Clouds</span>
+    <span class="nav-count" id="cnt-ida09">0</span>
+  </button>
+  <button class="nav-btn" data-sec="ida10" onclick="switchSection('ida10');closeSidebar()">
+    <span class="nav-icon">🎨</span><span class="nav-num">10</span>
+    <span class="nav-label">GANs</span>
+    <span class="nav-count" id="cnt-ida10">0</span>
+  </button>
+  <button class="nav-btn" data-sec="ida11" onclick="switchSection('ida11');closeSidebar()">
+    <span class="nav-icon">🌀</span><span class="nav-num">11</span>
+    <span class="nav-label">Diffusion Models</span>
+    <span class="nav-count" id="cnt-ida11">0</span>
+  </button>
+  <button class="nav-btn" data-sec="ida12" onclick="switchSection('ida12');closeSidebar()">
+    <span class="nav-icon">🗂</span><span class="nav-num">12</span>
+    <span class="nav-label">Advanced PC</span>
+    <span class="nav-count" id="cnt-ida12">0</span>
+  </button>
+  <button class="nav-btn" data-sec="ida13" onclick="switchSection('ida13');closeSidebar()">
+    <span class="nav-icon">🔍</span><span class="nav-num">13</span>
+    <span class="nav-label">Visualization</span>
+    <span class="nav-count" id="cnt-ida13">0</span>
+  </button>
+
+  <div class="course-divider">Python &amp; DSA</div>
+
+  <button class="nav-btn" data-sec="py01" onclick="switchSection('py01');closeSidebar()">
+    <span class="nav-icon">🐍</span><span class="nav-num">PY</span>
+    <span class="nav-label">Python Referans</span>
+    <span class="nav-count" id="cnt-py01">0</span>
+  </button>
+  <button class="nav-btn" data-sec="py02" onclick="switchSection('py02');closeSidebar()">
+    <span class="nav-icon">🏗</span><span class="nav-num">DS</span>
+    <span class="nav-label">Data Structures</span>
+    <span class="nav-count" id="cnt-py02">0</span>
+  </button>
+  <button class="nav-btn" data-sec="py03" onclick="switchSection('py03');closeSidebar()">
+    <span class="nav-icon">🔢</span><span class="nav-num">NP</span>
+    <span class="nav-label">NumPy</span>
+    <span class="nav-count" id="cnt-py03">0</span>
+  </button>
+  <button class="nav-btn" data-sec="py04" onclick="switchSection('py04');closeSidebar()">
+    <span class="nav-icon">📊</span><span class="nav-num">MPL</span>
+    <span class="nav-label">Matplotlib</span>
+    <span class="nav-count" id="cnt-py04">0</span>
+  </button>
+  <button class="nav-btn" data-sec="py05" onclick="switchSection('py05');closeSidebar()">
+    <span class="nav-icon">⚙️</span><span class="nav-num">SKL</span>
+    <span class="nav-label">Scikit-Learn</span>
+    <span class="nav-count" id="cnt-py05">0</span>
+  </button>
+  <button class="nav-btn" data-sec="py06" onclick="switchSection('py06');closeSidebar()">
+    <span class="nav-icon">🔥</span><span class="nav-num">PT</span>
+    <span class="nav-label">PyTorch</span>
+    <span class="nav-count" id="cnt-py06">0</span>
+  </button>
+  <button class="nav-btn" data-sec="py07" onclick="switchSection('py07');closeSidebar()">
+    <span class="nav-icon">📋</span><span class="nav-num">GD</span>
+    <span class="nav-label">Guides</span>
+    <span class="nav-count" id="cnt-py07">0</span>
+  </button>
+
+  <div class="sidebar-foot">
+    <button id="btn-import">&#128194; JSON Yükle</button>
+    <input type="file" id="fileInput" accept=".json" hidden>
+    <div class="hint">/ → arama &bull; ESC → kapat<br>Kart → detay popup</div>
+  </div>
+</nav>
+
+<button id="hamburger" onclick="openSidebar()">&#9776;</button>
+
+<div id="main">
+<header id="hdr-root">
+
+  <div id="hdr-summary" class="section-header">
+    <div class="hdr-title">Ders Özeti — Motivasyon Zinciri</div>
+    <div class="hdr-sub">Her yöntemin neden geliştirildiği ve bir sonrakine neden ihtiyaç duyulduğu</div>
+  </div>
+
+  <div id="hdr-ch01" class="section-header active">
+    <div class="hdr-title">01 · Introduction</div>
+    <div class="hdr-sub">ML Taxonomy · Model Complexity · Probability Theory · Course Roadmap</div>
+    <div class="controls">
+      <select id="flt-ch01"><option value="">All categories</option></select>
+      <input type="search" id="q-ch01" placeholder="Search...">
+      <span class="pill" id="pill-ch01">0 cards</span>
+    </div>
+  </div>
+
+  <div id="hdr-ch02" class="section-header">
+    <div class="hdr-title">02 · Bayes Decision Theory</div>
+    <div class="hdr-sub">Prior · Likelihood · Posterior · Loss Functions · Three Approaches</div>
+    <div class="controls">
+      <select id="flt-ch02"><option value="">All categories</option></select>
+      <input type="search" id="q-ch02" placeholder="Search...">
+      <span class="pill" id="pill-ch02">0 cards</span>
+    </div>
+  </div>
+
+  <div id="hdr-ch03" class="section-header">
+    <div class="hdr-title">03 · Parametric Density Estimation</div>
+    <div class="hdr-sub">Gaussian · MLE · MAP · EM Algorithm · GMM</div>
+    <div class="controls">
+      <select id="flt-ch03"><option value="">All categories</option></select>
+      <input type="search" id="q-ch03" placeholder="Search...">
+      <span class="pill" id="pill-ch03">0 cards</span>
+    </div>
+  </div>
+
+  <div id="hdr-ch04" class="section-header">
+    <div class="hdr-title">04 · Linear Discriminants</div>
+    <div class="hdr-sub">Discriminant Functions · Least Squares · Logistic Regression · Softmax</div>
+    <div class="controls">
+      <select id="flt-ch04"><option value="">All categories</option></select>
+      <input type="search" id="q-ch04" placeholder="Search...">
+      <span class="pill" id="pill-ch04">0 cards</span>
+    </div>
+  </div>
+
+  <div id="hdr-ch05" class="section-header">
+    <div class="hdr-title">05 · Support Vector Machines</div>
+    <div class="hdr-sub">Max Margin · KKT · Soft Margin · Kernels · Duality</div>
+    <div class="controls">
+      <select id="flt-ch05"><option value="">All categories</option></select>
+      <input type="search" id="q-ch05" placeholder="Search...">
+      <span class="pill" id="pill-ch05">0 cards</span>
+    </div>
+  </div>
+
+  <div id="hdr-ch06" class="section-header">
+    <div class="hdr-title">06 · AdaBoost</div>
+    <div class="hdr-sub">Ensemble · Bagging · Boosting · Weak Learners · Exponential Loss</div>
+    <div class="controls">
+      <select id="flt-ch06"><option value="">All categories</option></select>
+      <input type="search" id="q-ch06" placeholder="Search...">
+      <span class="pill" id="pill-ch06">0 cards</span>
+    </div>
+  </div>
+
+  <div id="hdr-ch07" class="section-header">
+    <div class="hdr-title">07 · Neural Networks</div>
+    <div class="hdr-sub">MLP · Backpropagation · Activations · Universal Approximation</div>
+    <div class="controls">
+      <select id="flt-ch07"><option value="">All categories</option></select>
+      <input type="search" id="q-ch07" placeholder="Search...">
+      <span class="pill" id="pill-ch07">0 cards</span>
+    </div>
+  </div>
+
+  <div id="hdr-ch08" class="section-header">
+    <div class="hdr-title">08 · Optimization &amp; Training</div>
+    <div class="hdr-sub">SGD · Adam · Batch Norm · Dropout · Initialization</div>
+    <div class="controls">
+      <select id="flt-ch08"><option value="">All categories</option></select>
+      <input type="search" id="q-ch08" placeholder="Search...">
+      <span class="pill" id="pill-ch08">0 cards</span>
+    </div>
+  </div>
+
+  <div id="hdr-ch09" class="section-header">
+    <div class="hdr-title">09 · Convolutional Neural Networks</div>
+    <div class="hdr-sub">Convolution · Pooling · Receptive Field · Object Detection</div>
+    <div class="controls">
+      <select id="flt-ch09"><option value="">All categories</option></select>
+      <input type="search" id="q-ch09" placeholder="Search...">
+      <span class="pill" id="pill-ch09">0 cards</span>
+    </div>
+  </div>
+
+  <div id="hdr-ch10" class="section-header">
+    <div class="hdr-title">10 · Word Embeddings</div>
+    <div class="hdr-sub">Word2Vec · CBOW · Skip-gram · GloVe · Analogies</div>
+    <div class="controls">
+      <select id="flt-ch10"><option value="">All categories</option></select>
+      <input type="search" id="q-ch10" placeholder="Search...">
+      <span class="pill" id="pill-ch10">0 cards</span>
+    </div>
+  </div>
+
+  <div id="hdr-ch11" class="section-header">
+    <div class="hdr-title">11 · Recurrent Neural Networks</div>
+    <div class="hdr-sub">RNN · BPTT · LSTM · GRU · Seq2Seq · Attention</div>
+    <div class="controls">
+      <select id="flt-ch11"><option value="">All categories</option></select>
+      <input type="search" id="q-ch11" placeholder="Search...">
+      <span class="pill" id="pill-ch11">0 cards</span>
+    </div>
+  </div>
+
+  <div id="hdr-ch12" class="section-header">
+    <div class="hdr-title">12 · Transformers</div>
+    <div class="hdr-sub">Self-Attention · Multi-Head · Positional Encoding · BERT · GPT</div>
+    <div class="controls">
+      <select id="flt-ch12"><option value="">All categories</option></select>
+      <input type="search" id="q-ch12" placeholder="Search...">
+      <span class="pill" id="pill-ch12">0 cards</span>
+    </div>
+  </div>
+
+  <!-- IDA section headers -->
+  <div id="hdr-ida01" class="section-header">
+    <div class="hdr-title">IDA 01 · Introduction to Image Analysis</div>
+    <div class="hdr-sub">Image Representation · Histograms · Connectivity · Digitisation</div>
+    <div class="controls">
+      <select id="flt-ida01"><option value="">All categories</option></select>
+      <input type="search" id="q-ida01" placeholder="Search...">
+      <span class="pill" id="pill-ida01">0 cards</span>
+    </div>
+  </div>
+
+  <div id="hdr-ida02" class="section-header">
+    <div class="hdr-title">IDA 02 · Basic Toolbox</div>
+    <div class="hdr-sub">Convolution · Morphology · Fourier Transform · Linear Filtering</div>
+    <div class="controls">
+      <select id="flt-ida02"><option value="">All categories</option></select>
+      <input type="search" id="q-ida02" placeholder="Search...">
+      <span class="pill" id="pill-ida02">0 cards</span>
+    </div>
+  </div>
+
+  <div id="hdr-ida03" class="section-header">
+    <div class="hdr-title">IDA 03 · Deep Learning Crash Course</div>
+    <div class="hdr-sub">Perceptron · MLP · CNN · Backprop · Loss Functions</div>
+    <div class="controls">
+      <select id="flt-ida03"><option value="">All categories</option></select>
+      <input type="search" id="q-ida03" placeholder="Search...">
+      <span class="pill" id="pill-ida03">0 cards</span>
+    </div>
+  </div>
+
+  <div id="hdr-ida04" class="section-header">
+    <div class="hdr-title">IDA 04 · Object Detection</div>
+    <div class="hdr-sub">Template Matching · R-CNN · YOLO · FPN · Focal Loss</div>
+    <div class="controls">
+      <select id="flt-ida04"><option value="">All categories</option></select>
+      <input type="search" id="q-ida04" placeholder="Search...">
+      <span class="pill" id="pill-ida04">0 cards</span>
+    </div>
+  </div>
+
+  <div id="hdr-ida05" class="section-header">
+    <div class="hdr-title">IDA 05 · Image Segmentation</div>
+    <div class="hdr-sub">U-Net · Mask R-CNN · Cellpose · StarDist · IoU</div>
+    <div class="controls">
+      <select id="flt-ida05"><option value="">All categories</option></select>
+      <input type="search" id="q-ida05" placeholder="Search...">
+      <span class="pill" id="pill-ida05">0 cards</span>
+    </div>
+  </div>
+
+  <div id="hdr-ida06" class="section-header">
+    <div class="hdr-title">IDA 06 · Object Tracking</div>
+    <div class="hdr-sub">Kalman Filter · Hungarian · Optical Flow · FlowNet · GOTURN</div>
+    <div class="controls">
+      <select id="flt-ida06"><option value="">All categories</option></select>
+      <input type="search" id="q-ida06" placeholder="Search...">
+      <span class="pill" id="pill-ida06">0 cards</span>
+    </div>
+  </div>
+
+  <div id="hdr-ida07" class="section-header">
+    <div class="hdr-title">IDA 07 · Attention and Transformers</div>
+    <div class="hdr-sub">Self-Attention · ViT · DETR · Swin Transformer</div>
+    <div class="controls">
+      <select id="flt-ida07"><option value="">All categories</option></select>
+      <input type="search" id="q-ida07" placeholder="Search...">
+      <span class="pill" id="pill-ida07">0 cards</span>
+    </div>
+  </div>
+
+  <div id="hdr-ida08" class="section-header">
+    <div class="hdr-title">IDA 08 · Image Analysis with Transformers</div>
+    <div class="hdr-sub">UNETR · SAM · MAE · DINO · Foundation Models</div>
+    <div class="controls">
+      <select id="flt-ida08"><option value="">All categories</option></select>
+      <input type="search" id="q-ida08" placeholder="Search...">
+      <span class="pill" id="pill-ida08">0 cards</span>
+    </div>
+  </div>
+
+  <div id="hdr-ida09" class="section-header">
+    <div class="hdr-title">IDA 09 · 3D Point Cloud Analysis</div>
+    <div class="hdr-sub">Point Cloud · Normals · PointNet · PointNet++ · Set Abstraction</div>
+    <div class="controls">
+      <select id="flt-ida09"><option value="">All categories</option></select>
+      <input type="search" id="q-ida09" placeholder="Search...">
+      <span class="pill" id="pill-ida09">0 cards</span>
+    </div>
+  </div>
+
+  <div id="hdr-ida10" class="section-header">
+    <div class="hdr-title">IDA 10 · Generative Adversarial Networks</div>
+    <div class="hdr-sub">Autoencoder · VAE · GAN · CycleGAN · pix2pix</div>
+    <div class="controls">
+      <select id="flt-ida10"><option value="">All categories</option></select>
+      <input type="search" id="q-ida10" placeholder="Search...">
+      <span class="pill" id="pill-ida10">0 cards</span>
+    </div>
+  </div>
+
+  <div id="hdr-ida11" class="section-header">
+    <div class="hdr-title">IDA 11 · Diffusion Models</div>
+    <div class="hdr-sub">DDPM · Forward/Reverse Process · Noise Prediction · Stable Diffusion</div>
+    <div class="controls">
+      <select id="flt-ida11"><option value="">All categories</option></select>
+      <input type="search" id="q-ida11" placeholder="Search...">
+      <span class="pill" id="pill-ida11">0 cards</span>
+    </div>
+  </div>
+
+  <div id="hdr-ida12" class="section-header">
+    <div class="hdr-title">IDA 12 · Advanced Point Cloud Methods</div>
+    <div class="hdr-sub">FCPN · DGCNN · EdgeConv · FoldingNet · Diffusion for Clouds</div>
+    <div class="controls">
+      <select id="flt-ida12"><option value="">All categories</option></select>
+      <input type="search" id="q-ida12" placeholder="Search...">
+      <span class="pill" id="pill-ida12">0 cards</span>
+    </div>
+  </div>
+
+  <div id="hdr-ida13" class="section-header">
+    <div class="hdr-title">IDA 13 · Visualization and BoVW</div>
+    <div class="hdr-sub">Bag of Visual Words · GradCAM · Saliency · t-SNE</div>
+    <div class="controls">
+      <select id="flt-ida13"><option value="">All categories</option></select>
+      <input type="search" id="q-ida13" placeholder="Search...">
+      <span class="pill" id="pill-ida13">0 cards</span>
+    </div>
+  </div>
+
+  <div id="hdr-py01" class="section-header">
+    <div class="hdr-title">Python Referans</div>
+    <div class="hdr-sub">Basics · Control Flow · Lists · Strings · Dicts · Functions · Classes · I/O</div>
+    <div class="controls">
+      <select id="flt-py01"><option value="">All categories</option></select>
+      <input type="search" id="q-py01" placeholder="Search...">
+      <span class="pill" id="pill-py01">0 cards</span>
+    </div>
+  </div>
+
+  <div id="hdr-py02" class="section-header">
+    <div class="hdr-title">Data Structures &amp; Algorithms</div>
+    <div class="hdr-sub">Arrays · Two Pointers · Stack · Trees · Graphs · DP · Backtracking</div>
+    <div class="controls">
+      <select id="flt-py02"><option value="">All categories</option></select>
+      <input type="search" id="q-py02" placeholder="Search...">
+      <span class="pill" id="pill-py02">0 cards</span>
+    </div>
+  </div>
+
+  <div id="hdr-py03" class="section-header">
+    <div class="hdr-title">NumPy Referans</div>
+    <div class="hdr-sub">Arrays · Indexing · Broadcasting · Linear Algebra · Random</div>
+    <div class="controls">
+      <select id="flt-py03"><option value="">All categories</option></select>
+      <input type="search" id="q-py03" placeholder="Search...">
+      <span class="pill" id="pill-py03">0 cards</span>
+    </div>
+  </div>
+
+  <div id="hdr-py04" class="section-header">
+    <div class="hdr-title">Matplotlib Referans</div>
+    <div class="hdr-sub">Basics · Styling · Plot Types · Subplots</div>
+    <div class="controls">
+      <select id="flt-py04"><option value="">All categories</option></select>
+      <input type="search" id="q-py04" placeholder="Search...">
+      <span class="pill" id="pill-py04">0 cards</span>
+    </div>
+  </div>
+
+  <div id="hdr-py05" class="section-header">
+    <div class="hdr-title">Scikit-Learn Referans</div>
+    <div class="hdr-sub">Workflow · Models · Preprocessing &amp; Pipelines</div>
+    <div class="controls">
+      <select id="flt-py05"><option value="">All categories</option></select>
+      <input type="search" id="q-py05" placeholder="Search...">
+      <span class="pill" id="pill-py05">0 cards</span>
+    </div>
+  </div>
+
+  <div id="hdr-py06" class="section-header">
+    <div class="hdr-title">PyTorch Referans</div>
+    <div class="hdr-sub">Tensors · Model Definition · Training Loop</div>
+    <div class="controls">
+      <select id="flt-py06"><option value="">All categories</option></select>
+      <input type="search" id="q-py06" placeholder="Search...">
+      <span class="pill" id="pill-py06">0 cards</span>
+    </div>
+  </div>
+
+  <div id="hdr-py07" class="section-header">
+    <div class="hdr-title">Guides &amp; Cheat Sheets</div>
+    <div class="hdr-sub">Big-O · Complexity · Sorting · Data Structure Operations</div>
+    <div class="controls">
+      <select id="flt-py07"><option value="">All categories</option></select>
+      <input type="search" id="q-py07" placeholder="Search...">
+      <span class="pill" id="pill-py07">0 cards</span>
+    </div>
+  </div>
+
+</header>
+
+<div id="overview-panel" class="ch-overview-panel" style="display:none">
+  <div class="ch-ov-inner">
+    <div class="ch-ov-label">Chapter Overview</div>
+    <div id="ch-ov-body" class="ch-ov-body"></div>
+  </div>
+</div>
+
+<div id="summary-page" style="display:none"></div>
+<div id="card-grid"></div>
+<div class="footer-text">Kart = detay popup &bull; <kbd>/</kbd> arama &bull; <kbd>ESC</kbd> kapat</div>
+</div>
+
+<!-- POPUP -->
+<div class="popup-overlay" id="popupOverlay">
+  <div class="popup-box" id="popupBox"></div>
+</div>
+
+<script>
+/* ==================== STATE ==================== */
+const CHAPTERS = ['ch01','ch02','ch03','ch04','ch05','ch06','ch07','ch08','ch09','ch10','ch11','ch12',
+                   'ida01','ida02','ida03','ida04','ida05','ida06','ida07','ida08','ida09','ida10','ida11','ida12','ida13',
+                   'py01','py02','py03','py04','py05','py06','py07'];
+let DATA = {};
+CHAPTERS.forEach(c => DATA[c] = []);
+let OVERVIEWS = {};
+let SUMMARY = null;
+let SEC = 'ch01';
+let F = {};
+CHAPTERS.forEach(c => F[c] = {cat:'', q:''});
+
+const CH_CTX = {
+  ch01:'ch01',ch02:'ch02',ch03:'ch03',ch04:'ch04',ch05:'ch05',ch06:'ch06',
+  ch07:'ch07',ch08:'ch08',ch09:'ch09',ch10:'ch10',ch11:'ch11',ch12:'ch12',
+  ida01:'ida01',ida02:'ida02',ida03:'ida03',ida04:'ida04',ida05:'ida05',ida06:'ida06',
+  ida07:'ida07',ida08:'ida08',ida09:'ida09',ida10:'ida10',ida11:'ida11',ida12:'ida12',ida13:'ida13',
+  py01:'py01',py02:'py02',py03:'py03',py04:'py04',py05:'py05',py06:'py06',py07:'py07'
+};
+
+/* ==================== HELPERS ==================== */
+function esc(s){ return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])) }
+function $(id){ return document.getElementById(id) }
+
+/* Extract searchable text from a rich item */
+function searchText(item){
+  const parts = [item.title, item.cat, item.summary||item.desc||'', item.context||''];
+  if(item.sections){
+    item.sections.forEach(s => {
+      if(s.text) parts.push(s.text);
+      if(s.heading) parts.push(s.heading);
+      if(s.items) parts.push(...s.items);
+      if(s.rows) s.rows.forEach(r => parts.push(...r));
+      if(s.left) { parts.push(s.left.title||''); (s.left.points||[]).forEach(p=>parts.push(p)); }
+      if(s.right) { parts.push(s.right.title||''); (s.right.points||[]).forEach(p=>parts.push(p)); }
+    });
+  }
+  if(item.formula) parts.push(item.formula);
+  if(item.intuition) parts.push(item.intuition);
+  if(item.notes) parts.push(item.notes);
+  return parts.join(' ').toLowerCase();
+}
+
+/* ==================== SIDEBAR ==================== */
+function openSidebar(){ $('sidebar').classList.add('open') }
+function closeSidebar(){ $('sidebar').classList.remove('open') }
+
+function switchSection(sec){
+  SEC = sec;
+  document.querySelectorAll('.nav-btn[data-sec]').forEach(b => b.classList.toggle('active', b.dataset.sec === sec));
+  document.querySelectorAll('.section-header').forEach(h => h.classList.remove('active'));
+  $('hdr-'+sec).classList.add('active');
+  showOverview(sec);
+  render();
+  // show/hide summary page vs card grid
+  const isSummary = sec === 'summary';
+  $('summary-page').style.display = isSummary ? 'block' : 'none';
+  $('card-grid').style.display   = isSummary ? 'none'  : '';
+}
+
+function showOverview(sec){
+  const panel = $('overview-panel');
+  const body = $('ch-ov-body');
+  const text = OVERVIEWS[sec];
+  if(text){
+    const paras = text.split('\n\n').filter(p=>p.trim()).map(p=>`<p>${esc(p.trim())}</p>`).join('');
+    body.innerHTML = paras;
+    panel.style.display = '';
+    if(typeof renderMathInElement === 'function'){
+      renderMathInElement(panel,{
+        delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],
+        throwOnError:false
+      });
+    }
+  } else {
+    panel.style.display = 'none';
+  }
+}
+
+/* ==================== COUNTS ==================== */
+function updateCounts(){ CHAPTERS.forEach(c => { const el=$('cnt-'+c); if(el) el.textContent = DATA[c].length; }); }
+
+/* ==================== POPULATE DROPDOWNS ==================== */
+function buildDropdown(id, items){
+  const sel = $(id);
+  const cats = [...new Set(items.map(x => x.cat))].sort();
+  sel.innerHTML = '<option value="">All categories</option>';
+  cats.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o); });
+}
+
+/* ==================== RENDER SUMMARY ==================== */
+function renderSummary(){
+  if(!SUMMARY) return;
+  const s = SUMMARY;
+  const steps = s.chain.map((step, i) => {
+    const isLast = i === s.chain.length - 1;
+    const probs = step.problems.length
+      ? `<ul class="chain-problems">${step.problems.map(p=>`<li>${esc(p)}</li>`).join('')}</ul>` : '';
+    const next = step.next
+      ? `<div class="chain-next">→ ${esc(step.next)}</div>` : '';
+    return `<div class="chain-step ${isLast?'chain-last':''}">
+      <div class="chain-left">
+        <div class="chain-num">${step.num}</div>
+        <div class="chain-line"></div>
+      </div>
+      <div class="chain-body">
+        <div class="chain-method">${esc(step.method)}</div>
+        <div class="chain-title">${esc(step.title)}</div>
+        <div class="chain-what">${esc(step.what)}</div>
+        ${probs}${next}
+      </div>
+    </div>`;
+  }).join('');
+  const bp = s.bigpicture.map(l =>
+    `<div class="bp-line">${esc(l)}</div>`
+  ).join('');
+  $('summary-page').innerHTML = `
+    <div id="summary-page-inner">
+      <div class="sum-title">${esc(s.title)}</div>
+      <div class="sum-sub">${esc(s.subtitle)}</div>
+      ${steps}
+      <div class="bigpicture">
+        <h3>Büyük Resim</h3>
+        ${bp}
+      </div>
+    </div>`;
+}
+
+/* ==================== RENDER CARDS ==================== */
+function render(){
+  if(SEC === 'summary'){ renderSummary(); return; }
+  renderCards(SEC);
+}
+
+function catClass(cat, sec){
+  return cat.replace(/[^a-zA-Z0-9]/g,'-') + ' ' + CH_CTX[sec];
+}
+
+function renderCards(sec){
+  const grid = $('card-grid');
+  grid.innerHTML = '';
+  const f = F[sec];
+  const q = f.q.toLowerCase();
+  const showHeadings = !f.cat && !q;
+
+  const items = DATA[sec].filter(item => {
+    if(f.cat && item.cat !== f.cat) return false;
+    if(q && !searchText(item).includes(q)) return false;
+    return true;
+  });
+
+  const seen = new Set(), catOrder = [];
+  items.forEach(item => { if(!seen.has(item.cat)){ seen.add(item.cat); catOrder.push(item.cat); }});
+  const groups = {};
+  catOrder.forEach(c => groups[c] = []);
+  items.forEach(item => groups[item.cat].push(item));
+
+  catOrder.forEach(cat => {
+    const cc = catClass(cat, sec);
+    if(showHeadings){
+      const hdr = document.createElement('div');
+      hdr.className = 'cat-heading cat-hdr-' + cc;
+      hdr.textContent = cat;
+      grid.appendChild(hdr);
+    }
+    groups[cat].forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'card card-cat-' + cc;
+      // Rich format: show summary + context. Legacy: show desc + formula line.
+      const isRich = !!item.summary;
+      const previewText = isRich ? esc(item.summary) : esc(item.desc||'');
+      const formulaLine = (!isRich && item.formula) ? `<div class="card-formula">${esc(item.formula.split('\n')[0])}</div>` : '';
+      const ctxLine = item.context ? `<div class="card-ctx">${esc(item.context)}</div>` : '';
+      card.innerHTML = `
+        <div class="card-title">${esc(item.title)}</div>
+        <div class="card-summary">${previewText}</div>
+        ${formulaLine}
+        ${ctxLine}
+        <span class="card-tag card-cat-${cc}">${esc(item.cat)}</span>`;
+      card.onclick = () => showPopup(item, cc);
+      grid.appendChild(card);
+    });
+  });
+
+  $('pill-'+sec).textContent = items.length + ' cards';
+}
+
+/* ==================== RENDER SECTIONS ==================== */
+function renderSection(s){
+  const h = s.heading ? `<div class="sec-heading">${esc(s.heading)}</div>` : '';
+  switch(s.type){
+    case 'text':
+      return `<div class="sec-block">${h}<p class="sec-text">${esc(s.text||'')}</p></div>`;
+    case 'insight':
+      return `<div class="sec-block">${h}<div class="sec-insight-box"><p class="sec-text">${esc(s.text||'')}</p></div></div>`;
+    case 'note':
+      return `<div class="sec-block">${h}<div class="sec-note-box"><p class="sec-text">${esc(s.text||'')}</p></div></div>`;
+    case 'formula':
+      return `<div class="sec-block">${h}<div class="sec-formula">${esc(s.text||'').replace(/\n/g,'<br>')}</div></div>`;
+    case 'list':
+      const lis = (s.items||[]).map(i=>`<li>${esc(i)}</li>`).join('');
+      return `<div class="sec-block">${h}<ul class="sec-list">${lis}</ul></div>`;
+    case 'table':{
+      const rows = s.rows||[];
+      if(!rows.length) return '';
+      const thead = `<tr>${rows[0].map(c=>`<th>${esc(c)}</th>`).join('')}</tr>`;
+      const tbody = rows.slice(1).map(r=>`<tr>${r.map(c=>`<td>${esc(c)}</td>`).join('')}</tr>`).join('');
+      return `<div class="sec-block">${h}<table class="sec-table"><thead>${thead}</thead><tbody>${tbody}</tbody></table></div>`;
+    }
+    case 'compare':{
+      const L = s.left||{}, R = s.right||{};
+      const lpts = (L.points||[]).map(p=>`<li>${esc(p)}</li>`).join('');
+      const rpts = (R.points||[]).map(p=>`<li>${esc(p)}</li>`).join('');
+      return `<div class="sec-block">${h}<div class="sec-compare">
+        <div class="sec-cmp-box"><div class="sec-cmp-title">${esc(L.title||'')}</div><ul class="sec-cmp-pts">${lpts}</ul></div>
+        <div class="sec-cmp-box"><div class="sec-cmp-title">${esc(R.title||'')}</div><ul class="sec-cmp-pts">${rpts}</ul></div>
+      </div></div>`;
+    }
+    case 'code':
+      return `<div class="sec-block">${h}<code class="sec-code">${esc(s.text||'')}</code></div>`;
+    default: return '';
+  }
+}
+
+/* ==================== SHOW POPUP ==================== */
+function showPopup(item, cc){
+  let body = '';
+  if(item.sections && item.sections.length){
+    // Rich format
+    body = item.sections.map(renderSection).join('');
+  } else {
+    // Legacy format fallback
+    body = `
+      ${item.formula ? `<div class="popup-lbl">Formula</div><div class="popup-formula">${esc(item.formula)}</div>` : ''}
+      <div class="popup-lbl">Description</div>
+      <div class="popup-desc">${esc(item.desc||'')}</div>
+      ${item.intuition ? `<div class="popup-lbl">Intuition</div><div class="popup-intuition">${esc(item.intuition)}</div>` : ''}
+      ${item.notes ? `<div class="popup-lbl">Notes</div><div class="popup-notes">${esc(item.notes)}</div>` : ''}`;
+  }
+  $('popupBox').innerHTML = `
+    <div class="popup-title">${esc(item.title)}</div>
+    <div class="popup-meta">
+      <span class="p-cat">${esc(item.cat)}</span>
+      ${item.context ? `<span class="p-ctx">${esc(item.context)}</span>` : ''}
+    </div>
+    ${item.summary ? `<p class="popup-summary">${esc(item.summary)}</p>` : ''}
+    <hr class="popup-divider">
+    ${body}
+    <button class="popup-close-btn" id="pc-close">Close</button>`;
+  $('popupOverlay').classList.add('show');
+  $('pc-close').onclick = hidePopup;
+  if(typeof renderMathInElement === 'function'){
+    renderMathInElement($('popupBox'),{
+      delimiters:[
+        {left:'$$',right:'$$',display:true},
+        {left:'$',right:'$',display:false}
+      ],
+      throwOnError:false
+    });
+  }
+}
+
+/* ==================== POPUP ==================== */
+function hidePopup(){ $('popupOverlay').classList.remove('show') }
+$('popupOverlay').onclick = e => { if(e.target === $('popupOverlay')) hidePopup() };
+
+/* ==================== FILTERS ==================== */
+CHAPTERS.forEach(sec => {
+  $('flt-'+sec).onchange = function(){ F[sec].cat = this.value; render() };
+  $('q-'+sec).oninput   = function(){ F[sec].q   = this.value; render() };
+});
+
+/* ==================== KEYBOARD ==================== */
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape') hidePopup();
+  if(e.key === '/' && !['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)){
+    e.preventDefault();
+    $('q-'+SEC) && $('q-'+SEC).focus();
+  }
+});
+
+/* ==================== LOAD DATA ==================== */
+function applyData(d){
+  CHAPTERS.forEach(c => { if(d[c]) DATA[c] = d[c]; });
+  if(d.overviews) OVERVIEWS = d.overviews;
+  if(d.summary) SUMMARY = d.summary;
+  CHAPTERS.forEach(c => buildDropdown('flt-'+c, DATA[c]));
+  updateCounts();
+  showOverview(SEC);
+  render();
+}
+
+$('btn-import').onclick = () => $('fileInput').click();
+$('fileInput').onchange = async function(){
+  const f = this.files[0]; if(!f) return;
+  try { applyData(JSON.parse(await f.text())); }
+  catch(e){ alert('JSON error: ' + e.message); }
+  this.value = '';
+};
+
+fetch('./data/unified.json')
+  .then(r => { if(!r.ok) throw new Error(r.status); return r.json() })
+  .then(applyData)
+  .catch(() => {
+    $('card-grid').innerHTML = `
+      <div style="padding:28px;color:var(--muted);font-size:13px;line-height:2;grid-column:1/-1">
+        <div style="font-size:15px;font-weight:700;color:var(--accent-light);margin-bottom:8px">Veriyi yükle</div>
+        Sol alttaki <strong style="color:#fff">📂 JSON Yükle</strong> butonuna bas<br>
+        ve <code style="background:#1c2130;padding:2px 6px;border-radius:4px">data/unified.json</code> dosyasını seç.<br><br>
+        <span style="font-size:11px">Veya: <code>python3 merge_json.py</code> → local server ile aç.</span>
+      </div>`;
+    updateCounts();
+  });
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+</body>
+</html>
