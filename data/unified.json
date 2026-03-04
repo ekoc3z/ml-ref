@@ -1240,6 +1240,54 @@
           "text": "MSE (squared error) is natural for regression: it corresponds to assuming Gaussian noise in the output. It heavily penalises large errors. Cross-entropy is natural for classification: it corresponds to the negative log-likelihood of a categorical distribution. It penalises confident wrong predictions logarithmically. If you use MSE for classification, you get poor gradients (activation derivative kills them for confident wrong predictions) and penalise 'too-correct' predictions. If you use cross-entropy for regression, you implicitly assume discrete outputs. The pairing is not arbitrary — it comes from the exponential family framework and maximum likelihood."
         }
       ]
+    },
+    {
+      "title": "0'dan Anlat: Activation → Gradient → Backprop → Training Loop",
+      "cat": "Foundations",
+      "summary": "Activation fonksiyonu neden gerekli, sigmoid neden başarısız, ReLU neden standart, gradient nasıl öğretiyor, backprop nasıl çalışıyor — sıfır bilgiden tam tabloya.",
+      "context": "Lectures 12–13 · 04–11.12.2023 — Sıfırdan tam tablo",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Neden Activation Fonksiyonu Var?",
+          "text": "Bir nöron şunu yapıyor: tüm girdileri kendi ağırlıklarıyla çarpıp topluyor, bias ekliyor. Sonuç herhangi bir sayı olabilir — buna pre-activation diyoruz. Sonra bu sayı activation fonksiyonundan geçiyor.\n\nActivation olmadan ne olur? Her katman bir linear dönüşüm yapıyor. Ama iki linear dönüşümü arka arkaya yapınca yine bir linear dönüşüm çıkıyor. 10 katman da koysam hepsi matematiksel olarak tek bir katmana eşdeğer — derinlik anlamsız. Activation araya girerek non-linearity katıyor, katmanları üst üste koymanın anlamı oluyor."
+        },
+        {
+          "type": "text",
+          "heading": "Sigmoid'in Sorunu",
+          "text": "Sigmoid her sayıyı 0 ile 1 arasına sıkıştırıyor. Çıktı katmanında binary classification için ideal. Ama hidden layer'larda büyük sorun var.\n\nBackprop'ta gradient geriye akarken her katmanda o katmanın local gradient'iyle çarpılıyor. Sigmoid'in local gradient'i en fazla 0.25. 10 katmanlı bir ağda:\n\n1.0 × 0.25 × 0.25 × ... × 0.25 = yaklaşık 0.000001\n\nİlk katmana ulaşan gradient milyonda bir olmuş. O katmanın weight'leri neredeyse hiç güncellenemiyor. İlk katmanlar öğrenemiyor — buna vanishing gradient diyorlar."
+        },
+        {
+          "type": "text",
+          "heading": "ReLU Neden Daha İyi?",
+          "text": "ReLU basit: pre-activation pozitifse olduğu gibi bırak, negatifse sıfır yap.\n\nPozitif bölgede local gradient 1. Backprop'ta:\n\n1.0 × 1 × 1 × ... × 1 = 1.0\n\nGradient ilk katmana orijinal büyüklüğünde ulaşıyor. Tüm katmanlar öğrenebiliyor.\n\n\"Ama nöronların yarısı 0 üretmiyor mu?\" — bu aslında iyi bir şey. Farklı nöronlar farklı pattern'lere uzmanlaşıyor. \"Yatay kenar\" öğrenen nöron araba resmi için ateşlenmez — bu normal, o nöronun işi bu değil. Her input için farklı nöronlar ateşleniyor, bu efficient bir representation.\n\nGerçek sorun \"dying ReLU\" — bir nöron hiçbir input için hiç ateşlenmiyorsa kalıcı olarak ölüyor, hiç gradient almıyor. Bu çok büyük learning rate kullandığında olabilir, ama iyi ayarlanmış eğitimde nadir."
+        },
+        {
+          "type": "text",
+          "heading": "Gradient Ne Demek, Nasıl Öğretiyor?",
+          "text": "Gradient bir fonksiyonun herhangi bir noktadaki eğimi — her yönde zemin nasıl eğimli. Loss'u minimize etmek istiyoruz, gradient loss'un en hızlı arttığı yönü gösteriyor, biz ters yöne gidiyoruz.\n\nSomut örnek: bir weight w için gradient 3 çıktı. Bu demek ki w'yu artırırsan loss 3 kat artıyor. O zaman w'yu azalt:\n\nyeni w = eski w - learning_rate × gradient\nyeni w = w - 0.1 × 3 = w - 0.3\n\nGradient negatif çıksaydı update pozitif olurdu, w artardı. Her zaman loss'u düşüren yöne gidiyorsun."
+        },
+        {
+          "type": "text",
+          "heading": "Training Loop — Büyük Resim",
+          "text": "Weight'ler rastgele başlatılıyor. Bir adım şunlardan oluşuyor:\n\n1. Forward pass — veri tüm katmanlardan geçiyor. İlk adımda weight'ler random, tahmin saçma. Kedi resmini gördü, \"köpek %73\" dedi. Bu adımda öğrenme yok — sadece tahmin üretiliyor ve her katmanın ara değerleri hafızada saklanıyor. Bu saklama önemli, backprop bunlara ihtiyaç duyacak.\n\n2. Loss hesaplanıyor — network'ün son katmanından bir olasılık vektörü çıkıyor. Gerçek etiketle karşılaştırılıp tek bir sayı üretiliyor — mesela 2.3. Loss tek bir scalar.\n\n3. Backprop — tek bir geriye geçişte tüm weight'lerin gradientleri hesaplanıyor. Öğrenme henüz yok, sadece hesaplama.\n\n4. Weight update — tüm weight'ler aynı anda güncelleniyor. Öğrenme burada.\n\nBitti. Bir adım bu. Sonra başa dön, aynı şeyi tekrar yap."
+        },
+        {
+          "type": "text",
+          "heading": "Output ve Loss Nasıl Çıkıyor?",
+          "text": "Network'ün son katmanından bir olasılık vektörü çıkıyor. Mesela 3 sınıflı bir problemde softmax sonrası:\n\nKedi:   0.72\nKöpek:  0.20\nKuş:    0.08\n\nGerçek etiket kedi. Cross-entropy bu ikisini karşılaştırıp tek bir sayı üretiyor — mesela 2.3. Loss tek bir scalar. Vektör değil, matris değil. Sadece model ne kadar yanlış bilgisi."
+        },
+        {
+          "type": "text",
+          "heading": "Tek Bir Sayıdan Milyonlarca Gradient Nasıl Çıkıyor?",
+          "text": "Loss tek sayı, ama loss'un output'a göre türevi bir vektör:\n\nLoss = 2.3  (tek sayı)\ndLoss/dOutput = [-0.28, +0.20, +0.08]  (vektör)\n\nBu vektör kedi tahminini artırırsan loss azalır, köpek ve kuşu azaltırsan loss azalır diyor. Bilgi burada açılıyor.\n\nBackprop bu vektörü alıp geriye doğru katman katman yürüyor. Her katmanda şu soruyu soruyor: \"Bir önceki katmanın çıktısı biraz değişseydi, loss ne kadar değişirdi?\"\n\nVe her katman sadece iki şeye bakıyor:\n\nBirincisi, bir sonraki katmandan gelen gradient — \"benden sonraki kısım loss'u ne kadar etkiliyor?\"\n\nİkincisi, kendi forward pass'te sakladığı ara değer — \"ben o adımda ne üretmiştim?\"\n\nBu ikisini çarpıyor, kendi weight'lerinin gradient'ini buluyor, ve bir önceki katmana gradient'i iletiyor:\n\nw₁ → katman1 → h₁ → katman2 → h₂ → katman3 → output → loss\n\nBackprop:\nloss → katman3'ün gradient'i bulundu → h₂'ye iletildi\nh₂  → katman2'nin gradient'i bulundu → h₁'e iletildi\nh₁  → katman1'in gradient'i bulundu → w₁ güncellendi\n\nSigmoid'de her katmanda 0.25 ile çarpılıyor, 10 katman sonra milyonda bir. ReLU'da 1 ile çarpılıyor, ilk katmana güçlü ulaşıyor.\n\nTek sayıdan bilgi çıkmıyor aslında — bilgi zaten zincirin içinde saklıydı. Backprop o zinciri geriye doğru takip ederek her weight'in katkısını açığa çıkarıyor."
+        },
+        {
+          "type": "text",
+          "heading": "Öğrenme Nerede, Ne Zaman Oluyor?",
+          "text": "Forward pass  →  tahmin üret + ara değerleri sakla\nLoss          →  ne kadar yanlışım? (tek bir sayı)\nBackprop      →  her weight loss'u ne kadar etkiliyor?\n                 (gradient vektör genişleyerek her weight'e ulaşıyor)\nWeight update →  gradiente göre tüm weight'leri güncelle  — öğrenme burada\nTekrar        →  binlerce kez\n\nBir adım anlamsız görünüyor — weight'ler minicik bir miktar kayıyor. Ama 10.000 adım sonra her weight doğru yönde birikmiş:\n\nAdım 1:     w = 0.50  (random)\nAdım 1000:  w = 0.31  (kaymaya başladı)\nAdım 10000: w = 0.12  (anlamlı bir değere oturdu)\n\nÖğrenme tek adımda olmuyor. Forward pass'te de backprop'ta da öğrenme yok — sadece hazırlık. Asıl öğrenme weight update'te, ve bu update binlerce kez birikince anlam kazanıyor."
+        }
+      ]
     }
   ],
   "ch08": [
