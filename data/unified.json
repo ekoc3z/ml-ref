@@ -709,6 +709,48 @@
           "text": "With small training data and correct model assumptions (data really is Gaussian with shared covariance), LDA uses the training data more efficiently — it has fewer effective parameters to estimate. With abundant data, the discriminative model wins: it makes no assumptions about $p(x)$ and directly estimates what's needed for classification. This is the fundamental bias-variance trade-off applied to model selection: strong correct assumptions help when data is scarce, but become irrelevant (and potentially harmful) when data is abundant. In practice, with modern large datasets, discriminative models (logistic regression, neural networks) dominate."
         }
       ]
+    },
+    {
+      "title": "0'dan Anlat: Linear Discriminant → GLM → Logistic Regression",
+      "cat": "Comparison",
+      "summary": "Sınıflandırma için üç yaklaşımın kronolojik gelişimi. Linear discriminant neden yetersiz, GLM nasıl geliştiriyor, logistic regression neden son adım. Her biri bir öncekinin tam eksikliğini çözüyor.",
+      "context": "Lectures 6–7 · 08–13.11.2023 — Baştan sona, 0 bilgiyle",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Sınıflandırma Problemi Nedir?",
+          "text": "Elimde bir veri noktası var — mesela bir email. Bu spam mi, değil mi? Ya da bir hastanın kan değerleri var, kanser mi, sağlıklı mı?\n\nMakine öğrenmesinin bu tür problemlerde amacı şu: elimdeki özelliklerden (feature'lardan) yola çıkarak \"hangi sınıfa ait?\" sorusunu cevaplamak. Bunu yapmanın en basit yolu ise iki sınıf arasına bir sınır çizmek."
+        },
+        {
+          "type": "text",
+          "heading": "1. Aşama — En Basit Yaklaşım: Linear Discriminant",
+          "text": "Düşün ki verin 2 boyutlu — iki feature var. Bunları bir düzleme çizince belki de iki sınıf güzel ayrışıyor. O zaman aralarına bir doğru çizebilirsin. Yüksek boyutta bu doğru bir hyperplane oluyor ama fikir aynı.\n\nBu sınırı matematiksel olarak şöyle yazıyoruz — LaTeX olmadan söylersem: her feature'ı bir ağırlıkla çarp, topla, bir de sabit ekle. Sonuç sıfırdan büyükse sınıf 1, küçükse sınıf 2.\n\nBu \"linear discriminant\" dediğimiz şey. Çok güzel bir tarafı var: kapalı form çözümü var, yani bir matris işlemiyle direkt cevabı bulabiliyorsun. Hesaplama açısından çok hızlı.\n\nAma iki büyük sorunu var:\n\nBirinci sorun: Çıktı sınırsız. Bir veri noktası için \"3.7\" gibi bir sayı çıkabiliyor. Bu ne demek? Sınıf 1 olasılığı 3.7 mi? Anlamsız. Olasılık 0 ile 1 arasında olmalı.\n\nİkinci sorun: Outlier'lara aşırı hassas. Eğer bir veri noktası çok uzakta ama doğru sınıflandırılmışsa, least-squares onu da minimize etmeye çalışıyor ve tüm sınırı kaydırıyor. Lecture'daki slide'da bunu gösterdiler — 3 sınıflı bir problemde yeşil sınıfın büyük çoğunluğu yanlış sınıflandırılıyordu.\n\nPeki ne yapacağız?"
+        },
+        {
+          "type": "text",
+          "heading": "2. Aşama — Generalized Linear Model: Çıktıyı Sıkıştır",
+          "text": "Sorun çıktının sınırsız olması. Çözüm: çıktıyı bir fonksiyondan geçir ve 0 ile 1 arasına sıkıştır.\n\nBu fonksiyona \"aktivasyon fonksiyonu\" diyorlar. Lecture'da buna \"g()\" yazıyorlar. Yani model artık şöyle: önce linear kombinasyonu hesapla, sonra g()'den geçir.\n\nHangi g() seçelim? İşte burada lecture'da güzel bir şey yapıyorlar. Eğer iki sınıfın her biri Gaussian dağılımlıysa ve Bayes teoremini uygularsan, posterior olasılık zaten otomatik olarak sigmoid şeklinde çıkıyor diyorlar. Yani sigmoid seçimi keyfi değil — matematiksel olarak türetilebiliyor.\n\nSigmoid neye benziyor? S şeklinde bir eğri. Çok büyük pozitif sayıları 1'e yakın bir değere, çok büyük negatif sayıları 0'a yakın bir değere götürüyor. Ortada ise düzgün bir geçiş var. Yani artık çıktımız gerçekten 0 ile 1 arasında ve olasılık gibi yorumlanabiliyor.\n\nBu aşamaya \"Generalized Linear Model\" diyorlar çünkü sınırlar hâlâ linear — g() monoton olduğu için g(wTx) = sabit demek wTx = başka bir sabit demek. Karar sınırının şekli değişmiyor, sadece çıktı yorumu değişiyor.\n\nPeki sorun çözüldü mü? Hayır, yeni bir sorun çıktı.\n\nBu modeli hâlâ least-squares ile eğitiyorlar — yani tahminim ile gerçek etiket arasındaki kare farkı minimize et diyorlar. Ama sigmoid + least-squares kötü bir kombinasyon. Neden?\n\nSigmoid'in uç değerlerinde eğimi neredeyse sıfır. Yani model çok emin olduğunda — ister doğru ister yanlış — gradient küçülüyor ve öğrenme duraksıyor. En kötüsü şu: model tamamen yanlış tahmin ettiğinde bile çok eminse gradient sıfıra yakın. Güncelleme olmuyor. Öğrenme donuyor.\n\nÜstelik least-squares + sigmoid kombinasyonunun loss landscape'i non-convex — yani birden fazla local minimum var. Gradient descent nereye düşerse oraya takılıp kalabiliyor."
+        },
+        {
+          "type": "text",
+          "heading": "3. Aşama — Logistic Regression: Doğru Kaybı Kullan",
+          "text": "Model değişmiyor. Yine sigmoid var, yine aynı yapı. Değişen tek şey: kayıp fonksiyonu.\n\nLeast-squares yerine cross-entropy kullanıyoruz. Cross-entropy'nin fikri farklı: tahminim doğru sınıf için ne kadar olasılık verdi sorusunu soruyor. Eğer gerçek sınıf 1 ama sen 0.01 demişsen — çok büyük kayıp. 0.99 demişsen — neredeyse sıfır kayıp.\n\nVe burada sihirli bir şey oluyor: cross-entropy + sigmoid kombinasyonunu gradient açısından hesapladığında, sigmoid'in türevi algebraically iptal oluyor. Gradient sadece hata çarpı input kalıyor. Bu demek ki:\n\nModel ne kadar emin olursa olsun, yanlışsa gradient büyük kalıyor. Öğrenme duraksatmıyor. Loss landscape convex — tek bir global minimum var, gradient descent oraya ulaşabiliyor.\n\nLogistic regression bu yüzden GLM'in doğru eğitilmiş versiyonu."
+        },
+        {
+          "type": "list",
+          "heading": "Üçünü Yan Yana Koy",
+          "items": [
+            "Linear Discriminant: Basit, hızlı, kapalı form çözüm. Ama çıktı sınırsız ve outlier'a hassas.",
+            "GLM + sigmoid + least-squares: Çıktı artık olasılık gibi. Ama eğitim hâlâ kötü — gradient kayboluyor, non-convex.",
+            "Logistic Regression — GLM + sigmoid + cross-entropy: Her şey düzgün. Convex, temiz gradient, doğru olasılık yorumu. Bu derste öğretilen doğru yol."
+          ]
+        },
+        {
+          "type": "insight",
+          "heading": "Neden Bu Sırayla İşleniyor?",
+          "text": "Lecture'da bu üçü sırayla işleniyor çünkü her biri bir öncekinin tam olarak hangi sorununu çözdüğünü gösteriyor. Motivation chain'in tam da anlattığı bu."
+        }
+      ]
     }
   ],
   "ch05": [
