@@ -2055,6 +2055,39 @@
       ]
     },
     {
+      "title": "Query, Key, Value — Neden Üç Ayrı Vektör?",
+      "cat": "Attention",
+      "summary": "Key ve Value neden ayrı? Çünkü 'nasıl bulunacağın' ile 'ne içerdiğin' farklı şeyler. İkisini ayırınca model ikisini de bağımsız optimize edebiliyor.",
+      "context": "Lecture 21 · 29.01.2024 — General Attention Layer (Slide 26–27)",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Önce Key = Value olsaydı ne olurdu?",
+          "text": "x_cat = [0.9, 0.2, 0.7, ...]   ← \"cat\" embedding'i\n\nAlignment: e = q · x_cat        ← x_cat ile ara\nOutput:    y = a × x_cat        ← x_cat'i kullan\n\nAynı vektör hem \"ben nasıl aranırım\"\nhem \"bulununca ne veririm\" diyor.\nBu kısıtlayıcı — ikisi her zaman aynı olmak zorunda."
+        },
+        {
+          "type": "code",
+          "heading": "Somut senaryo: \"The cat sat on the mat\"",
+          "text": "\"sat\" kelimesi şunu soruyor:\n\"Benim öznemi kim? Hangi token benim subject'im?\"\n\nQuery (q_sat): \"subject arıyorum\" bilgisini encode eden vektör.\n\n---\n\n\"cat\" tokenının iki ayrı vektörü var:\n\nKey (k_cat):\n  \"Ben bir isim/noun'um, cümlenin başındayım,\n   büyük ihtimalle subject'im.\"\n  → q_sat ile dot product yapılınca yüksek skor verecek\n    şekilde optimize edilmiş\n\nValue (v_cat):\n  \"Hayvan, canlı, tekil, dişi olabilir,\n   'kedi' anlamı, semantik bilgi...\"\n  → bulununca sat'a aktarılacak gerçek içerik\n\n---\n\nAlignment:  q_sat · k_cat = yüksek  ← \"evet, cat benim subject'im\"\nOutput:     y_sat += a × v_cat      ← cat'in semantic bilgisini al"
+        },
+        {
+          "type": "code",
+          "heading": "Telefon Rehberi Analojisi",
+          "text": "Key   = isim    ← bununla ararsın\nValue = numara  ← bulununca bunu alırsın\n\n\"Ahmet\" diye ararsın (key ile match),\ntelefon numarasını alırsın (value).\n\nKey = Value olsaydı:\n\"Ahmet\" diye ararsın, \"Ahmet\" alırsın — işe yaramaz."
+        },
+        {
+          "type": "code",
+          "heading": "Transformer'da",
+          "text": "k_cat = x_cat × Wₖ    ← \"nasıl bulunurum?\" için optimize\nv_cat = x_cat × Wᵥ    ← \"bulununca ne veririm?\" için optimize\n\nWₖ ve Wᵥ farklı öğrenilen matrisler:\n\nk_cat:  \"ben noun'um, subject pozisyonundayım,\n         verb arayanlara uyunum\"\nv_cat:  \"ben kedi'yim, canlıyım, tekil,\n         şu semantik özelliklere sahibim\"\n\nArama kriteri ile içerik birbirinden bağımsız optimize ediliyor."
+        },
+        {
+          "type": "code",
+          "heading": "Özet",
+          "text": "Query  →  \"ne arıyorum?\"\nKey    →  \"başkaları beni nasıl bulur?\"\nValue  →  \"bulununca ne veririm?\"\n\nKey ≠ Value çünkü:\n  \"nasıl bulunacağın\" ile \"ne içerdiğin\" farklı şeyler.\n  İkisini ayırınca model ikisini de bağımsız optimize edebiliyor."
+        }
+      ]
+    },
+    {
       "title": "Self-Attention: The Core Mechanism",
       "cat": "Attention",
       "summary": "Self-attention allows every position in a sequence to directly attend to every other position, computing a weighted sum of value vectors. This gives O(1) dependency path length (vs O(n) for RNNs) and full parallelisation — at the cost of O(n²) attention computation.",
@@ -2096,6 +2129,39 @@
               "O(n²) memory — prohibitive for very long sequences (n > 4096)"
             ]
           }
+        }
+      ]
+    },
+    {
+      "title": "Positional Encoding",
+      "cat": "Attention",
+      "summary": "Self-attention permutation invariant — token sırası önemsiz. Pozisyon bilgisi eklemek için her token'a bir positional encoding vektörü toplanır. Sinusoidal encoding parametre gerektirmez ve eğitimde görülmeyen uzunluklara genelleşir.",
+      "context": "Lecture 21 · 29.01.2024 — Positional Encoding (Slide 33–37)",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Problem",
+          "text": "\"cat bites dog\"\n\"dog bites cat\"\n\nSelf-attention ikisini aynı görür — sıra bilgisi yok."
+        },
+        {
+          "type": "code",
+          "heading": "Çözüm: Pozisyon bilgisi ekle",
+          "text": "x₁' = x₁ + p₁\nx₂' = x₂ + p₂\nx₃' = x₃ + p₃\n\nx = word embedding\np = positional encoding\n\nToplamı self-attention'a veriyorsun.\nArtık her token \"ben kaçıncı sıradayım\" bilgisini taşıyor."
+        },
+        {
+          "type": "code",
+          "heading": "p nasıl üretilir? — İki seçenek",
+          "text": "1. Learned (öğrenilen):\n   Her pozisyon için bir vektör öğren\n   p₁, p₂, ..., pT  — T×D tablo\n   Basit ama maksimum uzunluk T'ye kadar çalışır.\n\n2. Sinusoidal (Transformer paper'ı):\n   PE(pos, 2i)   = sin(pos / 10000^(2i/D))\n   PE(pos, 2i+1) = cos(pos / 10000^(2i/D))\n\n   Her dimension farklı frekansta sinüs/kosinüs dalgası.\n   Alçak frekanslı boyutlar yavaş değişir (global pozisyon)\n   Yüksek frekanslı boyutlar hızlı değişir (local pozisyon)."
+        },
+        {
+          "type": "code",
+          "heading": "Neden sinusoidal iyi?",
+          "text": "Parametre yok — öğrenilmiyor\nEğitimde görmediğin uzunluklara genelleşiyor\nPE(pos+k), PE(pos)'un lineer fonksiyonu →\n  model \"bu token şundan k adım ileride\" hesaplayabiliyor\nDeğerleri bounded: [-1, 1]"
+        },
+        {
+          "type": "code",
+          "heading": "Intuition",
+          "text": "Düşük frekanslı boyutlar:  ████████░░░░████████  ← yavaş, global konum\nYüksek frekanslı boyutlar: █░█░█░█░█░█░█░█░█░█░  ← hızlı, yerel konum\n\nHer pozisyon için benzersiz bir \"parmak izi\" oluşuyor."
         }
       ]
     },
