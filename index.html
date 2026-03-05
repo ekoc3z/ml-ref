@@ -290,6 +290,19 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .ch-ov-body p:last-child{margin-bottom:0}
 .ch-ov-body .katex-display{margin:.4em 0;overflow-x:auto}
 
+/* TRANSFORMER LEARNING TREE */
+#tx-tree-view{padding:20px;overflow-x:auto}
+#tx-container{position:relative;margin:0 auto}
+.tx-node{position:absolute;cursor:pointer;transition:transform .15s}
+.tx-node:hover{transform:translateY(-2px)}
+.tx-box{border-radius:10px;border:2px solid transparent;padding:0 14px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:12px;font-weight:700;line-height:1.3;transition:border-color .2s,box-shadow .2s}
+.tx-node:hover .tx-box{box-shadow:0 0 0 3px rgba(129,140,248,.35)}
+.tx-Foundation  {background:#1e1a50;color:#a5b4fc;border-color:#4338ca}
+.tx-Attention   {background:#0c2a3a;color:#67e8f9;border-color:#0891b2}
+.tx-Building    {background:#0c2a2a;color:#5eead4;border-color:#0d9488}
+.tx-Architecture{background:#2d1a4a;color:#c4b5fd;border-color:#7c3aed}
+.tx-Pretrained  {background:#14320a;color:#86efac;border-color:#16a34a}
+
 /* MOBILE */
 @media(max-width:768px){
   #sidebar{transform:translateX(-100%)}
@@ -614,7 +627,11 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
   <div id="hdr-ch12" class="section-header">
     <div class="hdr-title">12 · Transformers</div>
     <div class="hdr-sub">Self-Attention · Multi-Head · Positional Encoding · BERT · GPT</div>
-    <div class="controls">
+    <div class="controls" style="margin-bottom:6px">
+      <button id="ch12-cards-btn" class="active" onclick="setTxView('cards')">&#128203; Cards</button>
+      <button id="ch12-tree-btn" onclick="setTxView('tree')">&#128506; Learning Tree</button>
+    </div>
+    <div class="controls" id="ch12-card-controls">
       <select id="flt-ch12"><option value="">All categories</option></select>
       <input type="search" id="q-ch12" placeholder="Search...">
       <span class="pill" id="pill-ch12">0 cards</span>
@@ -833,6 +850,7 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 
 <div id="summary-page" style="display:none"></div>
 <div id="card-grid"></div>
+<div id="tx-tree-view" style="display:none"><div id="tx-container"></div></div>
 <div class="footer-text">Kart = detay popup &bull; <kbd>/</kbd> arama &bull; <kbd>ESC</kbd> kapat</div>
 </div>
 
@@ -896,10 +914,14 @@ function switchSection(sec){
   $('hdr-'+sec).classList.add('active');
   showOverview(sec);
   render();
-  // show/hide summary page vs card grid
   const isSummary = sec === 'summary';
+  const isTxTree = (sec === 'ch12') && TX_VIEW === 'tree';
   $('summary-page').style.display = isSummary ? 'block' : 'none';
-  $('card-grid').style.display   = isSummary ? 'none'  : '';
+  $('card-grid').style.display   = (isSummary || isTxTree) ? 'none' : '';
+  $('tx-tree-view').style.display = isTxTree ? '' : 'none';
+  if(isTxTree){ $('overview-panel').style.display='none'; renderTransformerTree(); }
+  const cc = $('ch12-card-controls');
+  if(cc) cc.style.display = isTxTree ? 'none' : '';
 }
 
 function showOverview(sec){
@@ -1107,6 +1129,146 @@ function showPopup(item, cc){
 /* ==================== POPUP ==================== */
 function hidePopup(){ $('popupOverlay').classList.remove('show') }
 $('popupOverlay').onclick = e => { if(e.target === $('popupOverlay')) hidePopup() };
+
+/* ==================== TRANSFORMER LEARNING TREE ==================== */
+const TX_NODE_W=190, TX_NODE_H=58, TX_COL_W=250, TX_ROW_H=112, TX_PAD=28;
+let TX_VIEW = 'cards';
+
+const TX_TREE = [
+  { id:'motivation', title:'Neden Transformer?', cat:'Foundation',
+    row:0, col:1, connects_to:['attention'],
+    summary:'RNN\'lerin paralel çalışamaması ve uzun bağımlılık sorunu Transformer\'ı doğurdu.',
+    points:['RNN: t adımı t-1\'e bağımlı → paralel hesaplama yok','LSTM kapılar ile sorunu azaltır ama yavaş ve sınırlı','Transformer: tüm pozisyonlar aynı anda birbirine bakabilir','2017 — "Attention is All You Need" (Vaswani et al.)']
+  },
+  { id:'attention', title:'Attention Mekanizması', cat:'Attention',
+    row:1, col:1, connects_to:['scaled','qkv'],
+    summary:'Her token, diğer tüm tokenlara "ne kadar dikkat edeceğini" öğrenir.',
+    points:['Soru: bu token için hangi tokenlar önemli?','Similarity score hesapla → softmax normalize → ağırlıklı toplam','RNN\'dan farkı: doğrudan long-range bağımlılık, uzaklık önemsiz','Attention ağırlıkları görselleştirilebilir ve yorumlanabilir']
+  },
+  { id:'scaled', title:'Scaled Dot-Product', cat:'Building',
+    row:2, col:0, connects_to:['multihead'],
+    summary:'Attention(Q,K,V) = softmax(QKᵀ/√dk)·V — temel attention formülü.',
+    points:['Q·Kᵀ: query-key benzerlik matrisi (n×n)','÷√dk: yüksek boyutlarda dot product büyüyünce softmax doyar','softmax satır bazında → attention ağırlıkları (toplamı 1)','V ile ağırlıklı toplam → yeni token representation']
+  },
+  { id:'qkv', title:'Q / K / V Matrisleri', cat:'Building',
+    row:2, col:2, connects_to:['multihead'],
+    summary:'Her token üç ayrı linear projection\'a girer: Query, Key, Value.',
+    points:['Q (Query): "ne arıyorum" — arama vektörü','K (Key): "ne içeriyorum" — katalog etiketi','V (Value): "match olunca ne göndereceğim" — içerik','WQ, WK, WV öğrenilen parametre matrisleri','Input × W → üç farklı reprezentasyon uzayı']
+  },
+  { id:'multihead', title:'Multi-Head Attention', cat:'Building',
+    row:3, col:1, connects_to:['posenc','ffn'],
+    summary:'h paralel attention head → her biri farklı ilişki öğrenir → concat → linear.',
+    points:['Tek head: tek tip ilişki öğrenir','h head: farklı subspace\'lerde farklı örüntüler','head_i = Attention(QW_i^Q, KW_i^K, VW_i^V)','Concat(head1,...,headh) × WO → final output','Tipik: h=8 (base), h=12 (large)']
+  },
+  { id:'posenc', title:'Positional Encoding', cat:'Foundation',
+    row:4, col:0, connects_to:['encoder'],
+    summary:'Attention sıra bilmez — sin/cos PE ile her pozisyona benzersiz kimlik eklenir.',
+    points:['Attention permutation-invariant: kelime sırası kaybolur','PE(pos,2i) = sin(pos / 10000^(2i/d_model))','PE(pos,2i+1) = cos(pos / 10000^(2i/d_model))','Token embedding + PE → encoder/decoder girişi','Learned PE de mümkün (BERT gibi modellerde)']
+  },
+  { id:'ffn', title:'Feed-Forward Layer', cat:'Building',
+    row:4, col:2, connects_to:['decoder'],
+    summary:'Her pozisyona aynı 2-katmanlı FFN uygulanır: genişlet → nonlinearity → daralt.',
+    points:['FFN(x) = max(0, xW₁+b₁)W₂+b₂','d_ff genelde 4×d_model (512→2048)','Position-wise: her token bağımsız ve aynı ağırlıklarla','Attention = tokenlar arası iletişim, FFN = token içi işleme']
+  },
+  { id:'encoder', title:'Encoder Block', cat:'Architecture',
+    row:5, col:0, connects_to:['architecture'],
+    summary:'Multi-Head Self-Attention + FFN, her biri Add&LayerNorm ile sarılı. N kez stack.',
+    points:['Self-Attention: her token herkese bakabilir (bidirectional)','Add & Norm: residual bağlantı + LayerNorm → gradient akışı','FFN: token\'ın kendi içindeki dönüşümü','N=6 (base) veya 12 (large, BERT)','Çıktı: her token için zenginleştirilmiş representation']
+  },
+  { id:'decoder', title:'Decoder Block', cat:'Architecture',
+    row:5, col:2, connects_to:['architecture'],
+    summary:'Masked Self-Attention + Cross-Attention (encoder çıktısına) + FFN. Üretim için.',
+    points:['Masked Self-Attention: gelecek tokenlara bakma (causal mask)','Cross-Attention: Q=decoder, K/V=encoder output','FFN: position-wise dönüşüm','Her adım önceki üretilen tokenları kullanır','N=6 decoder layer, her biri 3 sublayer içerir']
+  },
+  { id:'architecture', title:'Full Transformer', cat:'Architecture',
+    row:6, col:1, connects_to:['bert','gpt'],
+    summary:'N Encoder + N Decoder stack. Input → Encoder → Decoder → Output vocab distribution.',
+    points:['Encoder stack: tüm input\'u paralel encode et','Decoder stack: output token\'ları birer birer üret','Cross-attention bağlantısı: decoder encoder bilgisini kullanır','Orijinal kullanım: makine çevirisi (seq2seq)','Artık: classification, generation, QA için de temel']
+  },
+  { id:'bert', title:'BERT', cat:'Pretrained',
+    row:7, col:0, connects_to:[],
+    summary:'Encoder-only Transformer. Masked LM + NSP ile pretrain. Anlama görevleri için.',
+    points:['Encoder-only: bidirectional — her token herkese bakabilir','Masked LM: random %15 token maskelenir, tahmin edilir','NSP (Next Sentence Prediction): iki cümle bağlantılı mı?','Fine-tune: sınıflandırma, NER, soru cevaplama','BERT-base: 12 layer, 12 head, 110M parametre']
+  },
+  { id:'gpt', title:'GPT / LLM', cat:'Pretrained',
+    row:7, col:2, connects_to:[],
+    summary:'Decoder-only Transformer. Autoregressive LM. Üretim görevleri için temel.',
+    points:['Decoder-only: unidirectional — sadece önceki tokenlara bak','Autoregressive: her adım bir token üretir','Causal masking: gelecek tokenlar görünmez','Pretrain: next token prediction (dil modeli)','GPT-2, GPT-3, GPT-4, LLaMA, Claude buradan']
+  }
+];
+
+function setTxView(mode){
+  TX_VIEW = mode;
+  const cbtn=$('ch12-cards-btn'), tbtn=$('ch12-tree-btn');
+  if(cbtn) cbtn.classList.toggle('active', mode==='cards');
+  if(tbtn) tbtn.classList.toggle('active', mode==='tree');
+  if(SEC !== 'ch12') return;
+  const isTxTree = mode === 'tree';
+  $('card-grid').style.display = isTxTree ? 'none' : '';
+  $('tx-tree-view').style.display = isTxTree ? '' : 'none';
+  const cc = $('ch12-card-controls');
+  if(cc) cc.style.display = isTxTree ? 'none' : '';
+  if(isTxTree){ $('overview-panel').style.display='none'; renderTransformerTree(); }
+  else showOverview('ch12');
+}
+
+function renderTransformerTree(){
+  const container=$('tx-container');
+  container.innerHTML='';
+  let maxRow=0, maxCol=0;
+  TX_TREE.forEach(n=>{ maxRow=Math.max(maxRow,n.row); maxCol=Math.max(maxCol,n.col); });
+  const W=(maxCol+1)*TX_COL_W+TX_PAD*2;
+  const H=(maxRow+1)*TX_ROW_H+TX_PAD*2+20;
+  container.style.width=W+'px'; container.style.height=H+'px'; container.style.position='relative';
+  const pos={};
+  TX_TREE.forEach(n=>{
+    const cx=TX_PAD+(n.col+0.5)*TX_COL_W;
+    const cy=TX_PAD+n.row*TX_ROW_H+TX_ROW_H/2;
+    pos[n.id]={cx,cy,x:cx-TX_NODE_W/2,y:cy-TX_NODE_H/2};
+  });
+  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('width',W); svg.setAttribute('height',H);
+  svg.style.cssText='position:absolute;top:0;left:0;pointer-events:none';
+  const defs=document.createElementNS('http://www.w3.org/2000/svg','defs');
+  defs.innerHTML=`<marker id="tx-arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#4b5563"/></marker>`;
+  svg.appendChild(defs);
+  TX_TREE.forEach(n=>{
+    if(!n.connects_to||!n.connects_to.length) return;
+    const src=pos[n.id]; if(!src) return;
+    n.connects_to.forEach(tid=>{
+      const tgt=pos[tid]; if(!tgt) return;
+      const x1=src.cx,y1=src.y+TX_NODE_H,x2=tgt.cx,y2=tgt.y,my=(y1+y2)/2;
+      const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+      path.setAttribute('d',`M${x1},${y1} C${x1},${my} ${x2},${my} ${x2},${y2}`);
+      path.setAttribute('stroke','#4b5563'); path.setAttribute('stroke-width','2');
+      path.setAttribute('fill','none'); path.setAttribute('marker-end','url(#tx-arr)');
+      svg.appendChild(path);
+    });
+  });
+  container.appendChild(svg);
+  TX_TREE.forEach(n=>{
+    const p=pos[n.id]; if(!p) return;
+    const el=document.createElement('div');
+    el.className='tx-node';
+    el.style.cssText=`left:${p.x}px;top:${p.y}px;width:${TX_NODE_W}px;height:${TX_NODE_H}px`;
+    el.innerHTML=`<div class="tx-box tx-${esc(n.cat)}" style="height:${TX_NODE_H}px">${esc(n.title)}</div>`;
+    el.onclick=()=>showTxPopup(n);
+    container.appendChild(el);
+  });
+}
+
+function showTxPopup(node){
+  const pts=(node.points||[]).map(p=>`<li>${esc(p)}</li>`).join('');
+  $('popupBox').innerHTML=`
+    <div class="popup-title">${esc(node.title)}</div>
+    <div class="popup-meta"><span class="p-cat">Transformer · ${esc(node.cat)}</span></div>
+    <p class="popup-summary">${esc(node.summary)}</p>
+    <hr class="popup-divider">
+    ${pts?`<div class="sec-block"><div class="sec-heading">Önemli Noktalar</div><ul class="sec-list">${pts}</ul></div>`:''}
+    <button class="popup-close-btn" id="tx-close">Kapat</button>`;
+  $('popupOverlay').classList.add('show');
+  $('tx-close').onclick=hidePopup;
+}
 
 /* ==================== FILTERS ==================== */
 CHAPTERS.forEach(sec => {
