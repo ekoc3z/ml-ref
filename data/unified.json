@@ -1929,6 +1929,49 @@
       ]
     },
     {
+      "title": "Attention: Image Captioning Adım Adım",
+      "cat": "Attention",
+      "summary": "Language translation'dan tek farkı encoder kısmı — RNN yerine CNN. Attention mekanizması tamamen aynı, sadece neye attention yapıldığı değişiyor: hangi kaynak kelime → resmin hangi bölgesi.",
+      "context": "Lecture 20 · 24.01.2024 — Image Captioning with Attention (Xu et al. ICML 2015)",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Fark: Encoder ne üretiyor?",
+          "text": "Translation'da encoder bir RNN'di, her kelime için bir z_l üretiyordu.\nImage captioning'de encoder bir CNN:\n\nResim → CNN → H×W spatial feature map\n                └── her konum için D boyutlu vektör\n\nÖrnek: 7×7 grid = 49 spatial location\n       Her location: z_l ∈ ℝᴰ\n\nl = 1, 2, ..., H×W   ← artık kelime değil, görüntü bölgesi\n\nh₀ = MLP(tüm CNN features) → decoder'ı başlatır."
+        },
+        {
+          "type": "code",
+          "heading": "Adım 1 — Alignment Scores",
+          "text": "Decoder'ın önceki hidden state'i θ_{t-1} ile her görüntü bölgesine bak:\n\ne_{t,1}  = f_att(θ_{t-1}, z₁)    ← sol üst köşe ne kadar ilgili?\ne_{t,2}  = f_att(θ_{t-1}, z₂)\n...\ne_{t,49} = f_att(θ_{t-1}, z₄₉)   ← sağ alt köşe ne kadar ilgili?\n\nf_att = küçük bir MLP → scalar skor\n\nSonuç: H×W boyutunda alignment score matrisi."
+        },
+        {
+          "type": "code",
+          "heading": "Adım 2 — Softmax → Attention Weights",
+          "text": "a_{t,l} = softmax(e_{t,l})\n\nSonuç: H×W attention map\n       Toplamı = 1\n       Yüksek değer = \"bu bölgeye bak\""
+        },
+        {
+          "type": "code",
+          "heading": "Adım 3 — Context Vector",
+          "text": "c_t = Σ_l  a_{t,l} × z_l\n\nBölgelerin ağırlıklı toplamı → D boyutlu vektör\n\"Bu adımda resmin neresine bakıyorum?\""
+        },
+        {
+          "type": "code",
+          "heading": "Adım 4 — Decoder",
+          "text": "h_t = RNN(y_{t-1}, h_{t-1}, c_t)\ny_t = softmax(W × h_t)\n\nHer decoder adımında farklı görüntü bölgesine odaklanıyor."
+        },
+        {
+          "type": "code",
+          "heading": "Tam Akış",
+          "text": "ENCODER:\nResim → CNN → z₁, z₂, ..., z₄₉   (7×7 spatial features)\nh₀ = MLP(features)\n\nDECODER t=1:   \"person\" üretecek\ninput=[START], state=h₀\ne_{1,l} = f_att(h₀, z_l)  for all l\na_{1,l} = softmax(e_{1,l})   ← insan olan bölgeye yüksek ağırlık\nc₁ = Σ a_{1,l} × z_l\nh₁ = RNN([START], h₀, c₁)\ny₁ = \"person\"\n\nDECODER t=2:   \"wearing\" üretecek\ninput=y₁, state=h₁\nattention(h₁, z₁..z₄₉) → c₂  ← beden/kıyafet bölgesine odak\nh₂ = RNN(y₁, h₁, c₂)\ny₂ = \"wearing\"\n\nDECODER t=3:   \"hat\" üretecek\nattention → c₃   ← şapka bölgesine odak\ny₃ = \"hat\""
+        },
+        {
+          "type": "code",
+          "heading": "Translation vs Image Captioning — Tek Fark",
+          "text": "Translation:    z_l = RNN hidden states    (kelime başına 1 vektör)\nImage Caption:  z_l = CNN spatial features (bölge başına 1 vektör)\n\nAttention mekanizması tamamen aynı.\nFark sadece neye attention yapıldığı:\n  Translation   → \"hangi kaynak kelime?\"\n  Image Caption → \"resmin hangi bölgesi?\""
+        }
+      ]
+    },
+    {
       "title": "GRU and Seq2Seq with Attention",
       "cat": "GRU",
       "summary": "GRU (Cho et al., 2014) simplifies LSTM to two gates and no separate cell state. Seq2seq with attention (Bahdanau 2015) solves the information bottleneck of compressing a whole sequence into one vector by giving the decoder dynamic access to all encoder states.",
@@ -1963,6 +2006,54 @@
     }
   ],
   "ch12": [
+    {
+      "title": "General Attention Layer: Image Captioning'den Self-Attention'a",
+      "cat": "Attention",
+      "summary": "Image captioning attention'dan başlayarak adım adım general attention layer'a, oradan da self-attention'a nasıl gelindiğinin evrimi. Her adım bir şeyi değiştiriyor: MLP → dot product → scale → multi-query → key/value ayrımı → self-attention.",
+      "context": "Lecture 21 · 29.01.2024 — General Attention Layer (Slide 17–31)",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Başlangıç: Image Captioning Attention",
+          "text": "Inputs:\n  z: CNN features (H×W×D)\n  h: decoder hidden state — tek query (D×1)\n\nOperations:\n  e_{i,j} = f_att(h, z_{i,j})   ← MLP alignment\n  a       = softmax(e)\n  c       = Σ a_{i,j} × z_{i,j}  ← context vector"
+        },
+        {
+          "type": "code",
+          "heading": "Adım 1 — Flatten",
+          "text": "H×W spatial grid → N vektör. Kodlaması değişti, mantık aynı:\n\nz (H×W×D)  →  x (N×D)    N = H×W\n\ne_i = f_att(h, x_i)\na   = softmax(e)\nc   = Σ aᵢ xᵢ\n\n\"Attention permutation invariant\" — sıra önemli değil."
+        },
+        {
+          "type": "code",
+          "heading": "Adım 2 — MLP → Dot Product",
+          "text": "f_att MLP yerine basit dot product:\n\ne_i = h · xᵢ        ← MLP gitti, sadece iç çarpım"
+        },
+        {
+          "type": "code",
+          "heading": "Adım 3 — Scaled Dot Product",
+          "text": "Büyük vektörlerde dot product çok büyük\n→ softmax çok sivri olur → √D ile böl:\n\ne_i = h · xᵢ / √D"
+        },
+        {
+          "type": "code",
+          "heading": "Adım 4 — Birden Fazla Query",
+          "text": "Tek h yerine M tane query vektörü:\n\nQueries: q (M×D)    ← artık tek değil\n\ne_{i,j} = qᵢ · xⱼ / √D\na       = softmax(e)\nyᵢ      = Σⱼ a_{i,j} xⱼ    ← her query için ayrı output"
+        },
+        {
+          "type": "code",
+          "heading": "Adım 5 — Key ve Value Ayrımı",
+          "text": "x hem alignment'ta hem output'ta kullanılıyor — bunları ayır:\n\nk = x × Wₖ    ← Key:   alignment için\nv = x × Wᵥ    ← Value: output için\n\ne_{i,j} = qᵢ · kⱼ / √D\na       = softmax(e)\nyᵢ      = Σⱼ a_{i,j} vⱼ    ← artık v kullanılıyor\n\nWₖ ve Wᵥ öğrenilen weight matrix'ler.\nInput/output boyutları artık bağımsız."
+        },
+        {
+          "type": "code",
+          "heading": "Adım 6 — Self-Attention",
+          "text": "Query de dışarıdan gelmiyor — input'tan üretiliyor:\n\nk = x × Wₖ\nv = x × Wᵥ\nq = x × Wq    ← query de input'tan\n\ne_{i,j} = qᵢ · kⱼ / √D\na       = softmax(e)\nyᵢ      = Σⱼ a_{i,j} vⱼ\n\nInput:  sadece x (N×D)   — dışarıdan query yok\nOutput: y (N×D)"
+        },
+        {
+          "type": "code",
+          "heading": "Tam Evrim",
+          "text": "Image Captioning Attention\n  → f_att(h, z)   MLP, tek query, spatial grid\n\nAdım 1: Flatten      z(H×W×D) → x(N×D)\nAdım 2: Dot product  f_att → h·x\nAdım 3: Scale        h·x / √D\nAdım 4: Multi-query  q(M×D), e_{i,j} = qᵢ·xⱼ/√D\nAdım 5: Key/Value    k=xWₖ, v=xWᵥ — align on k, output from v\nAdım 6: Self-Attn    q=xWq → no external query\n\n= Scaled Dot-Product Self-Attention"
+        }
+      ]
+    },
     {
       "title": "Self-Attention: The Core Mechanism",
       "cat": "Attention",
