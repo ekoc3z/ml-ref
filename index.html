@@ -1142,85 +1142,85 @@ const TX_TREE = [
   // ── ENCODER (col 0) ────────────────────────────────
   { id:'inputemb', title:'Input Embedding', cat:'Embedding',
     row:0, col:0, connects_to:['posenc_enc'],
-    summary:'Giriş token\'ları d_model boyutlu vektörlere dönüştürülür.',
-    points:['Vocab × d_model öğrenilen lookup tablosu','Her token benzersiz dense vektör olur','d_model = 512 (base) / 768 (large)','Ağırlıklar backprop ile güncellenir — semantik benzerlik öğrenilir']
+    summary:'"cat" yazıyorsun ama bilgisayar harfleri anlamıyor. Bu katman her kelimeyi 512 sayılık bir vektöre dönüştürüyor — modelin sıfırdan öğrendiği bir "kelime koordinat sistemi". Eğitim boyunca bu koordinatlar ayarlanıyor ve sonunda benzer kelimeler uzayda birbirine yakın oturuyor: king ile queen yakın, king ile pizza uzak.',
+    points:['Vocab × 512 boyutlu bir tablo var, her kelimenin bir satırı. "cat" gelince o satırı alıyorsun, bu kadar — lookup tablosu gibi.','Tablo eğitim sırasında backprop ile öğreniliyor. Başta rastgele, ama sonunda "king − man + woman ≈ queen" ilişkileri kendiliğinden ortaya çıkıyor.','d_model = 512 (küçük), 768 (BERT), 1024 (büyük) — bu sayı ağ boyunca hiç değişmiyor, her şey bu boyutta.','Son katmandaki output embedding tablosuyla genellikle aynı ağırlıklar paylaşılıyor — "anlarken kullandığım kelime temsili, üretirken de aynı olmalı" diye düşünüyorsun, ve çalışıyor.']
   },
   { id:'posenc_enc', title:'+ Positional Encoding', cat:'Encoding',
     row:1, col:0, connects_to:['selfattn'],
-    summary:'Token embedding + PE → sıra bilgisi eklenir. Attention permutation-invariant olduğu için zorunlu.',
-    points:['PE(pos,2i) = sin(pos / 10000^(2i/d))','PE(pos,2i+1) = cos(pos / 10000^(2i/d))','Embedding ve PE toplanır (concat değil)','Her pozisyon farklı frekans kombinasyonu → benzersiz kimlik']
+    summary:'Self-attention\'ın kör bir noktası var: "cat bites dog" ile "dog bites cat" aynı kelimelerden oluşuyor, ama anlam tamamen farklı. Attention bunları ayırt edemiyor çünkü kelimelere sıra değil sadece kimlik bakıyor. Bu katman her tokena "sen 3. sıradasın" bilgisini sinüs/kosinüs dalgalarıyla vektörüne ekliyor.',
+    points:['Neden sinüs/kosinüs? Her pozisyon için benzersiz imza üretiyorlar. Ayrıca PE(pos+k), PE(pos)\'un lineer fonksiyonu — yani model "şu token 5 adım geride" gibi göreceli mesafeleri hesaplayabiliyor.','Embedding\'e ekliyoruz (concat etmiyoruz), boyut değişmiyor. Kelime anlamı + sıra bilgisi aynı vektörde birleşiyor.','Parametre yok, öğrenilmiyor — bu yüzden eğitimde 128 kelimelik cümleler gördüysen, çıkarımda 200 kelimelik cümleye de genelleşebiliyor.','Düşük frekanslı boyutlar (i küçük) global konum bilgisi taşıyor, yüksek frekanslı boyutlar (i büyük) yerel. Birlikte zengin bir konum temsili oluyor.']
   },
   { id:'selfattn', title:'Multi-Head Self-Attention', cat:'Attention',
     row:2, col:0, connects_to:['addnorm1_enc'],
-    summary:'Her encoder token, dizideki tüm tokenlara aynı anda bakabilir (bidirectional).',
-    points:['Q = K = V = encoder input (self-attention)','Scaled dot-product: softmax(QKᵀ/√dk)·V','h paralel head her biri farklı ilişki öğrenir','Bidirectional: hem sol hem sağ context görülür']
+    summary:'"The animal didn\'t cross the street because it was tired" — buradaki "it" neyi kastediyor? Sen anlıyorsun, ama model nasıl anlıyor? Self-attention sayesinde: "it" tokeni tüm cümleye bakıyor, "animal"a en yüksek skoru veriyor ve o bilgiyi kendine kopyalıyor. Her token, aynı dizideki tüm tokenlara aynı anda bakabiliyor.',
+    points:['Her token için Q (ne arıyorum?), K (beni nasıl bulabilirler?), V (bulunca ne vereyim?) üretiliyor — üç ayrı lineer dönüşüm.','QKᵀ ile n×n benzerlik matrisi çıkıyor: "token i, token j\'ye ne kadar baksın?" sorusunun cevabı.','√dk\'ya bölme şart: vektör boyutu büyüyünce dot product rakamları patlar → softmax tek yere yığılır → gradient tamamen ölür. Küçük ama kritik detay.','Multi-head: 8 paralel attention başlığı, her biri farklı bir ilişki tipini öğreniyor. Birisi subject-verb uyumu, diğeri zamir referansı, bir diğeri yerel komşuluk yapısı gibi.','RNN\'den büyük fark: "the cat sat on the mat" cümlesinde "cat" aynı anda hem "sat"a hem "mat"a bakabiliyor. RNN\'de önce birini görüp hatırlamaya çalışırdın.']
   },
   { id:'addnorm1_enc', title:'Add & Norm', cat:'Norm',
     row:3, col:0, connects_to:['ffn_enc'],
-    summary:'Residual bağlantı + Layer Normalization — gradient akışı ve eğitim stabilitesi.',
-    points:['Add: x + Sublayer(x)  — residual (skip) bağlantı','LayerNorm: her token vektörünü normalize eder','Residual: gradientler doğrudan geçer → vanishing önlenir','Batch Norm değil Layer Norm: sequence uzunluğu değişken']
+    summary:'İki şey var burada: residual bağlantı ve layer normalization. Residual olmadan 6 katmanlı ağı eğitmek pratikte neredeyse imkansız — gradient geri giderken her katmanda küçülüyor ve ilk katmanlara hiçbir şey ulaşmıyor. Residual bunu çözüyor.',
+    points:['x + Sublayer(x): attention\'ın çıktısını üzerine yazmıyoruz, ekliyoruz. En kötü ihtimalle attention sıfır üretse bile eski bilgi kaybolmuyor.','Gradient highway: loss\'tan gelen gradient direkt ilk katmana akabiliyor, 6 katmanı çarparak geçmeden. Vanishing gradient sorunu büyük ölçüde çözülüyor.','Neden Layer Norm, Batch Norm değil? Farklı uzunluktaki cümlelerde batch istatistikleri tutarsız oluyor. Layer Norm her token\'ı kendi boyutları üzerinden normalize ediyor, bu daha güvenli.','Pre-norm (GPT-2 ve sonrası): LayerNorm önce uygulanıyor, sonra sublayer. Büyük modellerde eğitimi daha stabil hale getiriyor.']
   },
   { id:'ffn_enc', title:'Feed-Forward', cat:'FFN',
     row:4, col:0, connects_to:['addnorm2_enc'],
-    summary:'Her pozisyona aynı 2-katmanlı FFN: d_model → 4×d_model → d_model.',
-    points:['FFN(x) = max(0, xW₁+b₁)W₂+b₂','d_ff = 4×d_model  (örn. 512 → 2048 → 512)','Position-wise: her token bağımsız, aynı ağırlıklar','Attention = tokenlar arası iletişim  |  FFN = token içi dönüşüm']
+    summary:'Attention\'ın yaptığı şey tokenlar arası bilgi alışverişi — "kimden ne alayım?" Ama bir de "aldığım bilgiyle ne yapacağım?" sorusu var. Bunu FFN yapıyor. Her tokena aynı ağı bağımsız olarak uyguluyorsun, ama her tokenin girdisi farklı.',
+    points:['FFN(x) = max(0, xW₁+b₁)W₂+b₂ — önce 4× genişlet (512→2048), ReLU ile sıkıştır, tekrar dar (2048→512).','Neden 4×? Daha zengin nonlinear dönüşüm için. Deneysel olarak bu oran iyi çalışıyor — daha az genişletince model kapasitesi düşüyor, daha fazla da parametre boşa gidiyor.','Attention = "hangi tokenlardan bilgi toplayacağım?" | FFN = "topladığım bilgiyle ne yapacağım?" Birbirini tamamlayan iki farklı işlem.','Araştırmalar FFN\'nin faktüel bilgi depoladığını gösteriyor: "Paris" gördüğünde "France"ı tetikleyen, "Einstein" gördüğünde "physicist" bağlantısını kuran nöronlar FFN\'de bulunmuş.']
   },
   { id:'addnorm2_enc', title:'Add & Norm', cat:'Norm',
     row:5, col:0, connects_to:['crossattn'],
-    summary:'FFN + residual + LayerNorm → encoder katmanının sonu. N kez tekrar. Çıktı decoder\'a gider.',
-    points:['Encoder bir katmanı (sublayer) burada biter','N = 6 kez tekrar (base) veya 12 (large)','Son encoder katmanı çıktısı → decoder\'daki tüm cross-attention katmanlarına K ve V olarak gider','Her token için bağlam zenginleştirilmiş vektör çıkar']
+    summary:'Encoder\'ın bir bloğu burada tamamlandı: Self-Attn → Add&Norm → FFN → Add&Norm. Bu blok N kez tekrarlanıyor (genellikle 6). Her tekrarda tokenlar birbirinden daha fazla bilgi toplayıp daha soyut temsillere dönüşüyor.',
+    points:['İlk katmanlar syntactic ilişkileri öğreniyor: "the" ile "cat" birbirine bağlı. Son katmanlar semantik ve global anlam: "bu cümle bir olumsuzlama mı?"','Son encoder bloğunun çıktısı özel: decoder\'daki TÜM cross-attention katmanlarına Key ve Value olarak gidiyor. Encoder bir kez çalışıyor, çıktı kalıcı.','Residual + LayerNorm burada da aynı görevi yapıyor: gradient akışı ve aktivasyon stabilizasyonu.']
   },
 
   // ── DECODER (col 2) ────────────────────────────────
   { id:'outemb', title:'Output Embedding', cat:'Embedding',
     row:1, col:2, connects_to:['posenc_dec'],
-    summary:'Decoder girişi: önceki adımda üretilen token (çıkarımda) veya shifted target (eğitimde).',
-    points:['Eğitimde: hedef dizi bir adım sağa kaydırılır (teacher forcing)','Çıkarımda: o ana kadar üretilmiş tokenlar','Encoder ile aynı embedding boyutu (d_model)','Aynı embedding tablosu encoder ile paylaşılabilir']
+    summary:'Decoder\'ın girişi hedef dildeki tokenlar. Ama eğitimde akıllıca bir trick var: teacher forcing. "The cat sat" üretmesini istiyorsan [START, The, cat] veriyorsun, model [The, cat, sat] üretmeli. Doğru cevabı girdi olarak verince eğitim hem hızlanıyor hem stabilleşiyor.',
+    points:['Teacher forcing: modelin önceki tahminlerine güvenmek zorunda kalmıyor. Kendi yanlış tahminini görse zincirleme hata birikir. Eğitimde bunu atlıyoruz.','Çıkarımda ise: bir önceki adımda ne ürettiysen onu girdi olarak veriyorsun. Hata birikme riski var ama başka seçenek yok.','[START] tokeni ilk adımı tetikliyor. Model [END] üretince duruyor — ne zaman biteceğini kendisi öğreniyor.','Encoder embedding tablosuyla paylaşılabilir: GPT gibi sadece decoder olan modellerde kaynak-hedef aynı dil olduğu için çok mantıklı.']
   },
   { id:'posenc_dec', title:'+ Positional Encoding', cat:'Encoding',
     row:2, col:2, connects_to:['maskedattn'],
-    summary:'Decoder tokenlarına da pozisyon bilgisi eklenir — encoder ile aynı formül.',
-    points:['Encoder PE ile özdeş formül','Decoder\'ın da hangi pozisyonda olduğunu bilmesi gerekir','Token embedding + PE toplanır']
+    summary:'Decoder için de aynı positional encoding. Decoder "şu an kaçıncı kelimeyi üretiyorum?" bilgisine ihtiyaç duyuyor — bu bilgi olmadan her adımda aynı kararı verirdi. Pozisyon bilgisi sonunda cross-attention\'ın Q\'suna da giriyor.',
+    points:['Encoder PE ile özdeş formül — aynı sinüs/kosinüs tabanlı imza.','Bu pozisyon bilgisi cross-attention\'da Q\'ya giriyor: "3. kelimeyi üretirken encoder\'da neye bakmalıyım?"','Çıkarımda her adımda bir token üretiliyor, her seferinde yeni pozisyon encodingı ekleniyor.']
   },
   { id:'maskedattn', title:'Masked Self-Attention', cat:'Attention',
     row:3, col:2, connects_to:['addnorm1_dec'],
-    summary:'Decoder\'ın kendi tokenlarına baktığı attention — gelecek tokenlar maskelenir (causal).',
-    points:['Causal mask: token t yalnızca 1..t-1\'e bakabilir','Üst üçgen matris −∞ ile doldurulur → softmax sıfırlar','Autoregressive üretim: geleceği görmeden üretme','Eğitimde tüm pozisyonlar paralel işlenir — çıkarımda sequential']
+    summary:'Bir problem: eğitimde teacher forcing ile tüm hedef tokenleri aynı anda veriyoruz. Ama "cat" üretirken modelin "sat"ı görmemesi lazım — yoksa cevaba bakarak soru çözüyor. Maskeleme bunun için: gelecekteki tokenlerin attention skorlarına −∞ atıyoruz, softmax\'tan sonra sıfır oluyor.',
+    points:['Uygulaması: softmax(QKᵀ/√dk + M)·V, burada M matrisinin üst üçgeni −∞, geri kalanı sıfır.','−∞ → exp(−∞) = 0 → softmax\'tan sonra o tokenın ağırlığı sıfır. "Bu tokena hiç bakma" anlamına geliyor.','Çıkarımda maskelemeye gerek yok zaten: sadece üretilmiş tokenlar mevcut, gelecek yok ki maskelensin.','Eğitimdeki büyük avantaj: maskelenmiş halde bile tüm pozisyonlar aynı anda paralel işleniyor. RNN\'de sırayla adım atmak zorundaydık, bu çok daha hızlı.']
   },
   { id:'addnorm1_dec', title:'Add & Norm', cat:'Norm',
     row:4, col:2, connects_to:['crossattn'],
-    summary:'Masked self-attention + residual + LayerNorm. Çıktı cross-attention\'a Q olarak gider.',
-    points:['Decoder\'ın kendi bağlamı toplandı','Bu çıktı cross-attention\'da Query (Q) olarak kullanılır','Residual + LayerNorm her sublayer\'dan sonra uygulanır']
+    summary:'Masked self-attention + Add&Norm. Decoder artık "şu ana kadar ne ürettim?" sorusunu yanıtladı ve bunu bir vektöre sıkıştırdı. Bu vektör bir sonraki adımda cross-attention\'ın Query\'si oluyor: "şimdiye kadar ürettiklerime bakarak encoder\'dan ne öğrenmem gerekiyor?"',
+    points:['Decoder kendi geçmişini öğrendi: hangi kelimeler, hangi sırada, nasıl bir bağlamda.','Bu çıktı Q olarak cross-attention\'a gidiyor — artık "kaynaktan ne soracağımı biliyorum" aşamasına geçiyor.','Residual + LayerNorm: her sublayer gibi aynı işlev.']
   },
   { id:'crossattn', title:'Cross-Attention', cat:'Attention',
     row:6, col:2, connects_to:['addnorm2_dec'],
-    summary:'Q decoder\'dan, K ve V encoder çıktısından — decoder kaynak diziyi okur.',
-    points:['Q = decoder (addnorm1_dec çıktısı)','K = V = encoder çıktısı (addnorm2_enc son katmanı)','Decoder her pozisyon tüm encoder tokenlarına bakabilir','Seq2seq\'in "hafızası": çeviri yaparken kaynağa bak','İki farklı kaynaktan gelen ok: encoder (çapraz) + decoder (dikey)']
+    summary:'Q decoder\'dan geliyor (ne üretmek istiyorum?), K ve V encoder\'dan geliyor (kaynak cümle ne diyor?). "Je suis fatigué" → "I am tired" çevirisinde "tired" üretirken, Q_tired encoder\'daki "fatigué" K\'sıyla yüksek dot product veriyor ve V_fatigué alınıyor. Tam bilgi transfer bu şekilde oluyor.',
+    points:['Q = decoder çıktısı (masked self-attn sonrası) — "şu an ne üretmeye çalışıyorum?"','K = V = encoder son katman çıktısı — kaynak cümledeki tüm tokenların temsilcisi.','Cross-attention olmadan decoder kaynak cümleyi hiç göremezdi. Sadece kendi ürettiklerini bilirdi, bu çeviri için feci olurdu.','Encoder bir kez çalışıyor, çıktı sabit kalıyor. Decoder\'ın her N katmanı bu aynı encoder çıktısına bakıyor — tekrar hesaplanmıyor.','Güzel tarafı: her adımda kaynak cümlenin farklı bölgelerine odaklanabiliyor. "am" üretirken "suis"e, "tired" üretirken "fatigué"ye yüksek attention.']
   },
   { id:'addnorm2_dec', title:'Add & Norm', cat:'Norm',
     row:7, col:2, connects_to:['ffn_dec'],
-    summary:'Cross-attention + residual + LayerNorm. Encoder bilgisi decoder\'a entegre edildi.',
-    points:['Cross-attention çıktısı stabilize edilir','Encoder bilgisi artık decoder representation\'ına işlenmiş','Sonraki FFN\'e temiz representation gider']
+    summary:'Cross-attention + Add&Norm. Artık decoder vektörü iki ayrı bilgiyi birleştirmiş: kendi ürettiklerinden öğrendikleri (masked self-attn) + kaynaktan aldıkları (cross-attn). FFN bu zenginleştirilmiş temsili her token için ayrı ayrı işleyecek.',
+    points:['İki bilgi kaynağı birleşti: "şimdiye kadar ne ürettim" + "kaynak cümle ne diyordu".','Residual ile cross-attention çıktısı üzerine yazılmıyor, ekleniyor. Önceki bilgi korunuyor.','Sonraki FFN için temiz, normalize edilmiş bir temsil hazır.']
   },
   { id:'ffn_dec', title:'Feed-Forward', cat:'FFN',
     row:8, col:2, connects_to:['addnorm3_dec'],
-    summary:'Encoder FFN ile aynı yapı — position-wise 2-katmanlı FFN.',
-    points:['FFN(x) = max(0, xW₁+b₁)W₂+b₂','Encoder FFN ile ağırlıkları paylaşmaz (ayrı parametreler)','Her decoder pozisyonu bağımsız işlenir','Decoder katmanı burada tamamlanır — N kez tekrar']
+    summary:'Encoder FFN ile aynı yapı ama farklı ağırlıklar. Encoder "anlama" yapıyor, decoder "üretim" yapıyor — iki farklı görev, iki farklı öğrenilmiş ağırlık seti. Attention\'ın topladığı bilgiyi her token için bağımsız, derin bir şekilde işliyor.',
+    points:['FFN(x) = max(0, xW₁+b₁)W₂+b₂ — encoder ile aynı formül, ama ağırlıklar tamamen farklı.','4× genişleme yine var: 512→2048→512. Nonlinear kapasite için aynı mantık.','Decoder katmanı burada tamamlandı: Masked-Attn → A&N → Cross-Attn → A&N → FFN → A&N.']
   },
   { id:'addnorm3_dec', title:'Add & Norm', cat:'Norm',
     row:9, col:2, connects_to:['linear'],
-    summary:'Decoder FFN + residual + LayerNorm. Decoder katmanının sonu.',
-    points:['Decoder bir katman burada biter (3 sublayer tamamlandı)','N = 6 kez tekrar (base)','Son decoder katmanı çıktısı Linear+Softmax\'a gider']
+    summary:'FFN + Add&Norm. Bir decoder bloğu bitti — 3 sublayer tamamlandı. Bu blok N kez tekrarlanıyor. Sonunda her decoder pozisyonu için d_model boyutlu bir vektör elde ediyoruz. Bu vektör "buraya kadar ne gördüm, ne ürettim, şimdi ne gelecek?" bilgisini taşıyor. Linear + Softmax bunu kelimeye çevirecek.',
+    points:['Decoder 3 sublayer: Masked Self-Attn → Cross-Attn → FFN, her biri Add&Norm ile paketlendi.','N = 6 (base), 12 (large), 24 (xl) kez tekrar. Her tekrarda daha soyut, hedefe daha yakın bir temsil.','Son decoder bloğunun çıktısı Linear\'a gidiyor — artık kelime üretme vakti.']
   },
   { id:'linear', title:'Linear Projection', cat:'Output',
     row:10, col:2, connects_to:['softmax'],
-    summary:'d_model → vocab_size boyutuna doğrusal projeksiyon. Her token için ham logit.',
-    points:['d_model (512) → vocab_size (30.000+) boyuta','Öğrenilen W matrisi (d_model × vocab_size)','Çıktı: vocab\'daki her token için "ham puan" (logit)','Embedding tablosuyla ağırlıklar paylaşılabilir (weight tying)']
+    summary:'d_model boyutlu vektörü vocab_size\'a açıyorsun. "Şu ana kadar gördüklerime göre, sözlükteki her kelime için ham bir puan (logit) veriyorum." 50.000 kelimeli bir vocab\'ta bu 512×50.000 = 25M parametreli tek bir matris — ve modelin en büyük katmanlarından biri bu.',
+    points:['512 (ya da 1024) boyuttan 30.000–100.000+ boyuta doğrusal dönüşüm.','Yüksek logit = "model bu kelimenin gelmesini güçlü bir şekilde bekliyor."','Genellikle input embedding tablosuyla aynı ağırlıklar paylaşılıyor (weight tying). Mantığı şu: bir kelimeyi anlamak için kullandığın temsil, onu üretmek için de kullanılmalı.','Çıktı henüz olasılık değil — ham sayılar. Softmax bunu düzeltecek.']
   },
   { id:'softmax', title:'Softmax → Output', cat:'Output',
     row:11, col:2, connects_to:[],
-    summary:'Logitler olasılık dağılımına çevrilir → en olası token seçilir veya örneklenir.',
-    points:['softmax(z_i) = exp(z_i) / Σexp(z_j)','Çıktı: vocab üzerinde olasılık dağılımı (toplam = 1)','Eğitimde: cross-entropy loss ile hedef token karşılaştırılır','Çıkarımda: argmax (greedy) veya top-k/nucleus sampling']
+    summary:'Logitleri 0-1 arasına sıkıştırıp olasılığa çeviriyorsun. Eğitimde "doğru token buydu, sen ne öngördün?" diye cross-entropy loss hesaplıyorsun. Çıkarımda ise bir seçim yapman lazım: en yüksek olasılıklı kelimeyi mi al (greedy), yoksa dağılımdan mı örnekle (sampling)?',
+    points:['softmax(z_i) = exp(z_i) / Σexp(z_j) — tüm vocab üzerinde toplamı 1 olacak şekilde normalize ediyor.','Eğitim: cross-entropy loss = −log p(hedef token). Doğru tokenın log olasılığını maksimize et, yanlışları minimize et.','Greedy decoding: her adımda argmax al. Deterministik, hızlı, ama tekrarlayan ve yaratıcısız çıktı verebiliyor.','Temperature: logitleri t\'ye bölüyorsun. t=0.7 → daha keskin, deterministik (GPT sohbette). t=1.2 → daha dağınık, yaratıcı (şiir, hikaye).','Top-p (nucleus) sampling: kümülatif olasılık 0.9 olana kadar olan kelimeler arasından örnekle. Saçma düşük olasılıklı kelimeler otomatik eleniyor.']
   }
 ];
 
