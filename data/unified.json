@@ -1896,6 +1896,39 @@
       ]
     },
     {
+      "title": "Attention Mechanism: Adım Adım Tam Akış",
+      "cat": "Attention",
+      "summary": "Encoder tüm hidden state'leri z₁…zT'yi saklar. Decoder her adımında önceki hidden state'i ile bu z'lere bakarak alignment skoru hesaplar, softmax ile ağırlıklandırır ve o adıma özel bir context vektörü oluşturur. Her adımda decoder farklı encoder token'larına odaklanıyor — 'şu an hangi kaynak kelime önemli?' sorusunu soruyor.",
+      "context": "Lecture 20 · 24.01.2024 — Attention Models (Bahdanau et al. 2015)",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Encoder",
+          "text": "x₁  x₂  x₃  x₄\n↓   ↓   ↓   ↓\nz₁  z₂  z₃  z₄     ← tüm hidden state'ler saklanıyor\n\nHepsi saklanıyor — attention için hepsine lazım olacak.\n\nh₀ = MLP(z₄)        ← sadece decoder'ı başlatmak için"
+        },
+        {
+          "type": "text",
+          "heading": "Decoder — t=1",
+          "text": "Initial state: h₀ (encoder'dan gelen)\nInput: [START] token'ı\n\nAttention:\ne_{1,1} = f_att(h₀, z₁)\ne_{1,2} = f_att(h₀, z₂)\ne_{1,3} = f_att(h₀, z₃)\ne_{1,4} = f_att(h₀, z₄)\n\na_{1,*} = softmax([e_{1,1}, e_{1,2}, e_{1,3}, e_{1,4}])\n\nc₁ = a_{1,1}×z₁ + a_{1,2}×z₂ + a_{1,3}×z₃ + a_{1,4}×z₄\n\nDecoder RNN adımı:\nh₁ = RNN([START], h₀, c₁)\ny₁ = softmax(W × h₁)       ← ilk kelime tahmini"
+        },
+        {
+          "type": "text",
+          "heading": "Decoder — t=2",
+          "text": "Initial state: h₁ (bir önceki adımdan)\nInput: y₁ (bir önceki output)\n\nAttention: bu sefer h₁ ile encoder z'lerine bakıyor:\ne_{2,1} = f_att(h₁, z₁)\ne_{2,2} = f_att(h₁, z₂)\n...\n\nc₂ = Σ a_{2,l} × z_l\n\nDecoder RNN adımı:\nh₂ = RNN(y₁, h₁, c₂)\ny₂ = softmax(W × h₂)"
+        },
+        {
+          "type": "text",
+          "heading": "Genel Formül",
+          "text": "h_t = RNN(y_{t-1}, h_{t-1}, c_t)\n          ↑          ↑         ↑\n     önceki      önceki    o ana özel\n     output      hidden    context\n                 state     vector\n\nHer adımda 3 şey giriyor decoder'a: önceki kelime, önceki hidden state, o adıma özel context."
+        },
+        {
+          "type": "text",
+          "heading": "Tam Akış",
+          "text": "ENCODER:\nx₁→z₁  x₂→z₂  x₃→z₃  x₄→z₄\nh₀ = MLP(z₄)\n\nDECODER t=1:\ninput=[START], state=h₀\nattention(h₀, z₁..z₄) → c₁\nh₁ = RNN([START], h₀, c₁)\ny₁ = softmax(W×h₁)\n\nDECODER t=2:\ninput=y₁, state=h₁\nattention(h₁, z₁..z₄) → c₂\nh₂ = RNN(y₁, h₁, c₂)\ny₂ = softmax(W×h₂)\n\n...devam"
+        }
+      ]
+    },
+    {
       "title": "GRU and Seq2Seq with Attention",
       "cat": "GRU",
       "summary": "GRU (Cho et al., 2014) simplifies LSTM to two gates and no separate cell state. Seq2seq with attention (Bahdanau 2015) solves the information bottleneck of compressing a whole sequence into one vector by giving the decoder dynamic access to all encoder states.",
