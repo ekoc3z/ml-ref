@@ -2166,6 +2166,39 @@
       ]
     },
     {
+      "title": "Key Varken Positional Encoding Neden Gerekli?",
+      "cat": "Attention",
+      "summary": "Key semantiği biliyor — 'ben noun'um, canlıyım'. Ama pozisyonu bilmiyor. 'cat bites dog' ve 'dog bites cat'te x_cat embedding'i aynı, k_cat aynı. Model kim subject kim object ayırt edemiyor. PE pozisyonu Key'e yansıtıyor.",
+      "context": "Lecture 21 · 29.01.2024 — Positional Encoding motivasyonu",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Key zaten semantiği biliyor",
+          "text": "k_cat  →  \"ben noun'um, canlıyım...\"\nk_dog  →  \"ben noun'um, canlıyım...\"\n\n\"cat\" ve \"dog\" farklı Key'ler üretiyor — birbirinden ayırt ediliyor.\nSorun bu değil."
+        },
+        {
+          "type": "code",
+          "heading": "Asıl sorun: Pozisyon bilgisi yok",
+          "text": "\"cat bites dog\"    →  x_cat embedding'i\n\"dog bites cat\"    →  x_cat embedding'i   ← AYNI\n\nk_cat her iki cümlede de aynı.\n\n\"bites\" kelimesi q_bites · k_cat hesapladığında\n\"cat bende önce mi sonra mı?\" bilgisi yok.\nAlignment skoru her iki durumda da eşit çıkıyor."
+        },
+        {
+          "type": "code",
+          "heading": "Positional Encoding ne yapıyor?",
+          "text": "Embedding'e pozisyon vektörü toplanıyor, Key ona göre üretiliyor:\n\n\"cat bites dog\":\n  x_cat + PE(1) → k_cat_pos1\n\n\"dog bites cat\":\n  x_cat + PE(3) → k_cat_pos3\n\nk_cat_pos1 ≠ k_cat_pos3\n\nArtık q_bites · k_cat_pos1 ile q_bites · k_cat_pos3 farklı sonuç veriyor.\nModel \"benden önce gelen cat\" ile \"benden sonra gelen cat\"ı\nayırt edebiliyor."
+        },
+        {
+          "type": "code",
+          "heading": "Subject / Object ayrımı",
+          "text": "\"cat bites dog\":  cat pozisyon 1 → subject\n\"dog bites cat\":  cat pozisyon 3 → object\n\nPE olmadan model ikisinde de aynı şeyi görüyor,\nkim subject kim object ayırt edemiyor.\n\nPE ekleyince pozisyon Key'e yansıyor,\nsyntactic rol öğrenilebilir hale geliyor."
+        },
+        {
+          "type": "code",
+          "heading": "Özet",
+          "text": "Key     →  \"ben semantik olarak neyim?\"    (kelime kimliği)\nPE      →  \"ben dizide neredeyim?\"         (pozisyon kimliği)\n\nİkisi birlikte: \"ben kaçıncı sıradaki hangi kelimeyim?\"\n\nKey ambiguity'yi kaldırmıyor, PE kaldırıyor —\nama \"hangi kelime\" değil \"hangi pozisyondaki kelime\" ambiguity'si."
+        }
+      ]
+    },
+    {
       "title": "Multi-Head Attention and Positional Encoding",
       "cat": "Attention",
       "summary": "Multi-head attention runs h attention heads in parallel, each learning different relationship types. Positional encoding injects position information since self-attention is permutation-equivariant — without it, word order is invisible to the model.",
