@@ -204,6 +204,8 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 
 /* Code block */
 .sec-code{background:var(--code-bg,#0b1020);border:1px solid var(--border);border-radius:6px;padding:12px 14px;font-family:'Fira Code','Cascadia Code','Courier New',monospace;font-size:12px;color:#e2e8f0;white-space:pre;overflow-x:auto;line-height:1.6;display:block;margin:0}
+.qa-mark{color:#38bdf8;margin-right:6px;font-size:8px;vertical-align:2px;opacity:1;letter-spacing:0}
+.sec-block-qa{border-left:2px solid rgba(56,189,248,.25);padding-left:10px;margin-left:-10px}
 
 /* ── Summary / Chain page ─────────────────────────────── */
 #summary-page{padding:24px 28px;max-width:860px;margin:0 auto}
@@ -1083,8 +1085,10 @@ function renderSection(s){
         <div class="sec-cmp-box"><div class="sec-cmp-title">${esc(R.title||'')}</div><ul class="sec-cmp-pts">${rpts}</ul></div>
       </div></div>`;
     }
-    case 'code':
-      return `<div class="sec-block">${h}<code class="sec-code">${esc(s.text||'')}</code></div>`;
+    case 'code': {
+      const hq = s.heading ? `<div class="sec-heading"><span class="qa-mark">▶</span>${esc(s.heading)}</div>` : '';
+      return `<div class="sec-block sec-block-qa">${hq}<code class="sec-code">${esc(s.text||'')}</code></div>`;
+    }
     default: return '';
   }
 }
