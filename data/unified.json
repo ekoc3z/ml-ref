@@ -1292,6 +1292,29 @@
   ],
   "ch08": [
     {
+      "title": "Batch vs SGD vs Mini-batch — Somut Örnek",
+      "cat": "Gradient-Methods",
+      "summary": "1000 vektörlük bir dataset üzerinden Batch, SGD ve Mini-batch öğrenmenin farkı: ne zaman forward pass yapılır, ne zaman hata hesaplanır, ne zaman güncelleme olur?",
+      "context": "Lectures 14–15 · 18–20.12.2023 — Optimising neural networks",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Batch",
+          "text": "Diyelim ki 1000 tane verimiz var, her biri 3 uzunluğunda bir vektör.\n\n1000 vektörün hepsini ağdan geçiriyorsun (forward pass).\nHer biri için output ve error hesaplıyorsun ama henüz güncelleme yok.\n1000 tanesinin hatasını topluyorsun (örneğin MSE ortalaması).\nSonra bu toplam hatanın üzerinden backprop yapıyorsun,\ntüm ağırlıklar için gradyanları hesaplıyorsun.\nBir kez gradient descent adımı atıyorsun.\nTekrar başa dön, 1000 taneyi tekrar sok...\n\nYavaş ama stabil."
+        },
+        {
+          "type": "code",
+          "heading": "SGD",
+          "text": "İlk vektörü sokuyorsun, forward pass, error hesaplıyorsun,\nhemen backprop, hemen güncelliyorsun.\nİkinci vektörü sokuyorsun, forward pass, error, backprop, güncelleme...\n1000 vektör için 1000 kez güncelleme oluyor.\n\nAma her güncelleme sadece tek örneğin hatasına göre yapıldığı için\ngürültülü — o örnek temsili olmayabilir.\nBu gürültü bazen işe yarıyor, local minimum'dan kaçmana yardımcı oluyor."
+        },
+        {
+          "type": "code",
+          "heading": "Mini-batch",
+          "text": "32 vektörü sokuyorsun, 32 forward pass, 32 error hesaplıyorsun,\nortalaladın, backprop, güncelliyorsun.\nSonraki 32'ye geçiyorsun.\n1000 vektör için ~31 güncelleme oluyor.\n\n32 örneğin ortalaması tek örnekten daha güvenilir bir gradyan veriyor,\nama 1000 örneği beklemek zorunda da kalmıyorsun.\nPratikte kullanılan bu."
+        }
+      ]
+    },
+    {
       "title": "Gradient Descent Variants",
       "cat": "Gradient-Methods",
       "summary": "Gradient descent minimises the loss by following the negative gradient. The key design choice is how much data to use per update: full batch (stable but slow), stochastic/mini-batch (noisy but fast and parallelisable). Mini-batch SGD is the workhorse of deep learning.",
@@ -2304,6 +2327,59 @@
   ],
   "ida01": [
     {
+      "title": "Lecture 1 — Q & A",
+      "cat": "Fundamentals",
+      "summary": "IDA Lecture 1'in tüm sınav soruları ve sade açıklamalarla cevapları. Image analysis alanı, CT, MRI, ultrason, floresan mikroskopi, konfokal, light-sheet ve elektron mikroskobu.",
+      "context": "Lecture 01 · 19.10.2023 — Introduction to Image Data Analysis",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "S1. Image analysis alanı nedir ve genel amaçları neler?",
+          "text": "Image analysis, bir görüntüden anlam çıkarmayı otomatik hale getirmeye çalışan disiplindir. Bir insanın bir görüntüye bakıp \"burada bir hücre var, şu bölgede anormallik var\" diyebildiği şeyi bilgisayarın yapmasını sağlamak istiyorsun.\n\nGenel amaçlar birkaç farklı seviyede düşünülebilir. Görüntü iyileştirme seviyesinde: gürültüyü gidermek, kontrast artırmak, görüntüyü daha net hale getirmek. Segmentasyon seviyesinde: görüntüdeki nesneleri birbirinden ayırt etmek, hücreleri saymak, tümör sınırlarını belirlemek. Tespit seviyesinde: belirli bir yapının görüntüde nerede olduğunu bulmak. Ölçüm seviyesinde: nesne boyutunu, yoğunluğunu, şeklini sayısal olarak elde etmek.\n\nNeden bu alan önemli? Biyomedikal görüntülemede insan gözü yüz binlerce görüntüyü inceleyemez, ama otomatik analiz yapabilir. Üstelik gözlemciler arası değişkenlik (iki doktorun farklı karar verması) ortadan kalkar ve tekrarlanabilir, objektif sonuçlar elde edilir."
+        },
+        {
+          "type": "code",
+          "heading": "S2. Image analysis alanında ele alınan temel operasyonlar ve problemler neler?",
+          "text": "Temel operasyonlar şu şekilde sıralanabilir:\n\nGörüntü iyileştirme (enhancement): gürültü azaltma, keskinleştirme, kontrast iyileştirme. Görüntüyü sonraki adımlar için hazırlamak amaçlıdır.\n\nSegmentasyon: görüntüyü anlamlı bölgelere bölme. \"Hangi pikseller bu hücreye ait?\" sorusunu cevaplar.\n\nNesne tespiti (detection): görüntüde belirli bir yapının varlığını ve konumunu bulma. \"Bu görüntüde çekirdek var mı, nerede?\"\n\nSınıflandırma (classification): tespit edilen nesneyi bir kategoriye atama. \"Bu hücre normal mi, anormal mi?\"\n\nTakip (tracking): nesneleri video veya 3D+t verisinde zaman boyunca izleme.\n\nYeniden yapılandırma (reconstruction): 2D görüntü serilerinden 3D yapı elde etme.\n\nTemel zorluklar arasında gürültü, değişken aydınlatma, birbirine benzeyen nesnelerin ayırt edilmesi, 3D verinin büyüklüğü ve farklı modalitelerin (CT, MRI, mikroskop) çok farklı görüntü özellikleri taşıması sayılabilir."
+        },
+        {
+          "type": "code",
+          "heading": "S3. CT'nin temel prensibi nedir? Farklı yönlerden alınan projeksiyonlar 3B görüntüye nasıl dönüştürülür?",
+          "text": "CT (Computed Tomography) X-ışını kullanır. Temel fikir şudur: X-ışını demetin vücuttan geçerken her doku tipi farklı miktarda soğurur. Dedektör bu soğurulmuş demeti ölçer ve bir projeksiyon (gölge görüntüsü) elde edilir. Tek bir açıdan bakınca hangi yapının nerede olduğunu anlayamazsın — sadece o açıdan birleşik bir gölge görürsün.\n\nFarklı açılardan (genellikle 360 derece dönüp) çok sayıda projeksiyon alınır. Ardından bu projeksiyonlardan 3B yapıyı yeniden oluşturmak için matematiksel bir algoritma kullanılır: Filtered Back Projection (FBP) en klasik yöntemdir. Fikir şudur: her projektsiyon bir \"bu açıdan bu yoğunluk vardı\" bilgisi taşır. Bütün açılardan geri yansıtıp (back projection) bunları üst üste getirince kesişim noktaları yoğunlaşır ve gerçek yapı ortaya çıkar. Filtre adımı bu geri yansıtmadan kaynaklanan bulanıklığı giderir.\n\nModern CT sistemleri saniyeler içinde yüzlerce kesit üretir ve bu kesitler birleşince tam 3B voksel hacmi elde edilir."
+        },
+        {
+          "type": "code",
+          "heading": "S4. MRI'ın temel prensibi nedir? X, Y, Z yönündeki manyetik alan gradyanlarını kontrol etmenin amacı nedir?",
+          "text": "MRI (Magnetic Resonance Imaging) X-ışını kullanmaz; bunun yerine vücuttaki hidrojen atomlarının (protonların) manyetik özelliklerini kullanır. Güçlü bir manyetik alan uygulandığında protonlar bu alana hizalanır. Ardından radyo frekansında bir RF pulse uygulanır ve protonlar hizalamalarından sapar. Bu pulse kesilince protonlar eski hizalamalarına dönerken (relaksasyon) enerji yayarlar; bu enerji ölçülür.\n\nFarklı dokular farklı relaksasyon hızlarına sahiptir (T1 ve T2 zamanları), bu yüzden sinyal şiddeti dokudan dokuya değişir ve yumuşak doku kontrastı çok yüksektir — bu CT'ye göre MRI'ın büyük avantajıdır.\n\nManyetik alan gradyanları (x, y, z yönlerinde) ise spatial encoding için kullanılır: manyetik alan gücü her lokasyonda farklı olursa, her lokasyondaki proton biraz farklı frekansta salınır. Bu frekans farkından hangi sinyalin vücudun neresinden geldiğini anlayabilirsin. x gradyanı kesit seçimini sağlar (hangi dilimi görüntüleyeceksin), y ve z gradyanları ise o kesit içindeki konumu kodlar. Böylece 3B uzaysal bilgi elde edilmiş olur."
+        },
+        {
+          "type": "code",
+          "heading": "S5. Ultrasonun çalışma prensibi nedir? 3B görüntüler nasıl elde edilir?",
+          "text": "Ultrason, işitme eşiğinin çok üzerinde frekanslarda (tipik olarak 2-20 MHz) ses dalgaları gönderir. Bu dalgalar vücuda girer ve farklı doku sınırlarında (örneğin yumuşak doku ile kemik, sıvı ile doku arasında) yansır. Geri dönen yankıyı (eko) ölçersin: ne kadar sürede döndü → ne kadar uzakta; ne kadar güçlü döndü → o sınırın ne kadar belirgin olduğu.\n\nBu yöntem kompanse eden özelliği sayesinde gerçek zamanlı görüntüleme yapar — saniyede yüzlerce ölçüm yapılabilir ve kalp atışı gibi hareketler bile görüntülenebilir.\n\n3B görüntü elde etmek için birkaç yol var: birincisi 2B görüntüler farklı açılardan alınıp üst üste birleştirilebilir (sweeping). İkincisi 2B array transdüserler kullanılarak aynı anda birden fazla dilim alınabilir. Ultrasonun avantajı radyasyon içermemesi ve taşınabilir olmasıdır; dezavantajı ise görüntü kalitesinin CT ve MRI'a kıyasla düşük olması ve kemiğin içine görüntü gönderememesidir."
+        },
+        {
+          "type": "code",
+          "heading": "S6. Floresan mikroskobu için kullanılan genel konsept nedir?",
+          "text": "Floresan mikroskobu, incelemek istediğin molekülü veya yapıyı floresan boyalar ya da floresan proteinlerle (örneğin GFP — Green Fluorescent Protein) işaretlemeye dayanır.\n\nTemel fiziksel prensip şudur: floresan bir madde belirli bir dalga boyunda ışık soğurur (eksitasyon) ve daha uzun dalga boyunda ışık yayar (emisyon). Bu dalga boyu farkı sayesinde özel filtreler kullanarak yalnızca floresan sinyalini görebilir, arka plan ışığını elimine edebilirsin.\n\nBu tekniğin gücü seçicilik ve çokluluktur: farklı yapıları farklı renklerle işaretleyebilirsin. Örneğin çekirdeği mavi, hücre zarını yeşil, belirli bir proteini kırmızı boyarsın ve hepsini aynı anda görüntüleyebilirsin. Bu seçicilik standart ışık mikroskopisiyle mümkün değildir."
+        },
+        {
+          "type": "code",
+          "heading": "S7. Konfokal mikroskop nasıl daha iyi uzamsal çözünürlük ve az ışık saçılması sağlar? 3B görüntüler nasıl elde edilir?",
+          "text": "Standart floresan mikroskopta problem şudur: odak düzleminin dışındaki katmanlardan da ışık geliyor ve bu ışık görüntüyü bulanıklaştırıyor. Derinliği olan numunelerde bu çok ciddi bir sorun haline geliyor.\n\nKonfokal mikroskop bu problemi pinhole (iğne deliği) ile çözer. Işık kaynağının önüne ve dedektörün önüne birer pinhole yerleştirilir. Dedektörün önündeki pinhole kritiktir: yalnızca odak düzleminden gelen ışığın geçmesine izin verir, dışarıdaki düzlemlerden gelen saçılmış ışığı fiziksel olarak engeller. Sonuç olarak her anda sadece odak düzlemindeki çok küçük bir noktadan bilgi alınır.\n\nBu tek noktalı tarama anlamına gelir: lazer spot'u numune üzerinde satır satır tarar ve tüm görüntüyü oluşturmak için çok sayıda nokta ölçülür. Yavaş bir süreç ama çok temiz, saçılmasız görüntüler elde edilir.\n\n3B görüntü için odak düzlemi (z) adım adım aşağı veya yukarı taşınır ve her derinlikte tam bir 2B görüntü alınır. Bu dilimler üst üste getirilince tam 3B voksel hacmi elde edilir. Bu tekniğe optik dilimleme (optical sectioning) denir."
+        },
+        {
+          "type": "code",
+          "heading": "S8. Light-sheet mikroskobunun temel mimarisi nasıl? 3B görüntüler nasıl alınır? Avantaj ve dezavantajları neler?",
+          "text": "Light-sheet mikroskobunun temel fikri, aydınlatmayı ve görüntülemeyi birbirinden ayırmaktır. Bu iki işlemi aynı eksen üzerinden yapan konfokal mikroskopta pinhole ile çözmeye çalıştığın problemi, light-sheet burada geometrik olarak çözer.\n\nMimari şu şekildir: ince bir ışık yaprağı (sheet) numuneden yatay geçirir — sadece o dilimi aydınlatır. Kamera ise bu ışık yaprağına dik açıda (90 derece) bakar ve yalnızca aydınlatılan dilimi görüntüler. Odak dışı aydınlatma olmadığı için saçılma çok düşüktür ve görüntü kalitesi çok yüksektir.\n\n3B görüntü için numune (veya ışık yaprağı) z ekseninde adım adım taşınır ve her adımda bir dilim alınır.\n\nAvantajları: çok hızlı görüntüleme (tüm dilim tek seferde kameraya düşer, nokta nokta taramaya gerek yok), düşük fototoksisite (canlı numuneler için kritik), büyük hacimleri görüntüleyebilir. Özellikle canlı zebrafish embriyoları, beyin aktivitesi gibi büyük canlı numuneler için idealdir.\n\nDezavantajları: optik tasarım daha karmaşık, numune hazırlama özel gerektirir, bazı numunelerde ışık yaprağının içinden geçmesi zor olabilir (şeffaf olmayan numuneler)."
+        },
+        {
+          "type": "code",
+          "heading": "S9. Hangi elektron mikroskobu türleri var? Avantaj ve dezavantajları neler?",
+          "text": "Elektron mikroskobu ışık yerine elektron demetleri kullanır. Elektronların dalga boyu fotonlara kıyasla çok daha kısa olduğu için çok daha yüksek çözünürlük elde edilebilir — nanometre altı yapılar görülebilir.\n\nİki ana yaklaşım vardır:\n\nTransmission EM (TEM): elektron demeti numunenin içinden geçer. Geçen elektronlar dedektörde görüntü oluşturur. Çok ince kesitler gerekir (50-100 nm). Çok yüksek çözünürlük sağlar. Dezavantajı: numune hazırlama çok zahmetlidir, canlı numuneler incelenemez.\n\nScanning EM (SEM): elektron demeti numunenin yüzeyinde tarar. Yüzeyden yansıyan veya ikincil elektronlar ölçülür. Yüzey morfolojisini çok güzel gösterir. Çözünürlüğü TEM'e göre biraz daha düşük ama yüzey analizi için mükemmeldir.\n\n3B EM için ek teknikler geliştirilmiştir:\nFIB-SEM (Focused Ion Beam + SEM): iyon demeti ile numunenin ince dilimlerini tıraşlar, her dilimi SEM ile görüntüler. Çok yüksek çözünürlüklü 3B hacimler elde edilebilir ama numune yıkıcı süreçten geçer.\nS3EM (Serial Section SEM): numuneyi ultraince dilimler halinde keser, her dilimi görüntüler.\n\nGenel dezavantajlar: vakum ortamı gerektirir, numune hazırlama çok uzun sürer, canlı görüntüleme imkansız, pahalı ve büyük cihazlar."
+        }
+      ]
+    },
+    {
       "title": "Image Representation and Digitization",
       "cat": "Fundamentals",
       "summary": "A digital image is a 2D array of pixels, each storing an intensity or color value. Continuous scenes are sampled spatially (resolution) and quantised in amplitude (bit depth). Understanding these steps is essential for every downstream processing task.",
@@ -2441,6 +2517,59 @@
   ],
   "ida02": [
     {
+      "title": "Lecture 2 — Q & A",
+      "cat": "Filtering",
+      "summary": "IDA Lecture 2'nin tüm sınav soruları ve sade açıklamalarla cevapları. Dijital görüntü temsili, yoğunluk dönüşümleri, histogram, konvolüsyon, separable filterlar, frekans alanı, median, morfolojik operasyonlar.",
+      "context": "Lecture 02 · 26.10.2023 — Basic Image Processing Toolbox",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "S1. Dijital görüntüler nasıl temsil edilir? 8-bit ile 16-bit farkı? Renk nasıl kodlanır? 3B görüntüler? Metadata ne işe yarar?",
+          "text": "Dijital görüntü, düzenli bir piksel ızgarasından oluşur. Her piksel belirli bir konumdaki ışık yoğunluğunu sayısal olarak depolar. 2B görüntü için bu ızgara M×N boyutunda bir matristir.\n\n8-bit görüntü 0-255 arası 256 farklı değer saklayabilir. 16-bit ise 0-65535 arası 65536 değer saklayabilir. Neden önemli? Tıbbi görüntüler ve mikroskopi verileri genellikle çok ince yoğunluk farklılıkları içerir; 8-bit bunları temsil etmekte yetersiz kalır ve bilgi kaybı oluşur. 16-bit bu dinamik aralık sorununu çözer.\n\nRenk kodlaması en yaygın olarak RGB ile yapılır: her piksel için kırmızı, yeşil ve mavi kanalı ayrı ayrı saklanır. Bunun yanında HSV (ton, doygunluk, parlaklık) veya CMYK gibi alternatif renk uzayları da vardır. Mikroskopide çok kanallı görüntüler de yaygındır: farklı floresan boyalar için ayrı kanallar.\n\n3B görüntü, 2B ızgaranın z ekseninde yığılmasıyla M×N×Z boyutunda bir voksel hacmidir. Her voksel (volume pixel) 3B uzaydaki küçük bir küpü temsil eder.\n\nMetadata görüntünün nasıl alındığına dair ek bilgileri saklar: piksel boyutu (μm cinsinden voksel büyüklüğü), zaman damgası, kullanılan mikroskop parametreleri vs. Ölçüm yapmak istiyorsan gerçek fiziksel boyutu bilebilmek için metadata kritik öneme sahiptir."
+        },
+        {
+          "type": "code",
+          "heading": "S2. Yoğunluk dönüşümleri hangi türlerde olur? Histogram nedir ve ne işe yarar? Gamma dönüşümünün amacı nedir?",
+          "text": "Yoğunluk dönüşümleri (intensity transformations), piksel değerlerini noktasal olarak dönüştürür — yani her pikselin yeni değeri sadece kendi eski değerine bağlıdır, komşuları önemli değildir.\n\nLineer dönüşümler: y = a·x + b. 'a' kontrast kontrolü, 'b' parlaklık kontrolü sağlar. Histogram stretching de buraya girer: yoğunluk aralığını [min, max] → [0, 255]'e gererek kontrastı artırırsın.\n\nHistogram eşitleme (equalization): yoğunlukları eşit dağılacak şekilde yeniden eşler. Zayıf kontrastlı görüntülerde çarpıcı iyileştirmeler sağlar.\n\nGamma dönüşümü: y = x^γ. Bu neden gerekli? İnsan gözü karanlık tonlara aydınlık tonlardan çok daha duyarlıdır. γ<1 koyu tonları açar (gölgelerde detay ortaya çıkar), γ>1 aydınlık tonları karartır. Ekranlar da genellikle gamma düzeltmesi gerektirir.\n\nYoğunluk histogramı, görüntüdeki her yoğunluk değerinin kaç piksel tarafından kullanıldığını gösteren dağılım grafiğidir. Dar histogramdan düşük kontrast, çok sola kaymış histogramdan görüntünün karanlık olduğu, bimodal histogramdan arka plan ve nesnenin net ayrıldığı anlaşılabilir. Eşikleme için de kullanılır."
+        },
+        {
+          "type": "code",
+          "heading": "S3. Linear spatial filtering ve 2B/3B konvolüsyon nasıl çalışır? Anizotropik 3B görüntüde izotropik kernel ne sorunu yaratır?",
+          "text": "Linear spatial filtering, bir kernel (filtre maskesi) görüntünün üzerinde kaydırılarak her konumda komşu piksellerin ağırlıklı toplamının hesaplanmasıdır. Bu işleme konvolüsyon denir.\n\nNasıl çalışır: 3×3'lük bir Gaussian blur kernel ele al. Her piksel üzerine kernel'i hizala, kernel ağırlıklarını karşılık gelen piksel değerleriyle çarp, topla. Bu toplanmış değer o konumun yeni piksel değeri olur. Kernel boyunca kaydırarak tüm görüntüyü tara.\n\n2B'den 3B'ye geçince kernel de 3B olur: MxNxZ boyutunda bir voksel hacmini işlemek için MxNxZ boyutunda bir kernel kullanırsın.\n\nAnizotropik 3B görüntü problemi şudur: tıbbi görüntülerde voksel boyutu her yönde eşit değildir. Örneğin x-y düzleminde 0.2 mm çözünürlük varken z yönünde 1 mm kesit kalınlığı olabilir. Eğer izotropik bir Gaussian kernel uygularsan (her yönde aynı sigma) z yönünde çok daha geniş bir alandan bilgi toplamış olursun, sanki görüntüyü z ekseninde aşırı bulanıklaştırıyorsun. Yapılar deforme görünür. Doğru yaklaşım voksel boyutuna göre ölçeklendirilmiş anizotropik kernel kullanmaktır."
+        },
+        {
+          "type": "code",
+          "heading": "S4. Separable filter kernel nedir? Nasıl çalışır? Ne faydası var?",
+          "text": "Separable filter, 2B (veya 3B) bir konvolüsyonu birden fazla ardışık 1B konvolüsyona ayrıştırabilen bir kernel tipidir. Gaussian filtresi bunun klasik örneğidir.\n\nNasıl çalışır: 2B Gaussian filtresi uygulamak yerine önce yatay yönde 1B Gaussian, ardından dikey yönde 1B Gaussian uygularsın. Matematiksel olarak bu iki adım, doğrudan 2B Gaussian uygulamakla tamamen eşdeğerdir.\n\n3B için üç ardışık 1B konvolüsyon: önce x yönünde, sonra y yönünde, sonra z yönünde.\n\nFaydası hesaplama maliyetinde muazzam bir azalmadır. Bir NxN kernel'li 2B konvolüsyonun maliyeti O(N²) işlem per piksel. Separable yaklaşımda bu O(2N) per piksel olur. N büyüdükçe bu fark dramatik biçimde açılır. 3B'de O(N³) yerine O(3N). Büyük tıbbi görüntülerde veya 3B veri setlerinde bu fark çalışma süresini saatlerden dakikalara indirebilir."
+        },
+        {
+          "type": "code",
+          "heading": "S5. Frekans alanında filtreleme nasıl çalışır? Avantajları neler? 3B görüntüye nasıl genişler?",
+          "text": "Fourier dönüşümü bir görüntüyü uzaysal alandan frekans alanına taşır. Görüntüdeki her piksel değerinin hangi frekans bileşenlerinden oluştuğunu gösterir. Düşük frekanslar genel parlaklık ve büyük yapılara karşılık gelirken, yüksek frekanslar keskin kenarlara ve gürültüye karşılık gelir.\n\nFrekans alanında filtreleme şu şekilde çalışır: FFT uygula → frekans alanında filtre mask'ı çarp (örneğin düşük frekansları geç, yüksekleri kapat) → ters FFT ile uzaysal alana dön. Matematiksel olarak bu, uzaysal alanda konvolüsyonla tamamen eşdeğerdir — bu konvolüsyon teoreminin ana sonucudur.\n\nAvantajları: çok büyük kernel'ler için uzaysal konvolüsyon O(N²·K²) maliyetlidir, ama frekans alanında her zaman O(N² log N) maliyetle yapılabilir, yani büyük kernel'lerde frekans alanı çok daha hızlıdır. Ayrıca tam olarak hangi frekansları geçirmek istediğini net biçimde tanımlayabilirsin (ideal low-pass, band-pass gibi).\n\n3B görüntüye genişleme doğrudur: 3B FFT uygularsın, 3B frekans alanında filtrelersin, 3B ters FFT ile geri dönersin. Hesaplama artışı O(N³ log N) olur ama prensip aynıdır."
+        },
+        {
+          "type": "code",
+          "heading": "S6. Non-linear rank order filterlar nedir? Median, min, max filtreleri nasıl çalışır? Faydaları neler?",
+          "text": "Non-linear filterlar, piksel değerlerinin ağırlıklı toplamı yerine başka bir fonksiyon uygular — dolayısıyla süperpozisyon prensibi geçerli değildir.\n\nRank order filter fikri şudur: komşuluk penceresindeki tüm piksel değerlerini sıralarsın (rank'larsın) ve bu sıralı diziden belirli bir elemanı seçersin.\n\nMedian filter: sıralı dizinin ortanca değerini al. Bu neden kullanışlı? \"Salt and pepper\" gürültüsüne (rastgele beyaz/siyah pikseller) karşı son derece etkilidir. Gaussian blur da gürültüyü giderir ama kenarları bulanıklaştırır; median ise kenarları korurken gürültüyü siler, çünkü aşırı değerler (0 veya 255) sıralı dizide başa veya sona düşer ve ortanca seçilmez.\n\nMin filter (erosion): penceredeki en küçük değeri seç. Binary görüntülerde parlak nesneleri küçültür, karanlık bölgeleri genişletir.\n\nMax filter (dilation): penceredeki en büyük değeri seç. Binary görüntülerde parlak nesneleri büyütür, küçük delikleri kapatır.\n\nBu filterlar morfolojik operasyonların temelini oluşturur."
+        },
+        {
+          "type": "code",
+          "heading": "S7. Morfolojik görüntü işlemenin genel fikri nedir? Structuring element nedir ve nasıl kullanılır?",
+          "text": "Morfolojik görüntü işleme, görüntüdeki şekilleri yapısal bir elemanla (structuring element) şekillendirmeye, büyütmeye, küçültmeye ya da analiz etmeye yarar. Genellikle binary görüntüler üzerinde çalışır (beyaz nesne, siyah arka plan).\n\nStructuring element (SE), belirli bir şekil ve boyutta küçük bir maskedir: kare, disk, çizgi gibi. Bu elemanın nasıl seçildiği operasyonun hangi geometrik özelliklere duyarlı olacağını belirler.\n\nMorfolojik operasyonlar SE'yi görüntü üzerinde kaydırır ve her konumda SE ile örtüşen bölgeye göre karar verir. Örneğin dilation işleminde: SE merkezi her piksel üzerine yerleştirilir, SE ile örtüşen bölgede en az bir beyaz piksel varsa o merkez piksel beyaz yapılır. Bu nesneleri büyütür ve küçük boşlukları doldurur. Erosion ise tersi — SE bölgesinin tamamının beyaz olması gerekir, bu nesneleri küçültür ve ince köprüleri koparır."
+        },
+        {
+          "type": "code",
+          "heading": "S8. Binary görüntüde erosion/dilation/opening/closing nasıl hesaplanır? Etkileri neler?",
+          "text": "Dört temel morfolojik operasyon:\n\nErosion (aşındırma): SE'nin merkezi bir piksele gelince SE'nin tüm alanı nesnenin içinde kalıyorsa o piksel beyaz kalır, değilse siyah olur. Etki: nesneler küçülür, ince bağlantılar kopar, kenarlardaki pikseller silinir. Küçük gürültü nesnelerini yok edebilir.\n\nDilation (genişleme): SE merkezi gelince SE'nin herhangi bir bölgesi nesneyle örtüşüyorsa o piksel beyaz olur. Etki: nesneler büyür, küçük delikler ve çatlaklar kapanır, bölünmüş parçalar birleşebilir.\n\nOpening (erosion → dilation): önce aşındır, sonra genişlet. Etki: küçük gürültü nesnelerini ve ince çıkıntıları siler, ama büyük nesnelerin genel şeklini korur. İnce bağlantıları koparır.\n\nClosing (dilation → erosion): önce genişlet, sonra aşındır. Etki: küçük delikleri ve boşlukları doldurur, yakın nesneleri birleştirir, ama genel şekli korur.\n\nKolayca hatırlamak için: opening = dışarıdaki küçükleri kaldır, closing = içerideki küçükleri doldur."
+        },
+        {
+          "type": "code",
+          "heading": "S9. Binary yapılardaki küçük delikleri morfoloji ile nasıl doldurursun? Connected component nasıl çıkarılır? Dual operatörler neler?",
+          "text": "Küçük delikleri doldurmak için closing operasyonu kullanılır: önce dilation ile delikler kapanır, ardından erosion ile dışarıdan büyüyen kısım geri alınır. Delik küçükse structuring element'in büyüklüğüne göre seçim yapılır.\n\nAlternatif olarak flood fill (sel doldurma) algoritması kullanılabilir: nesnenin dışından başlayıp arka planı boyarsın, boyayamadığın arka plan bölgeleri iç deliklerdir.\n\nConnected component labeling (bağlı bileşen etiketleme): binary görüntüdeki birbirine bağlı beyaz piksel gruplarını bulur ve her birini farklı bir etiketle işaretler. 4-bağlantılılık (sadece yatay/dikey komşular) veya 8-bağlantılılık (köşegen komşular da sayılır) kullanılabilir. Böylece görüntüdeki her ayrı nesneyi sayabilir ve üzerinde ayrı ayrı ölçüm yapabilirsin.\n\nDual operatörler, morfolojide birbirinin tamamlayıcısı olan çift operatörlerdir:\n  Erosion ↔ Dilation (biri diğerinin duali)\n  Opening ↔ Closing (biri diğerinin duali)\n\nDualite şu anlama gelir: beyaz ve siyahı yer değiştirip (görüntüyü tersine çevirip) bir operasyon uygularsan, orijinal görüntüde diğer operasyonu uygulamakla aynı sonucu alırsın. Matematiksel olarak: erosion(complement(A)) = complement(dilation(A))."
+        }
+      ]
+    },
+    {
       "title": "Convolution and Linear Filtering",
       "cat": "Filtering",
       "summary": "Convolution is the fundamental operation in image processing: a kernel (filter) slides over the image, computing a weighted sum at each position. It is the basis for blurring, sharpening, edge detection, and is the mathematical heart of CNNs.",
@@ -2565,6 +2694,59 @@
   ],
   "ida03": [
     {
+      "title": "Lecture 3 — Q & A",
+      "cat": "Foundations",
+      "summary": "IDA Lecture 3'ün tüm sınav soruları ve sade açıklamalarla cevapları. MLP, gradient descent, CNN katmanları, backprop.",
+      "context": "Lecture 03 · 2.11.2023 — Deep Learning Crash Course",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "S1. MLP'nin bileşenleri neler? Ağırlıklar verilince çıktıyı nasıl hesaplarsın?",
+          "text": "MLP'de üç şey var: input layer (veriyi alır), hidden layer'lar (asıl işlem burada),\noutput layer (sonuç çıkar). Her nöron önceki katmanın tüm nöronlarına bağlı\n— bu yüzden 'fully connected' denir. Her bağlantının bir ağırlığı,\nher nöronun bir bias'ı var.\n\nÇıktıyı hesaplamak için katman katman ilerlersin:\nHer katmanda W × girdi + bias hesaplarsın,\nsonra ReLU ya da sigmoid gibi bir aktivasyon uygularsın.\nBunu son katmana kadar tekrarlarsın.\nSon katmanda softmax varsa her sınıf için bir olasılık üretirsin."
+        },
+        {
+          "type": "code",
+          "heading": "S2. MLP nasıl eğitilir? Hangi bileşenler değişir? Hata nasıl hesaplanır?",
+          "text": "Ağırlıklar başta rastgele. Bir örnek verirsin, ağ tahmin üretir.\nBu tahmini doğru cevapla karşılaştırırsın — bu fark loss.\nSınıflandırma için cross-entropy, sayı tahmini için MSE.\n\nSonra backprop devreye girer:\n'Bu hataya hangi ağırlık ne kadar katkıda bulundu?'\nsorusunu zincir kuralıyla geriye doğru hesaplarsın.\nHer ağırlık için bir gradyan çıkar.\nGradient descent ile ağırlıkları güncellersin.\n\nSadece ağırlıklar ve bias'lar değişir.\nKaç katman, kaç nöron var — bunlar sabit kalır."
+        },
+        {
+          "type": "code",
+          "heading": "S3. Gradient descent nedir? Learning rate neden kritik?",
+          "text": "Loss fonksiyonunu engebeli bir arazi gibi düşün, minimum noktayı bulmak istiyorsun.\nGradient descent: bulunduğun noktada zeminin hangi yöne eğimli olduğunu hesapla,\noradan ters yöne bir adım at. Bunu defalarca tekrarlayınca minimuma yaklaşırsın.\n\nLearning rate = her adımın büyüklüğü.\n  Çok büyük → minimum'un üzerinden atlarsın, ağ stabil olmuyor.\n  Çok küçük → çok yavaş ilerlersin, yüzlerce epoch gerekebilir.\n\nGenellikle 0.001 ile başlanır.\nAdam gibi adaptif optimizerlar bunu otomatik ayarlar."
+        },
+        {
+          "type": "code",
+          "heading": "S4. CNN ile klasik makine öğrenmesi arasındaki temel fark nedir?",
+          "text": "Klasik ML'de işi ikiye bölersin:\n  1. Elle özellik çıkar (kenar dedektörü, renk histogramı, SIFT...)\n  2. Bu özellikleri bir classifier'a ver\nÖzellikleri sen tasarlarsın.\n\nCNN'de ise ağ özellikleri de kendisi öğreniyor.\nHam piksellerden direkt çıktıya gidiyor,\naradaki her şeyi backprop ile kendisi keşfediyor.\nElle feature engineering yok.\n\nBu büyük avantaj: insan aklının tasarlayamayacağı özellikleri bulabiliyor\nve veriyle öğrendiği için çok daha iyi genelleme yapıyor."
+        },
+        {
+          "type": "code",
+          "heading": "S5. Convolutional layer nasıl çalışıyor? Filtreler nedir? Shared weights'te backprop?",
+          "text": "Küçük bir filtre (örn. 3×3) tüm görüntünün üzerinde kayar.\nHer pozisyonda filtreyi o bölgeyle çarpıp toplayarak tek bir sayı üretirsin.\nFiltre = öğrenilen ağırlıklar.\nAynı filtre görüntünün her yerine aynı ağırlıklarla uygulanır → weight sharing.\n\nBackprop'ta:\nO filtre görüntünün 100 pozisyonunda kullanıldıysa,\nfiltrenin gradyanı bu 100 pozisyondan gelen gradyanların toplamıdır.\nHepsini birleştirip filtreyi bir kez güncelliyorsun.\n\nWeight sharing sayesinde parametre sayısı devasa azalır."
+        },
+        {
+          "type": "code",
+          "heading": "S6. Conv layer'ın hangi hyperparameter'ları var? Parametre sayısı nasıl hesaplanır?",
+          "text": "Hyperparameter'lar:\n  kernel size  → k×k  (kaç piksellik filtre)\n  out_channels → kaç farklı filtre (özellik) aranıyor\n  stride       → filtre kaçar piksel atlayarak kayacak\n  padding      → görüntü kenarlarına kaç piksel sıfır ekleneceği\n\nParametre sayısı = k × k × C_in × C_out + C_out  (son terim bias)\n\nÖrnek: 3×3 kernel, 3 input channel, 32 filtre\n→ 3×3×3×32 + 32 = 896 parametre\n\nStride ve padding çıktı boyutunu etkiler, parametre sayısını değiştirmez."
+        },
+        {
+          "type": "code",
+          "heading": "S7. Pooling layer nedir? Neden kullanılıyor? Hangi hyperparameter'ları var?",
+          "text": "Spatial boyutu küçültür. Max pooling en yaygını:\n  görüntüyü 2×2'lik bloklara böl,\n  her bloktan sadece en büyük değeri al.\n  28×28'lik feature map → stride=2 ile → 14×14 olur.\n\nNeden kullanılır?\n  1. Parametre azaltma — sonraki katman daha küçük girdi işler.\n  2. Translation invariance — bir özellik 1-2 piksel kaydıysa\n     max pooling sonrası aynı değeri vermeye devam edebilir.\n\nHyperparams: pool size (kaç×kaç blok) ve stride."
+        },
+        {
+          "type": "code",
+          "heading": "S8. FC layer CNN'de nerede kullanılıyor? Multi-class output için hangi aktivasyon?",
+          "text": "Conv+pool katmanları bittikten sonra, en sonda.\nO noktada ağ görüntüden yüksek seviyeli özellikler çıkarmıştır.\nArtık bunları birleştirip 'bu hangi sınıf?' sorusunu cevaplama zamanı.\n\n3D feature map'i düzleştirip (flatten) 1D vektöre dönüştürürsün,\nsonra FC layer'lar gelir.\n\nMulti-class çıktı için softmax:\n  Her sınıfa bir olasılık verir, hepsi toplamda 1 olur.\n  '%80 kedi, %15 köpek, %5 kuş' gibi.\nBinary sınıflandırma için sigmoid da kullanılabilir."
+        },
+        {
+          "type": "code",
+          "heading": "S9. Tipik bir CNN nasıl yapılandırılır? Katmanlar hangi sırayla geliyor?",
+          "text": "[Conv → ReLU → Pool]  ← bu bloğu birkaç kez tekrarla\n        ↓\n    Flatten          ← 3D feature map'i 1D vektöre dönüştür\n        ↓\n   FC layer(lar)     ← özellikleri birleştir\n        ↓\n     Softmax         ← sınıf olasılıklarını üret\n\nHer [Conv → ReLU → Pool] bloğunda:\n  spatial boyut küçülür, filtre sayısı artar.\n\nİlk katmanlar: kenar, renk gibi basit şeyler.\nDerin katmanlar: şekil parçaları, nesneler — giderek daha soyut.\nBu hiyerarşik öğrenme CNN'i güçlü yapan şey."
+        }
+      ]
+    },
+    {
       "title": "Perceptron, MLP, and Backpropagation",
       "cat": "Foundations",
       "summary": "The perceptron is the atomic building block: a linear threshold unit. Stacking layers creates an MLP. Backpropagation — efficient reverse-mode automatic differentiation through the computational graph — is the algorithm that makes training deep networks feasible.",
@@ -2681,6 +2863,64 @@
   ],
   "ida04": [
     {
+      "title": "Lecture 4 — Q & A",
+      "cat": "Classical",
+      "summary": "IDA Lecture 4'ün tüm sınav soruları ve sade açıklamalarla cevapları. Template matching, Hough transform, R-CNN ailesi, YOLO, SSD, FPN, Focal Loss.",
+      "context": "Lecture 04 · 10.11.2023 — Object Detection",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "S1. Template matching nasıl çalışıyor? Benzerlik ölçütleri neler? Kısıtlamaları nedir?",
+          "text": "Bir şablonu (template) alıp tüm görüntü üzerinde kaydırırsın.\nHer pozisyonda şablonla o bölge arasındaki benzerliği hesaplarsın.\nEn yüksek benzerlik → nesnenin orada olduğunu varsayarsın.\n\nBenzerlik ölçütleri:\n  SSD (Sum of Squared Differences) — düşük = daha benzer\n  Normalized Cross-Correlation — 1'e yakın = daha benzer\n  Normalized correlation kullanmak iyi çünkü aydınlatma değişimine karşı daha sağlam.\n\nŞablonu nasıl belirlersin? Bir örnek nesnenin crop'u ya da elle çizilmiş.\n\nKısıtlamalar:\n  Rotasyon, scale değişimi veya deformasyona karşı hiç dayanıklı değil.\n  Her pozisyon için hesaplama gerekiyor — yavaş.\n  Nesne görünümü değişirse tamamen bozuluyor."
+        },
+        {
+          "type": "code",
+          "heading": "S2. Hough transform nedir? Şekil tespiti nasıl yapılıyor? Accumulator matrix nedir?",
+          "text": "Fikir: her kenar pikseli 'ben hangi çizginin (ya da dairenin) üzerinde olabilirim?'\nsorusunu sorar ve buna göre oy kullanır.\n\nÇizgi tespiti için (y = mx + b parametreleri):\n  Her edge pikseli (x,y) için: bu noktadan geçen tüm olası çizgileri\n  parametre uzayında (m, b) birer nokta olarak işaretle.\n  Çok sayıda piksel aynı (m,b)'ye oy verdiyse → orada bir çizgi var.\n\nAccumulator matrix = parametre uzayındaki sayaç tablosu.\n  Her (m,b) kombinasyonu için kaç piksel oy kullandığını tutar.\n  Zirve noktalar → tespit edilen şekiller.\n\nDaireler için: (x0, y0, r) 3 parametre — 3D accumulator.\n\nFaydalı: gürültüye ve eksik piksellere karşı dayanıklı.\nKısıt: parametre sayısı arttıkça hesaplama çok ağırlaşıyor."
+        },
+        {
+          "type": "code",
+          "heading": "S3. Hough transform'un avantajları ve kısıtlamaları nelerdir?",
+          "text": "Avantajlar:\n  Gürültüye dayanıklı — çoğunluk oylaması yapılıyor.\n  Eksik, tamamlanmamış kenarlarla da çalışıyor.\n  Örtüşen şekilleri tespit edebiliyor.\n  Belirli geometrik şekiller için çok güvenilir.\n\nKısıtlamalar:\n  Parametre sayısı arttıkça bellek ve hesaplama patlıyor\n  (çizgi 2D, daire 3D, genel şekil daha fazla).\n  Şekli önceden bilmen gerekiyor — parametrik olmayan formlara uygulanamaz.\n  Gerçek dünya nesnelerinin karmaşık şekillerine uymuyor."
+        },
+        {
+          "type": "code",
+          "heading": "S4. R-CNN nasıl çalışıyor? Region proposal nedir? Neden yavaş?",
+          "text": "R-CNN üç adım:\n  1. Selective Search ile ~2000 aday bölge öner (region proposals)\n  2. Her bölgeyi ayrı ayrı CNN'den geçir → özellik vektörü\n  3. Her özellik vektörünü SVM ile sınıflandır + bounding box regress et\n\nCNN sadece sınıflandırma yapıyor, özellik olarak kullanılıyor.\n\nNeden yavaş?\n  2000 region proposal × CNN forward pass = 2000 ayrı CNN çalıştırıyorsun.\n  Bir görüntü için 47 saniye test süresi — gerçek zamanlı kullanım imkansız.\n  Eğitmesi de zor: 3 ayrı parçayı ayrı ayrı eğitmek gerekiyor\n  (CNN, SVM, bbox regressor)."
+        },
+        {
+          "type": "code",
+          "heading": "S5. Fast R-CNN ve Faster R-CNN farkı nedir? Neden daha hızlı?",
+          "text": "Fast R-CNN:\n  Görüntüyü bir kez CNN'den geçir → feature map üret.\n  Region proposal'ları doğrudan feature map üzerinde uygula (RoI Pooling).\n  2000 ayrı CNN yerine 1 CNN → çok daha hızlı (0.3 saniye).\n  Ama region proposal hâlâ Selective Search ile — o hâlâ yavaş.\n\nFaster R-CNN:\n  Region Proposal Network (RPN) ekliyor — proposal üretimi de CNN ile yapılıyor.\n  Feature map'i hem RPN hem de sınıflandırma için paylaşıyor.\n  Uçtan uca eğitilebilir — tek bir modelde her şey.\n  ~0.2 saniye, ve çok daha doğru.\n\nFark özeti: Her seferinde daha fazla işi CNN'e taşıdılar,\nve feature map'i paylaştırdılar."
+        },
+        {
+          "type": "code",
+          "heading": "S6. RoI Pooling nedir? RPN nedir? Anchor box nedir?",
+          "text": "RoI Pooling:\n  Feature map üzerinde bir region proposal bölgesini al,\n  sabit boyutlu çıktıya dönüştür (örn. 7×7).\n  Bölge her boyutta olabilir, FC layer sabit boyut istiyor.\n\nRegion Proposal Network (RPN):\n  Feature map üzerinde kayan bir pencere.\n  Her pozisyonda 'burada nesne var mı?' ve bounding box tahmini yapar.\n  CNN ile eğitildiği için hızlı.\n\nAnchor box:\n  Her pozisyon için önceden tanımlanmış farklı boyut/oran kombinasyonları.\n  Örn: küçük kare, büyük kare, yatay dikdörtgen, dikey dikdörtgen...\n  RPN bu anchor'ları referans alarak 'bu anchor ne kadar kaymış/büyümüş?'\n  sorusunu cevaplar — doğrudan koordinat değil, fark tahmin eder."
+        },
+        {
+          "type": "code",
+          "heading": "S7. One-shot detector'lar neden daha hızlı? YOLO nasıl çalışıyor?",
+          "text": "R-CNN ailesi iki aşamalı: önce region proposal, sonra sınıflandırma.\nOne-shot (single-stage) detector'larda bu iki aşama tek geçişte yapılıyor.\nAyrı bir proposal adımı yok → çok daha hızlı.\n\nYOLO:\n  Görüntüyü S×S grid'e böl (örn. 7×7).\n  Her grid hücresi: B tane bounding box tahmini + her box için confidence,\n  ve tüm sınıflar için olasılık vektörü.\n  Tek bir CNN forward pass'inde tüm bunları tahmin ediyor.\n  Gerçek zamanlı: 45 fps.\n\nDezavantaj: grid yapısından dolayı küçük ve birbirine yakın\nnesnelerde zorlanıyor. Her grid hücresi sadece 1 nesne tespit edebiliyor."
+        },
+        {
+          "type": "code",
+          "heading": "S8. YOLO'nun dezavantajları neler? SSD bunları nasıl çözüyor?",
+          "text": "YOLO'nun sorunları:\n  Küçük nesnelerde zayıf — grid çok kaba kalıyor.\n  Her grid hücresi sadece 1 nesne tespit edebiliyor.\n  Birbirine yakın nesneleri ayırt etmekte zorlanıyor.\n  Aspect ratio çeşitliliği sınırlı.\n\nSSD (Single Shot Detector):\n  Birden fazla feature map kullanır — farklı boyuttaki nesnelere uyum.\n    Büyük feature map (erken katman): küçük nesneler.\n    Küçük feature map (derin katman): büyük nesneler.\n  Her feature map'te farklı boyut ve oranlarla anchor box'lar.\n  Böylece çok farklı ölçeklerdeki nesneleri tek geçişte yakalıyor.\n\nSSD hızı YOLO ile karşılaştırılabilir ama özellikle küçük nesnelerde daha iyi."
+        },
+        {
+          "type": "code",
+          "heading": "S9. Feature Pyramid Network (FPN) nedir? Nesne tespitinde nasıl kullanılır?",
+          "text": "Problem: CNN'de derin katmanlar semantik açıdan zengin ama düşük çözünürlüklü.\nErken katmanlar yüksek çözünürlüklü ama az semantik.\nKüçük nesneler erken katmanlarda, büyük nesneler derin katmanlarda iyi.\n\nFPN çözümü:\n  Bottom-up: normal CNN forward pass (her katmanda boyut küçülür).\n  Top-down: derin katmandan geri yukarı çıkarken lateral connection'larla\n  üst katmanların semantik bilgisini alt katmanlara aktar.\n  Her ölçekte hem semantik hem de detay bilgisi var.\n\nNesne tespitinde:\n  Her FPN çıktısını (farklı ölçek) için ayrı detection head kullan.\n  Küçük nesneler büyük feature map'ten, büyük nesneler küçük feature map'ten tespit.\n  Faster R-CNN + FPN = çok güçlü kombinasyon."
+        },
+        {
+          "type": "code",
+          "heading": "S10. Focal Loss nedir? Nerede kullanılıyor?",
+          "text": "Problem: one-shot detector'larda binlerce anchor box var.\nBunların büyük çoğunluğu boş alan (background) — nesne yok.\nStandart cross-entropy'de bu kolay örnekler loss'u domine ediyor,\nağ asıl zor örneklerden (gerçek nesneler) yeterince öğrenemiyor.\n\nFocal Loss:\n  Kolay örneklerin (yüksek confidence, doğru tahmin) katkısını otomatik küçültür.\n  Zor örneklerin (düşük confidence, yanlış tahmin) katkısını büyütür.\n  FL = -(1 - p_t)^γ × log(p_t)\n  γ (gamma) ne kadar büyükse, kolay örneklerin etkisi o kadar azalır.\n\nNerede kullanılıyor? RetinaNet'in classification head'inde.\nFPN + Focal Loss kombinasyonu → two-stage detector kadar doğru,\none-stage detector kadar hızlı."
+        }
+      ]
+    },
+    {
       "title": "Classical Object Detection: Template Matching and Hough Transform",
       "cat": "Classical",
       "summary": "Before deep learning, object detection relied on template matching (slide a prototype over the image) and the Hough Transform (vote for parametric shapes). Both are still relevant for constrained industrial inspection and geometrically regular objects.",
@@ -2789,6 +3029,59 @@
     }
   ],
   "ida05": [
+    {
+      "title": "Lecture 5 — Q & A",
+      "cat": "Fundamentals",
+      "summary": "IDA Lecture 5'in tüm sınav soruları ve sade açıklamalarla cevapları. Semantic segmentation, active learning, U-Net, Mask R-CNN, RoIAlign, StarDist, Cellpose.",
+      "context": "Lecture 05 · 16.11.2023 — Machine Learning-based Image Segmentation",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "S1. ML semantic segmentation için nasıl kullanılır? Random forest neden iyi?",
+          "text": "Her pikseli bir sınıfa atamak istiyorsun.\nBunun için her pikselden özellikler çıkarırsın:\n  renk, gradyan yönü, kenar yoğunluğu, doku, komşu piksel istatistikleri...\nSonra bu özellikleri bir classifier'a verirsin.\n\nRandom forest neden iyi seçim?\n  Hızlı eğitim ve tahmin.\n  Hangi özelliklerin önemli olduğunu gösterebiliyor.\n  Overfitting'e karşı dayanıklı (ensemble yöntemi).\n  Az veriyle bile makul sonuç verir.\n  Sliding window ile piksel piksel uygulanabilir."
+        },
+        {
+          "type": "code",
+          "heading": "S2. Active learning nedir? Kullanıcıyı döngüye dahil etmek neden mantıklı?",
+          "text": "Etiketleme pahalı ve zaman alıcı, özellikle medikal görüntülerde.\nActive learning şunu yapar:\n  Model önce az etiketli veriyle eğitilir.\n  Sonra 'hangi örnekleri bilmiyorum?' diye sorar.\n  En emin olmadığı pikselleri/bölgeleri kullanıcıya gösterir.\n  Kullanıcı sadece bu zor örnekleri etiketler.\n  Model tekrar eğitilir, döngü devam eder.\n\nNeden mantıklı?\n  Zaten emin olunan örnekleri etiketlemek zaman kaybı.\n  Az etiketle maksimum öğrenme.\n  Kullanıcı ekspertizi en kritik yerlere odaklanıyor."
+        },
+        {
+          "type": "code",
+          "heading": "S3. CNN semantic segmentation için nasıl kullanılır? Sliding window'un dezavantajı?",
+          "text": "CNN her piksele bir sınıf etiketi vermek için kullanılır.\n\nStepping window yaklaşımı:\n  Her piksel etrafında bir pencere al → CNN'e ver → o pikselin sınıfını tahmin et.\n  Tüm pikseller için tekrarla.\n\nDezavantajı:\n  Her piksel için ayrı CNN forward pass → çok yavaş.\n  Pencereler büyük ölçüde örtüşüyor — aynı piksel yüzlerce kez işleniyor.\n  Gerçek zamanlı ya da büyük görüntüler için kullanılamaz.\n\nÇözüm: Fully Convolutional Network (FCN) — tüm görüntüyü bir kez işle,\nher pozisyon için aynı anda tahmin üret."
+        },
+        {
+          "type": "code",
+          "heading": "S4. Unpooling / up-convolution nedir? 1×1 conv ne işe yarar? Batch norm nasıl çalışır?",
+          "text": "Unpooling / transposed convolution:\n  Pooling spatial boyutu küçültüyordu.\n  Segmentasyon için orijinal boyuta geri dönmek gerekiyor.\n  Transposed conv (up-conv): öğrenilen ağırlıklarla boyutu büyütür.\n  Nearest neighbor unpooling: sadece değeri kopyalar, öğrenme yok.\n\n1×1 convolution:\n  Spatial boyutu değiştirmez.\n  Sadece channel sayısını değiştirir (azaltır veya artırır).\n  Parametre azaltmak ve channel'lar arası ilişki kurmak için.\n\nBatch normalization:\n  Her mini-batch için aktivasyonları normalize et (ortalama=0, std=1).\n  Sonra γ ve β ile ölçekle — bunlar öğrenilen parametreler.\n  Eğitimi stabilize eder, daha büyük learning rate kullanılabilir,\n  hafif regularization etkisi var."
+        },
+        {
+          "type": "code",
+          "heading": "S5. U-Net mimarisi nedir? Skip connection neden önemli? 3D'ye nasıl taşınır?",
+          "text": "U-Net: encoder-decoder mimarisi, U şeklinde.\n\nEncoder (sol kol): [Conv → ReLU → Pool] × 4\n  Her adımda spatial boyut yarıya iner, channel sayısı iki katına çıkar.\n  Yüksek seviyeli özellikler öğrenilir.\n\nDecoder (sağ kol): transposed conv ile boyutu büyüt, channel azalt.\n  Her decoder adımında karşı encoder adımından skip connection gelir.\n\nSkip connection neden önemli?\n  Encoder'daki ince detaylar (kenarlar, dokular) pooling sırasında kaybolur.\n  Skip connection bu detayları direkt decoder'a aktarır.\n  Segmentation hem semantik bilgiyi hem de konumsal detayı kullanabilir.\n\n3D'ye taşıma: 2D conv ve pool yerine 3D versiyonlarını kullan.\nSparse 2D annotation ile 3D eğitim:\n  Her 3D volume için birkaç 2D slice etiketli yeterli,\n  ağ interpolasyonla 3D öğrenebiliyor."
+        },
+        {
+          "type": "code",
+          "heading": "S6. Mask R-CNN nasıl çalışıyor? Mask branch'in çıktısı nedir?",
+          "text": "Faster R-CNN'e bir şube daha ekliyorsun.\n\nFaster R-CNN zaten yapıyor:\n  RPN → region proposals\n  RoI Pooling → sabit boyutlu özellik\n  Classification head → sınıf tahmini\n  BBox regression head → bounding box düzeltmesi\n\nMask R-CNN ekliyor:\n  Mask head: küçük bir FCN (fully conv network)\n  Her RoI için 28×28'lik binary mask tahmin ediyor.\n  Her sınıf için ayrı mask çıktısı var (örn. 80 sınıf → 80 adet 28×28 mask).\n  Sınıf tahminine göre doğru mask seçilip orijinal boyuta ölçekleniyor.\n\nSonuç: her nesne için ayrı piksel maskesi → instance segmentation."
+        },
+        {
+          "type": "code",
+          "heading": "S7. RoIAlign nedir? RoI Pooling'in instance segmentation için sorunu ne?",
+          "text": "RoI Pooling sorunu:\n  Region proposal koordinatları float — feature map piksel hizalaması integer.\n  Yuvarlama yapılıyor → pikseller yanlış hizalanıyor.\n  Bounding box için yeterli ama piksel hassasiyeti gerektiren\n  mask için büyük sorun — mask kayıyor.\n\nRoIAlign çözümü:\n  Yuvarlamak yerine bilinear interpolation kullanır.\n  Float koordinatlarda tam olarak istenen konumu hesaplar.\n  Her RoI çıktı hücresi için 4 nokta örnekle, bilinear interpole et.\n  Hiç quantization yok → piksel hassas hizalama.\n\nSonuç: Mask R-CNN RoI Pooling yerine RoIAlign kullanınca\nmask kalitesi önemli ölçüde artıyor."
+        },
+        {
+          "type": "code",
+          "heading": "S8. StarDist (star-convex polygon) yaklaşımı nedir?",
+          "text": "Fikir: her hücre merkezi etrafında star-convex polygon kullanarak sınırı temsil et.\n\nNasıl çalışır?\n  Her piksel için ağ iki şey tahmin eder:\n    1. Bu piksel bir nesne merkezine ne kadar yakın? (distance map)\n    2. Bu noktadan N yönde (örn. 32 ışın) nesne sınırına uzaklık.\n  Bu uzaklıklardan star-convex polygon oluşturulur.\n\nEğitim hedefleri: her piksel için uzaklık değerleri.\nSınırda olan nesneler: sadece görünen kısım tahmin edilir.\nÇıktı katmanları: 1 distance + N radial distance map.\n\nNeden iyi?\n  Yuvarlak/oval nesneler (hücreler) için çok uygun.\n  Örtüşen nesneleri NMS ile ayırıyor.\n  U-Net gibi encoder-decoder mimari kullanıyor."
+        },
+        {
+          "type": "code",
+          "heading": "S9. Cellpose nasıl çalışıyor? Gradient flow nedir? 3D segmentasyon nasıl?",
+          "text": "Cellpose'un fikri: her piksele hücre merkezine doğru bir akış vektörü öğret.\n\nGround truth dönüşümü:\n  Her etiketli hücre için simüle edilmiş gradient flow hesaplanır.\n  Sanki merkeze doğru akan bir sıvı var gibi — difüzyon simulasyonu.\n  Her piksel: 'hangi yöne akmalıyım?' vektörü alıyor.\n\nAğ mimarisi:\n  U-Net benzeri.\n  Çıktı: yatay akış + dikey akış + hücre olasılığı (3 kanal).\n\nHücre instance'ı nasıl elde edilir?\n  Her pikseli gradient flow boyunca akıt.\n  Aynı noktaya yakınsayan pikseller aynı hücreye ait.\n  Kümeleme ile instance'ları belirle.\n\n3D için:\n  Seçenek 1: her eksende (XY, XZ, YZ) 2D çalıştır, sonuçları birleştir.\n  Seçenek 2: direkt 3D ağ eğit."
+        }
+      ]
+    },
     {
       "title": "Semantic vs Instance Segmentation",
       "cat": "Fundamentals",
@@ -2907,6 +3200,54 @@
   ],
   "ida06": [
     {
+      "title": "Lecture 6 — Q & A",
+      "cat": "Filtering",
+      "summary": "IDA Lecture 6'nın tüm sınav soruları ve sade açıklamalarla cevapları. Nesne takibi, nearest neighbor, supervoxel+GMM, Viterbi, GOTURN, optical flow, FlowNet.",
+      "context": "Lecture 06 · 23.11.2023 — Object Tracking",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "S1. Nesne takibinin genel amacı nedir? 'Tracking by detection' ile 'tracking by contour evolution' farkı?",
+          "text": "Genel amaç: video ya da 3D+t veri içinde nesneleri zaman boyunca takip et.\nHer zaman noktasında nesnenin kimliğini koru, trajektori çıkar.\n\nMikroskopi verisindeki zorluklar:\n  Çok sayıda birbirine benzeyen nesne (hücreler).\n  Bölünme ve ölüm olayları.\n  Gürültü, düşük kontrast.\n  3D+t verisi → büyük veri boyutu.\n\nTracking by detection:\n  Her zaman noktasında nesneleri tespit et.\n  Tespitleri zaman boyunca birbirine bağla (assignment problemi).\n  Tespit ve takip ayrı ayrı yapılıyor.\n\nTracking by contour evolution:\n  Aktif kontur (snake) ile nesne sınırını doğrudan takip et.\n  Sınır bir sonraki frame'e taşınıp güncelleniyor.\n  Tespit ve takip birleşik."
+        },
+        {
+          "type": "code",
+          "heading": "S2. Nearest neighbor tracking nasıl çalışıyor?",
+          "text": "Her zaman noktasında tespitler var (bounding box merkezi ya da segmentasyon merkezi).\n\nAlgoritma:\n  t anındaki her nesne için t+1 anındaki en yakın tespiti bul.\n  Mesafe genellikle Öklid mesafesi.\n  Eşleştirme greedy — en yakına git.\n\nSorunlar:\n  Nesneler çaprazlaşırsa yanlış eşleştirme.\n  Yeni nesneler / kaybolan nesneler için özel mantık gerekiyor.\n  Sadece bir frame geriye bakıyor — küresel optimum değil.\n\nTespitler nereden geliyor?\n  Önceki lecture'larda öğrendiğimiz yöntemler:\n  threshold + connected components, U-Net, StarDist, Cellpose..."
+        },
+        {
+          "type": "code",
+          "heading": "S3. Supervoxel + Gaussian Mixture Model ile tracking nasıl yapılıyor?",
+          "text": "Adımlar:\n\n1. Supervoxel oluştur:\n   Birbirine benzer ve yakın pikselleri grupla → supervoxel.\n   Her nesne birkaç supervoxel'den oluşuyor.\n\n2. GMM ile nesne modeli:\n   Her nesnenin konumu ve şekli Gaussian ile modellenir.\n   Gaussian'ın merkezi = nesne konumu.\n\n3. Zaman boyunca güncelleme:\n   t anındaki Gaussian'ı t+1'e tahmin et (hareket modeli).\n   Yeni supervoxel'leri mevcut Gaussian'lara ata.\n   EM algoritması ile Gaussian parametrelerini güncelle.\n\nAvantaj: bölünme olaylarını modelleyebilir\n(bir Gaussian iki Gaussian'a ayrılabilir)."
+        },
+        {
+          "type": "code",
+          "heading": "S4. Tracking algoritmalarına hangi kısıt ve heuristikler eklenebilir?",
+          "text": "Biyolojik olarak makul sonuçlar için:\n\n  Maksimum hareket hızı:\n    Bir hücre bir frame'de çok fazla hareket edemez.\n    Belirli bir mesafenin üzerindeki eşleştirmeleri reddet.\n\n  Bölünme kısıtı:\n    Bir hücre en fazla 2'ye bölünebilir.\n    Bölünme sonrası her iki yavru hücreyi de takip et.\n\n  Ölüm/doğum yönetimi:\n    Görüntü sınırından çıkan nesne = kayıp (normal).\n    Ortada kaybolan = ölüm (özel olay olarak işaretle).\n\n  Hacim/boyut sürekliliği:\n    Hücre boyutu ani değişmez.\n    Çok farklı boyuttaki eşleştirmeleri reddet.\n\nBu kısıtlar assignment problemine maliyet matrisi olarak eklenir."
+        },
+        {
+          "type": "code",
+          "heading": "S5. Global track linking ve Viterbi algoritması nedir? State-space diyagramı nasıl?",
+          "text": "Nearest neighbor sadece bir sonraki frame'e bakıyor.\nGlobal track linking tüm zaman boyutuna bakıp en iyi trajektori seti buluyor.\n\nState-space diyagramı:\n  Düğümler: her zaman noktasındaki tespitler + başlangıç/bitiş düğümleri.\n  Kenarlar: olası eşleştirmeler arası geçişler.\n  Her kenarın maliyeti var (mesafe, boyut farkı vs.).\n\nViterbi algoritması:\n  Bu diyagramda en düşük maliyetli yolu bul.\n  Dynamic programming ile verimli çözüm.\n  Tüm zaman noktalarını bir arada optimize ediyor.\n  Lokal optimum yerine global optimum.\n\nDüğümler = o zaman noktasındaki tespit.\nKenarlar = 'bu nesne bir sonraki frame'de şu nesne olabilir' ilişkisi."
+        },
+        {
+          "type": "code",
+          "heading": "S6. GOTURN nasıl çalışıyor? Laplace dağılımı neden kullanılıyor?",
+          "text": "GOTURN: CNN tabanlı single-object tracker.\n\nGirdi: önceki frame'deki nesnenin crop'u + mevcut frame'in geniş alanı.\nCNN bu iki girdiyi birlikte işleyip nesnenin yeni konumunu tahmin ediyor.\nIki ayrı CNN kolu (Siamese benzeri), FC'de birleşiyor.\n\nLaplace dağılımı neden?\n  Eğitim verisi üretmek için nesneler rastgele konuma yerleştiriliyor.\n  Laplace dağılımından hareket örnekleniyor.\n  Laplace → kalın kuyruklar → hem küçük hem büyük hareketler.\n  Normal dağılım küçük hareketlere yönelirdi.\n  Laplace ile ağ daha çeşitli hareket büyüklüklerine hazırlanıyor.\n\nPotansiyel kısıt:\n  Tek nesne takip ediyor.\n  Hızlı kamera hareketi veya tamamen yeni görünümlerde bozulabilir."
+        },
+        {
+          "type": "code",
+          "heading": "S7. Optical flow nedir? İki frame verilince ne tahmin edilir?",
+          "text": "Optical flow: iki ardışık frame arasında her pikselin\nnerede olduğunu gösteren 2D hareket vektörü alanı.\n\nHer piksel (x, y) için:\n  Bu piksel bir sonraki frame'de (x + u, y + v) konumuna gitti.\n  u ve v → yatay ve dikey hareket miktarı.\n  Tüm görüntü için bu vektörler → dense optical flow field.\n\nNe işe yarıyor?\n  Nesne hareketi tahmini.\n  Video stabilizasyonu.\n  Action recognition.\n  Tracking için özellik olarak kullanılabilir.\n\nZor durumlar:\n  Büyük hareketler, aydınlatma değişimi,\n  transparan yüzeyler, motion blur."
+        },
+        {
+          "type": "code",
+          "heading": "S8. FlowNet nasıl çalışıyor? Correlation layer nedir? FlowNet2 ne getiriyor?",
+          "text": "FlowNet: CNN ile dense optical flow tahmini.\n\nİki frame'i birleştirip encoder-decoder CNN'den geçiriyorsun.\nDecoder çıktısı: her piksel için (u, v) hareket vektörü.\n\nCorrelation layer:\n  İki feature map arasındaki benzerliği hesaplar.\n  'Frame 1'deki bir patch, Frame 2'nin hangi bölgesine benziyor?'\n  Her konum için küçük bir arama penceresi içinde karşılaştırma yapılır.\n  Ağın iki frame'i ilişkilendirmesine yardımcı olur.\n  CNN'in hangi bölgelerin eşleştiğini daha kolay öğrenmesini sağlar.\n\nFlowNet2 iyileştirmeleri:\n  Birden fazla FlowNet modülünü seri bağladı.\n  Önce kaba tahmin, sonra ince düzeltme.\n  Küçük ve büyük hareketler için ayrı dal.\n  Çok daha iyi doğruluk.\n\nEğitim verisi nasıl elde edilir?\n  Gerçek video + bilinen hareket → sentetik data.\n  3D render edilmiş sahneler (FlyingChairs, FlyingThings3D)."
+        }
+      ]
+    },
+    {
       "title": "Kalman Filter for Object Tracking",
       "cat": "Filtering",
       "summary": "The Kalman filter is the optimal linear estimator for tracking objects under Gaussian noise. It alternates between a predict step (propagate state estimate forward using a motion model) and an update step (correct with new observations). Essential for multi-object tracking (MOT).",
@@ -2984,6 +3325,69 @@
     }
   ],
   "ida07": [
+    {
+      "title": "Lecture 7 — Q & A",
+      "cat": "Motivation",
+      "summary": "IDA Lecture 7'nin tüm sınav soruları ve sade açıklamalarla cevapları. RNN, attention mekanizması, Transformer mimarisi, ViT, DETR.",
+      "context": "Lecture 07 · 30.11.2023 — Attention and Transformers",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "S1. MLP sequential data için neden uygun değil? CNN işe yarıyor mu?",
+          "text": "MLP'nin sorunu:\n  Sabit boyutlu girdi bekliyor — farklı uzunlukta diziler için uygulanamaz.\n  Her pozisyon için ayrı ağırlıklar olurdu — parametre patlaması.\n  Önceki adımların bilgisini tutmuyor, her girdiyi bağımsız işliyor.\n\nCNN ne kadar işe yarıyor?\n  1D conv ile kısa bağımlılıkları yakalayabilir.\n  Birkaç katman ile biraz daha uzun bağımlılıklar.\n  Ama çok uzun mesafeli ilişkiler için çok derin ağ gerekiyor.\n  Ayrıca değişken uzunluklu dizilerle başa çıkması zor.\n  RNN'e göre daha az doğal bir fit."
+        },
+        {
+          "type": "code",
+          "heading": "S2. RNN'in temel fikri nedir? Sequential data için neden uygun?",
+          "text": "Fikir: önceki adımın bilgisini bir 'hidden state' olarak tut\nve her adımda hem yeni girdi hem de bu state'i kullan.\n\n  h_t = f(W_hh × h_{t-1} + W_xh × x_t + b)\n  y_t = W_hy × h_t\n\nHer adımda:\n  Önceki state (h_{t-1}) + mevcut girdi (x_t) → yeni state (h_t).\n  State geçmiş bilgisini taşıyor.\n\nNeden sequential data için uygun?\n  Değişken uzunluklu dizileri doğal işliyor.\n  Ağırlıklar tüm zaman adımlarında paylaşılıyor (weight sharing).\n  Geçmiş bağımlılıkları teorik olarak sonsuz uzağa taşıyabilir."
+        },
+        {
+          "type": "code",
+          "heading": "S3. Sequential data için tipik uygulama alanları neler? Mimariler nasıl değişiyor?",
+          "text": "Uygulama alanları ve karşılık gelen mimariler:\n\n  Çoka-bire (many-to-one):\n    Sentiment analysis: tüm cümleyi oku → tek etiket.\n    Son adımın hidden state'i çıktı olarak kullanılır.\n\n  Bire-çoka (one-to-many):\n    Image captioning: tek görüntü → kelime dizisi.\n    Girdi bir kez verilir, RNN metin üretir.\n\n  Çoka-çoka (many-to-many), eşit uzunluk:\n    Video classification, her frame için etiket.\n\n  Çoka-çoka, farklı uzunluk (Seq2Seq):\n    Makine çevirisi: Türkçe cümle → İngilizce cümle.\n    Encoder tüm girdiyi okur, decoder çıktıyı üretir."
+        },
+        {
+          "type": "code",
+          "heading": "S4. RNN'deki internal state'in mantığı nedir?",
+          "text": "Hidden state = ağın belleği.\n\nHer adımda iki bilgi birleşiyor:\n  1. Önceki adımdan gelen hidden state (geçmiş ne söylüyor?)\n  2. Mevcut adımın girdisi (şu an ne görüyorum?)\n\nBu ikisi ağırlıklarla birleştirilip aktivasyondan geçiyor → yeni hidden state.\n\nAnalooji: bir cümleyi okurken zihinde özet tutmak gibi.\nHer kelimeyi okuyunca özeti güncelliyorsun.\n\nSorun: çok uzun dizilerde ilk adımların bilgisi\ngiderek 'seyreltiliyor' — vanishing gradient problemi.\nLSTM ve GRU bu sorunu özel gate mekanizmalarıyla çözüyor."
+        },
+        {
+          "type": "code",
+          "heading": "S5. RNN'in açılmış hesaplama grafiği nasıl görünür? Eğitim nasıl yapılır? Sorunlar neler?",
+          "text": "Açılmış hesaplama grafiği (unrolled):\n  RNN'i zaman boyunca düz bir ağ gibi çiz.\n  Her zaman adımı = ayrı bir katman, ama aynı ağırlıklar.\n  h0 → h1 → h2 → ... → hT  (her adımda x_t de giriyor)\n\nEğitim: Backpropagation Through Time (BPTT).\n  Açılmış grafik üzerinde normal backprop.\n  Gradyanlar zamanda geriye doğru akar.\n\nSorunlar:\n  Vanishing gradient: gradyanlar çok adım geriye gidince sıfıra yaklaşıyor.\n    → Uzak bağımlılıklar öğrenilemiyor.\n  Exploding gradient: gradyanlar çok büyüyor.\n    → Gradient clipping ile önleniyor.\n  Uzun diziler için çok yavaş eğitim (sequential — paralelleştirilemiyor).\n\nAğırlıklar tüm zaman adımlarında paylaşıldığı için (weight sharing)\nher adım için ayrı parametre öğrenmek zorunda değiliz."
+        },
+        {
+          "type": "code",
+          "heading": "S6. RNN'de parametre matrisleri her zaman adımı için ayrı mı öğrenilir?",
+          "text": "Hayır — tüm zaman adımlarında aynı ağırlıklar kullanılır.\n\nW_hh, W_xh, W_hy matrisleri paylaşılıyor.\nHer adımda aynı dönüşümü yapıyorsun, farklı girdi ve state ile.\n\nNeden bu iyi?\n  Parametre sayısı diziyi uzunluğundan bağımsız sabit kalıyor.\n  Farklı uzunlukta dizilere uygulanabilir.\n  Her adımda aynı 'kural' geçerli — tutarlı işleme."
+        },
+        {
+          "type": "code",
+          "heading": "S7. Attention mekanizması nedir? Key, value, query nedir? Encoder-decoder attention?",
+          "text": "RNN'in sorunu: uzun dizilerde bilgi tek bir vektörde sıkışıyor.\nAttention: decoder her adımda tüm encoder çıktılarına bakabilsin.\n\nKey, Query, Value analojisi:\n  Query (Q): 'Şu an ne arıyorum?' — decoder'ın mevcut durumu.\n  Key (K): 'Bende ne var?' — encoder çıktılarının temsili.\n  Value (V): 'Asıl içerik ne?' — encoder çıktılarının bilgisi.\n\n  Attention weight = softmax(Q × K^T / √d_k)\n  Çıktı = Attention weight × V\n\nEncoder-decoder attention:\n  Query decoder'dan geliyor.\n  Key ve Value encoder'dan geliyor.\n  Decoder her adımda hangi encoder çıktısına bakması gerektiğini öğreniyor.\n  Çeviri için: Türkçe kelime üretirken hangi İngilizce kelimeye bak?"
+        },
+        {
+          "type": "code",
+          "heading": "S8. Transformer mimarisi nedir? Multi-head attention neden daha iyi?",
+          "text": "Transformer RNN'i tamamen bıraktı — sadece attention kullanıyor.\n\nEncoder bloğu (N kez tekrar):\n  Multi-head self-attention → Add & Norm → Feed-Forward → Add & Norm\n\nDecoder bloğu (N kez tekrar):\n  Masked self-attention → Add & Norm\n  → Cross-attention (encoder'a bakıyor) → Add & Norm\n  → Feed-Forward → Add & Norm\n\nFayda:\n  Tüm pozisyonlar birbirine direkt bağlanıyor — uzun bağımlılık sorunu yok.\n  Paralelleştirilebilir — RNN gibi sıralı işlem yok, GPU'yu tam kullanıyor.\n\nMulti-head attention neden daha iyi?\n  Her head farklı bir ilişkiyi öğrenebilir.\n  Bir head sözdizimsel ilişkiyi, diğeri anlamsal ilişkiyi yakalayabilir.\n  Tek head tüm ilişkileri aynı anda yakalamak zorunda kalıyor."
+        },
+        {
+          "type": "code",
+          "heading": "S9. Transformer görüntü sınıflandırma ve nesne tespitine nasıl uygulanır?",
+          "text": "Görüntüler için sorun: Transformer dizi bekliyor, görüntü 2D.\n\nVision Transformer (ViT) çözümü:\n  Görüntüyü sabit boyutlu patch'lere böl (örn. 16×16 piksel).\n  Her patch'i düzleştir ve linear projection ile embedding'e dönüştür.\n  Positional encoding ekle — patch'in konumunu bilsin.\n  Sequence olarak Transformer encoder'dan geçir.\n  Başa özel [CLS] token ekle → sınıflandırma için.\n\nNesne tespiti (DETR):\n  CNN ile görüntüden feature map çıkar.\n  Feature map'i düzleştir + positional encoding → Transformer encoder.\n  Decoder: object query'ler ile encoder çıktısına cross-attention.\n  Her query bir nesne tahmin ediyor (class + bounding box).\n  Farklı sayıda nesne: 'no object' sınıfı ile hallediliyor."
+        },
+        {
+          "type": "code",
+          "heading": "S10. ViT'te final classification nasıl elde ediliyor?",
+          "text": "ViT'te başa özel bir [CLS] token ekleniyor.\nBu token patch embedding'leriyle birlikte Transformer'dan geçiyor.\nSelf-attention sayesinde tüm patch'lerin bilgisini topluyor.\n\nEncoder'ın sonunda [CLS] token'ının çıktısı alınıyor.\nBu vektör bir MLP classification head'e veriliyor.\nSonunda sınıf olasılıkları çıkıyor.\n\nNeden [CLS] token?\n  Hangi patch'e bakacağını önceden bilmiyorsun.\n  [CLS] token tüm patch'lerle etkileşime giriyor\n  ve 'genel görüntü özeti' öğreniyor."
+        },
+        {
+          "type": "code",
+          "heading": "S11. DETR'de hangi adımlar var? Farklı sayıda nesne nasıl yönetiliyor?",
+          "text": "DETR adımları:\n  1. CNN backbone ile görüntüden feature map çıkar.\n  2. Feature map'i düzleştir + 2D positional encoding ekle.\n  3. Transformer encoder: feature map'teki global bağımlılıkları işle.\n  4. Transformer decoder: N tane object query (örn. 100 sabit sorgu).\n     Her query cross-attention ile encoder çıktısına bakıyor.\n  5. Her query için prediction head:\n     Sınıf tahmini + bounding box koordinatları.\n\nFarklı sayıda nesne:\n  N sorgu sabit ama görüntüde bazen 3, bazen 50 nesne olabilir.\n  'No object' özel sınıfı ekleniyor.\n  Gerçek nesne olmayan sorguların çıktısı 'no object' oluyor.\n  Hungarian matching ile eğitim sırasında hangi sorgunun\n  hangi gerçek nesneye karşılık geldiği optimize ediliyor."
+        }
+      ]
+    },
     {
       "title": "From RNNs to Self-Attention in Vision",
       "cat": "Motivation",
@@ -3083,6 +3487,74 @@
   ],
   "ida08": [
     {
+      "title": "Lecture 8 — Q & A",
+      "cat": "Medical",
+      "summary": "IDA Lecture 8'in tüm sınav soruları ve sade açıklamalarla cevapları. DeTr, UNETR, Swin Transformer, SAM, masked autoencoder, TrackFormer.",
+      "context": "Lecture 08 · 7.12.2023 — Image Analysis with Transformers",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "S1. DeTr görüntü özelliklerini nasıl çıkarıyor? Transformer nesne tespitine nasıl uygulanıyor?",
+          "text": "DeTr (Detection Transformer) iki aşama:\n\n1. CNN backbone (genellikle ResNet):\n   Görüntüden feature map çıkarır.\n   Transformer tam boyutlu görüntüyle başa çıkamaz — CNN ön işlem yapıyor.\n\n2. Transformer encoder-decoder:\n   Feature map düzleştirilip positional encoding eklenerek\n   Transformer encoder'a veriliyor.\n   Decoder: sabit sayıda object query → encoder çıktısına cross-attention.\n   Her query bir nesne tahmin ediyor (sınıf + bbox).\n\nEnd-to-end eğitim — NMS gibi el işi post-processing yok.\nHungarian matching ile en iyi query-nesne eşleştirmesi bulunuyor."
+        },
+        {
+          "type": "code",
+          "heading": "S2. CNN tabanlı özellik çıkarımı sonrası konumsal bilgi nasıl korunuyor?",
+          "text": "CNN feature map ürettikten sonra düzleştirince\nhangi özelliğin nerede olduğu bilgisi kaybolabilir.\n\nÇözüm: 2D positional encoding.\n  Feature map'teki her konum (satır, sütun) için\n  bir pozisyon vektörü hesaplanır.\n  Bu vektör feature embedding'e eklenir.\n  Transformer'a verilen her token hem 'ne' hem 'nerede' bilgisi taşır.\n\n1D positional encoding (ViT'teki) yeterli olmaz —\ngörüntüde hem x hem y ekseni önemli.\nDeTr'de sinüs/kosinüs tabanlı 2D encoding kullanılıyor."
+        },
+        {
+          "type": "code",
+          "heading": "S3. Object query nedir? Prediction head ne üretiyor? 'No object' sınıfı neden gerekli?",
+          "text": "Object query:\n  Decoder'a verilen N tane öğrenilebilir vektör (örn. 100 sorgu).\n  Her query 'ben bir nesne arıyorum' diye encoder çıktısına bakıyor.\n  Cross-attention ile görüntünün ilgili bölgelerine odaklanıyor.\n  Her query bağımsız bir nesne tahmin etmeye çalışıyor.\n\nPrediction head çıktıları (her query için):\n  Sınıf dağılımı (softmax) + bounding box koordinatları (cx, cy, w, h).\n\n'No object' sınıfı neden gerekli?\n  Görüntüde 100 nesne olmayabilir — 3-4 nesne olabilir.\n  Geri kalan query'lerin çıktısı 'boş' olmalı.\n  'No object' sınıfı bu durumu temsil ediyor.\n  Eğitimde Hungarian matching ile hangi query'nin hangi nesneye\n  ya da 'no object'e karşılık geleceği optimize ediliyor."
+        },
+        {
+          "type": "code",
+          "heading": "S4. UNETR 3D görüntüyü Transformer'a nasıl veriyor? Embedding ve positional encoding nasıl birleşiyor?",
+          "text": "3D görüntü doğrudan Transformer'a verilemez — çok büyük.\n\nÖn işlem:\n  3D hacmi eşit boyutlu 3D patch'lere böl (örn. 16×16×16 vokseller).\n  Her patch'i düzleştir → 1D vektör.\n  Linear projection ile sabit boyutlu embedding'e dönüştür.\n\nPositional encoding:\n  Her 3D patch pozisyonu için öğrenilebilir ya da sinüs tabanlı encoding.\n  Embedding + positional encoding → Transformer encoder'a giriyor.\n\nTransformer kısmı:\n  Encoder tüm patch'ler arası global ilişkileri öğreniyor.\n  Çıktı: her patch için zenginleştirilmiş özellik vektörü.\n  Bu vektörler CNN decoder'a skip connection olarak gönderiliyor."
+        },
+        {
+          "type": "code",
+          "heading": "S5. UNETR encoder özellikleri orijinal çözünürlüğe nasıl çıkarılıyor? Loss fonksiyonu nasıl?",
+          "text": "Encoder çıktıları düşük çözünürlüklü patch özellikler.\nOrijinal boyuta dönmek için CNN decoder kullanılıyor.\n\nDecoder:\n  Farklı Transformer katmanlarının çıktılarını skip connection olarak al.\n  Her birini yeniden şekillendir (reshape) — 1D token → 3D feature map.\n  Transposed convolution ile boyutu kademeli büyüt.\n  U-Net gibi encoder çıktılarını decoder'a birleştir.\n\nLoss fonksiyonu:\n  Segmentasyon için genellikle:\n  Cross-entropy loss + Dice loss kombinasyonu.\n  Cross-entropy piksel başı sınıf olasılığı.\n  Dice loss sınıf dengesizliğine karşı (küçük nesneler)."
+        },
+        {
+          "type": "code",
+          "heading": "S6. Swin Transformer nedir? Neden lineer complexity? Neden önemli?",
+          "text": "Standart ViT sorunu:\n  Her patch her diğer patch'e attention hesaplıyor → O(n²) complexity.\n  Görüntü büyüdükçe hesaplama patlıyor.\n\nSwin Transformer çözümü:\n  Attention'ı tüm görüntüde değil, küçük local window'larda hesapla.\n  Örn. 7×7'lik pencereler içinde self-attention.\n  Her pencere bağımsız → O(n) complexity (pencere sayısıyla lineer).\n\nNeden önemli?\n  Yüksek çözünürlüklü ve 3D medikal görüntüler için uygulanabilir.\n  GPU belleği ve hesaplama açısından çok daha verimli.\n  Swin-UNETR gibi modeller 3D beyin MRI'larına uygulanabiliyor."
+        },
+        {
+          "type": "code",
+          "heading": "S7. Patch merging ve SW-MSA nedir? Neden shifted window?",
+          "text": "Patch merging:\n  Her adımda komşu patch'leri birleştir → spatial boyut küçülür, channel artar.\n  CNN'deki pooling gibi — hiyerarşik özellik öğrenimi.\n  Derin katmanlar daha büyük alana, daha az detaya bakıyor.\n\nWindow-based self-attention (W-MSA):\n  Görüntüyü sabit pencereler böl, her pencerede kendi içinde attention.\n  Sorun: pencere sınırları boyunca hiç bilgi aktarımı yok.\n\nShifted Window (SW-MSA):\n  Bir sonraki katmanda pencereleri yarım pencere kaydır.\n  Önceki katmanın pencere sınırları artık pencerelerin ortasına geliyor.\n  Farklı pencereler arasında dolaylı bilgi akışı sağlanıyor.\n\nVerimli uygulama: cyclic shift + masking ile SW-MSA\nnormal W-MSA kadar hızlı hesaplanabiliyor."
+        },
+        {
+          "type": "code",
+          "heading": "S8. Swin-UNETR, vanilla UNETR'dan nasıl farklı? SW-MSA 3D'ye nasıl taşınıyor?",
+          "text": "Vanilla UNETR: ViT encoder (global attention, O(n²)) + CNN decoder.\nSwin-UNETR: Swin Transformer encoder (local window attention, O(n)) + CNN decoder.\n\nFark:\n  Swin-UNETR çok daha büyük ve yüksek çözünürlüklü 3D görüntüleri işleyebiliyor.\n  Vanilla UNETR 3D'de patch sayısı çok artınca bellek yetersiz kalıyor.\n  Swin hierarchical yapısı sayesinde multi-scale özellikler üretiyor.\n\nSW-MSA 3D'ye taşıma:\n  2D'de x ve y ekseninde kaydırma vardı.\n  3D'de x, y, z eksenlerinde kaydırma yapılıyor.\n  3D pencereler (örn. 7×7×7) içinde 3D self-attention.\n  Cyclic shift 3D'de de aynı şekilde uygulanıyor."
+        },
+        {
+          "type": "code",
+          "heading": "S9. SAM (Segment Anything Model) nasıl çalışıyor? Üç encoder neden ayrı?",
+          "text": "SAM üç bileşen:\n\n1. Image encoder (ViT-H):\n   Görüntüyü bir kez encode eder → image embedding.\n   Ağır model, ama görüntü başına bir kez çalışıyor.\n\n2. Prompt encoder:\n   Nokta, kutu, maske veya metin gibi ipuçlarını encode eder.\n   Hafif — her tıklamada hızlı çalışması gerekiyor.\n\n3. Mask decoder:\n   Image embedding + prompt embedding → segmentasyon maskesi.\n   Çok hafif ve hızlı.\n\nNeden ayrı?\n  Image encoder görüntü başına bir kez — pahalı ama tekrar kullanılabilir.\n  Kullanıcı her tıkladığında sadece hafif prompt encoder + decoder çalışıyor.\n  İnteraktif kullanım için gerekli — her tıklamada tam ViT çalıştırılamaz.\n\nImage encoder pre-training: masked autoencoder ile."
+        },
+        {
+          "type": "code",
+          "heading": "S10. SAM neden birden fazla maske tahmini yapıyor? Prompt nasıl görünüyor?",
+          "text": "Neden birden fazla maske?\n  Tek bir nokta belirsiz — hangi nesneyi kastettiğini bilmiyor.\n  Örn. bir noktaya tıkladında: hücre mi, hücre grubu mu, tüm doku mu?\n  SAM 3 farklı ölçekte maske üretiyor (küçük/orta/büyük).\n  Kullanıcı hangisini istediğini seçiyor.\n\nPrompt türleri:\n  Nokta (pozitif/negatif): 'Bu piksel nesnede / nesnede değil'\n  Kutu: bounding box içindeki nesneyi segmentele\n  Maske: kaba bir maske hint olarak ver\n  (Metin: SAM'ın orijinal versiyonunda yok, sonraki versiyonlarda eklendi)\n\nİnteraktivite:\n  Kullanıcı tıklıyor → prompt encoder çalışıyor → mask decoder çalışıyor.\n  Milisaniyeler içinde sonuç — gerçek zamanlı."
+        },
+        {
+          "type": "code",
+          "heading": "S11. Masked autoencoder nedir? SAM'ın eğitiminde hangi loss kullanılıyor?",
+          "text": "Masked Autoencoder (MAE):\n  Self-supervised pretraining yöntemi — etiket gerekmez.\n  Görüntüyü patch'lere böl.\n  Patch'lerin büyük bir kısmını (%75) rastgele maskele (gizle).\n  Sadece görünen patch'lerle Transformer encoder çalıştır.\n  Decoder gizlenen patch'leri yeniden oluşturmaya çalışır.\n  Loss: maskelenen bölgelerdeki piksel değerleri için MSE.\n\n  Bu şekilde ağ görüntü yapısını ve içeriğini anlamak zorunda kalıyor.\n\nSAM'ın image encoder'ı MAE ile pretrain ediliyor.\nSonra segmentasyon için fine-tune.\n\nSAM'ın loss fonksiyonu:\n  Focal loss + Dice loss kombinasyonu.\n  (Binary segmentation için standart iyi kombinasyon.)"
+        },
+        {
+          "type": "code",
+          "heading": "S12. TrackFormer nesne takibine Transformer'ı nasıl uyguluyor? Temporal bağlantı nasıl?",
+          "text": "TrackFormer: DETR'yi video takibine genişletiyor.\n\nFikir:\n  Bir önceki frame'deki tespit edilen nesneler\n  bir sonraki frame'e 'track query' olarak taşınıyor.\n\nNasıl çalışıyor?\n  Frame t'de: normal DETR object query'leri + bir önceki frame'in query'leri.\n  Track query'ler bir önceki nesnenin bilgisini taşıyor.\n  Cross-attention ile yeni frame'deki konumlarını arıyorlar.\n  Çıktı: her track query için güncellenen konum + sınıf.\n\nTemporal bağlantı nasıl kuruldu?\n  Önceki frame'in decoder çıktısı (query vektörü)\n  doğrudan bir sonraki frame'in decoder girdisi olarak kullanılıyor.\n  Query vektörü nesnenin 'hafızası' görevi görüyor.\n\nYeni nesneler: yeni object query'ler ile tespit edilip track listesine ekleniyor.\nKaybolan nesneler: birkaç frame tespit edilmezse listeden çıkarılıyor."
+        }
+      ]
+    },
+    {
       "title": "UNETR: Transformers for Medical Image Segmentation",
       "cat": "Medical",
       "summary": "UNETR (Hatamizadeh et al. 2022) uses a ViT encoder to extract global context from volumetric medical images, connected to a CNN decoder via skip connections in a U-shaped architecture. It bridges the global representation strength of Transformers with the spatial precision of U-Net.",
@@ -3170,6 +3642,44 @@
   ],
   "ida09": [
     {
+      "title": "Lecture 9 — Q & A",
+      "cat": "Representation",
+      "summary": "IDA Lecture 9'un tüm sınav soruları ve sade açıklamalarla cevapları. Point cloud temsili, outlier removal, curvature, PointNet, PointNet++.",
+      "context": "Lecture 09 · 14.12.2023 — Detection and Segmentation in 3D Point Clouds",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "S1. Point cloud nedir? Hangi sensörler üretiyor? İşlemenin zorlukları neler?",
+          "text": "Point cloud: 3D uzayda bir yüzeyden örneklenmiş noktalar kümesi.\nHer nokta: (x, y, z) koordinatı, bazen renk veya yoğunluk da var.\nSırasız — noktalar arasında bağlantı/grid yapısı yok.\n\nHangi sensörler üretiyor?\n  LiDAR: lazer ışını gönder, geri dönüş süresinden mesafe hesapla.\n  Depth camera (RGB-D): yapılandırılmış ışık veya ToF.\n  Stereo kamera: iki görüntüden derinlik tahmini.\n  CT/MRI: medikal 3D görüntüleme.\n\nİşlemenin zorlukları:\n  Sırasız — CNN gibi grid tabanlı yöntemler doğrudan uygulanamaz.\n  Değişken yoğunluk — bazı bölgeler sık, bazıları seyrek noktalar.\n  Büyük veri boyutu — milyonlarca nokta olabilir.\n  Gürültü ve outlier'lar — sensör hatalarından kaynaklı."
+        },
+        {
+          "type": "code",
+          "heading": "S2. Outlier removal nasıl yapılır? Normal vektörler nasıl hesaplanır?",
+          "text": "Outlier removal:\n  Statistical outlier removal:\n    Her nokta için k en yakın komşuya mesafeyi hesapla.\n    Ortalama mesafesi genel ortalamanın çok üzerinde olanlar → outlier.\n    Silinir.\n\n  Radius outlier removal:\n    Belirli yarıçap içinde komşu sayısı az olan noktalar → outlier.\n\nNormal vektör hesaplama:\n  Her nokta için k en yakın komşuyu bul.\n  Bu komşu noktalara PCA (Principal Component Analysis) uygula.\n  En küçük eigenvalue'ya karşılık gelen eigenvector → yüzey normali.\n  Fiziksel olarak: o bölgedeki yüzeyin hangi yöne baktığını gösteriyor.\n\n  Sorun: normal yönü belirsiz (içe mi dışa mı bakıyor?).\n  Çözüm: tutarlılık için yayılım algoritması veya görüş açısına göre düzeltme."
+        },
+        {
+          "type": "code",
+          "heading": "S3. Curvature nerede yüksek? Nasıl hesaplanır? Region growing segmentation nedir?",
+          "text": "Curvature (eğrilik) nerede yüksek?\n  Keskin kenarlar, köşeler, sivri uçlar.\n  Düz yüzeylerde curvature ≈ 0.\n  Kavisli yüzeylerde orta, köşelerde çok yüksek.\n\nCurvature hesaplama:\n  PCA'dan gelen eigenvalue'lardan:\n  curvature = λ_min / (λ_1 + λ_2 + λ_3)\n  Küçük eigenvalue ne kadar dominant → o kadar yüksek curvature.\n\nKenar tespiti:\n  Yüksek curvature bölgeleri = kenarlara işaret eder.\n\nRegion growing segmentation:\n  Bir tohum nokta seç (düşük curvature, düz alan).\n  Komşu noktaları ekle — eğer normal vektörleri yeterince benzer ise.\n  Benzer yüzey parçaları tek segment olarak büyüyor.\n  Farklı yüzeylere geçişte (yüksek curvature) büyüme durur.\n  Sonuç: düz/düzgün yüzey parçaları ayrı segment olarak gruplanır."
+        },
+        {
+          "type": "code",
+          "heading": "S4. PointNet'in temel fikirleri neler? Permutation invariance nasıl sağlanıyor?",
+          "text": "PointNet'in üç temel sorunu çözmesi gerekiyor:\n  1. Sırasız girdi — hangi sırada verilirse verilsin aynı sonuç.\n  2. Noktalar arası etkileşim — global yapıyı anlama.\n  3. Dönüşümlere dayanıklılık — rotation, scale.\n\nMimari:\n  Her noktayı bağımsız olarak MLP ile işle → nokta başı özellik.\n  (Tüm noktalar aynı ağırlıkları paylaşıyor — weight sharing)\n  Tüm nokta özelliklerini global max pooling ile birleştir → global özellik.\n  Global özellik + her nokta özelliği → sınıflandırma/segmentasyon.\n\nPermutation invariance:\n  Max pooling simetrik bir fonksiyon.\n  Noktaları hangi sırayla verirsen ver, max aynı çıkar.\n  Bu sayede sırasız küme girişi doğal olarak destekleniyor."
+        },
+        {
+          "type": "code",
+          "heading": "S5. PointNet lineer dönüşümlere nasıl dayanıklı hale geliyor? Classification ve segmentation nasıl?",
+          "text": "T-Net (Transformer Network):\n  Girdiden küçük bir ağ 3×3 dönüşüm matrisi tahmin ediyor.\n  Bu matris girdi noktalarına uygulanıyor → normalize edilmiş koordinatlar.\n  Bir de feature uzayında 64×64 dönüşüm matrisi var.\n  Böylece ağ rotasyon/yansıma gibi dönüşümlere dayanıklı hale geliyor.\n\nClassification:\n  Global özellik vektörü → MLP → sınıf olasılıkları.\n  Tüm point cloud için tek çıktı.\n\nSegmentation:\n  Global özellik her nokta özelliğiyle birleştirilir (concatenate).\n  Her nokta için: kendi özelliği + global bağlam.\n  MLP → her nokta için sınıf etiketi."
+        },
+        {
+          "type": "code",
+          "heading": "S6. PointNet++'ın hiyerarşik yaklaşımının mantığı nedir? Tek seviyede neler yapılıyor?",
+          "text": "PointNet sorunu: tüm noktaları tek seferde global max pooling.\nLokal yapıyı öğrenemiyor — komşu noktalar arasındaki ilişki kaybolabilir.\n\nPointNet++ çözümü: hiyerarşik işleme.\n\nTek bir hiyerarşi seviyesinde yapılanlar:\n\n  1. Sampling:\n     Farthest Point Sampling (FPS) ile merkez noktalar seç.\n     Birbirinden uzak noktaları seç → iyi kapsam.\n\n  2. Grouping:\n     Her merkez etrafında belirli yarıçapta komşuları grupla.\n     Her grup = küçük bir local point cloud.\n\n  3. PointNet uygula:\n     Her gruba mini PointNet uygula → o merkez için local özellik.\n\nSonuç: daha az ama daha bilgi yoğun nokta kümesi.\nBu işlemi birkaç kez tekrarla → giderek daha global özellikler.\n\nClassification: en derin seviyedeki global özellikten.\nSegmentation: her seviyeden özelliği birleştir (interpolation ile boyutu geri büyüt)."
+        }
+      ]
+    },
+    {
       "title": "Point Cloud Representation and Preprocessing",
       "cat": "Representation",
       "summary": "A point cloud is an unordered set of 3D points sampled from a surface. Unlike voxels (regular 3D grid) or meshes (connectivity structure), point clouds are sparse and orderless. Preprocessing — normal estimation, outlier removal, downsampling — is critical before any learning.",
@@ -3247,6 +3757,64 @@
     }
   ],
   "ida10": [
+    {
+      "title": "Lecture 10 — Q & A",
+      "cat": "Generative",
+      "summary": "IDA Lecture 10'un tüm sınav soruları ve sade açıklamalarla cevapları. Generative modeller, autoencoder, VAE, GAN, InfoGAN, conditional GAN, CycleGAN.",
+      "context": "Lecture 10 · 21.12.2023 — Generative Adversarial Networks",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "S1. Generative modellerin fikri nedir? Neden önemli olabilirler?",
+          "text": "Discriminative modeller veriyi alıp sana bir etiket ya da sayı verir — yani karar verirler. Generative modeller ise daha temel bir soruyu sorar: \"Bu veri nasıl üretilmiş olabilir?\" Amacı verinin altındaki dağılımı öğrenmek, yani p(x)'i modellemek. Bunu başarırsa, o dağılımdan yeni örnekler örnekleyebilirsin — yani yoktan gerçekçi görüntüler, sesler ya da metinler üretebilirsin.\n\nNeden bu önemli? Birkaç farklı açıdan düşünebilirsin:\n\nEğitim verisi artırma açısından: etiketli veri toplamak pahalı ve zaman alıcı, ama generative bir modelin ürettiği sentetik veriyle bu açığı kapatabilirsin. Özellikle tıbbi görüntülemede çok az örnek olduğunda bu kritik hale geliyor.\n\nPratik görüntü işleme açısından: bir görüntüdeki eksik alanı tamamlamak (inpainting), gece çekimini gündüz fotoğrafına dönüştürmek ya da çizimden gerçekçi fotoğraf üretmek gibi işler için generative modeller doğal bir araç.\n\nAnomali tespiti açısından: model normal verinin dağılımını öğrenirse, o dağılım altında çok düşük olasılıklı görünen yeni örnekleri anormal olarak işaretleyebilirsin.\n\nBilimsel açıdan: hücre görüntüsü sentezi, protein yapısı üretimi, ilaç molekülü tasarımı gibi alanlarda generative modeller gerçekten kullanılıyor."
+        },
+        {
+          "type": "code",
+          "heading": "S2. Autoencoder nedir? Klasik vs. VAE farkı? Eğitim amacı nedir?",
+          "text": "Autoencoder iki parçadan oluşur: encoder girdiyi alıp küçük bir vektöre (latent code z) sıkıştırır, decoder bu z'den girdiyi yeniden inşa etmeye çalışır. Eğitim amacı basit: x'e verip x̂ al, aralarındaki farkı minimize et. Bu sayede ağ verinin önemli özelliklerini latent space'e sıkıştırmayı öğrenir. Boyut azaltma, gürültü giderme, özellik öğrenme için işe yarıyor.\n\nAma bir generative model olarak klasik autoencoder'ın ciddi bir sorunu var: z bir nokta, latent space'de boşluklar var. Yani eğitimde hiç görmediğin bir z noktasından decode etmeye çalışırsan anlamsız bir çıktı alırsın. Rastgele z örnekleyemezsin — dolayısıyla yeni veri üretemezsin.\n\nVAE bu problemi şöyle çözer: encoder artık tek bir nokta değil, bir Gaussian dağılım parametresi (μ, σ²) üretir. z bu dağılımdan örneklenir. KL divergence terimi bu dağılımı N(0,I) standart Gaussian'a yakın kalmaya zorlar. Böylece latent space dolup taşar, her noktadan anlamlı bir çıktı alabilirsin.\n\nEğitim amacı (ELBO) iki terimin dengesidir:\n  Reconstruction loss — decoder'ın girdiyi iyi yeniden inşa etmesini ister.\n  KL divergence — latent dağılımın çok dağılmasını engeller, düzenli tutar.\nBu dengeyi bulmak önemli: çok sıkıştırırsan görüntüler bulanıklaşır, çok gevşek olursa sampling çalışmaz.\n\nReparameterization trick: z = μ + σ ⊙ ε, ε ~ N(0,I)\nBu formül örnekleme adımını gradyan akışına açık hale getirir, yoksa backprop çalışmazdı."
+        },
+        {
+          "type": "code",
+          "heading": "S3. GAN'ın genel fikri nedir? Eğitim nasıl çalışır? Small gradients problemi nasıl çözülür?",
+          "text": "GAN'ın ana fikri iki ağı birbirine karşı koymak: Generator ve Discriminator. Generator rastgele bir gürültü vektörü z alıp sahte bir görüntü üretmeye çalışırken, Discriminator gelen görüntünün gerçek mi sahte mi olduğunu anlamaya çalışır. Bu bir minimax oyunu: Discriminator ne kadar iyi ayırt ederse Generator da bir o kadar gerçekçi üretmek zorunda kalır, ve bu gidiş gelişte ikisi de ilerler.\n\nEğitim döngüsü iki adım şeklinde işler:\nÖnce Discriminator güncellenir — hem gerçek görüntüler hem de Generator'ın ürettiği sahteler gösterilir, ikisini doğru ayırt etmesi istenir.\nSonra Generator güncellenir — ürettiği sahteleri Discriminator'a yutturmaya çalışır, yani D(G(z)) ≈ 1 olsun ister.\nBu iki adım dönüşümlü tekrarlanır.\n\nSmall gradients (vanishing gradient) problemi şu anda ortaya çıkar: eğitim başında Generator çok kötü görüntüler ürettiği için Discriminator bu görüntüleri kolayca sahte olarak %100 emin şekilde sınıflandırır. Matematiksel olarak log(1 - D(G(z))) ≈ 0'a yaklaşır, gradyan neredeyse sıfırlanır ve Generator öğrenemez.\n\nÇözüm non-saturating loss adı verilen küçük bir değişikliktir: Generator'ı log(1 - D(G(z)))'yi minimize etmek yerine log(D(G(z)))'yi maximize edecek şekilde yeniden formüle edersin. Matematiksel olarak aynı yönü gösterse de erken eğitimde çok daha büyük gradyanlar sağlar, Discriminator ne kadar emin olursa olsun Generator anlamlı bir öğrenme sinyali almaya devam eder."
+        },
+        {
+          "type": "code",
+          "heading": "S4. CNN'lerin GAN'da yapı taşı olarak kullanılmasını sağlayan mimari kararlar neler?",
+          "text": "Orijinal GAN fully connected katmanlar kullanıyordu ve görüntüler için verimli değildi. DCGAN (Deep Convolutional GAN) CNN'i GAN mimarisine başarıyla entegre etti ve birkaç temel kararla bunu sağladı.\n\nGenerator için ana fikir şu: gürültü vektörü z küçük bir feature map'e dönüştürülür, sonra transposed convolution (deconv) katmanlarıyla adım adım büyütülerek tam çözünürlüklü görüntüye ulaşılır. Her katmanda Batch Normalization uygulanır çünkü bu eğitim sürecini dramatik biçimde kararlı hale getirir. Aktivasyon olarak ReLU kullanılır, sadece son çıktı katmanında görüntüyü [-1,1] aralığına getirmek için Tanh tercih edilir.\n\nDiscriminator için ise tersi yapılır: görüntü strided convolution'larla adım adım küçültülür. Burada önemli bir karar pooling kullanmamak — bunun yerine stride=2 convolutional katmanlarla downsample edilir, böylece ağın spatial bilgiyi nasıl düşüreceğini öğrenmesine izin verilir. Aktivasyon LeakyReLU seçilir çünkü standart ReLU'nun aksine negatif girişlere de küçük bir gradyan geçirir ve discriminator'ın ölü nöronlara takılmasını engeller.\n\nGenel ilke olarak fully connected katmanlar mümkün olduğunca azaltılır, 3×3 veya 4×4 kernellar tercih edilir. BatchNorm'un eğitime katkısı o kadar büyük ki, onsuz GAN'ları stabil tutmak çok zorlaşıyor."
+        },
+        {
+          "type": "code",
+          "heading": "S5. InfoGAN'da latent code disentangling ne anlama geliyor?",
+          "text": "Vanilla GAN'da gürültü vektörü z rastgele bir vektördür ve her boyutunun ne anlama geldiği bilinmez. Ağ istediğini kodlayabilir ve bu tamamen kara kutu gibidir — z'nin bir boyutunu değiştirirsen üretilen görüntüde ne değişeceğini tahmin edemezsin.\n\nDisentangling (ayrıştırma) demek, latent space'in her boyutunu insan tarafından anlamlı, birbirinden bağımsız bir faktörle eşleştirmek demektir. Diyelim ki el yazısı rakam üretiyorsun: ideal bir disentangled latent space'de z[0] rakamın tipini (0-9 arası), z[1] yazı kalınlığını, z[2] eğim açısını kontrol eder. Bir boyutu değiştirince sadece o özellik değişir, diğerleri sabit kalır.\n\nInfoGAN bunu şöyle başarır: z vektörünü ikiye böler — bir kısım gürültü kalır, bir kısım latent code c olur. Loss'a ek bir mutual information terimi eklenir; bu terim, üretilen görüntüye bakıp c'yi geri tahmin edebilmeni ister. Yani Generator, c'deki bilgiyi görüntüye yansıtmak zorunda kalır, onu görmezden gelemez. Sonuç olarak c boyutları anlamlı faktörlere karşılık gelmeye başlar — ve bu öğrenim tamamen unsupervised, hangi boyutun hangi özelliği temsil edeceği önceden kimse tarafından söylenmemiş."
+        },
+        {
+          "type": "code",
+          "heading": "S6. İki latent code arasında interpolasyon: InfoGAN vs vanilla GAN farkı ne?",
+          "text": "Deneyi şöyle yaparsın: iki farklı latent code al (z_A ve z_B), bunlar arasında lineer interpolasyon yaparak z_t = (1-t)*z_A + t*z_B vektörlerini üret, her t değeri için Generator'dan görüntü al ve bu geçiş görüntülerini gözlemle.\n\nVanilla GAN'da bu geçiş görüntüleri üretilir ama çoğu zaman anlamsız ya da tutarsızdır. Bunun nedeni latent space'in organize olmamasıdır — z_A ve z_B arasındaki yol tamamen keyfidir, hangi özelliğin değiştiği belli değildir. Bir noktada görüntü bozulabilir ya da beklediğinden çok farklı bir şeye dönüşebilir.\n\nInfoGAN'da ise tablo çok farklıdır çünkü latent code c ayrıştırılmıştır. Mesela MNIST'te c'nin rakam tipini kontrol eden boyutunu interpolasyona sokarsan 3'ten 7'ye doğru düzgün ve anlamlı bir geçiş görürsün. Kalınlığı kontrol eden boyutu değiştirirsen rakam tipi sabit kalırken sadece kalınlık değişir. Her boyutun etkisi izole edilmiş olduğu için geçiş hem görsel olarak düzgün hem de yorumlanabilirdir.\n\nKısaca söylersek: InfoGAN latent space'e bir koordinat sistemi kazandırır ve içinde anlamlı yönler bulmana izin verir. Vanilla GAN'da bu koordinat sistemi yoktur."
+        },
+        {
+          "type": "code",
+          "heading": "S7. Conditional GAN'ın mantığı nedir? Ne koşullandırılır? cGAN ile image-to-image translation nasıl?",
+          "text": "Vanilla GAN'da ne üretileceğini kontrol edemiyorsun — z'yi veriyorsun, ne çıkacağı rastgele. Conditional GAN buna bir çözüm getirir: üretimi istediğin bir koşula göre yönlendirebilirsin. z'ye ek olarak bir koşul c de verirsin ve ağ bu koşula uygun içerik üretir.\n\nKoşul olarak pek çok şey kullanılabilir. Sınıf etiketi (\"kedi üret\", \"köpek üret\") en basit örnektir. Başka bir görüntü de koşul olabilir — mesela gece fotoğrafını gündüz fotoğrafına çevirmek istiyorsan gece fotoğrafı koşul olarak verilir. Metin açıklaması ya da segmentasyon maskesi de kullanılabilir.\n\nMimari açıdan bakıldığında değişiklik hem Generator'ı hem de Discriminator'ı etkiler. Generator artık [z, c] birleşimini alır ve c'ye uygun içerik üretmek zorundadır. Discriminator ise sadece \"bu görüntü gerçek mi?\" sorusunu değil, \"bu görüntü koşul c ile tutarlı mı?\" sorusunu sorar. Yoksa Generator her koşul için herhangi bir gerçek görüntü üretip Discriminator'ı kandırabilirdi.\n\nImage-to-image translation için pix2pix bu yaklaşımı somutlaştırır. Generator olarak U-Net kullanılır çünkü skip connection'lar sayesinde ince detaylar korunur. Discriminator olarak PatchGAN kullanılır — tüm görüntüyü değil, küçük patch'leri ayrı ayrı değerlendirir ve bu yerel doku kalitesine odaklanmayı sağlar. Loss ise adversarial kısmın yanına bir L1 terimi ekler, bu sayede piksel düzeyinde de hedef görüntüye yakın kalınır."
+        },
+        {
+          "type": "code",
+          "heading": "S8. Conditional GAN ile image-to-image translation'ın potansiyel dezavantajı nedir?",
+          "text": "pix2pix ve benzeri conditional GAN yaklaşımlarının kritik bir zayıflığı var: eşleştirilmiş (paired) eğitim verisi gerektiriyorlar. Her giriş görüntüsünün tam olarak karşılık gelen bir hedef görüntüsü olması lazım.\n\nBu gerçek dünyada büyük bir sorun. Çizimden fotoğraf üretmek istiyorsan, her çizim için aynı sahnenin fotoğrafını çekmen gerekiyor. Yaz görünümünü kış görünümüne çevirmek istiyorsan, aynı sahnenin iki mevsim versiyonunu elde etmen gerekiyor — bu imkansıza yakın. MRI'ı CT'ye çevirmek istiyorsan aynı hastanın her iki taramasına da ihtiyacın var.\n\nBazı durumlar ise doğası gereği paired veri üretmeye izin vermez. Van Gogh tarzında bir fotoğraf çevirmek istediğini düşün — Van Gogh fotoğraf makinesi olan birinin çağında yaşamamış, dolayısıyla \"bu fotoğrafın Van Gogh tarafından boyanmış hali\" diye bir veri seti var olamaz.\n\nİşte bu noktada paired veri gerektirmeyen CycleGAN devreye girer."
+        },
+        {
+          "type": "code",
+          "heading": "S9. CycleGAN'ın yararı ve çalışma mantığı nedir? Mimarisi ve kayıp fonksiyonları?",
+          "text": "CycleGAN'ın sunduğu temel avantaj şudur: eşleştirilmiş veri olmadan iki domain arasında çeviri yapabilir. At fotoğrafları ve zebra fotoğrafları gibi iki ayrı koleksiyon yeterli — hangi atın hangi zebranın karşılığı olduğunu bilmen gerekmiyor.\n\nMimari iki Generator ve iki Discriminator içerir:\n  G: X domain'inden Y domain'ine çevirir (at → zebra)\n  F: Y domain'inden X domain'ine çevirir (zebra → at)\n  D_Y: gerçek Y görüntülerini G'nin ürettiklerinden ayırt etmeye çalışır\n  D_X: gerçek X görüntülerini F'nin ürettiklerinden ayırt etmeye çalışır\n\nEğitim sırasında her iki discriminator da ayrı ayrı güncellenir, Generator'lar ise hem discriminator'ı kandırmak hem de cycle-consistency sağlamak için eğitilir.\n\nKayıp fonksiyonları üç bileşenden oluşur:\n\nAdversarial loss (her iki yön için): G'nin ürettiği görüntüler D_Y'yi, F'nin ürettikleri D_X'i kandırmalı.\n\nCycle-consistency loss: X → Y → X geri dönünce orijinal X çıkmalı; Y → X → Y geri dönünce orijinal Y çıkmalı. Yani F(G(x)) ≈ x ve G(F(y)) ≈ y. Bu en kritik kısıt.\n\nIdentity loss (opsiyonel): G'ye zaten Y domain'inden bir görüntü verirsen onu değiştirmemeli — G(y) ≈ y. Bu renk tutarlılığını korumaya yardımcı olur."
+        },
+        {
+          "type": "code",
+          "heading": "S10. Cycle-consistency loss'un fikri nedir? Neden dahil etmek faydalı?",
+          "text": "Problemi şöyle düşün: paired veri yok, yani sadece adversarial loss varsa Generator neyin doğru çeviri olduğunu bilemez. Teorik olarak Generator, X'teki girdi görüntüsünü tamamen görmezden gelip Y domain'inden herhangi bir gerçekçi görüntü üretebilir ve Discriminator'ı hâlâ kandırabilir. Sonuç olarak at fotoğrafından zebra üretmek yerine tamamen alakasız ama gerçekçi görünen bir zebra görüntüsü üretir. İçerik kaybı tamamen gizli kalır.\n\nCycle-consistency bunu engeller, çünkü anlamlı bir çevirinin geri çevrilince orijinali vermesi gerektiğini söyler:\n  x → G(x) → F(G(x)) ≈ x\n  y → F(y) → G(F(y)) ≈ y\n\nBu kısıt Generator'ı X'in içeriğini korumaya zorlar. Atı zebraya çevirirken atın pozunu, yapısını, arka planını koruması gerekiyor — sadece dış görünüm (çizgiler, renk) değişmeli. Generator rastgele bir zebra fotoğrafı üretirse geri çevirince orijinal at görüntüsünü veremez, bu da loss'u artırır.\n\nBir dil çevirisi analojisi ile düşünebilirsin: Türkçe cümleyi İngilizceye çevirdikten sonra tekrar Türkçeye çevirdiğinde aynı anlamı elde edebiliyorsan, o çeviri muhtemelen doğrudur. Bu kısıt olmadan sistem sadece Discriminator'ı kandıran ama anlamsız çeviriler öğrenebilir."
+        }
+      ]
+    },
     {
       "title": "Autoencoders and Variational Autoencoders",
       "cat": "Generative",
@@ -3327,6 +3895,54 @@
     }
   ],
   "ida11": [
+    {
+      "title": "Lecture 11 — Q & A",
+      "cat": "Generative",
+      "summary": "IDA Lecture 11'in tüm sınav soruları ve sade açıklamalarla cevapları. Diffusion modeller, forward/backward process, variance schedule, DDPM training, classifier guidance, CLIP, DALL-E 2, Imagen.",
+      "context": "Lecture 11 · 18.01.2024 — Diffusion Models",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "S1. Hangi generative model türlerini biliyorsun? Benzerlik ve farklar neler?",
+          "text": "Dört ana generative model ailesi var ve birbirinden önemli farkları var.\n\nVAE (Variational Autoencoder): Görüntüyü latent bir Gaussian dağılıma sıkıştırır, oradan tekrar görüntüye döner. Eğitim çok stabil çünkü net bir kayıp fonksiyonu var (ELBO). Sorun şu ki görüntüler biraz bulanık çıkar — piksel düzeyinde reconstruction yapılınca ağ detay yerine ortalamaları öğrenmeye yönelir. Latent space yapısı güzel ve düzenli.\n\nGAN (Generative Adversarial Network): Generator ve Discriminator birbirine karşı oynar. Görüntü kalitesi çok yüksek, keskin ve gerçekçi çıktılar verir. Ama eğitim süreci dengesizdir, mode collapse riski var ve p(x) olasılığını doğrudan hesaplamak mümkün değil.\n\nDiffusion Models (DDPM): Gerçek görüntüye adım adım gürültü ekleyip ardından bu süreci tersine döndürmeyi öğrenir. Eğitim çok stabil, görüntü kalitesi şu an en üst düzeyde. Tek dezavantajı sampling'in yavaş olması — yüzlerce ya da binlerce adım gerekiyor.\n\nFlow Models: Invertible (tersine çevrilebilir) transformasyonlar kullanır ve exact likelihood hesaplayabilir. Çok bellek yoğun olduğu için pratikte daha az kullanılıyor.\n\nBenzerlik açısından hepsi bir veriden anlamlı temsil çıkarmaya ve dağılımı modellemeye çalışır. Fark olarak eğitim stabilitesinde diffusion en iyisi, görüntü kalitesinde diffusion ve GAN başa baş, hız açısından GAN en hızlı."
+        },
+        {
+          "type": "code",
+          "heading": "S2. Denoising diffusion probabilistic models (DDPM) genel fikri nedir?",
+          "text": "DDPM'in ana fikri iki yönlü bir süreç üzerine kurulu.\n\nForward process — gürültü ekleme: Gerçek bir görüntü x_0'dan başlarsın ve her adımda küçük bir miktar Gaussian gürültü eklersin. Yeterince çok adım (tipik olarak T=1000) sonunda görüntü tamamen saf Gaussian gürültüye dönüşür. Bu süreç sabit ve öğrenilmez — sadece gürültü eklemek.\n\nBackward process — gürültü çıkarma: Şimdi işi tersine yapmak istiyorsun. x_T'den (saf gürültü) başlayıp adım adım gürültüyü çıkararak x_0'a (temiz görüntü) ulaşmak. Bunu yapmak için bir sinir ağı eğitirsin. Ağa sorduğun soru şu: \"Bu adımda hangi gürültü eklenmişti?\" Ağ bunu tahmin etmeyi öğrenirse, tersini yaparak her adımda görüntüyü gürültüden arındırabilirsin.\n\nNeden bu şekilde çalışıyor? Çünkü görüntüden gürültüye geçiş matematiksel olarak kolayca tanımlanabiliyor, ama saf gürültüden doğrudan gerçekçi görüntüye gitmek çok zor. Adım adım yaparak zor problemi çok sayıda küçük kolaylaştırılmış probleme böldürüyorsun.\n\nEğitim stabili çünkü hiçbir adversarial oyun yok — sadece \"ne kadar gürültü vardı\" sorusunu cevaplamaya çalışıyorsun."
+        },
+        {
+          "type": "code",
+          "heading": "S3. Forward diffusion process nasıl tanımlanır? Ne zaman durulur? Pratikte nasıl yapılır?",
+          "text": "Forward process matematiksel olarak bir Markov zinciridir: her adım sadece bir önceki adıma bağlıdır. Her adım şu şekilde tanımlanır:\n\n  q(x_t | x_{t-1}) = N(x_t; √(1-β_t) · x_{t-1}, β_t · I)\n\nYani her adımda x_{t-1}'i biraz küçültürsün (√(1-β_t) ile çarparak sinyali azaltırsın) ve üzerine β_t kadarlık Gaussian gürültü eklersin. β_t değerleri küçük tutulur (tipik olarak 0.0001'den 0.02'ye kadar), böylece her adım yavaş ve kademeli bir değişim olur.\n\nNe zaman durulur? T adım sonra x_T artık neredeyse saf N(0, I) Gaussian gürültüye dönüşmüştür ve başlangıçtaki görüntüden iz kalmamıştır. Genellikle T = 1000 yeterli sayılır.\n\nPratikte önemli bir verimlilik var: tüm bu adımları sırayla hesaplamak zorunda değilsin. α_t = 1-β_t ve ᾱ_t = ∏α_s (kümülatif çarpım) tanımlarsan, herhangi bir t adımına tek seferde geçebilirsin:\n\n  x_t = √ᾱ_t · x_0 + √(1-ᾱ_t) · ε,   ε ~ N(0,I)\n\nBu formül eğitimi çok verimli kılar: eğitimde rastgele bir t seç, x_t'yi tek adımda hesapla, ağa ver. Bin adımı tek tek simüle etmene gerek yok."
+        },
+        {
+          "type": "code",
+          "heading": "S4. Variance schedule nasıl dahil edilir? Cosine scheduler DDPM performansını nasıl etkiler?",
+          "text": "Variance schedule, β_1'den β_T'ye kadar giden dizidir ve her adımda ne kadar gürültü ekleneceğini belirler. Doğru schedule seçimi eğitim kalitesini ciddi biçimde etkiler.\n\nLinear schedule (orijinal DDPM): β_t 0.0001'den 0.02'ye lineer olarak artar. Kulağa makul gelir ama bir problemi var: ᾱ_t çok erken düşer, yani görüntü çok hızlı bilgisini kaybeder. Eğitimin son yarısında ağ neredeyse tamamen saf gürültüye bakıyor, anlamlı görüntü özelliği yok, dolayısıyla öğreneceği bir şey de kalmıyor.\n\nCosine schedule (Improved DDPM): ᾱ_t değerini cosinus fonksiyonuyla hesaplar, böylece başlangıçta gürültü ekleme çok daha yavaş gerçekleşir, ortada dengeli bir geçiş yaşanır, ve hatta sürecin sonuna kadar görüntüde hâlâ bir miktar sinyal kalmaya devam eder.\n\nBu neden önemli? Ağ eğitim sırasında her t değerinde bir şeyler öğrenmesi gerekiyor. Eğer görüntü t=500'de zaten tamamen gürültüye dönmüşse, t=500 ila t=1000 arasındaki adımlarda ağa verecek anlamlı bilgi yok. Cosine schedule bu boşa giden eğitim bütçesini ortadan kaldırır ve özellikle küçük görüntü çözünürlüklerinde belirgin kalite iyileşmesi sağlar."
+        },
+        {
+          "type": "code",
+          "heading": "S5. Backward process (reverse diffusion) mantığı nedir? q(x_{t-1}|x_t) nasıl yaklaşıklanır?",
+          "text": "Forward direction (gürültü eklemek) kolaydır — sadece bir formül. Ama bizi asıl ilgilendiren backward direction (gürültüyü çıkarmak): x_t'ye bakarak x_{t-1}'i elde etmek. Bu çok daha zor bir problem.\n\nMatematiksel olarak q(x_{t-1} | x_t) hesaplamak için tüm veri dağılımını p(x) bilmek gerekir — ama bu zaten öğrenmek istediğimiz şey. Dolayısıyla bu dağılımı doğrudan hesaplayamayız.\n\nÇözüm, parametreli bir model p_θ ile yaklaşıklamak:\n  p_θ(x_{t-1} | x_t) = N(x_{t-1}; μ_θ(x_t, t), Σ_θ(x_t, t))\n\nBir sinir ağı, gürültülü x_t ve zaman adımı t'ye bakarak bu Gaussian'ın ortalamasını (ve kovaryansını) tahmin etmeyi öğrenir. Pratikte ağ doğrudan μ'yu tahmin etmek yerine eklenen gürültü ε'yı tahmin eder — bu matematiksel olarak eşdeğer ama öğrenmesi daha kolay bir problem. μ_θ daha sonra bu gürültü tahmininden kapalı formda hesaplanır. Kovaryans Σ ise genellikle basitlik açısından sabit β_t I olarak alınır.\n\nEğitimde avantaj şu: biz forward process'i kendimiz uyguladığımız için hangi ε'yı eklediğimizi kesinlikle biliyoruz. Bu gerçek gürültü ile ağın tahmini arasındaki farkı minimize etmek açık ve stabil bir eğitim hedefi sağlıyor."
+        },
+        {
+          "type": "code",
+          "heading": "S6. Diffusion model eğitimi nasıl yapılır? Loss fonksiyonu nedir? DDPM pseudo-code nedir?",
+          "text": "Loss fonksiyonu oldukça basit ve temizdir:\n  L = E [ ||ε - ε_θ(x_t, t)||² ]\n\nYani gerçek eklenen gürültü ε ile ağın tahmini ε_θ arasındaki MSE'yi minimize etmek. GAN'daki gibi hiçbir rakip ağ yok, VAE'deki gibi KL terimi dengelemeye gerek yok — sadece düz bir regression problemi.\n\nSinir ağı mimarisi olarak genellikle U-Net kullanılır çünkü hem global hem lokal özellikleri iyi yakalar. Zaman adımı t, sinusoidal pozisyon embedding ile ağa verilir — her adımdaki gürültü miktarı farklı olduğu için ağın t'yi bilmesi kritik.\n\nEğitim pseudo-code:\n  1. Gerçek veri x_0'ı al, rastgele t seç\n  2. Rastgele ε ~ N(0, I) örnekle\n  3. x_t = √ᾱ_t · x_0 + √(1-ᾱ_t) · ε (tek adımda)\n  4. Loss = ||ε - ε_θ(x_t, t)||²\n  5. Gradient descent adımı at, başa dön\n\nSampling (yeni görüntü üretme) pseudo-code:\n  1. x_T ~ N(0, I) — saf gürültüden başla\n  2. t = T, T-1, ..., 1 adımlarında geri git:\n       Gürültü tahmin et: ε_θ(x_t, t)\n       μ_θ'ı hesapla (formülden)\n       x_{t-1} = μ_θ + √β_t · z  (z ~ N(0,I), t=1'de z=0)\n  3. x_0'ı döndür — temiz görüntü"
+        },
+        {
+          "type": "code",
+          "heading": "S7. DDPM nasıl koşullandırılır? Classifier guidance vs classifier-free guidance nedir?",
+          "text": "Vanilla DDPM sınıf veya içerik bilgisi olmadan üretir — ne çıkacağı tamamen rastgele. Kontrollü üretim için modeli bir koşula (class etiketi, metin, görüntü) göre yönlendirmek gerekir.\n\nZaman koşullandırması ağın zaten içinde var: ağ sinusoidal embedding ile t'yi alıyor, farklı adımlarda ne kadar gürültü bekleneceğini biliyor. Bu olmadan model çalışamaz.\n\nSınıf koşullandırması ise t'ye ek olarak class label c'yi de ağa vermekle yapılır. ε_θ(x_t, t, c) artık hem adıma hem de sınıfa göre gürültüyü tahmin eder.\n\nClassifier Guidance, ayrı bir sınıflandırıcı ağı eğitmeyi gerektirir. Bu sınıflandırıcı gürültülü görüntüler üzerinde çalışır ve üretim sırasında log p(c|x_t)'nin gradyanı diffusion skoruna eklenerek üretim istenen sınıfa doğru çekilir. Guidance scale s ne kadar büyük olursa üretim o kadar sıkı koşula bağlanır ama çeşitlilik azalır. Ekstra bir ağ eğitmek gerektiği için maliyetli.\n\nClassifier-Free Guidance ise çok daha elegant: tek bir model hem koşullu hem koşulsuz üretim yapabilecek şekilde eğitilir. Eğitim sırasında c rastgele boş token ile değiştirilir (dropout). Üretimde her adımda iki tahmin yapılır — koşullu ve koşulsuz — ve farkları alınır: sonuç = ε(∅) + s · (ε(c) - ε(∅)). Bu DALL-E 2 ve Imagen'in kullandığı yöntemdir, ekstra ağ gerektirmediği için hem daha basit hem de pratikte daha iyi çalışıyor."
+        },
+        {
+          "type": "code",
+          "heading": "S8. CLIP / DALL-E 2 / Imagen genel çalışma prensibi nedir? Imagen Video nasıl çalışır?",
+          "text": "CLIP (Contrastive Language-Image Pretraining), metni ve görüntüyü aynı embedding uzayına getirmeyi öğrenir. Milyarlarca (görüntü, metin açıklaması) çiftini contrastive loss ile eğitir: eşleşen çiftler birbirine yakın, eşleşmeyenler uzak olmalı. Sonuç olarak metinden görüntünün semantiğini anlayan evrensel bir encoder elde edersin. \"Bir çayırda koşan at\" yazısının embedding'i ile o sahneyi gösteren görüntünün embedding'i aynı uzayda yakın noktalar olur.\n\nDALL-E 2 CLIP üzerine inşa edilmiştir. Önce metin CLIP text encoder'dan geçer ve text embedding elde edilir. Ardından bir \"prior\" ağı bu text embedding'i image embedding'e dönüştürür. Son adımda bir diffusion model bu image embedding'den gerçek görüntü üretir. Yani sistem metin → CLIP semantik uzayı → görüntü pipeline'ını takip eder.\n\nImagen ise farklı bir yol izler ve CLIP kullanmaz; bunun yerine çok büyük frozen bir dil modeli (T5-XXL) ile metin embedding üretir. Bu dil modeli metni derin bir şekilde anlıyor ve bu temsilden yararlanarak üretim yapılıyor. Görüntü üretimi bir cascade ile yapılır: önce 64×64 çözünürlüklü görüntü üretilir, ardından iki ayrı super-resolution diffusion modeli 256×256'ya ve 1024×1024'e çıkarır. Classifier-free guidance her aşamada uygulanır.\n\nImagen Video aynı cascade mimarisini zaman boyutuna da genişletir. Spatial attention'ın yanına temporal attention blokları eklenir; bu sayede ardışık frame'ler birbiriyle tutarlı üretilir. Önce kısa, düşük çözünürlüklü videolar üretilir, ardından hem zamansal hem uzamsal super-resolution modellerle HD videoya ulaşılır."
+        }
+      ]
+    },
     {
       "title": "Denoising Diffusion Probabilistic Models: Overview",
       "cat": "Generative",
@@ -3421,6 +4037,69 @@
   ],
   "ida12": [
     {
+      "title": "Lecture 12 — Q & A",
+      "cat": "Architecture",
+      "summary": "IDA Lecture 12'nin tüm sınav soruları ve sade açıklamalarla cevapları. PointNet++ kısıtları, FCPN, EdgeConv/DGCNN, FoldingNet, DDPM ile implant üretimi.",
+      "context": "Lecture 12 · 18.01.2024 — Advanced Methods for Point Cloud Processing",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "S1. PointNet++'ın potansiyel kısıtlamaları neler? FCPN uzamsal fazlalığı nasıl aşıyor?",
+          "text": "PointNet++ büyük point cloud'ları işlerken birbirine örtüşen (overlapping) bloklara böler ve her bloğu ayrı ayrı işler. Sonra bu blokların sonuçlarını birbirine yapıştırır. Burada iki problem var: birincisi, örtüşen bölgeler birden fazla kez hesaplanır, yani gereksiz yere aynı hesabı tekrarlarsın — bu uzamsal fazlalıktır. İkincisi, blok sınırlarında bilgi tutarsızlıkları ve artifactlar oluşabilir.\n\nFCPN (Fully-Convolutional Point Network) bu problemi kökten farklı bir yaklaşımla çözer. Fikir şu: önce düzensiz point cloud'u düzenli bir 3B voksel ızgarasına dönüştür, sonra bu düzenli yapı üzerinde standart 3B konvolüsyon uygula. Böylece tüm büyük point cloud'u tek seferlik ve örtüşme olmadan işleyebilirsin. Her bölge tam olarak bir kez hesaplanır, sınır problemi yoktur ve GPU'nun toplu konvolüsyon optimizasyonlarından tam faydalanabilirsin."
+        },
+        {
+          "type": "code",
+          "heading": "S2. FCPN'nin point-to-voxel konsepti nedir? Düzenli feature volume elde edildikten sonra ne yapılır?",
+          "text": "FCPN'nin ilk ve kritik adımı point-to-voxel dönüşümüdür. 3B uzayı düzenli küçük voksel hücrelerine bölersin. Her hücrenin içine düşen ham noktaları basit bir PointNet (MLP + max pooling) ile işler ve o hücreyi temsil eden bir özellik vektörü elde edersin. Hücrenin içinde kaç nokta olduğu veya noktaların tam yerleri artık önemli değil — hücre tek bir özellik vektörüne indirgendi. Tüm bu hücreleri bir araya getirince düzenli bir 3B özellik hacmi elde edersin.\n\nBu düzenli hacim elde edildikten sonra artık standart 3B CNN araçları devreye girer. Farklı ölçeklerde (1×1×1 ve 3×3×3 gibi) 3B konvolüsyonlar encoder-decoder mimarisinde uygulanır. Bunun üç farklı çıktı başı vardır: birincisi voksel tamamlama için 3B dekonvolüsyon çıktısı, ikincisi her nokta için yoğun özellik üretmek amacıyla latent-space nearest-neighbor interpolasyonu, üçüncüsü ise global sınıflandırma için fully-connected çıktısı. Dolayısıyla semantik segmentasyon, sahne tamamlama ve global sınıflandırma gibi farklı görevler aynı ağ üzerinden çözülebilir."
+        },
+        {
+          "type": "code",
+          "heading": "S3. EdgeConv operatörü nasıl çalışır? Permutation invariance nasıl sağlanır? Hem lokal hem global özellik nasıl üretilir?",
+          "text": "EdgeConv'un temel fikri şu: bir noktayı tek başına değil, komşularıyla olan ilişkisi aracılığıyla tanımlamak. Her nokta i için k en yakın komşuyu bulursun. Sonra her komşu j için bir kenar özelliği hesaplarsın: e_ij = MLP([x_i, x_j - x_i]). Burada x_i noktanın kendi koordinatları, x_j - x_i ise komşuya göre göreli konum. Bu iki bilgiyi birleştirince hem noktanın kendisi hem de lokal bağlamı yakalanmış olur.\n\nPermutation invariance (sıradan bağımsızlık), kenar özelliklerini max pooling ya da mean pooling gibi simetrik bir fonksiyonla birleştirmekle sağlanır. Komşuları hangi sırayla verirsen ver, max aynı çıkar. Bu PointNet'teki global max pooling ile aynı mantıktır.\n\nHem lokal hem global özellik üretmesi şu şekilde gerçekleşir: ilk katmanlarda k-NN hesaplaması 3B koordinat uzayında yapılır, yani geometrik olarak yakın noktalar komşu olur ve lokal şekil özellikleri yakalanır. Ama ağın ilerleyen katmanlarında k-NN artık özellik uzayında hesaplanır. Bu noktada geometrik yakınlık değil, semantik benzerlik önemlidir — bir uçağın farklı noktaları feature space'de birbirine yakın olabilir. Böylece derin katmanlarda global ve semantik ilişkiler ortaya çıkar."
+        },
+        {
+          "type": "code",
+          "heading": "S4. Kenar ağırlıkları nasıl toplanır? Aggregation fonksiyonunun taşıması gereken önemli özellik nedir?",
+          "text": "Bir merkez düğümün k komşusundan gelen kenar özelliklerini elinde tuttuğunu düşün. Bunları tek bir vektöre nasıl indirgeyeceksin? Birkaç seçenek var:\n\nMax pooling: her özellik boyutunda k değer arasından en büyüğünü al. En baskın sinyali öne çıkarır.\nMean (average) pooling: tüm k komşunun ortalamasını al. Daha yumuşak bir temsil verir.\nSum pooling: topla. Mean'e benzer ama komşu sayısına duyarlı.\nWeighted sum: her komşuya önem ağırlığı ver (attention mekanizması gibi).\n\nTaşıması gereken kritik özellik permutation invariance'dır: hangi sırayla k komşuyu verirsen ver, sonuç aynı çıkmalıdır. Max, mean ve sum bu özelliği doğası gereği taşır. Bu özellik olmadan ağ, aslında önemsiz olan nokta sırasına karşı hassas hale gelir ve farklı sıralamalarla farklı sonuçlar verir. Point cloud verisi tanımı gereği sırasız olduğu için aggregation fonksiyonunun bu bağımsızlığı garantilemesi zorunludur."
+        },
+        {
+          "type": "code",
+          "heading": "S5. PointNet neden EdgeConv'un özel bir halidir? Bu açıdan PointNet'in dezavantajı ne? Derin katmanlarda semantik benzerlik artar mı azalır mı?",
+          "text": "EdgeConv'un formülüne bakınca PointNet'in burada nasıl özel bir durum olduğunu görmek mümkündür. EdgeConv'da kenar özelliği e_ij = MLP([x_i, x_j - x_i]) hesaplanır. Eğer x_i terimini görmezden gelip yalnızca x_j - x_i yerine düz x_j kullansaydın ve her noktayı tüm noktaların global komşusu olarak ele alsaydın, PointNet elde edersin. Yani PointNet her noktayı bağımsız işleyip global max pooling yapıyor — bu EdgeConv'un çok özel ve kısıtlı bir versiyonu aslında.\n\nBu açıdan PointNet'in dezavantajı şudur: komşu noktalar arasındaki yerel ilişkiyi hiç yakalamıyor. İki nokta birbirine çok yakın olsa bile EdgeConv gibi bir \"bu nokta o noktanın neresinde\" sorusu sorulmuyor. Geometrik bağlam kayboluyor.\n\nDerin katmanlarda semantik benzerlik artıyor. Bunun sebebi şu: erken katmanlarda özellikler ham 3B koordinatlardan türüyor, bu yüzden geometrik yakınlık öne çıkıyor. Ama katmanlar derinleştikçe özellikler daha soyut ve anlamsal hale geliyor. Feature space'de bir uçağın burnu ile başka bir uçağın burnu birbirine yaklaşıyor — çünkü ikisi de \"uçak burnu\" konseptini temsil ediyor. DGCNN bunu dinamik graph recomputation ile açıkça kullanıyor."
+        },
+        {
+          "type": "code",
+          "heading": "S6. Input dropout'un amacı nedir? EdgeConv performansını nasıl etkiler?",
+          "text": "Input dropout, eğitim sırasında nokta cloud'undaki noktaların rastgele bir kısmını düşürme tekniğidir. Yani her eğitim adımında farklı sayıda nokta görürsün — bazen 1024 nokta, bazen 512, bazen daha az.\n\nAmacı ağı yoğunluk değişimlerine karşı dayanıklı kılmaktır. Gerçek dünya point cloud'ları tutarsız nokta yoğunluklarına sahiptir: sensöre yakın nesneler çok nokta üretirken uzaktakiler çok seyrek. Dropout ile eğitilen ağ bu değişkenliği doğal bir şekilde görüp buna adapte olmayı öğrenir.\n\nEdgeConv açısından düşününce bu oldukça kritiktir. EdgeConv k-NN üzerine kurulu, yani nokta komşulukları eğitimde sürekli değişiyor. Input dropout bunu daha da artırır. Bir yandan bu fazladan gürültü overfitting'i önlemeye yardımcı olur. Öte yandan aşırı dropout oranlarında performans düşebilir çünkü EdgeConv'un yerel geometriyi anlamlandırabilmesi için yeterli komşu noktanın bulunması gerekir. Çok fazla nokta düşürülürse lokal yapı bozulur ve özellik kalitesi düşer."
+        },
+        {
+          "type": "code",
+          "heading": "S7. FoldingNet'te codeword nasıl üretilir? Lokal kovaryans matrisinin mantığı nedir? Permutation invariance nasıl sağlanır?",
+          "text": "FoldingNet bir autoencoder'dır ve encoder kısmı codeword'ü şöyle üretir: önce her nokta için lokal bir kovaryans matrisi hesaplanır. Bu kovaryans, noktanın k komşusuna PCA uygular ve lokal yüzey şeklini özetler — düz mı, eğri mi, kenar mı gibi. Bu ek bilgi ham koordinatların üzerine eklenir ve her nokta daha zengin bir özellik vektörüyle temsil edilir. Ardından graph-based bir katman komşuların bilgisini birleştirir ve yerel bağlam güçlendirilir. Son olarak global max pooling tüm noktaların özelliklerini tek bir 512 boyutlu codeword'e indirgir.\n\nLokal kovaryans matrisinin mantığı şudur: sadece koordinatları vermek o noktanın içinde bulunduğu yüzeyin şeklini tam anlatmaz. Kovaryans matrisi o bölgenin geometrik yapısını özetler ve ağa çok daha bilgi yoğun bir girdi sağlar.\n\nLokal bilgi aggregation, her noktanın komşuları arasında graph convolution ile yapılır.\n\nPermutation invariance global max pooling sayesinde sağlanır — tıpkı PointNet'te olduğu gibi. Noktaları hangi sırayla verirsen ver, max pooling aynı global özeti üretir."
+        },
+        {
+          "type": "code",
+          "heading": "S8. Codeword 2D template grid'i nasıl reshape eder? Folding operasyonu nasıl uygulanır? Loss nasıl hesaplanır? Intra vs inter-class interpolasyon farkı nedir?",
+          "text": "FoldingNet'in decoder kısmı tamamen yeni bir fikir üzerine kurulu: 3B yüzeyin aslında katlanmış 2B bir grid olduğunu varsayar. Başlangıçta düz bir 2B nokta grid'i var (u,v koordinatları). Her grid noktası için codeword c ile birleştirilir: [u, v, c]. Bu 3 boyutlu 2B koordinat + 512 boyutlu codeword birleşimini bir MLP'den geçirirsin ve 3B koordinat (x, y, z) çıkar. Bu işlem tüm grid noktaları için yapılınca grid 3B yüzeye katlanmış olur.\n\nİki aşamalı folding önemlidir: birinci MLP kaba bir 3B şekle katlıyor, ikinci MLP üzerine ince ayar yapıyor. Böylece daha karmaşık yüzeyler öğrenilebilir.\n\nLoss, üretilen nokta kümesi ile orijinal nokta kümesi arasındaki Chamfer distance veya Earth Mover's Distance (EMD) ile hesaplanır. Bu mesafeler iki nokta kümesi arasındaki en iyi eşleşmeyi baz alır.\n\nInterpolasyon farkına gelince: iki aynı sınıftan nesnenin (iki sandalye) codeword'leri arasında interpolasyon yaparsan bir sandalyenin diğerine düzgün geometrik geçişini görürsün — bu intra-class interpolasyon. Ama farklı sınıflardan iki nesnenin (sandalye ve masa) codeword'leri arasında interpolasyon yaparsan anlamsız bir karışım çıkar — bu inter-class interpolasyon ve anlamlı değildir çünkü latent space'de iki sınıf farklı bölgelerdedir."
+        },
+        {
+          "type": "code",
+          "heading": "S9. FoldingNet zebrafish embryo hizalamasında nasıl kullanılır? Codeword'ler ne işe yarar? Eğitim verisi ve etiketler nasıl?",
+          "text": "Bu çok özgün bir uygulama: geliştirme sürecindeki zebrafish embriyo point cloud'larını zaman içinde hizalamak. Farklı zaman noktalarında alınan 3B+t point cloud'ları birbirine kayıt etmek (registration) gerekiyor.\n\nFoldingNet burada şöyle kullanılır: her zaman noktasındaki embriyo point cloud'u encoder'dan geçirilip bir codeword üretilir. Bu codeword o embriyonun 3B şeklinin kompakt bir özeti. İki farklı zaman noktasındaki codeword'leri karşılaştırarak ne kadar benzer olduklarını ölçersin. Benzer codeword'ler benzer şekillere karşılık geldiği için temporal alignment yapabilirsin — hangi zaman noktasının hangiyle eşleştiğini codeword uzayında bulabilirsin.\n\nEğitim verisi açısından ilginç bir nokta var: bu yaklaşım büyük ölçüde unsupervised çalışır. Sadece ham point cloud'lar verilir, manuel eşleştirme etiketi gerekmez. Ağ şekillerin ortak latent temsillerini öğrenir ve bu temsil üzerinden hizalamayı yapabilir. Etiket olarak yalnızca point cloud'ların hangi embriyoya ait olduğu bilgisi yeterlidir."
+        },
+        {
+          "type": "code",
+          "heading": "S10. DDPM ile otomatik implant tahmini nasıl yapılır? Conditioning nasıl dahil edilir? Eğitim hedefi ve final implant nasıl hesaplanır?",
+          "text": "Bu yaklaşım, cerrahi implant (örneğin kafatası plakası) tasarımını bir generative problem olarak ele alır. Hasta skull point cloud'u var, bir kısmı eksik — oraya girecek implantı bulmak istiyorsun.\n\nDDPM conditioning şöyle çalışır: forward process sadece implant point cloud'una gürültü ekler. Ama backward process sırasında ağa hem gürültülü implant hem de conditioning olarak tam hasta skull'ı verilir. Yani ağ \"bu kafatasına uyacak implant nasıl görünür?\" sorusunu gürültüden geriye doğru adım adım çözer. Skull bilgisi her backward adımda ağa koşul olarak girip üretimi şekillendirir.\n\nEğitim hedefi klasik DDPM'deki gibidir: ağ her adımda eklenen gürültüyü tahmin eder, yani ε_θ(noisy_implant, skull, t) → ε. MSE loss ile gerçek gürültüye yaklaşmayı öğrenir.\n\nFinal implant hesaplamasında birkaç seçenek var: tek bir örnekleme çalıştırıp sonucu doğrudan kullanabilirsin. Ya da ağın stokastik yapısı sayesinde aynı skull için birden fazla farklı ama hepsi makul olan implant önerisi üretebilirsin, sonra bunların ortalamasını alarak daha stabil bir tahmin elde edebilirsin."
+        },
+        {
+          "type": "code",
+          "heading": "S11. Stokastik üretim sürecinin potansiyel faydası nedir? Neden birden fazla makul şekil üretmek faydalı?",
+          "text": "Deterministik bir model (mesela düz bir encoder-decoder) bir girdi için hep aynı tek çıktıyı verir. Bu durum şöyle bir problem yaratır: gerçek dünyada genellikle tek bir \"doğru\" cevap yoktur. Eksik bir kafatasına girecek implant için birden fazla anatomiyle uyumlu tasarım olabilir, ya da tamamlanması gereken 3B şeklin birden fazla makul yorumu olabilir.\n\nStokastik DDPM bu belirsizliği doğal olarak modeller. Her sampling çalıştırışında gürültüden farklı bir yol izlenerek farklı ama hepsi eğitim dağılımına uygun bir çıktı elde edilir. Bu birkaç açıdan faydalıdır:\n\nDiğerlerine göre konsensüs almak açısından: birden fazla öneri üret, hepsinin ortalamasını veya medianını al. Bu, tek bir gürültülü tahminden çok daha kararlı ve güvenilir bir sonuç verir.\n\nKlinik karar desteği açısından: cerrah tek bir öneride kalmak yerine birkaç farklı implant tasarımı arasından en uygununu seçebilir. Bu hem daha esnek hem de klinisyene kontrol tanır.\n\nBelirsiizliği görselleştirmek açısından: eğer tüm öneriler birbirine çok benziyorsa güven yüksektir. Ama çok farklı önerilerin çıkması o bölgede anatomik belirsizlik olduğuna işaret eder — bu başlı başına klinisyen için değerli bilgidir."
+        }
+      ]
+    },
+    {
       "title": "Fully-Convolutional Point Network (FCPN)",
       "cat": "Architecture",
       "summary": "FCPN (Rethage et al. 2018) is a hybrid point-to-voxel architecture: PointNet maps raw points to a regular 3D voxel grid, then standard 3D convolutions process the resulting dense feature volume. This enables processing arbitrarily large point clouds in a single forward pass.",
@@ -3476,6 +4155,54 @@
     }
   ],
   "ida13": [
+    {
+      "title": "Lecture 13 — Q & A",
+      "cat": "Classical",
+      "summary": "IDA Lecture 13'ün tüm sınav soruları ve sade açıklamalarla cevapları. Bag-of-Visual-Words, deconvolutional networks, CNN layer visualization, PCA kısıtları, t-SNE.",
+      "context": "Lecture 13 · 25.01.2024 — CNN Visualization Techniques",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "S1. Bag-of-Words fikri nedir? Görüntülere nasıl uyarlanır? Bölgeler nasıl çıkarılır ve tanımlanır?",
+          "text": "Bag-of-Words (BoW) metinden geliyor. Metin belgelerinde bir belgeyi temsil etmek için hangi kelimelerin kaç kez geçtiğini sayarsın — kelimelerin sırasını görmezden gelirsin. Sonuçta her belge bir kelime frekans histogramına dönüşür ve bu vektörle sınıflandırma yapabilirsin.\n\nGörüntülere uyarlama şöyle çalışır: piksel değerleri yerine görsel özellikler (visual words) kullanılır. Kelime yerine görsel yamalar (patches) var, sözlük yerine görsel kelime dağarcığı (visual vocabulary) var.\n\nBölge çıkarma (region of interest extraction): görüntüden ilgi noktaları tespit edilir. Bu noktalar SIFT (Scale-Invariant Feature Transform) veya SURF gibi detektörlerle bulunabilir — köşeler, blob'lar, kenarlardaki belirgin noktalar tercih edilir. Ya da grid üzerinde düzenli örnekleme yapılabilir.\n\nBölge tanımlama (description): her tespit edilen bölge için bir özellik vektörü hesaplanır. SIFT descriptor, o bölge etrafındaki gradyan yönlerinin histogramından oluşan 128 boyutlu bir vektördür. Bu descriptor ölçek ve dönüşüm değişimlerine dayanıklıdır — aynı nesnenin farklı açıdan çekilmiş görüntüsünde de benzer descriptor üretilir."
+        },
+        {
+          "type": "code",
+          "heading": "S2. Code word dictionary nasıl oluşturulur? Yeni bir görüntü için histogram nasıl hesaplanır?",
+          "text": "Dictionary oluşturma adımları şöyle işler: eğitim setindeki tüm görüntülerden çok sayıda bölge descriptor'ı toplanır — binlerce, hatta milyonlarca 128 boyutlu vektör. Bu vektörler k-means clustering ile gruplandırılır. Her cluster merkezi bir \"visual word\" (görsel kelime) olur. Diyelim ki k=1000 seçtin: 1000 tane cluster merkezi, yani 1000 kelimelik bir vocabulary elde edersin.\n\nYeni görüntü için histogram hesaplama şöyle yapılır: görüntüden descriptor'lar çıkar. Her descriptor için vocabulary'deki en yakın kelimeye ata (nearest neighbor search). Hangi kelimeden kaç tane kullandığını say. Sonuç: 1000 boyutlu bir histogram — her boyut bir görsel kelimenin frekansını gösteriyor. Bu histogram artık görüntünün sabit boyutlu temsilidir ve sınıflandırıcıya verilebilir.\n\nKelime sırası önemsiz — tıpkı metindeki gibi \"bu görüntüde şu özellik çok var, bu özellik az var\" bilgisi yeterli."
+        },
+        {
+          "type": "code",
+          "heading": "S3. Sınıflandırıcı nasıl eğitilir? Makul bir sınıflandırıcı seçimi nedir? Yeni görüntü nasıl sınıflandırılır?",
+          "text": "Eğitim için etiketli görüntü histogramları kullanılır: her görüntüden BoVW histogramı çıkar, her histograma doğru sınıf etiketini ekle. Bu (histogram, etiket) çiftleriyle standart bir sınıflandırıcı eğitilir.\n\nMakul sınıflandırıcı seçimi olarak SVM (Support Vector Machine) çok yaygın kullanılır. Bunun sebebi BoVW histogramlarının yüksek boyutlu vektörler olması ve SVM'nin yüksek boyutlu uzaylarda iyi çalışmasıdır. RBF kernel veya histogram intersection kernel kullanılabilir. Daha basit alternatiflere bakılırsa k-NN de uygulanabilir.\n\nYeni görüntüyü sınıflandırma için pipeline şudur:\n  1. Görüntüden bölgeler çıkar (SIFT vs.)\n  2. Her bölge için descriptor hesapla\n  3. Her descriptor'ı vocabulary'deki en yakın kelimeye ata\n  4. Histogram oluştur\n  5. Eğitilmiş SVM'ye ver → sınıf tahminini al\n\nTüm süreç eğitim aşamasında öğrenilen vocabulary'ye bağlıdır, bu yüzden aynı vocabulary her görüntü için kullanılmalıdır."
+        },
+        {
+          "type": "code",
+          "heading": "S4. Deconvolutional network'ün genel fikri nedir? Kritik parçalar neler? Unpooling nasıl yaklaşıklanır? Reconstruction nasıl çalışır?",
+          "text": "Deconvolutional network, eğitilmiş bir CNN'in ne öğrendiğini görselleştirmek için kullanılır. Temel soru şudur: belirli bir aktivasyona yol açan görüntü yapısı ne? Yani \"bu nöronu en çok aktive eden girdi nasıl görünüyor?\"\n\nDeconv network'ün fikri CNN'i tersine çevirmektir. Normal CNN'de: görüntü → conv → ReLU → max pool → özellikler. Deconv network'te: bir katmandaki aktivasyonu al, geriye doğru git → görüntü uzayına yansıt.\n\nKritik parçalar üç adımdır:\n1. Unpooling: max pooling'i tersine almak gerekir. Forward pass sırasında max pooling hangi konumun max olduğunu kaydeder (switch variable). Geri giderken bu kaydedilmiş konuma aktivasyonu yerleştirirsin, diğer konumlar sıfır olur. Bu yaklaşık bir yeniden yapılandırma sağlar.\n2. ReLU: geriye doğru da ReLU uygulanır — yani negatif aktivasyonlar sıfırlanır.\n3. Transposed convolution (deconv): konvolüsyonun transpozesi uygulanır, yani özellik uzayından görüntü uzayına geri gidilir.\n\nReconstruction'un amacı şudur: ağın üst katmanlarındaki bir nörona en çok katkı yapan görüntü örüntüsünü görselleştirmek. Bu sayede her katmanın ne tür özelliklere duyarlı olduğunu anlayabilirsin."
+        },
+        {
+          "type": "code",
+          "heading": "S5. Farklı katman derinlikleri niteliksel olarak ne tür özellikler öğreniyor? Ağın dönüşüm ve oklüzyona dayanıklılığı nasıl test edilir?",
+          "text": "CNN katmanlarının öğrendiği özellikler derinlikle birlikte hiyerarşik olarak soyutlaşır ve bu çok güzel gözlemlenebilir bir örüntüdür:\n\nİlk katmanlar (düşük seviye): kenar detektörleri, renk geçişleri, yönlü çizgiler. Bunlar Gabor filtrelere çok benzer — yani ağ temel görsel ilkelkelleri yeniden keşfediyor.\n\nOrta katmanlar (orta seviye): doku parçaları, köşeler, basit şekil kombinasyonları. Bir kenarın veya ağ kafesinin tekrarlayan örüntüsü gibi şeyler.\n\nDerin katmanlar (yüksek seviye): nesne parçaları, yüzler, tekerlekler, gözler. Artık tanınabilir semantik yapılar ortaya çıkıyor.\n\nDayanıklılık testi için şu deney yapılır: görüntünün farklı kısımlarını kapatırsın (occlusion sensitivity) ve her durumda hangi sınıf tahmin edildiğine bakarsın. Eğer nesnenin kritik bir bölgesi kapatıldığında sınıflandırma bozuluyorsa, ağ gerçekten o bölgeye bakıyor demektir. Dönüşüm testi için görüntüyü döndürür, ölçekler veya çevirirsin ve aktivasyon haritalarının nasıl değiştiğini gözlemlersin."
+        },
+        {
+          "type": "code",
+          "heading": "S6. PCA'nın potansiyel kısıtı nedir? Stochastic Neighbor Embedding bu sorunu nasıl aşmaya çalışır?",
+          "text": "PCA (Principal Component Analysis) en yüksek varyanstaki yönleri bulur ve veriye lineer bir projeksiyon uygular. Yüksek boyutlu veriyi 2B veya 3B'ye indirgemek için çok kullanışlıdır. Ama temel bir kısıtı var: yalnızca lineer yapıları yakalayabilir.\n\nGerçek dünya verisinde, özellikle görüntü özelliklerinde, anlamlı yapı genellikle lineer değildir. Aynı nesnenin görüntüleri yüksek boyutlu uzayda karmaşık bir eğrisel manifold üzerindedir. PCA bunu düzleştirirken önemli yerel yapıları bozabilir. \"Birbirine benzeyen noktalar 2B'de de yakın görünsün\" garantisi yoktur.\n\nStochastic Neighbor Embedding (SNE) ise tamamen farklı bir felsefeden başlar: yüksek boyutlu uzayda komşu olan noktalar düşük boyutlu uzayda da komşu kalsın. Bu bir lineer dönüşüm değil, yerel komşuluk yapısını korumaya odaklanan bir optimizasyon problemidir. SNE lineer olmayan, manifold yapısını koruyabilen bir temsil arar. Bu sayede birbirine benzeyen (yüksek boyutlu uzayda yakın) noktaların 2B görselleştirmede de küme oluşturması mümkün olur."
+        },
+        {
+          "type": "code",
+          "heading": "S7. Stochastic Neighbor Embedding'in genel prensibi nedir? Anahtar fikirler neler? Objective function ve optimizasyon nasıl?",
+          "text": "SNE'nin temel fikri, benzerliği olasılıksal olarak tanımlamaktır. Yüksek boyutlu uzayda her nokta çifti için bir benzerlik olasılığı hesaplanır ve düşük boyutlu uzayda da aynı çiftler için bir benzerlik olasılığı hesaplanır. Amaç bu iki dağılımı birbirine yaklaştırmaktır.\n\nYüksek boyutlu uzayda: i noktasının merkez olduğu bir Gaussian koyarsın ve j noktasının bu Gaussian'a göre komşu olasılığı p_{j|i}'yi hesaplarsın. Yakın noktalar yüksek olasılık, uzak noktalar düşük olasılık alır.\n\nDüşük boyutlu uzayda: yeni koordinatlarda aynı çiftler için q_{j|i} hesaplanır.\n\nObjective function: KL divergence (Kullback-Leibler) iki dağılım arasındaki farkı ölçer.\n  L = Σ_i KL(P_i || Q_i) = Σ_{i,j} p_{j|i} log(p_{j|i} / q_{j|i})\nBu minimize edilirse yüksek boyutlu komşuluklar düşük boyutlu uzayda da korunmuş olur.\n\nt-SNE iyileştirmesi: düşük boyutlu uzayda Gaussian yerine t-dağılımı (serbestlik derecesi 1) kullanır. t-dağılımının kalın kuyruğu sayesinde uzak noktalar arasındaki fark büyütülür ve kümeler daha net ayrışır. Bu \"crowding problem\" adı verilen yoğunlaşma sorununu çözer.\n\nOptimizasyon: gradient descent ile yapılır. Düşük boyutlu koordinatlar rastgele başlatılır ve iteratif olarak KL divergence minimize edilecek şekilde güncellenir."
+        },
+        {
+          "type": "code",
+          "heading": "S8. t-SNE ile BoVW dictionary özellikleri nasıl görselleştirilir? Tam bağlantılı katman nasıl görselleştirilir?",
+          "text": "t-SNE ile BoVW dictionary görselleştirmek için şu yapılır: vocabulary'deki her visual word, 128 boyutlu bir SIFT descriptor vektörüdür. Bu vektörleri t-SNE'ye verirsin ve her kelimeyi 2B bir noktaya indirgersin. 2B düzlemde birbirine yakın düşen noktalar görsel olarak benzer yamalar demektir — benzer doku veya kenar örüntülerine sahip visual word'ler küme oluşturur. Bu sayede vocabulary'nin nasıl organize olduğunu görsel olarak anlayabilirsin: benzer görünümlü görüntü parçaları aynı bölgede mi toplanmış?\n\nFully-connected layer görselleştirmesi için ise şu yapılır: eğitilmiş ağdan test görüntülerini geçir ve son fully-connected katmanın (veya softmax öncesi katmanın) aktivasyon vektörlerini kaydet. Her görüntü için bu vektör yüzlerce veya binlerce boyutludur. Bu aktivasyon vektörlerinin hepsini t-SNE'ye ver. Her görüntü 2B bir noktaya dönüşür. Eğer ağ iyi öğrenmişse, aynı sınıftaki görüntüler 2B uzayda yakın kümelere toplanır ve farklı sınıflar birbirinden net ayrışır. Bu görselleştirme ağın sınıfları ne kadar iyi ayırt ettiğini sezgisel olarak gösterir."
+        }
+      ]
+    },
     {
       "title": "Bag of Visual Words",
       "cat": "Classical",
