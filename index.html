@@ -396,6 +396,11 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 
   <div class="course-divider">IDA · Image Data Analysis</div>
 
+  <button class="nav-btn" data-sec="ida-summary" onclick="switchSection('ida-summary');closeSidebar()" style="border-left:3px solid #38bdf8;margin-bottom:8px">
+    <span class="nav-icon">🔬</span><span class="nav-num" style="font-size:.6rem">ÖZT</span>
+    <span class="nav-label">IDA Özeti</span>
+  </button>
+
   <button class="nav-btn" data-sec="ida01" onclick="switchSection('ida01');closeSidebar()">
     <span class="nav-icon">🖼</span><span class="nav-num">01</span>
     <span class="nav-label">Introduction</span>
@@ -515,6 +520,11 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
   <div id="hdr-summary" class="section-header">
     <div class="hdr-title">Ders Özeti — Motivasyon Zinciri</div>
     <div class="hdr-sub">Her yöntemin neden geliştirildiği ve bir sonrakine neden ihtiyaç duyulduğu</div>
+  </div>
+
+  <div id="hdr-ida-summary" class="section-header">
+    <div class="hdr-title">IDA Özeti — Görüntü Analizinde Büyük Resim</div>
+    <div class="hdr-sub">Ham görüntü verisinden üretici modellere: her adım yeni bir yetenek ekliyor</div>
   </div>
 
   <div id="hdr-ch01" class="section-header active">
@@ -852,6 +862,7 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 </div>
 
 <div id="summary-page" style="display:none"></div>
+<div id="ida-summary-page" style="display:none"></div>
 <div id="card-grid"></div>
 <div id="tx-tree-view" style="display:none"><div id="tx-container"></div></div>
 <div class="footer-text">Kart = detay popup &bull; <kbd>/</kbd> arama &bull; <kbd>ESC</kbd> kapat</div>
@@ -871,6 +882,7 @@ let DATA = {};
 CHAPTERS.forEach(c => DATA[c] = []);
 let OVERVIEWS = {};
 let SUMMARY = null;
+let IDA_SUMMARY = null;
 let SEC = 'ch01';
 let F = {};
 CHAPTERS.forEach(c => F[c] = {cat:'', q:''});
@@ -918,9 +930,11 @@ function switchSection(sec){
   showOverview(sec);
   render();
   const isSummary = sec === 'summary';
+  const isIdaSummary = sec === 'ida-summary';
   const isTxTree = (sec === 'ch12') && TX_VIEW === 'tree';
   $('summary-page').style.display = isSummary ? 'block' : 'none';
-  $('card-grid').style.display   = (isSummary || isTxTree) ? 'none' : '';
+  $('ida-summary-page').style.display = isIdaSummary ? 'block' : 'none';
+  $('card-grid').style.display   = (isSummary || isIdaSummary || isTxTree) ? 'none' : '';
   $('tx-tree-view').style.display = isTxTree ? '' : 'none';
   if(isTxTree){ $('overview-panel').style.display='none'; renderTransformerTree(); }
   const cc = $('ch12-card-controls');
@@ -958,12 +972,10 @@ function buildDropdown(id, items){
 }
 
 /* ==================== RENDER SUMMARY ==================== */
-function renderSummary(){
-  if(!SUMMARY) return;
-  const s = SUMMARY;
+function buildSummaryHTML(s){
   const steps = s.chain.map((step, i) => {
     const isLast = i === s.chain.length - 1;
-    const probs = step.problems.length
+    const probs = step.problems && step.problems.length
       ? `<ul class="chain-problems">${step.problems.map(p=>`<li>${esc(p)}</li>`).join('')}</ul>` : '';
     const next = step.next
       ? `<div class="chain-next">→ ${esc(step.next)}</div>` : '';
@@ -983,21 +995,29 @@ function renderSummary(){
   const bp = s.bigpicture.map(l =>
     `<div class="bp-line">${esc(l)}</div>`
   ).join('');
-  $('summary-page').innerHTML = `
-    <div id="summary-page-inner">
-      <div class="sum-title">${esc(s.title)}</div>
+  return `<div class="sum-title">${esc(s.title)}</div>
       <div class="sum-sub">${esc(s.subtitle)}</div>
       ${steps}
       <div class="bigpicture">
         <h3>Büyük Resim</h3>
         ${bp}
-      </div>
-    </div>`;
+      </div>`;
+}
+
+function renderSummary(){
+  if(!SUMMARY) return;
+  $('summary-page').innerHTML = `<div id="summary-page-inner">${buildSummaryHTML(SUMMARY)}</div>`;
+}
+
+function renderIdaSummary(){
+  if(!IDA_SUMMARY) return;
+  $('ida-summary-page').innerHTML = `<div id="ida-summary-page-inner">${buildSummaryHTML(IDA_SUMMARY)}</div>`;
 }
 
 /* ==================== RENDER CARDS ==================== */
 function render(){
   if(SEC === 'summary'){ renderSummary(); return; }
+  if(SEC === 'ida-summary'){ renderIdaSummary(); return; }
   renderCards(SEC);
 }
 
@@ -1344,6 +1364,7 @@ function applyData(d){
   CHAPTERS.forEach(c => { if(d[c]) DATA[c] = d[c]; });
   if(d.overviews) OVERVIEWS = d.overviews;
   if(d.summary) SUMMARY = d.summary;
+  if(d.ida_summary) IDA_SUMMARY = d.ida_summary;
   CHAPTERS.forEach(c => buildDropdown('flt-'+c, DATA[c]));
   updateCounts();
   showOverview(SEC);
