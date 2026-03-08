@@ -8013,5 +8013,170 @@
       "↓  LSTM · uzun hafıza ama sequential → yavaş",
       "↓  Transformer · tam paralel, uzun bağımlılık, ölçeklenebilir ✓"
     ]
+  },
+  "ida_summary": {
+    "title": "IDA Dersi — Görüntü Analizinde Büyük Resim",
+    "subtitle": "Ham görüntü verisinden üretici modellere: her adım yeni bir yetenek ekliyor",
+    "chain": [
+      {
+        "num": 1,
+        "title": "Veri Nereden Geliyor?",
+        "method": "Imaging Modalities — CT, MRI, Ultrason, Mikroskopi",
+        "what": "Her şey bir görüntü sensörüyle başlar. CT X-ışını projeksiyonlarını filtered back-projection ile 3B yoğunluk hacmine dönüştürür. MRI manyetik rezonansı kullanır, yumuşak doku kontrastı mükemmeldir. Ultrason ses dalgası yansımalarından gerçek zamanlı görüntü üretir. Floresan mikroskopi seçici boylama ile hücre içi yapıları görünür kılar, konfokal pinhole ile derinlik bilgisi kazanır, light-sheet ise tüm embriyo gibi büyük canlı numuneleri çok hızlı görüntüler. Her modalite farklı fiziksel ilke, farklı çözünürlük ve farklı kullanım senaryosu demektir.",
+        "problems": [
+          "Ham görüntü doğrudan yorumlanamaz — gürültü, kontrast sorunları, artifacts",
+          "3B veri çok büyük, bellekte tutmak ve işlemek zor",
+          "Her modalite farklı kalibrasyon ve ön işlem gerektiriyor"
+        ],
+        "next": "Ham veriyi kullanılabilir hale getirmek için temel araçlar gerekiyor"
+      },
+      {
+        "num": 2,
+        "title": "Görüntüyü İşle",
+        "method": "Basic Toolbox — Filtreleme, Konvolüsyon, Morfoloji",
+        "what": "Dijital görüntü bit derinliği ve piksel yoğunluklarıyla temsil edilir. Yoğunluk dönüşümleri (gamma, histogram eşitleme) kontrastı düzenler. Linear filtering (Gaussian, Sobel) konvolüsyonla uygulanır — aynı kernel tüm görüntü üzerinde kaydırılır, weight sharing fikri burada başlar. Separable filterlar hesap maliyetini O(N²)'den O(2N)'e düşürür. Frekans alanında filtreleme büyük kernellar için daha hızlı. Median filter gürültüyü kenarları koruyarak giderir. Morfolojik operasyonlar (erosion, dilation, opening, closing) binary yapıları şekillendirir, connected component analizi nesneleri sayar.",
+        "problems": [
+          "Elle tasarlanmış filterlar domain bilgisi gerektiriyor — genel değil",
+          "Karmaşık görüntü içeriği (hücre tipi, nesne sınıfı) bu araçlarla tespit edilemiyor",
+          "Her yeni problem için farklı filter tasarımı gerekiyor"
+        ],
+        "next": "Veriden otomatik özellik öğrenen yöntemler gerekiyor"
+      },
+      {
+        "num": 3,
+        "title": "Veriden Öğren",
+        "method": "DL Crash Course — MLP, CNN, Loss Functions",
+        "what": "MLP her katmanda non-linear dönüşümler uygulayarak hiyerarşik özellikler öğrenir. Backprop chain rule ile tüm ağırlıkları günceller; forward pass'ta ara değerler (z, a) saklanır çünkü bunlara geriye dönüşte ihtiyaç var. CNN spatial yapıyı kullanır: aynı filtre görüntü üzerinde kaydırılır (weight sharing), her derinlik farklı bir özellik detector. İlk katmanlar kenar, sonrakiler doku, derin katmanlar semantik özellikler öğrenir. Aktivasyon: ReLU vanishing gradient sorununu çözer. Loss seçimi kritik: regresyon için MSE, sınıflandırma için cross-entropy, segmentasyon için Dice loss.",
+        "problems": [
+          "Nesnenin görüntüdeki konumu bilinmiyor — sınıflandırma var ama lokalizasyon yok",
+          "Çok sayıda nesne içeren sahneler için scalable çözüm gerekiyor"
+        ],
+        "next": "Nesneyi bul ve konumunu tespit et"
+      },
+      {
+        "num": 4,
+        "title": "Nesneyi Bul",
+        "method": "Object Detection — R-CNN, YOLO, FPN, Focal Loss",
+        "what": "Template matching ve Hough transform klasik yaklaşımlardır ama elle tasarım gerektirir. R-CNN selective search ile aday bölgeler önerir, her birini CNN ile sınıflandırır — çok yavaş. Fast R-CNN tüm görüntüyü bir kez işler, RoI pooling ile bölgeleri feature map'ten çıkarır. Faster R-CNN Region Proposal Network ekler — aday üretimi de öğrenilir, anchor box'lar farklı ölçek/oran için. YOLO tüm süreci tek bir network geçişine indirger — gerçek zamanlı tespit. FPN feature pyramid ile büyük ve küçük nesneleri aynı anda yakalar. Focal Loss sınıf dengesizliği sorununu çözer: kolay örnekleri küçük, zor örnekleri büyük ağırlıklandırır.",
+        "problems": [
+          "Bounding box kaba — nesnenin tam şekli bilinmiyor",
+          "Piksel düzeyinde ayrım (hangi piksel bu nesneye ait?) çözülmedi"
+        ],
+        "next": "Her pikseli sınıflandırarak nesne sınırlarını bul"
+      },
+      {
+        "num": 5,
+        "title": "Her Pikseli Sınıflandır",
+        "method": "Segmentation — U-Net, Mask R-CNN, StarDist, Cellpose",
+        "what": "Segmentasyon her piksele sınıf atamaktır. U-Net encoder-decoder yapısıyla encoder'da sıkıştırılan bilgiyi decoder'da skip connection'larla geri getirir — hem global hem lokal bağlam korunur. Unpooling, 1×1 conv ve Batch Normalization decoder'ın nasıl çalıştığını belirler. Mask R-CNN detection + segmentasyon birleşimidir; RoIAlign sub-pixel hassasiyetle feature örnekler. Active learning az etiketli veriyle verimli eğitim sağlar. StarDist hücreleri yıldız-konveks şekiller olarak modelleyip mesafe haritasından üretir. Cellpose akış vektörü (flow field) öğrenir ve gradient takip ederek hücre maskelerini oluşturur — farklı hücre şekillerine çok daha dayanıklı.",
+        "problems": [
+          "Tek frame: zamansal bilgi yok, nesneler hareket ettiğinde takip edilemiyor",
+          "Çok sayıda benzer nesne içeren videolarda kimlik atama çözülmedi"
+        ],
+        "next": "Nesneleri zaman içinde takip et ve kimliklerini koru"
+      },
+      {
+        "num": 6,
+        "title": "Zamanla Takip Et",
+        "method": "Object Tracking — Kalman Filter, Hungarian, Optical Flow",
+        "what": "Tracking by detection: her frame'de tespit et, sonra tespitleri zamanla birleştir. Nearest neighbor greedy ama global değil. Kalman filter predict-update döngüsüyle hem hareket modelini hem ölçüm gürültüsünü dengeleyerek optimal tahmin üretir. Hungarian algoritması bipartite matching problemini O(n³) ile optimal çözer. DeepSORT görünüm embedding ekleyerek kimlik karışıklığını azaltır. Global track linking (Viterbi) tüm zaman boyutunu optimize eder. Optical flow her pikselin iki frame arasındaki hareketini (u,v) vektörüyle tahmin eder; FlowNet/RAFT bunu derin ağlarla öğrenir. GOTURN CNN ile single-object tracker kurar.",
+        "problems": [
+          "Uzun menzilli bağımlılıklar ve geniş global bağlam zor — dikkat mekanizması yok",
+          "Tespit+takip ayrı modüller, uçtan uca optimize edilmiyor"
+        ],
+        "next": "Global bağlamı yakalamak için dikkat mekanizması gerekiyor"
+      },
+      {
+        "num": 7,
+        "title": "Global Bağlamı Anla",
+        "method": "Attention & Transformers — ViT, DETR, Swin",
+        "what": "RNN sıralı yapıyla sequential bağımlılıkları öğrenir ama uzun mesafeli ilişkileri unutur. Attention mekanizması her adımda tüm girdiyle ilişki kurarak bu sorunu çözer. Transformer encoder-decoder mimarisi tüm NLP'yi devralır. ViT görüntüyü patch'lere bölerek token dizisi oluşturur ve düz Transformer uygular — ImageNet'te CNN'i geçer. DETR Transformer ile object detection'ı uçtan uca çözer: object query'ler attention ile görüntünün ilgili bölgelerine odaklanır, anchor ve NMS kaldırılır. Swin Transformer shifted window attention ile hesaplama verimliliğini koruyarak büyük görüntülerde çalışır.",
+        "problems": [
+          "Genel modeller var ama spesifik görevlere (segmentasyon, her şeyin tespiti) adapte etmek ayrı eğitim gerektiriyor",
+          "Daha büyük, daha genel foundation modellere ihtiyaç var"
+        ],
+        "next": "Tek modele pek çok görevi çözdüren foundation modeller"
+      },
+      {
+        "num": 8,
+        "title": "Foundation Modeller",
+        "method": "Image Transformers — SAM, UNETR, MAE, DINO",
+        "what": "UNETR Transformer encoder'ı U-Net decoder ile birleştirir — 3B tıbbi segmentasyon için. Swin-UNETR hiyerarşik özellikler ekler. SAM (Segment Anything Model) her türlü görsel uyarıya (nokta, kutu, metin) yanıt veren sıfır-shot segmentasyon modeli; 1 milyar mask ile eğitildi. MAE (Masked Autoencoder) görüntünün %75'ini maskeleyip geri tahmin ederek kendi denetimli özellik öğrenir. DINO self-supervised ViT eğitimi ile nesne sınırlarına odaklanan dikkat haritaları üretir — etiketsiz özellik öğrenme. TrackFormer tespiti ve takibi tek Transformer'da birleştirir.",
+        "problems": [
+          "Hepsi 2B görüntü odaklı — gerçek dünya 3B, sensörler 3B nokta bulutları üretiyor",
+          "3B yapılar için konvolüsyon doğrudan uygulanamaz (ızgara yok)"
+        ],
+        "next": "Düzensiz 3B veriyi işleyecek özel mimariler gerekiyor"
+      },
+      {
+        "num": 9,
+        "title": "3B Dünyaya Geç",
+        "method": "Point Clouds — PointNet, PointNet++",
+        "what": "Nokta bulutu sırasız, düzensiz yoğunluklu 3B veri — LiDAR, derinlik kamera, stereo kameradan gelir. Klasik CNN doğrudan uygulanamaz. PointNet her noktayı bağımsız MLP ile işler, global max pooling ile simetrik fonksiyon sağlayarak permutation invariance garantiler. T-Net dönüşüme dayanıklılık için learnable alignment ekler. Segmentasyon için global özellik her nokta özelliğiyle birleştirilir. PointNet++ hiyerarşik yap: FPS ile merkez seç, ball query ile grupla, mini-PointNet ile lokal özellik çıkar. MSG farklı yarıçaplarda çoklu ölçek yakalar. FP modülü interpolasyonla özellikleri geri büyütür.",
+        "problems": [
+          "Büyük nokta bulutlarında uzamsal fazlalık ve hesaplama maliyeti",
+          "Lokal yapı ve dinamik özellik ilişkileri tam yakalanmıyor",
+          "3B üretim ve kodlama henüz çözülmedi"
+        ],
+        "next": "Daha verimli 3B işleme + üretici modeller gerekiyor"
+      },
+      {
+        "num": 10,
+        "title": "Yeni Veri Üret",
+        "method": "Generative Models — VAE, GAN, CycleGAN",
+        "what": "Generative modeller veri dağılımını öğrenerek yeni örnekler üretir. VAE encoder'da Gaussian dağılım parametreleri (μ, σ²) üretir, reparameterization trick ile differentiable sampling yapar, ELBO kaybıyla reconstruction + KL divergence dengeler — latent space düzgün ve anlamlı. GAN Generator ve Discriminator'ı minimax oyunuyla eğitir — keskin görüntüler ama mode collapse ve training instabilite. DCGAN CNN'i GAN'a entegre eder. InfoGAN latent code'u ayrıştırarak yorumlanabilir üretim sağlar. Conditional GAN koşullu üretim yapar. pix2pix paired translation, CycleGAN unpaired translation için cycle-consistency kaybı kullanır.",
+        "problems": [
+          "GAN eğitimi çok dengesiz — mode collapse, vanishing gradient",
+          "VAE görüntüleri bulanık — reconstruction kaybı detayları yumuşatıyor",
+          "Diffusion modeller her ikisini de geçen kalite sağlıyor"
+        ],
+        "next": "Stabil ve yüksek kaliteli üretim için diffusion gerekiyor"
+      },
+      {
+        "num": 11,
+        "title": "Mükemmel Üret",
+        "method": "Diffusion Models — DDPM, Classifier-Free Guidance, CLIP, Imagen",
+        "what": "DDPM görüntüye adım adım Gaussian gürültü ekler (forward), ardından her adımda eklenen gürültüyü tahmin eden bir sinir ağı ile tersine döner (backward). Eğitim basit MSE kaybı — adversarial oyun yok, sonuç stabil. Cosine variance schedule eğitim kalitesini artırır. Classifier-Free Guidance aynı modeli hem koşullu hem koşulsuz eğiterek üretimi yönlendirir. CLIP metin-görüntü embedding uzayını öğrenir. DALL-E 2 CLIP üzerine diffusion kurar. Imagen frozen T5 dil modeliyle metin anlayışı + diffusion cascade ile yüksek çözünürlük üretir. Imagen Video uzamsal+zamansal attention ile video üretir.",
+        "problems": [
+          "2B odaklı — 3B nokta bulutu üretimi için özel uyarlamalar gerekiyor",
+          "Modelin ne öğrendiğini anlama güçlüğü"
+        ],
+        "next": "3B için gelişmiş yöntemler + modeli anlamak"
+      },
+      {
+        "num": 12,
+        "title": "3B'yi Daha İyi İşle",
+        "method": "Advanced Point Cloud — FCPN, DGCNN, FoldingNet",
+        "what": "FCPN point-to-voxel dönüşümüyle düzensiz noktaları düzenli 3B ızgaraya taşır, ardından standart 3B CNN uygular — büyük sahneler için verimli. DGCNN EdgeConv ile dinamik graph inşa eder: her katmanda k-NN özellik uzayında yeniden hesaplanır, erken katmanlar geometrik, derin katmanlar semantik komşuluklar yakalar. FoldingNet 2B template ızgarayı 3B yüzeye katlayan decoder ile nokta bulutu autoencoder'ı oluşturur — compact codeword semantik düzenleme ve interpolasyon sağlar. DDPM nokta bulutları için diffusion: shape completion, implant üretimi (koşullu backward), stokastik üretim belirsizlik tahmini yapar.",
+        "problems": [
+          "Modeller hâlâ kara kutu — neden bu kararı verdiği belli değil",
+          "Klasik görüntü analizi ile derin öğrenme sonuçlarını karşılaştırmak zor"
+        ],
+        "next": "Modelin ne öğrendiğini görselleştirerek yorumlanabilirlik sağla"
+      },
+      {
+        "num": 13,
+        "title": "Modeli Anla",
+        "method": "Visualization — BoVW, Deconv, GradCAM, t-SNE",
+        "what": "Bag of Visual Words CNN öncesi dönemin önemli yaklaşımıdır: SIFT descriptor'lar k-means ile visual vocabulary oluşturur, her görüntü histogram olarak temsil edilir, SVM ile sınıflandırılır — DL'ye köprü olarak tarihi değeri var. Deconvolutional network CNN'i tersine çevirerek hangi girdi örüntüsünün belirli bir aktivasyonu ürettiğini görselleştirir; switch variable ile unpooling, transposed conv ile feature → görüntü dönüşümü yapılır. İlk katmanlar kenar, derin katmanlar semantik yapılar gösterir. t-SNE/SNE yüksek boyutlu özellikleri 2B'ye indirerken yerel komşuluk yapısını korur — PCA'nın lineer kısıtını aşar, KL divergence minimize eder. t-dağılımı crowding problemini çözer. BoVW dictionary ve fully-connected katman aktivasyonları t-SNE ile kümelere görselleştirilebilir.",
+        "problems": [],
+        "next": "Tüm araç kutusu hazır — ham görüntüden üretici modele tam pipeline tamamlandı"
+      }
+    ],
+    "bigpicture": [
+      "CT · MRI · Ultrason · Mikroskopi  ← veriyi topla",
+      "↓  Filtreleme · Konvolüsyon · Morfoloji  ← temizle ve işle",
+      "↓  MLP · CNN · Loss Functions  ← veriden öğren",
+      "↓  R-CNN · YOLO · FPN  ← nesneyi bul (bounding box)",
+      "↓  U-Net · Mask R-CNN · Cellpose  ← her pikseli sınıflandır",
+      "↓  Kalman · Hungarian · FlowNet  ← zamanla takip et",
+      "↓  ViT · DETR · Swin  ← global bağlamı attention ile yakala",
+      "↓  SAM · UNETR · MAE · DINO  ← foundation modeller, sıfır-shot",
+      "↓  PointNet · PointNet++  ← 3B dünyaya geç",
+      "↓  VAE · GAN · CycleGAN  ← yeni veri üret",
+      "↓  DDPM · Classifier-Free · Imagen  ← mükemmel üret",
+      "↓  FCPN · DGCNN · FoldingNet  ← 3B'yi daha iyi işle",
+      "↓  BoVW · Deconv · t-SNE  ← modeli anla ve yorumla ✓"
+    ]
   }
 }
