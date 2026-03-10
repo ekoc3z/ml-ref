@@ -4350,6 +4350,836 @@
       ]
     }
   ],
+  "vs01": [
+    {
+      "title": "Neden Vektör Uzayı Dili? — SP'nin Matematiksel Temeli",
+      "cat": "Motivation",
+      "summary": "EE499'un ana iddiası: sinyal işlemedeki her problem doğru dil kurulunca tek bir çerçeveye sığar. Sinyaller = vektörler, sistemler = operatörler. Bu dil kurulunca FIR filtreleme, CT, deblurring, optimal yaklaşım hepsi aynı matematikle çözülür.",
+      "context": "EE499 · Chapter 1.1 — Introduction to Vector-Space Methods in SP",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Bu dersin iddiası ne? Neden böyle soyut bir dile ihtiyaç var?",
+          "text": "Sinyal işleme derslerinde genellikle her konuyu ayrı bir araç olarak öğrenirsin: Fourier dönüşümü, filtre tasarımı, örnekleme teoremi, gürültü giderme... Bunların hepsi sanki farklı aletlermiş gibi görünür. Ama bu dersin iddiası şu: aslında hepsi aynı matematiksel yapıdan geliyor.\n\nO yapı şu: vektör uzayı dili.\n\nBu dilde üç temel sözleşme var:\n1. Sinyal x[n] veya x(t) → bir vektör olarak düşünülür\n2. Sistem (filtre, türev alma, konvolüsyon) → bir operatör olarak modellenir\n3. Lineer sistem → bir matris olarak temsil edilir\n\nBu üç sözleşmeyle birlikte, çok farklı görünen problemlerin hepsi 'y = A(x) formunda bir lineer denklem çöz' haline gelir:\n\n- FIR filtreleme: y = H·x (H konvolüsyon matrisi)\n- CT rekonstrüksiyon: projektörlerden görüntü bul → A·f = g\n- Deblurring: bulanık görüntüden orijinali bul → B·x ≈ y\n- Optimal LPF yaklaşımı: gerçekleştirilebilir bir filtre ile ideal LPF'e en yakın ne olur?\n\nHepsinin ortak yapısı: 'verilen y, bul x, öyle ki y = A·x'. Bu, ters problem. Ve bu derste bu problemi sistematik olarak çözeceğiz."
+        },
+        {
+          "type": "code",
+          "heading": "Bu dil olmadan ne eksik olurdu? Neden soyutlama gerekiyor?",
+          "text": "Soyutlama olmadan her problem için ayrı ayrı çözüm geliştirmek zorunda kalırsın. Mesela:\n\nSomut durum 1: FIR filtre tasarımı. x[n] sinyal, h[n] filtre. y[n] = Σ h[k]x[n-k]. Bunu bileşen bileşen hesaplarsın. İyi, ama başka bir probleme geçince bu bilgi aktarılmaz.\n\nSomut durum 2: Görüntü deblurring. Kamera nesneleri bulanık çekmiş. Orijinal görüntüyü bul. Bu çok farklı görünüyor, ama matematiksel yapı aynı: bir lineer sistem var (bulanıklaştırma operatörü) ve onun inversini bulmaya çalışıyorsun.\n\nSoyutlama şunu sağlar: FIR filtreleme için geliştirdiğin ters problem teorisi, CT rekonstrüksiyonuna, deblurring'e, örneklemeden sinyal rekonstrüksiyonuna hepsine aynı şekilde uygulanır. Matematiği bir kez öğrenirsin, her yerde kullanırsın.\n\nDersin sonunda göreceksin ki:\n- Projeksiyon teoremi = gürültü giderme, sinyal rekonstrüksiyon ve LPF'in hepsini açıklar\n- Least Squares çözümü = 'tam çözüm yoksa en iyi yaklaşımı bul' der\n- Minimum norm çözümü = 'sonsuz çözüm varsa en seyreği seç' der\n- Ve DFT, CTFS, örnekleme hepsi sadece 'baz değişimi' diye anlaşılır"
+        },
+        {
+          "type": "list",
+          "heading": "Bu derste cevap aranacak büyük sorular",
+          "items": [
+            "A(x) = y denkleminin çözümü var mı? (Existence — range space ile bağlantılı)",
+            "Varsa tekil mi? (Uniqueness — null space ile bağlantılı)",
+            "Çözüm yoksa en iyi yaklaşım ne? (Least Squares problemi)",
+            "Sonsuz çözüm varsa hangisini seçelim? (Minimum norm)",
+            "İki sinyal arasındaki açıyı, mesafeyi nasıl ölçürüz? (Norm ve iç çarpım)",
+            "Bir sinyali bir alt uzaya yansıtmanın analitik formülü ne? (Projeksiyon matrisi)"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Vektör Uzayı: Tanım ve Aksiyomlar",
+      "cat": "Foundations",
+      "summary": "Vektör uzayı soyut bir yapı: küme + skalar cisim + toplama + skalar çarpma. 7 aksiyom. Önemli olan gerçek sayılara ya da n-boyutlu uzaylara bağlı kalmak zorunda olmadığın — polinomlar, matrisler, fonksiyonlar hepsi vektör olabilir.",
+      "context": "EE499 · Chapter 1.2 — Definition of Vector Spaces",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Vektör uzayı tanımı — sezgiden aksiyomlara",
+          "text": "Vektör uzayı denilince ilk aklına ℝ² veya ℝ³ gelebilir: x-y-z eksenlerinde noktalar. Ama bu dersin 'vektör' kavramı çok daha geniş. Temel fikir şu: vektör, 'toplanabilen ve skalarla çarpılabilen şey'.\n\nResmi tanım şöyle kurulur:\nBir vektör uzayı (V, F, +, ·) dört bileşenden oluşur:\n\n1. V: vektörlerin kümesi — içindeki elemanlara 'vektör' deriz\n2. F: skalar cisim — F = ℝ (gerçel sayılar) veya F = ℂ (karmaşık sayılar)\n3. +: vektör toplama işlemi — V×V → V (iki vektör topla, bir vektör çıkar)\n4. ·: skalar çarpma — F×V → V (bir sayı ile vektör çarp, yine vektör çıkar)\n\nEn kritik koşul KAPALILIK:\n- x, y ∈ V ise x + y ∈ V olmak zorunda\n- x ∈ V ve α ∈ F ise α·x ∈ V olmak zorunda\n\nYani kümenin dışına çıkamassın. Bu basit görünüyor ama hangi kümelerin 'vektör uzayı olduğunu' ve hangilerinin olmadığını belirleyen tam da bu.\n\nÖrnek: 'Tersi mevcut matrisler' toplama altında kapalı mı?\nA terslenebilir, B terslenebilir → A+B terslenebilir mi? Hayır, olmak zorunda değil.\nKarşı örnek: A = I, B = -I → A+B = 0, terslenebilir değil.\nDolayısıyla 'terslenebilir matrisler' vektör uzayı DEĞIL."
+        },
+        {
+          "type": "list",
+          "heading": "7 aksiyom (pratikte hafızada tutulması gerekenler)",
+          "items": [
+            "Değişme: x + y = y + x (toplama sırasız)",
+            "Birleşme (toplama): (x+y)+z = x+(y+z)",
+            "Sıfır eleman: ∃ 0 ∈ V, x + 0 = x her x için",
+            "Ters eleman: her x için ∃ (-x) ∈ V, x + (-x) = 0",
+            "Skalar birleşme: α(βx) = (αβ)x",
+            "Dağılma 1: α(x+y) = αx + αy",
+            "Dağılma 2: (α+β)x = αx + βx",
+            "Çarpma kimliği: 1·x = x"
+          ]
+        },
+        {
+          "type": "code",
+          "heading": "Bu aksiyomlar ne için? Neden bu kadar çok?",
+          "text": "Bu 7 aksiyom, aslında 'toplama ve skalar çarpmanın her zamanki anlamında davranmasını' güvence altına alıyor. Gerçek sayılarla yaptığın her algebrik işlemi vektörlerle de yapabilmeni sağlıyor.\n\nPratikte bu aksiyomları ezberlemek yerine şunu unutma:\n- Sıfır vektör her zaman var ve her vektör uzayında 0 ∈ V\n- Herhangi bir vektörün additif tersi var\n- Toplama ve skalar çarpma 'beklediğin gibi' davranır\n\nBir kümenin vektör uzayı olup olmadığını test etmek için:\n1. Kapalılığı kontrol et (toplama ve skalar çarpma altında)\n2. Sıfır vektörünün kümede olup olmadığını kontrol et\n3. Eğer bunlar sağlanıyorsa, geri kalan aksiyomlar genellikle otomatik gelir"
+        }
+      ]
+    },
+    {
+      "title": "Vektör Uzayı Örnekleri",
+      "cat": "Foundations",
+      "summary": "ℝⁿ ve ℂⁿ klasik örnekler, ama vektör uzayı polinomları, matrisleri, fonksiyonları ve hatta sonsuz uzunluklu dizileri kapsar. Her biri farklı bir 'vektör' anlayışı ama hepsi aynı aksiyomları sağlar.",
+      "context": "EE499 · Chapter 1.2 — Examples of Vector Spaces",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Örnekler neden bu kadar çeşitli?",
+          "text": "Vektör uzayı kavramının gücü tam da burada: çok farklı matematiksel nesneleri aynı çerçeve içinde düşünmeni sağlıyor. SP'de çalıştığın şeyler şunlar:\n\nℝⁿ ve ℂⁿ: klasik n-boyutlu vektörler. Zaten biliyorsun. FIR filtre katsayıları buraya girer, örneklenmiş sinyaller buraya girer.\n\nPⁿ(ℝ) — en fazla n. dereceden polinomlar: \np(t) = a₀ + a₁t + ... + aₙtⁿ\nİki polinom topla → polinom, sayla çarp → polinom. Kapalı. Aksiyomlar sağlanır.\nBoyutu n+1 (sabit terim dahil).\n\nℂᴺˣᴺ — N×N karmaşık matrisler:\nMatrisleri vektör gibi düşün. Matrix toplama ve skalar çarpma tanımlı. Vektör uzayı.\n\nC[a,b] — [a,b]'de sürekli fonksiyonlar:\nx(t) ve y(t) sürekli → x(t)+y(t) de sürekli. αx(t) de sürekli. Vektör uzayı.\nBurada 'vektörler' artık fonksiyonlar — sonsuz boyutlu uzay!\n\nL₂[a,b] — sonlu enerjili fonksiyonlar:\n∫_a^b |x(t)|² dt < ∞ koşulunu sağlayan fonksiyonlar.\nBu SP'nin en önemli uzayı — gerçek fiziksel sinyaller burada yaşar.\n\nℓ_p(ℤ) — sonsuz uzunluklu diziler:\nΣ_{k=-∞}^{∞} |x[k]|^p < ∞ koşulu ile. p=2 en önemlisi: ℓ₂ = sonlu enerjili DT sinyaller."
+        },
+        {
+          "type": "table",
+          "heading": "SP'de kullanılan vektör uzayları",
+          "rows": [
+            [
+              "Uzay",
+              "Elemanlar",
+              "SP Bağlantısı"
+            ],
+            [
+              "ℝⁿ",
+              "Gerçel n-vektörler",
+              "Sonlu uzunluklu sinyaller, filtre katsayıları"
+            ],
+            [
+              "ℂᴺ",
+              "Karmaşık N-vektörler",
+              "DFT katsayıları, karmaşık sinyal örnekleri"
+            ],
+            [
+              "Pⁿ(ℝ)",
+              "Derece ≤ n polinomlar",
+              "Polinom yaklaşım, Legendre temeli"
+            ],
+            [
+              "C[a,b]",
+              "Sürekli fonksiyonlar",
+              "CT sinyaller (ideal model)"
+            ],
+            [
+              "L₂[a,b]",
+              "Sonlu enerjili fons.",
+              "Gerçekçi CT sinyal modeli, Fourier"
+            ],
+            [
+              "ℓ₂(ℤ)",
+              "∑|x[k]|² < ∞ diziler",
+              "Gerçekçi DT sinyal modeli, DTFS"
+            ],
+            [
+              "ℂᴺˣᴺ",
+              "N×N matrisler",
+              "Lineer sistem matrisleri, DFT matrisi"
+            ]
+          ]
+        },
+        {
+          "type": "code",
+          "heading": "L_p uzaylarında neden dikkatli olmak gerekir?",
+          "text": "L_p uzayı düz fonksiyonlar kümesi değil. Mesela L_p[a,b]'de ||·||_p normunu tanımlamak istersen:\n\n||x||_p = (∫|x(t)|^p dt)^(1/p)\n\nAma bir sorun var: y(t) = {1 eğer t=1, 0 otherwise} gibi bir fonksiyon düşün.\nBu y, sıfır fonksiyonu değil (y ≠ 0 olarak tanımlanmış), ama ||y||_p = 0.\nBu norm aksiyomunu ihlal ediyor: ||y||=0 ama y≠0.\n\nÇözüm: L_p'de 'neredeyse her yerde sıfır olan' (yani sadece sıfır ölçümlü bir kümede sıfırdan farklı olan) fonksiyonları 'sıfır' sayarız. Buna denklik ilişkisi denir: x ~ y eğer x(t) = y(t) neredeyse her yerde. Bu denklik sınıfları üzerinde L_p bir vektör uzayı ve ||·||_p geçerli bir norm."
+        }
+      ]
+    },
+    {
+      "title": "Alt Uzay ve Alt Uzay İşlemleri",
+      "cat": "Foundations",
+      "summary": "Alt uzay: aynı işlemler altında kapalı alt küme — orijini içermek zorunda. Kesişim alt uzay ✓, birleşim değil ✗. Span her zaman alt uzay. Direkt sum S⊕T: tekil ayrışım garantisi.",
+      "context": "EE499 · Chapter 1.3 — Subspaces",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Alt uzay nedir ve neden önemli?",
+          "text": "S ⊆ V bir alt uzaydır eğer aynı toplama ve skalar çarpma işlemleri altında S'nin kendisi de bir vektör uzayı ise.\n\nBunu kontrol etmek için gereken minimum koşul:\n1. Toplama kapalılığı: x, y ∈ S ⟹ x+y ∈ S\n2. Skalar çarpma kapalılığı: x ∈ S, α ∈ F ⟹ αx ∈ S\n\nBu iki koşul, sıfır vektörünün S'de bulunmasını garantiler:\n  α = 0 al → 0·x = 0 ∈ S\n\nDolayısıyla quick test: Sıfır vektörü S'de değilse → S alt uzay olamaz.\n\nNeden alt uzaylar bu derste önemli?\n- Bantlı sinyaller alt uzay oluşturur (belirli frekansları olan sinyaller)\n- DFT-limited sinyaller alt uzay oluşturur\n- Bir lineer sistemin çözümleri alt uzay olabilir\n- Projeksiyon teoremi için hedef hep bir alt uzay\n\nSomut örnek: DFT-limited sinyaller.\nV = ℂᴺ (N-uzunluklu diziler)\nS = {x ∈ V : X[k] = 0 için k = K+1,...,N-K-1} (sadece düşük frekanslı)\nBu S bir alt uzay mı? Evet — iki düşük frekanslı sinyal topla → yine düşük frekanslı."
+        },
+        {
+          "type": "compare",
+          "heading": "Kesişim alt uzay, birleşim değil — neden?",
+          "left": {
+            "title": "S ∩ T → Alt Uzay ✓ (ispat)",
+            "points": [
+              "x, y ∈ S∩T → x,y hem S'de hem T'de",
+              "S alt uzay → αx+βy ∈ S",
+              "T alt uzay → αx+βy ∈ T",
+              "Sonuç: αx+βy ∈ S∩T ✓",
+              "Sezgi: iki kısıtı aynı anda sağla → daha kısıtlı"
+            ]
+          },
+          "right": {
+            "title": "S ∪ T → Alt Uzay Değil ✗ (karşı örnek)",
+            "points": [
+              "ℝ²'de S = x-ekseni, T = y-ekseni",
+              "[1,0] ∈ S ve [0,1] ∈ T",
+              "Ama [1,0]+[0,1] = [1,1] ne S ne T'de!",
+              "Sezgi: iki farklı 'yönde' vektörleri toplarsan orta yönde çıkarsın"
+            ]
+          }
+        },
+        {
+          "type": "code",
+          "heading": "Span, cebirsel toplam ve direkt toplam — aralarındaki fark",
+          "text": "span{x₁,...,xₙ} = {Σ αₖ xₖ : αₖ ∈ F} — bu vektörlerin TÜM lineer kombinasyonları.\nHer zaman alt uzay (sıfır dahil, α=0 ile).\nSezgi: span, bu vektörlerden üretebileceğin her şey.\n\nCebirsel toplam S + T = {s + t : s ∈ S, t ∈ T}.\nS ve T alt uzay → S+T de alt uzay.\nAma S∩T = {0} olmak zorunda değil.\n\nDirekt toplam S ⊕ T: S+T ayrıca S∩T = {0} şartıyla.\nEn önemli özellik: TEKİL AYRIŞIM.\nS ⊕ T'deki her x için tam olarak bir s∈S ve t∈T vardır öyle ki x = s + t.\n\nDirekt sum neden kritik?\n- Baz teorisinin temeli: bir baz, uzayı 1-boyutlu alt uzayların direkt toplamı olarak yazar\n- Projeksiyon teorisinde: V = S ⊕ S⊥ — her vektörün tekil S ve S⊥ bileşeni var\n- Sinyali 'istenilen + gürültü' olarak tekil ayrıştırabilmek bundan geliyor"
+        }
+      ]
+    },
+    {
+      "title": "Lineer Bağımsızlık ve Hamel Bazı",
+      "cat": "Foundations",
+      "summary": "Lineer bağımsız vektörler tekil temsil garantiler — katsayılar belirsizleşmez. Hamel bazı = lineer bağımsız + span. Boyut = baz eleman sayısı. Ortogonallik bağımsızlığı impliye eder.",
+      "context": "EE499 · Chapter 1.4 — Linear Independence and Basis",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Lineer bağımsızlık neden bu kadar önemli? Tekil temsil ne demek?",
+          "text": "Bir vektörü 'bir bazda yaz' dediğimizde, o bazın vektörleri cinsinden bir temsil elde ederiz. Bu temsilin işe yaraması için TEKİL olması lazım — yani o vektörü temsil eden katsayılar benzersiz olmalı.\n\nLineer bağımsızlık tam da bunu garantiler.\n\nResmi tanım:\nx₁, x₂, ..., xₙ lineer bağımsız ↔\n  α₁x₁ + α₂x₂ + ... + αₙxₙ = 0 ⟹ α₁ = α₂ = ... = αₙ = 0\n(Yani sıfır kombinasyonu yalnızca hepsini sıfır alınca elde edilir.)\n\nNeden tekil temsil sağlar?\nDiyelim ki Σ αₖxₖ = z ve Σ βₖxₖ = z (aynı z'nin iki temsili).\nÇıkar: Σ (αₖ - βₖ)xₖ = 0\nLineer bağımsızlıktan: αₖ - βₖ = 0, yani αₖ = βₖ her k için.\n→ Temsil tekil!\n\nBağımlı vektörlerle ne olur?\n1(t-1) - 1(t) + 1(1) = 0 — yani (t-1), t ve 1 birlikte bağımlı.\nBu demek oluyor ki: eğer bunları baz olarak kullanırsan, aynı polinomu temsil etmek için farklı katsayılar bulabilirsin. Katsayılar belirsizleşir."
+        },
+        {
+          "type": "code",
+          "heading": "Hamel bazı ve boyut kavramı",
+          "text": "Hamel bazı: {x₁,...,xₙ} ⊂ V Hamel bazıdır eğer:\n  1. Lineer bağımsız\n  2. V'yi span ediyor: her v ∈ V, bu bazın lineer kombinasyonu\n\nBu iki koşul birlikte şunu garanti eder: V'deki her vektörün bu bazda TEKİL bir temsili var.\n\nboyut = dim(V) = baz vektörlerinin sayısı\n\nÖnemli teorem: V'nin herhangi iki bazı aynı sayıda eleman içerir. Dolayısıyla boyut iyi tanımlı.\n\nSezgi: baz, uzayı 'açıklamak için gereken minimum vektör kümesi'.\n\nPolinom örneği:\nP²(ℝ) için baz 1: {1, t, t²}\nP²(ℝ) için baz 2: {1, t-1, (t-1)²}\nHer ikisi de baz — boyut = 3.\n\np(t) = (1/2) + 2t + 3t²\n→ Baz 1'deki koordinatlar: [1/2, 2, 3]\n→ Baz 2'deki koordinatlar: hesaplanabilir, farklı sayılar ama aynı polinom\n\nNot: Ortogonallik ⟹ Lineer bağımsızlık\nEğer vektörler birbirine dik (iç çarpımları sıfır) ise otomatik lineer bağımsız. Ama tersi şart değil — lineer bağımsız vektörler dik olmak zorunda değil."
+        },
+        {
+          "type": "table",
+          "heading": "Önemli baz ve boyut örnekleri",
+          "rows": [
+            [
+              "Uzay",
+              "Bir örnek baz",
+              "Boyut"
+            ],
+            [
+              "ℝⁿ",
+              "Standart baz {e₁,...,eₙ}",
+              "n"
+            ],
+            [
+              "Pⁿ(ℝ)",
+              "{1, t, t², ..., tⁿ}",
+              "n+1"
+            ],
+            [
+              "Sym. 2×2 matris",
+              "{ [[1,0],[0,0]], [[0,0],[0,1]], [[0,1],[1,0]] }",
+              "3"
+            ],
+            [
+              "ODE: x''+3x'+2x=0",
+              "{e⁻ᵗ, e⁻²ᵗ}",
+              "2"
+            ],
+            [
+              "Periyodik DT: N nokta",
+              "{δ[n], δ[n-1], ..., δ[n-N+1]}",
+              "N"
+            ],
+            [
+              "Bantlı CT sinyaller",
+              "{sinc(t/T-k) : k ∈ ℤ}",
+              "∞ (sonsuz boyutlu)"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "title": "DFT ve Sinc Bazı — SP'deki Somut Baz Örnekleri",
+      "cat": "Signal Processing",
+      "summary": "DFT bazı N-uzunluklu diziler için karmaşık sinüzoidler. Sinc bazı bantlı sinyaller için örnekleme teoremine dayalı sonsuz boyutlu baz. CTFS = ortonormal bazda temsil.",
+      "context": "EE499 · Chapter 1.4.1 — Bases for Subspaces",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "DFT bazı nedir ve neden standart bazdan farklı?",
+          "text": "N-uzunluklu diziler uzayı ℂᴺ için iki doğal baz vardır:\n\nStandart baz (e-baz):\n{e₀, e₁, ..., e_{N-1}}, eₖ[n] = δ[n-k]\nYani eₖ: sadece k. konumda 1, diğerlerinde 0.\nx'i bu bazda yazmak = x'in zaman domenindeki örneklerini sıralamak.\nx = x[0]·e₀ + x[1]·e₁ + ... + x[N-1]·e_{N-1}\nKatsayılar: x[0], x[1], ..., x[N-1] — doğrudan örnekler\n\nDFT bazı (v-baz):\n{v₀, v₁, ..., v_{N-1}}, vₖ[n] = e^{j(2π/N)kn} için n=0,...,N-1\nYani vₖ: k. harmonik frekanstaki karmaşık sinüzoid.\nx'i bu bazda yazmak = x'in frekans domenindeki katsayılarını bulmak.\nx = (1/N)X[0]·v₀ + (1/N)X[1]·v₁ + ... (IDFT formülü)\nKatsayılar: (1/N)X[k] — normalize frekans içeriği\n\nAynı x vektörü, iki bazda iki farklı koordinat vektörüne sahip.\nZaman domeninde çalışmak = e-baz koordinatlarında çalışmak.\nFrekans domeninde çalışmak = v-baz koordinatlarında çalışmak."
+        },
+        {
+          "type": "code",
+          "heading": "Örnekleme teoremi ve sinc bazı bağlantısı",
+          "text": "[-B/2, B/2] Hz bantlı sonlu enerjili CT sinyaller bir alt uzay oluşturur.\nT = 1/B (Nyquist periyodu) ile örnekleme yap — aliasing yok.\n\nÖrnekleme teoremi şunu söylüyor:\n  x(t) = Σ_{n=-∞}^{∞} x(nT) · sinc((t-nT)/T)\n\nBunu baz diliyle oku:\n- Baz vektörleri: {vₙ(t) = sinc((t-nT)/T) : n ∈ ℤ}\n- Temsil katsayıları: {x(nT)} — yani sinyal örnekleri\n- Her bantlı sinyal, bu bazın lineer kombinasyonu\n- Temsil tekil — sampling theorem bu tekliği garanti eder\n\nBu baz neden özel?\n1. Sonsuz boyutlu (n tüm tamsayıları dolaşıyor)\n2. Ortonormal: <sinc(t/T-m), sinc(t/T-n)> = T·δ[m-n]\n   (iç çarpımla doğrulanabilir — Parseval ile)\n3. Katsayılar = örnekler → analog sinyali sayısal örneklerden tam geri kazanabilirsin\n\nÖnemli: Bu neden sinyal işlemede devrimdi? Sonsuz boyutlu bir fonksiyonu sonlu (ya da sayılabilir) örnekle tamamen temsil edebiliyorsun — bilgi kaybı yok."
+        },
+        {
+          "type": "code",
+          "heading": "CTFS ve ortonormal baz — katsayı formülünün gizemi çözülüyor",
+          "text": "Periyot T'lik CT sinyaller için Fourier serisi:\n  x(t) = Σ_{k=-∞}^{∞} aₖ · e^{jk(2π/T)t}\n\nKatsayılar: aₖ = (1/T) ∫₀ᵀ x(t) e^{-jk(2π/T)t} dt\n\nBu formül nereden geliyor? Ortonormal bazdan!\n\nAdım 1: Baz vektörlerini normalize et:\n  φₖ(t) = (1/√T) e^{jk(2π/T)t}\n  ||φₖ||² = ∫₀ᵀ |φₖ(t)|² dt = (1/T)·T = 1 ✓\n\nAdım 2: Ortogonalliği doğrula:\n  <φₖ, φₗ> = ∫₀ᵀ φₖ(t)φₗ*(t) dt = ∫₀ᵀ (1/T) e^{j(k-l)(2π/T)t} dt\n  k≠l için integral sıfır (tam periyot üzerinde sinüzoid) ✓\n\nOrtonormal baz oldu! Şimdi katsayı basit iç çarpım:\n  βₖ = <x, φₖ> = ∫₀ᵀ x(t) φₖ*(t) dt = (1/√T) ∫₀ᵀ x(t) e^{-jk(2π/T)t} dt\n\nAσlında aₖ = βₖ/√T = (1/T) ∫₀ᵀ x(t) e^{-jk(2π/T)t} dt — CTFS formülü!\n\nYani CTFS katsayıları aslında ortonormal bazda temsil katsayıları. Integral formülü el yordamıyla ezberlenecek bir şey değil — iç çarpımın doğal sonucu."
+        }
+      ]
+    },
+    {
+      "title": "Baz Değişimi — Matematiksel Temel ve DFT Bağlantısı",
+      "cat": "Signal Processing",
+      "summary": "Aynı vektör, farklı bazlarda farklı koordinat vektörlerine sahip. Baz değişim matrisi T_{e→v} koordinatları dönüştürür. DFT tam olarak budur: standart baz (zaman) ↔ DFT baz (frekans).",
+      "context": "EE499 · Chapter 1.4.2 — Change of Basis",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Baz değişimi nasıl kurulur?",
+          "text": "V = span{e₁,...,eₙ} = span{v₁,...,vₙ} (V'nin iki farklı bazı)\n\nAynı x ∈ V'yi her iki bazda yaz:\n  x = Σₖ αₖ eₖ  →  x_e = [α₁,...,αₙ]ᵀ  (e-bazındaki koordinatlar)\n  x = Σₖ βₖ vₖ  →  x_v = [β₁,...,βₙ]ᵀ  (v-bazındaki koordinatlar)\n\nBunları nasıl birbirine bağlarız?\n\nHer eₖ'yi v-bazında yaz:\n  e₁ = t₁₁v₁ + t₂₁v₂ + ... + tₙ₁vₙ\n  e₂ = t₁₂v₁ + t₂₂v₂ + ... + tₙ₂vₙ\n  ...\n  Yani: eₖ = Σᵢ tᵢₖ vᵢ\n\nMatris formu:\n  x = [e₁ e₂ ... eₙ] · x_e = [v₁ v₂ ... vₙ] · T_{e→v} · x_e\n\nBağıntı:\n  x_v = T_{e→v} · x_e  (e-koordinatlarından v-koordinatlarına)\n  x_e = T_{v→e} · x_v  (v-koordinatlarından e-koordinatlarına)\n  T_{v→e} = (T_{e→v})⁻¹\n\nSomut anlam: aynı gerçek nesne (x), iki farklı perspektiften görülüyor. T dönüşüm gözlükleri değiştiriyor."
+        },
+        {
+          "type": "code",
+          "heading": "DFT = baz değişimi olarak görmek",
+          "text": "V = ℂᴺ (N-uzunluklu diziler)\n\ne-baz = standart baz {δ[n-k] : k=0,...,N-1}\n→ x_e = zaman domenindeki vektör [x(0), x(1), ..., x(N-1)]ᵀ\n\nv-baz = DFT bazı {vₖ : vₖ[n] = e^{j(2π/N)kn}, k=0,...,N-1}\n→ x_v = frekans domenindeki koordinatlar\n\nT_{v→e} = [v₀ v₁ ... v_{N-1}] = DFT matrisi V\n  sütun k = vₖ = [1, e^{j2π k/N}, e^{j4π k/N}, ..., e^{j2π k(N-1)/N}]ᵀ\n\nx = V · X'   (IDFT formülü: x[n] = (1/N)Σ X[k] e^{j(2π/N)kn})\nX = V⁻¹ · x = (1/N) Vᴴ · x   (DFT formülü: X[k] = Σ x[n] e^{-j(2π/N)kn})\n\nÇünkü: Vᴴ·V = N·I → V⁻¹ = (1/N)Vᴴ\n\nUnitary DFT için: W = (1/√N)·V tanımla.\nO zaman Wᴴ·W = I → W unitary → W⁻¹ = Wᴴ\nUnitary DFT: X[k] = (1/√N) Σ x[n] e^{-j(2π/N)kn}\n            x[n] = (1/√N) Σ X[k] e^{j(2π/N)kn}"
+        },
+        {
+          "type": "insight",
+          "heading": "Baz değişiminin derin anlamı",
+          "text": "Zaman domeninde çalışmak ve frekans domeninde çalışmak, aynı vektörü farklı gözlüklerle görmek demek. Hiçbir bilgi kaybolmuyor — sadece koordinat sistemi değişiyor.\n\nBu görüş şu soruları cevaplıyor:\n- DFT neden terslenebilir? Çünkü baz değişimi matrisi terslenebilir.\n- DFT neden bilgi kaybetmiyor? Çünkü koordinat değişikliği bilgi kaybetmez.\n- DFT matrisi neden Hermitian simetrik? Çünkü DFT bazı ortogonal (Vᴴ·V = NI).\n\nSomut SP bağlantısı: zaman domeninde konvolüsyon = frekans domeninde çarpım. Bu aslında şunu söylüyor: konvolüsyon operatörü, DFT bazında diagonal matris olarak temsil edilir. Baz değişimi operatörleri basitleştiriyor."
+        }
+      ]
+    },
+    {
+      "title": "Norm ve Normlu Vektör Uzayı (NVS)",
+      "cat": "Geometry",
+      "summary": "Norm vektörün büyüklüğü: 3 aksiyom (non-negativity, homogeneity, triangle inequality). ℓ_p ailesi: p=1 elmas, p=2 daire, p=∞ kare. Küçük p → büyük norm değeri, küçük uzay.",
+      "context": "EE499 · Chapter 1.5 — Norm",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Norm neden gerekli? Soyut vektör uzayında mesafe nasıl tanımlanır?",
+          "text": "Bir vektör uzayında 'bu iki vektör birbirine yakın mı?' sorusunu sormak için mesafe metriğine ihtiyaç vardın. Mesafe metriği normdan gelir: d(x,y) = ||x-y||.\n\nAma norm olmadan bu soru anlamsız. Soyut vektör uzayında (örn. polinom uzayı) iki polinomun 'yakın' olması ne demek?\n\nNorm işte bunu tanımlar: ||·||: V → ℝ bir norm olabilmesi için 3 aksiyom:\n\nAksiyom 1 — Non-negativity:\n  ||x|| ≥ 0  ve  ||x|| = 0 ⟺ x = 0\n  (sadece sıfır vektörünün uzunluğu sıfır)\n  (normun sonlu olması lazım — sonsuz olamaz!)\n\nAksiyom 2 — Homogeneity:\n  ||αx|| = |α| · ||x||  (skalarla büyüt/küçült, norm orantılı değişir)\n\nAksiyom 3 — Triangle inequality (Minkowski eşitsizliği):\n  ||x + y|| ≤ ||x|| + ||y||  (kestirme yol köşegenli yoldan kısa)\n\nNot: p < 1 için triangle inequality sağlanmaz, dolayısıyla ℓ_p ile p<1 bir norm değil.\n\nNormlu Vektör Uzayı (NVS) = (V, ||·||) çifti: vektör uzayı + üzerine tanımlı norm."
+        },
+        {
+          "type": "code",
+          "heading": "ℓ_p normu ailesi ve geometrik yorumu",
+          "text": "ℂᴺ (veya ℝᴺ) üzerinde ℓ_p normu:\n  ||x||_p = (Σₖ |xₖ|^p)^{1/p}  için p ≥ 1\n\nÖzel durumlar:\n  ||x||₁ = Σ|xₖ|  (Manhattan / taxi-cab norm)\n  ||x||₂ = √(Σ|xₖ|²)  (Öklid norm)\n  ||x||_∞ = max_k|xₖ|  (sonsuz norm — p→∞ limiti)\n\nGeometrik görü — ℝ²'de unit ball {x : ||x||_p ≤ 1}:\n  ℓ₁: elmas / kare köşeli  (|x₁| + |x₂| ≤ 1)\n  ℓ₂: çember / daire  (x₁² + x₂² ≤ 1)\n  ℓ_∞: kare / kutu  (max(|x₁|,|x₂|) ≤ 1)\n\nNorm sıralaması (p < q için ℝᴺ'de):\n  ||x||_p ≥ ||x||_q  (küçük p → büyük sayısal norm değeri)\n  ℓ_p ⊂ ℓ_q  (p'si küçük uzay, daha sıkı, daha az eleman)\n\nFonksiyon uzayları için TERSINE döner:\n  L₁[a,b] ⊃ L₂[a,b] ⊃ ... ⊃ L_∞[a,b]\n  Neden? Sınırlı aralık [a,b]'de büyük p daha kısıtlayıcı koşul koyar."
+        },
+        {
+          "type": "table",
+          "heading": "SP'de kullanılan normlar",
+          "rows": [
+            [
+              "Uzay / Norm",
+              "Formül",
+              "Ne ölçüyor?"
+            ],
+            [
+              "ℓ₁ (finite)",
+              "Σ|xₖ|",
+              "Toplam mutlak değer"
+            ],
+            [
+              "ℓ₂ / Öklid",
+              "√(Σ|xₖ|²)",
+              "Vektör uzunluğu"
+            ],
+            [
+              "ℓ_∞",
+              "max|xₖ|",
+              "En büyük bileşen"
+            ],
+            [
+              "L₁[a,b]",
+              "∫|x(t)|dt",
+              "Toplam mutlak alan"
+            ],
+            [
+              "L₂[a,b]",
+              "(∫|x(t)|²dt)^{1/2}",
+              "Karekök enerji"
+            ],
+            [
+              "C[a,b] sup norm",
+              "max|x(t)|",
+              "Maksimum değer"
+            ],
+            [
+              "Frobenius (matris)",
+              "√(tr(AᴴA))",
+              "Matris 'boyutu'"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "title": "İç Çarpım ve Inner Product Space (IPS)",
+      "cat": "Geometry",
+      "summary": "İç çarpım normdan zengin: açı ve ortogonallik tanımlar. 4 aksiyom. Induced norm: ||x||=√<x,x>. IPS hiyerarşi: VS ⊃ NVS ⊃ IPS. ℂᴺ için <x,y>=yᴴx, L₂ için integral.",
+      "context": "EE499 · Chapter 1.6 — Inner Product",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "İç çarpım normdan ne ekler? Neden ihtiyaç var?",
+          "text": "Norm 'büyüklük' veriyor ama iki vektörün 'birbirine ne kadar benzediğini' ya da 'aralarındaki açıyı' söylemiyor. Mesela:\n\n- Norm || [1,0] || = || [0,1] || = 1 (eşit büyüklük)\n- Ama [1,0] ile [0,1] birbirine dik — bu bilgi normda yok\n\nİç çarpım, bu 'yön ilişkisini' ölçen bir yapı.\n\nResmi tanım:\n<·,·>: V×V → F, şu 4 aksiyomla:\n\n1. Conjugate symmetry: <x,y> = <y,x>*\n   Gerçel uzaylarda: <x,y> = <y,x> (tam simetrik)\n   Karmaşık uzaylarda: yer değiştirince conjugate alınır\n\n2. Linearity (1. argümanda): <αx, y> = α<x,y>\n   Ama 2. argümanda: <x, αy> = α*<x,y>  (conjugate linear)\n\n3. Additivity: <x+y, z> = <x,z> + <y,z>\n\n4. Non-negativity: <x,x> ≥ 0,  ve  <x,x> = 0 ⟺ x = 0\n   Not: <x,x> her zaman gerçel sayı (conjugate symmetry'den: <x,x> = <x,x>* → gerçel)\n\nInduced norm: ||x|| = √<x,x> — her IPS otomatik bir NVS olur.\n\nHiyerarşi:\n  Vektör Uzayı (VS)\n  └─ Normlu VS (NVS): norm ekle\n     └─ İç Çarpım Uzayı (IPS = Pre-Hilbert): iç çarpım ekle\n        └─ Hilbert Uzayı: IPS + complete (Cauchy dizileri yakınsar)"
+        },
+        {
+          "type": "code",
+          "heading": "Karmaşık uzaylarda neden yᴴx, yᵀx değil?",
+          "text": "ℂᴺ için iki aday var:\n  Seçenek A: <x,y> = yᵀx = Σ xₖyₖ\n  Seçenek B: <x,y> = yᴴx = Σ xₖyₖ*\n\nSeçenek A neden çalışmıyor?\n  x = [j, 0]ᵀ için <x,x> = j·j = j² = -1 < 0\n  Non-negativity ihlal ediliyor! Geçersiz.\n\nSeçenek B çalışıyor:\n  <x,x> = xᴴx = Σ|xₖ|² ≥ 0, ve = 0 iff x = 0 ✓\n\nConjugate symmetry:\n  <y,x> = xᴴy = (yᴴx)* = <x,y>* ✓\n\nLinearity:\n  <αx,y> = yᴴ(αx) = α(yᴴx) = α<x,y> ✓\n\nDolayısıyla karmaşık uzaylarda iç çarpım hep yᴴx, asla yᵀx.\nBu önemli: gerçel vektörlerde yᵀx = yᴴx (aynı şey), ama karmaşık için mutlaka yᴴx."
+        },
+        {
+          "type": "table",
+          "heading": "İç çarpım örnekleri ve induced normları",
+          "rows": [
+            [
+              "Uzay",
+              "İç Çarpım <x,y>",
+              "Induced Norm"
+            ],
+            [
+              "ℝᴺ",
+              "yᵀx = Σ xₖyₖ",
+              "||x||₂ (Öklid)"
+            ],
+            [
+              "ℂᴺ (standart)",
+              "yᴴx = Σ xₖyₖ*",
+              "||x||₂"
+            ],
+            [
+              "ℂᴺ (W ağırlıklı)",
+              "yᴴWx  (W pos.def.)",
+              "√(xᴴWx)"
+            ],
+            [
+              "L₂[a,b]",
+              "∫ₐᵇ x(t)y*(t) dt",
+              "||x||_{L₂}"
+            ],
+            [
+              "ℂᵐˣⁿ matrisler",
+              "tr(YᴴX)",
+              "||X||_F (Frobenius)"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Cauchy-Schwarz, Açı, Parallelogram ve Ortogonallik",
+      "cat": "Geometry",
+      "summary": "Cauchy-Schwarz: |<x,y>| ≤ ||x||·||y|| — açı tanımını mümkün kılar. Parallelogram yasası: sadece IPS'te, ve yalnızca ℓ₂ normun iç çarpımdan geldiğini ispat eder. x⊥y ↔ <x,y>=0.",
+      "context": "EE499 · Chapter 1.6.2 — Cauchy-Schwarz",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Cauchy-Schwarz eşitsizliği — ispat ve önemi",
+          "text": "Cauchy-Schwarz Eşitsizliği:\n  |<x, y>| ≤ ||x|| · ||y||  her x, y ∈ V için\n  Eşitlik ⟺ x ve y lineer bağımlı (y = αx veya x = 0 veya y = 0)\n\nİspat fikri:\n  0 ≤ ||x - αy||²  = <x-αy, x-αy> = ||x||² - α*<x,y> - α<y,x>* + |α|²||y||²\n  α = <x,y> / ||y||² seç (||y|| ≠ 0 varsay):\n  0 ≤ ||x||² - |<x,y>|² / ||y||²\n  → |<x,y>|² ≤ ||x||² · ||y||² → |<x,y>| ≤ ||x||·||y||  ✓\n\nNeden önemli?\nCS eşitsizliği, iç çarpımın ||x||·||y|| ile normalize edildiğinde [-1,1]'de kaldığını söylüyor.\nBu ise açıyı tanımlamamızı sağlıyor:\n  cos θ = <x,y> / (||x|| · ||y||)  (gerçel uzaylarda)\n  |cos θ| = |<x,y>| / (||x|| · ||y||) ≤ 1  ✓\n\nKarmaşık uzaylarda iki seçenek:\n  cos θ = |<x,y>| / (||x||·||y||)  (modül — daha yaygın)\n  cos θ = Re{<x,y>} / (||x||·||y||)  (gerçel kısım)\n\nSomut örnek — ℝ²:\n  x = [R₁cosθ₁, R₁sinθ₁], y = [R₂cosθ₂, R₂sinθ₂]\n  <x,y> / (||x||·||y||) = (R₁R₂cos θ₁cos θ₂ + R₁R₂sin θ₁sin θ₂) / (R₁R₂) = cos(θ₁-θ₂)  ✓"
+        },
+        {
+          "type": "code",
+          "heading": "Parallelogram yasası — sadece ℓ₂'nin IPS olduğunun kanıtı",
+          "text": "Parallelogram Yasası:\n  ||x+y||² + ||x-y||² = 2||x||² + 2||y||²\n\nBu yasa herhangi bir IPS'te geçerlidir (induced norm üzerinden ispat edilir).\n\nDaha kritik yön: KARŞITI da doğru.\nEğer bir norm parallelogram yasasını sağlıyorsa → o norm bir iç çarpımdan induced.\nVe induced eden iç çarpım şöyle yazılır (polarizasyon eşitliği):\n  <x,y> = (1/4)[||x+y||² - ||x-y||²]  (gerçel)\n  <x,y> = (1/4)[||x+y||² - ||x-y||² + j||x+jy||² - j||x-jy||²]  (karmaşık)\n\nℝ²'de ℓ₁ normu test et:\n  x = [1,0], y = [0,1]\n  ||x+y||₁² + ||x-y||₁² = (1+1)² + (1+1)² = 4 + 4 = 8\n  2||x||₁² + 2||y||₁² = 2·1² + 2·1² = 2 + 2 = 4\n  8 ≠ 4 → Parallelogram yasası sağlanmıyor → ℓ₁ IPS DEĞİL\n\nSonuç: ℓ_p normlar arasında YALNIZCA ℓ₂ (p=2) bir iç çarpımdan geliyor.\nDolayısıyla 'açı' ve 'ortogonallik' sadece ℓ₂ ile tanımlı."
+        },
+        {
+          "type": "code",
+          "heading": "Ortogonallik — tanım, ortogonal komplement, örnekler",
+          "text": "Ortogonallik: IPS'te x ⊥ y ↔ <x, y> = 0 (yani açı = 90°)\n\nGenel kullanım:\n- Sinyal ve gürültü dik ise → projeksiyon onları ayırır\n- Baz vektörleri dik ise → katsayı hesaplamak çok kolay\n- Hata vektörü alt uzaya dik ise → o nokta projeksiyondur\n\nOrtogonal komplement:\n  S⊥ = {x ∈ V : <x,s> = 0  her s ∈ S için}\n  Yani S'deki her şeye dik olan vektörlerin kümesi.\n  S⊥ her zaman alt uzay (kapalılık ispat edilebilir).\n  T = {0}: her uzaya dik: {0}⊥ = V\n  V'nin kendisi için: V⊥ = {0}\n\nSomut SP örneği:\n  IPS = ℓ₂(ℤ), <x,y> = Σ xₖyₖ*\n  S = {x ∈ ℓ₂ : xₖ = 0  için k < 0}  (causal diziler)\n  T = {x ∈ ℓ₂ : xₖ = 0  için k ≥ 0}  (anti-causal diziler)\n  <s,t> = Σₖ sₖtₖ* = Σ_{k<0} sₖtₖ* + Σ_{k≥0} sₖtₖ* = 0 + 0 = 0  (sₖ=0 k<0, tₖ=0 k≥0)\n  Yani S ⊥ T — causal ve anti-causal diziler birbirine dik!"
+        }
+      ]
+    },
+    {
+      "title": "Gram-Schmidt ve Ortonormal Baz Üretimi",
+      "cat": "Geometry",
+      "summary": "Gram-Schmidt: herhangi lineer bağımsız kümeden ortonormal baz üret. Ortonormal bazda katsayı = basit iç çarpım. Polinom uzayında Gram-Schmidt → Legendre polinomları.",
+      "context": "EE499 · Chapter 1.6.4 — Gram-Schmidt",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Ortonormal baz neden bu kadar değerli?",
+          "text": "Standart bir baz {x₁,...,xₙ} verildiğinde, herhangi bir v ∈ V'yi temsil etmek için n bilinmeyenli lineer sistem çözmek gerekir:\n  v = Σ βₖ xₖ → [x₁|x₂|...|xₙ] · β = v → β = ...matris tersi gerekli\n\nOrtonormal baz {e₁,...,eₙ} ile çok daha kolay:\n  βₖ = <v, eₖ>\nBaşka bir hesap gerekmez. Sadece her baz vektörü ile iç çarpım.\n\nBu neden çalışıyor?\n  <v, eₗ> = <Σₖ βₖ eₖ, eₗ> = Σₖ βₖ <eₖ, eₗ> = Σₖ βₖ δₖₗ = βₗ  ✓\n  (Ortogonallikten çapraz terimler sıfır)\n\nPratik sonuç: CTFS, DFT, sampling theorem katsayıları hep 'ortonormal bazda iç çarpım'."
+        },
+        {
+          "type": "code",
+          "heading": "Gram-Schmidt süreci — adım adım",
+          "text": "Verilen: {x₁, x₂, ..., xₙ} lineer bağımsız, IPS'te\nİstenen: {e₁, e₂, ..., eₙ} ortonormal, span{eₖ} = span{xₖ}\n\nAdım 1:\n  e₁ = x₁ / ||x₁||  (sadece normalize et)\n\nAdım 2:\n  x₂'yi x₂ - <x₂,e₁>e₁ yap  (e₁ bileşenini çıkar)\n  e₂ = (x₂ - <x₂,e₁>e₁) / ||x₂ - <x₂,e₁>e₁||  (normalize et)\n  <e₂, e₁> = 0 olduğu doğrulanabilir  ✓\n\nAdım k:\n  fₖ = xₖ - Σⁿ⁻¹_{n=1} <xₖ, eₙ>eₙ  (önceki tüm baz vektörleri bileşenlerini çıkar)\n  eₖ = fₖ / ||fₖ||  (normalize et)\n\nSonuç:\n  {e₁,...,eₙ} ortonormal: <eₖ,eₗ> = δₖₗ\n  span{e₁,...,eₙ} = span{x₁,...,xₙ}\n\nGörsel sezgi: e₁ yönünde birim vektör al. e₂ için x₂'den e₁'e paralel bileşeni çıkar — kalan e₁'e dik. Normalize et. Her adım bir önceki bazlarla dikliği garanti ediyor."
+        },
+        {
+          "type": "code",
+          "heading": "Gram-Schmidt uygulaması: Legendre Polinomları",
+          "text": "V = Pⁿ[-1,1], <f,g> = ∫₋₁¹ f(t)g(t) dt (gerçel, simetrik)\nStandart baz: {1, t, t², ..., tⁿ} — bunlar lineer bağımsız ama ortonormal değil.\n\n<1, t> = ∫₋₁¹ t dt = [t²/2]₋₁¹ = 0  ✓ (bu iki dik)\n<t, t²> = ∫₋₁¹ t³ dt = 0  ✓ (bu da dik, tek fonksiyon)\n<1, t²> = ∫₋₁¹ t² dt = 2/3 ≠ 0  ✗ (dik değil)\n\nGram-Schmidt uygula:\n\ne₁ = 1/||1|| = 1/√2  (çünkü ||1||² = ∫₋₁¹ 1 dt = 2)\n\ne₂ = (t - <t,e₁>e₁) / ||...|| = t/||t||  (çünkü <t,e₁> = 0)\n  ||t||² = ∫₋₁¹ t² dt = 2/3 → e₂ = √(3/2) · t\n\ne₃ = (t² - <t²,e₁>e₁ - <t²,e₂>e₂) / ||...||:\n  <t²,e₁> = (1/√2)∫₋₁¹ t² dt = (1/√2)·(2/3) = √2/3\n  <t²,e₂> = √(3/2)∫₋₁¹ t³ dt = 0\n  f₃ = t² - (√2/3)·(1/√2) = t² - 1/3\n  e₃ = (15/(2√10))^{1/2} · (t² - 1/3)  ≈ (√10/2√2)·(t²-1/3)\n\nBu ortonormal polinomlara 'Legendre polinomları' denir. Fizikte, kuantum mekaniğinde, approximation theory'de çok önemli."
+        }
+      ]
+    },
+    {
+      "title": "Projeksiyon — Formül, Teorem, Uygulamalar",
+      "cat": "Applications",
+      "summary": "Projeksiyon: x'e en yakın nokta alt uzayda. Ortogonallik prensibi: x-x̂ ⊥ S. ℂⁿ'de P=BB^H. Genel: P=B(B^HB)^{-1}B^H. Hilbert uzayında projeksiyon garantili.",
+      "context": "EE499 · Chapter 1.7 — Projection",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Projeksiyon nedir ve ortogonallik prensibiyle bağlantısı",
+          "text": "Problem: x ∈ V verilmiş, x ∉ S. S alt uzayındaki x'e en yakın noktayı bul.\n  x̂ = argmin_{s ∈ S} ||x - s||²\n\nBu noktaya x'in S'ye projeksiyonu diyoruz.\n\nOrtogonallik Prensibi (Projeksiyon Teoremi):\n  x̂ ∈ S ve ||x-x̂|| ≤ ||x-s|| her s ∈ S için\n  ⟺\n  x̂ ∈ S ve (x - x̂) ⊥ S\n\nYani: projeksiyon var ↔ hata vektörü alt uzaya dik.\nİspat yönü (projeksiyon → ortogonallik):\n  Varsay x̂ = argmin_{s∈S} ||x-s||. Herhangi s ∈ S için:\n  Seç sε = x̂ + εs ∈ S\n  ||x - sε||² = ||x-x̂||² - 2ε Re<x-x̂,s> + ε²||s||² ≥ ||x-x̂||²  (minimum koşulundan)\n  → Re<x-x̂, s> = 0 her s için → <x-x̂, s> = 0 → (x-x̂) ⊥ S  ✓\n\nSezgi: neden dik olan en yakın? Çünkü dik olmayan bir hata varsa, alt uzay yönünde biraz daha ilerlersen mesafeyi azaltabilirsin."
+        },
+        {
+          "type": "code",
+          "heading": "Projeksiyon matrisi türetme",
+          "text": "S = span{b₁,...,bᵣ} ⊆ ℂⁿ, B = [b₁|b₂|...|bᵣ] ∈ ℂⁿˣʳ\n\nOrtogonallik prensibi: (x - x̂) ⊥ S → <x-x̂, bₖ> = 0 her k için\n→ bₖᴴ(x - x̂) = 0 her k → Bᴴ(x - x̂) = 0\n→ Bᴴx = Bᴴx̂\n\nx̂ ∈ S olduğundan: x̂ = Bc  (bazın lineer kombinasyonu)\n→ Bᴴx = BᴴBc → c = (BᴴB)⁻¹Bᴴx  (BᴴB invertible — sütunlar lineer bağımsız)\n\nSonuç:\n  x̂ = Bc = B(BᴴB)⁻¹Bᴴx = Px\n  Projeksiyon matrisi: P = B(BᴴB)⁻¹Bᴴ\n\nOrtonormal baz ise BᴴB = I:\n  P = B·I⁻¹·Bᴴ = BBᴴ  (çok daha basit!)\n\nProjektion matrisinin özellikleri:\n  P² = P  (idempotent: iki kez proje et = bir kez proje et)\n  Pᴴ = P  (Hermitian simetrik)\n  P·P = P  ve  (I-P)·(I-P) = I-P  (I-P S⊥ ya proyeksion)"
+        },
+        {
+          "type": "code",
+          "heading": "Hilbert uzayı ve projeksiyon garantisi",
+          "text": "ℂⁿ'de projeksiyon her zaman var ve tekil. Ama genel IPS'te projeksiyon olmayabilir!\n\nÖrnek — projeksiyon olmayan durum:\nV = C∞[-1,1] (infinitely differentiable fonksiyonlar)\nS = polinomlar (sonlu dereceli)\nx(t) = eᵗ = 1 + t + t²/2! + t³/3! + ...\n\neᵗ'yi polinomlarla yaklaştırmak istiyoruz — ama her polinom derecesi için daha iyi bir polinom var!\nYani S içinde 'en iyi yaklaşım' mevcut değil — daima daha iyisi bulunabilir.\n\nNeden? S kapsamlı değil (complete değil). Taylor dizisi yakınsar ama limiti S'de değil.\n\nCompleteness (Tamlık) Tanımı:\nBir NVS X, her Cauchy dizisi X'de yakınsıyorsa taktir edilir.\n(Cauchy dizisi: dizinin terimleri birbirine keyfi yakın olabilir: ||xₙ-xₘ|| < ε)\n\nHilbert Uzayı = IPS + complete\n  - Her sonlu boyutlu IPS → Hilbert uzayı (otomatik complete)\n  - ℓ₂, L₂[a,b] → Hilbert uzayı ✓\n\nHilbert'te Projeksiyon Teoremi:\n  X Hilbert uzayı ve S kapalı (complete) alt uzaysa → projeksiyon her zaman var ve tekil."
+        }
+      ]
+    }
+  ],
+  "vs02": [
+    {
+      "title": "Lineer Operatör Nedir? — Sistem = Operatör",
+      "cat": "Foundations",
+      "summary": "Operatör iki vektör uzayı arasında bir eşleme. Lineer operatör: toplama ve skalar çarpma korunur. SP'de FIR filtre, türev alma, integral hepsi lineer operatör. Non-lineer örnekler: determinant, kareye alma.",
+      "context": "EE499 · Chapter 2.1 — Linear Operators",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Operatör kavramı — fonksiyonun genellemesi",
+          "text": "Operatör, matematikte bir eşleme: iki vektör uzayı arasında. Ama bu eşleme sıradan bir fonksiyondan farklı — giriş ve çıkış vektör uzayları olduğu için çok daha geniş bir alan kapsıyor.\n\nResmi tanım:\n  A: X → Y\n  X: giriş vektör uzayı (domain)\n  Y: çıkış vektör uzayı (codomain/range)\n\nBurada A harfi hem 'operator' hem 'matrix' için kullanılıyor ama bunlar AYNI şey değil. A(x) = y bir operatörü ifade eder; Ax = y ise matris çarpımını. İkisi arasındaki fark önemli:\n- Operator A: X → Y herhangi iki vektör uzayı arasında\n- Matrix A ∈ ℂᴹˣᴺ: sütun vektörü alır, sütun vektörü verir\n\nMatris gösterimi: Eğer X ve Y sonlu boyutluysa, her lineer operatörün bir matris temsili var. Ama X = L₂[a,b] gibi sonsuz boyutluysa matris yok — integral operatörü var.\n\nSP'deki somut örnekler:\n- LTI filtre: x[n] → y[n] = x[n]*h[n]  (konvolüsyon operatörü)\n- Türev: x(t) → dx/dt  (diferansiyel operatör)\n- Fourier dönüşümü: x(t) → X(jω)  (integral operatörü)\n- Örnekleme: x(t) → x(nT)  (örnekleme operatörü)"
+        },
+        {
+          "type": "code",
+          "heading": "Lineerlik tanımı ve somut testler",
+          "text": "Bir A: X → Y operatörü LİNEERDİR eğer:\n  A(αx₁ + βx₂) = αA(x₁) + βA(x₂)  her x₁,x₂ ∈ X ve α,β ∈ F için\n\nBu iki koşul olarak da yazılır:\n1. Additivity: A(x₁+x₂) = A(x₁) + A(x₂)\n2. Homogeneity: A(αx) = αA(x)\n\nNeden önemli? Lineer operatörlerin matris temsili var ve ters problem teorisi uygulanabilir.\n\nTest 1 — Türev lineer mi?\nA: P² → P¹ (derecesi 2'den küçük polinomlarda türev)\nA(αx₁(t) + βx₂(t)) = d/dt(αx₁ + βx₂) = α(dx₁/dt) + β(dx₂/dt) = αA(x₁) + βA(x₂) ✓\n→ Türev operatörü lineer.\n\nTest 2 — İntegral lineer mi?\nA: P² → ℝ, A(x) = ∫₀¹ x(t)dt\nA(αx₁+βx₂) = ∫(αx₁+βx₂)dt = α∫x₁dt + β∫x₂dt = αA(x₁)+βA(x₂) ✓\n→ İntegral operatörü lineer.\n\nTest 3 — İz (trace) lineer mi?\nA: ℝᴺˣᴺ → ℝ, A(X) = trace(X)\nA(αX+βY) = trace(αX+βY) = α·trace(X)+β·trace(Y) ✓  → Lineer.\n\nTest 4 — Determinant lineer mi?\nA: ℝᴺˣᴺ → ℝ, A(X) = det(X)\nA(αX) = det(αX) = αᴺ·det(X) ≠ α·det(X)  (N > 1 için)\n→ Determinant lineer DEĞİL!\n\nTest 5 — Değerlendirme lineer mi?\nA: P² → ℝ², A(x) = [x(0), x(1)]ᵀ\nLineer — polinom topla, değerlen → değerlendirip topla aynı."
+        },
+        {
+          "type": "table",
+          "heading": "Lineer ve non-lineer operatör örnekleri",
+          "rows": [
+            [
+              "Operatör",
+              "Tanım",
+              "Lineer?",
+              "Neden?"
+            ],
+            [
+              "Türev",
+              "dx(t)/dt",
+              "✓ Evet",
+              "Chain rule: (αx+βy)' = αx'+βy'"
+            ],
+            [
+              "İntegral",
+              "∫₀¹ x(t)dt",
+              "✓ Evet",
+              "İntegral lineer"
+            ],
+            [
+              "Konvolüsyon",
+              "x[n]*h[n]",
+              "✓ Evet",
+              "LTI = linear time-invariant"
+            ],
+            [
+              "İz (Trace)",
+              "tr(X)",
+              "✓ Evet",
+              "Matris toplama + skalar"
+            ],
+            [
+              "Değerlendirme",
+              "x → [x(0),x(1)]",
+              "✓ Evet",
+              "Topla sonra değerlen = değerlen sonra topla"
+            ],
+            [
+              "Determinant",
+              "det(X)",
+              "✗ Hayır",
+              "det(αX) = αᴺ·det(X) ≠ α·det(X)"
+            ],
+            [
+              "Kareye alma",
+              "x → x²",
+              "✗ Hayır",
+              "(x+y)² ≠ x²+y²"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Matris Gösterimi — Her Lineer Op. Bir Matris",
+      "cat": "Foundations",
+      "summary": "Sonlu boyutlu uzaylarda her lineer operatörün baz seçimine göre bir matris temsili var. A matrisi, her giriş baz vektörünün çıkışını sütun olarak alarak oluşturulur. Baz değişince matris değişir.",
+      "context": "EE499 · Chapter 2.2.1 — Matrix Representation",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Matris temsili teoremi ve yapım prensibi",
+          "text": "Temel Gerçek: Eğer A: X → Y lineer ve X, Y sonlu boyutluysa, seçilen bazlara göre bir M×N matris A var öyle ki:\n  [A(x)]_v = A · [x]_e\n\nBurada:\n- [x]_e: x'in e-bazındaki koordinat vektörü (N×1)\n- A: M×N matris (operatörün matris temsili)\n- [A(x)]_v: A(x)'in v-bazındaki koordinat vektörü (M×1)\n\nNasıl oluşturulur? A matrisinin k. sütunu = A(eₖ)'nin v-bazındaki koordinatları:\n  A = [ [A(e₁)]_v  |  [A(e₂)]_v  |  ...  |  [A(eₙ)]_v ]\n\nSezgi: Lineerlik sayesinde A'nın her giriş üzerindeki etkisi, baz vektörleri üzerindeki etkisinden belirleniyor. Baz vektörlerini nereye gönderdiğini bilirsen, her vektörü nereye gönderdiğini bilirsin.\n\nSomut örnek: A: P³ → P² (derecesi 3'ten küçük polinomlarda türev)\nX için e-baz: {1, t, t², t³}\nY için v-baz: {1, t, t²}\n\nA(e₁) = A(1) = 0 = 0·1 + 0·t + 0·t²  →  [A(e₁)]_v = [0,0,0]ᵀ\nA(e₂) = A(t) = 1 = 1·1 + 0·t + 0·t²  →  [A(e₂)]_v = [1,0,0]ᵀ\nA(e₃) = A(t²) = 2t = 0·1 + 2·t + 0·t²  →  [A(e₃)]_v = [0,2,0]ᵀ\nA(e₄) = A(t³) = 3t² = 0·1 + 0·t + 3·t²  →  [A(e₄)]_v = [0,0,3]ᵀ\n\nA = [0 1 0 0]\n    [0 0 2 0]\n    [0 0 0 3]\n\nTest: x(t) = a₀ + a₁t + a₂t² + a₃t³\nA(x) = a₁ + 2a₂t + 3a₃t²\n[A(x)]_v = [a₁, 2a₂, 3a₃]ᵀ\nA·[x]_e = A·[a₀,a₁,a₂,a₃]ᵀ = [a₁, 2a₂, 3a₃]ᵀ ✓"
+        },
+        {
+          "type": "code",
+          "heading": "Konvolüsyon matrisi — LTI sistemi matris olarak yazma",
+          "text": "SP'nin en önemli lineer operatörü: konvolüsyon.\nx[n] ∈ ℂᴺ (N-uzunluklu giriş), h[n] ∈ ℂᴷ (K-uzunluklu filtre)\ny[n] = x[n]*h[n] ∈ ℂᴹ, M = N+K-1 (tam konvolüsyon uzunluğu)\n\nBunu matris olarak yaz: A: ℂᴺ → ℂᴹ, A(x) = H·x\n\ny(0) = h(0)x(0)\ny(1) = h(1)x(0) + h(0)x(1)\ny(2) = h(2)x(0) + h(1)x(1) + h(0)x(2)\n...\n\nMatris formu:\ny = H·x  (H: M×N konvolüsyon matrisi)\n\nH = [h(0)    0       0    ...  0   ]\n    [h(1)  h(0)      0    ...  0   ]\n    [h(2)  h(1)    h(0)   ...  0   ]\n    [ ...   ...     ...   ... ...  ]\n    [h(K-1) h(K-2) h(K-3) ... h(0) ]\n    [  0   h(K-1) h(K-2)  ... h(1) ]\n    [ ...   ...     ...   ... ...  ]\n    [  0     0       0    ... h(K-1)]\n\nYapı: Alt üçgen band matris. Her sütun bir öncekinin bir aşağı kaydırılmış hali (Toeplitz yapısı).\n\nNeden önemli? Artık konvolüsyon = matris-vektör çarpımı.\ny = H·x formunda yazdığın anda:\n- Ters problem teorisi uygulanabilir (y bilinen, x bilinmeyen)\n- Dekonvolüsyon = 'y = H·x verilen, x'i bul' → ters problem\n- Gürültülü durumda Least Squares çözümü mevcut"
+        },
+        {
+          "type": "insight",
+          "heading": "Baz değişiminin matris temsiline etkisi",
+          "text": "Aynı operatörün farklı bazlarda farklı matris temsilleri var. İlişki:\n  A' = T_{v→v'} · A · T_{e'→e}\n\nSomut anlamı: türev operatörü, standart baz {1,t,t²} ile bir matris verir, ama Legendre bazıyla başka bir matris verir. Matematiksel içerik aynı — sadece koordinat sistemi farklı.\n\nPratikte: DFT bazında konvolüsyon matrisi diyagonal olur. Yani frekans domeninde LTI sistemi = her frekansı ayrı ayrı ölçeklendirmek. Bu özellik sayesinde frekans domeninde analiz çok daha kolay."
+        }
+      ]
+    },
+    {
+      "title": "Range ve Null Uzayı — Operatörün Anatomisi",
+      "cat": "Foundations",
+      "summary": "Range space R(A): A'nın ulaşabildiği her yer. Null space N(A): A'nın sıfıra gönderdiği her şey. İkisi de alt uzay. R(A)=Y → surjective (existence). N(A)={0} → injective (uniqueness). Rank-Nullity teoremi: rank + nullity = N.",
+      "context": "EE499 · Chapter 2.3 — Range and Null Spaces",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Range space nedir ve SP'de ne anlama gelir?",
+          "text": "A: X → Y operatörü için:\n\nRange space (görüntü uzayı):\n  R(A) = {y ∈ Y : y = A(x) için bazı x ∈ X}\n  Yani A'nın X'teki her x'i Y'de nereye gönderebileceği — A'nın erişebildiği yer.\n\nR(A) her zaman Y'nin alt uzayı (ispatı: y₁,y₂ ∈ R(A) → αy₁+βy₂ ∈ R(A) — lineerlikten).\n\nMatris versiyonu:\n  A: ℂᴺ → ℂᴹ, y = Ax = x₁a₁ + x₂a₂ + ... + xₙaₙ  (sütun kombinasyonu)\n  R(A) = span{a₁, a₂, ..., aₙ}  (sütunların span'ı = column space)\n  dim(R(A)) = rank(A) = bağımsız sütun sayısı\n\nÖnemli sınır: dim(R(A)) ≤ min(M,N)\n- R(A), ℂᴹ'nin alt uzayı → dim ≤ M\n- R(A), N vektör tarafından span → dim ≤ N\n\nSP yorumu: Konvolüsyon matrisi H için R(H) ⊂ ℂᴹ.\nSadece N<M olduğundan R(H) ≠ ℂᴹ → her y için çözüm yok.\n'Bu y ile uyumlu bir giriş var mı?' sorusu = 'y ∈ R(H) mi?' sorusu."
+        },
+        {
+          "type": "code",
+          "heading": "Null space nedir ve ne anlama gelir?",
+          "text": "Null space (çekirdek):\n  N(A) = {x ∈ X : A(x) = 0}\n  Yani A'nın sıfıra gönderdiği tüm vektörler.\n\nN(A) her zaman X'in alt uzayı (alıştırma).\n\nMatris versiyonu:\n  N(A) = {x ∈ ℂᴺ : Ax = 0}  (homojen sistem çözümleri)\n  x ∈ N(A) ⟺ x₁a₁ + x₂a₂ + ... + xₙaₙ = 0  (sütunlar arası lineer bağımlılık)\n  dim(N(A)) = N - rank(A)  (Rank-Nullity teoremi)\n\nSP yorumu: N(A) = {0} ise → çözüm tekil.\nN(A) ≠ {0} ise → sonsuz çözüm var.\n\nKonvolüsyon örneği:\nH: ℂᴺ → ℂᴹ, M = N+K-1 > N (tall matrix)\nSütunlar = h'nin shifted versiyonları → lineer bağımsız (h ≠ 0 ve K≥2 için)\nN(H) = {0} → dim(N(H)) = 0\nYorum: Dekonvolüsyon problemi, çözüm varsa tekil. Var olmak zorunda değil ama varsa bir tane.\n\nRank-Nullity teoremi (Matris versiyonu):\n  dim(X) = rank(A) + dim(N(A))\n  N = rank(A) + nullity(A)\n\nDerin yapı: ℂᴺ = N(A) ⊕ R(Aᴴ) — input uzayı null space ve range of adjoint'in direkt toplamı.\nBenzer: ℂᴹ = R(A) ⊕ N(Aᴴ)"
+        },
+        {
+          "type": "compare",
+          "heading": "Range space vs Null space — karşılaştırma",
+          "left": {
+            "title": "Range Space R(A)",
+            "points": [
+              "Y'nin alt uzayı",
+              "dim = rank(A) ≤ min(M,N)",
+              "R(A) = Y ↔ A surjective (onto)",
+              "Existence: çözüm var ↔ y ∈ R(A)",
+              "Matris: sütunların span'ı",
+              "R(A) = ℂᴹ ↔ full row rank"
+            ]
+          },
+          "right": {
+            "title": "Null Space N(A)",
+            "points": [
+              "X'in alt uzayı",
+              "dim = N - rank(A)",
+              "N(A) = {0} ↔ A injective (1-to-1)",
+              "Uniqueness: tekil ↔ N(A) = {0}",
+              "Matris: Ax=0'ın çözüm kümesi",
+              "N(A) = {0} ↔ full column rank"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "title": "Ters Problem — Existence ve Uniqueness Çerçevesi",
+      "cat": "Applications",
+      "summary": "Ters problem: A(x)=y verilen, x bul. Existence ↔ y ∈ R(A) ↔ A surjective. Uniqueness ↔ N(A)={0} ↔ A injective. Bijective ise tam ters A⁻¹ var ve bu da lineer. Ters problem doğru çerçeve = range + null space analizi.",
+      "context": "EE499 · Chapter 2.3 — Inverse Problems",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Ters problem ve iki temel soru",
+          "text": "Ters problem: A: X → Y verilmiş, y ∈ Y verilen, A(x) = y'yi sağlayan x ∈ X bul.\n\nSP'deki somut formlar:\n- Dekonvolüsyon: y = H·x verilen (gözlemlenen sinyal), H ve y bilinen → x bul (orijinal sinyal)\n- CT rekonstrüksiyon: y = Rf verilen (projektörler), R bilinen → f bul (görüntü)\n- Sistem tanımlama: y = H·x verilen, x bilinen → H bul (filtre)\n\nHerhangi bir problemi çözmeye başlamadan önce iki soru:\n\nSoru 1 — Existence (Varlık):\nA(x) = y'nin en az bir çözümü var mı?\n→ Cevap: y ∈ R(A) iff çözüm var.\n\nSoru 2 — Uniqueness (Tekillik):\nVarsa bu çözüm tek mi?\n→ Cevap: Çözüm tekil iff N(A) = {0}\n   Kanıt: İki çözüm x₁, x₂ varsa A(x₁) = A(x₂) = y → A(x₁-x₂) = 0 → x₁-x₂ ∈ N(A).\n   N(A) = {0} ise x₁-x₂ = 0 → x₁ = x₂ (tekil)\n   N(A) ≠ {0} ise, x₀ ∈ N(A), x₀ ≠ 0 alınabilir → x₁ + x₀ başka bir çözüm.\n\nÖnemli ince nokta: Uniqueness kontrolü, existence gerektirmez!\nN(A) = {0} olup olmadığını y'yi hiç bilmeden söyleyebilirsin."
+        },
+        {
+          "type": "code",
+          "heading": "Üç temel fact — existence ve uniqueness ile operatör özellikleri",
+          "text": "FACT 1 — Existence ↔ Surjective:\n  A(x) = y'nin her y ∈ Y için en az bir çözümü var\n  ↔ A surjective (onto)\n  ↔ R(A) = Y\n\nFACT 2 — Uniqueness ↔ Injective:\n  A(x) = y'nin her y için en fazla bir çözümü var\n  ↔ A injective (1-to-1)\n  ↔ N(A) = {0}\n\n  İspat (→): Varsay x₀ ∈ N(A), x₀ ≠ 0. A(x₀) = 0 = A(0).\n  Yani hem x₀ hem 0, A(·) = 0 denkleminin çözümü → uniqueness bozuluyor.\n  Bu yüzden N(A) = {0} gerekiyor.\n\nFACT 3 — Existence+Uniqueness ↔ Bijective:\n  Her y için tam bir çözüm var\n  ↔ A bijective\n  ↔ R(A) = Y ve N(A) = {0}\n  → Tam ters A⁻¹: Y → X mevcuttur ve A⁻¹ da lineer.\n\n  A lineer ise A⁻¹ da lineer:\n  A⁻¹(αy₁ + βy₂) = A⁻¹(αA(x₁) + βA(x₂)) = A⁻¹(A(αx₁+βx₂)) = αx₁+βx₂\n  = α A⁻¹(y₁) + β A⁻¹(y₂) ✓\n\nSP bağlantısı: Çoğu gerçek problem bijective değil. O yüzden:\n- R(A) ≠ Y ise tam çözüm yok → en iyi yaklaşım (Least Squares)\n- N(A) ≠ {0} ise sonsuz çözüm → en küçük normlu (Minimum Norm)"
+        }
+      ]
+    },
+    {
+      "title": "4 Durum Tablosu — Matris Şekli ve Rank ile",
+      "cat": "Applications",
+      "summary": "Lineer sistemi A·x=y çözerken 4 durum var. Matrisin şekli (tall/fat/square) ve rank'ı (full row/col) existence+uniqueness'ı belirler. Case 0: invertible. Case 1: tall, LS. Case 2: fat, min-norm. Case 3: degenerate.",
+      "context": "EE499 · Chapter 2.4 — Four Cases of Linear Systems",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "4 durum çerçevesi — neden tam olarak 4 durum?",
+          "text": "Lineer sistem A ∈ ℂᴹˣᴺ, y ∈ ℂᴹ, bul x ∈ ℂᴺ öyle ki y = Ax.\n\nExistence ve uniqueness bağımsız sorular:\n- Existence: R(A) = ℂᴹ ↔ rank(A) = M ↔ full row rank ↔ (M ≤ N gerekli koşul)\n- Uniqueness: N(A) = {0} ↔ rank(A) = N ↔ full column rank ↔ (M ≥ N gerekli koşul)\n\n4 kombinasyon:\n\nCase 0 (İdeal): Full row rank VE full column rank\n  → M = N = rank(A)  (square, invertible)\n  → Her y için tam bir çözüm: x = A⁻¹y\n\nCase 1 (Tall matrix): Full column rank, NOT full row rank\n  → M > N, rank = N\n  → Existence yok garantisi (R(A) ⊂ ℂᴹ)\n  → Uniqueness var (N(A) = {0})\n  → Çözüm varsa tekil, yoksa Least Squares\n\nCase 2 (Fat matrix): Full row rank, NOT full column rank\n  → M < N, rank = M\n  → Existence garantili (R(A) = ℂᴹ)\n  → Uniqueness yok (N(A) ≠ {0})\n  → Sonsuz çözüm var, seç: Minimum Norm\n\nCase 3 (Degenerate): NOT full row rank AND NOT full column rank\n  → rank(A) < min(M,N)\n  → Ne existence ne uniqueness\n  → En zor durum — genelleştirilmiş pseudo-inverse gerektirir"
+        },
+        {
+          "type": "table",
+          "heading": "4 durum özet tablosu",
+          "rows": [
+            [
+              "Durum",
+              "Matris Tipi",
+              "Existence?",
+              "Uniqueness?",
+              "Çözüm",
+              "SP Örneği"
+            ],
+            [
+              "Case 0",
+              "Square (M=N) full rank",
+              "✓ Her y için",
+              "✓ Tekil",
+              "x = A⁻¹y",
+              "Eşit boyutlu sistem"
+            ],
+            [
+              "Case 1",
+              "Tall (M>N) full col rank",
+              "✗ Garantisiz",
+              "✓ Varsa tekil",
+              "x_LS = (AᴴA)⁻¹Aᴴy",
+              "Dekonvolüsyon, CT rekon."
+            ],
+            [
+              "Case 2",
+              "Fat (M<N) full row rank",
+              "✓ Her y için",
+              "✗ Sonsuz çözüm",
+              "x_MN = Aᴴ(AAᴴ)⁻¹y",
+              "Underdetermined sistem"
+            ],
+            [
+              "Case 3",
+              "Rank deficient",
+              "✗ Garantisiz",
+              "✗ Tekil değil",
+              "Pseudo-inverse (SVD)",
+              "Kötü koşullu sistemler"
+            ]
+          ]
+        },
+        {
+          "type": "code",
+          "heading": "Case 0 bile sorunlu olabilir — gürültü amplifikasyonu",
+          "text": "Case 0'da A invertible ve x = A⁻¹y doğru görünüyor. Ama iki pratik sorun var:\n\nSorun 1 — Gürültü amplifikasyonu (noise amplification):\nGerçek ölçümde: y_tilde = y + n (n: gürültü)\nx_estimated = A⁻¹ y_tilde = A⁻¹(Ax + n) = x + A⁻¹n\n\nA kötü koşulluysa (ill-conditioned): A⁻¹ çok büyük olabilir.\n→ A⁻¹n >> n → gürültü amplify olur → çözüm berbat.\n\nCondition number: κ(A) = ||A||·||A⁻¹|| — büyükse ill-conditioned.\nDekonvolüsyon sorununda H genellikle kötü koşullu → doğrudan ters alma işe yaramıyor.\n\nSorun 2 — Büyük matris:\nGerçek görüntü işleme problemlerinde A çok büyük olabilir (milyonlar×milyonlar).\n→ A⁻¹ hesaplanamaz veya saklanamaz.\nDüzenleştirme (regularization) gerekli: min ||Ax-y||² + λ||x||²\n\nSonuç: Case 0 'kolay' görünse de pratikte regularization olmadan kullanmak tehlikeli."
+        }
+      ]
+    },
+    {
+      "title": "Case 1: Least Squares Çözümü — Tall Matrix",
+      "cat": "Applications",
+      "summary": "Tall matrix (M>N, full column rank): çözüm olmayabilir ama LS en iyi yaklaşımı bulur. Normal denklem: AᴴA·x_LS = Aᴴy. Çözüm: x_LS = (AᴴA)⁻¹Aᴴy. Geometrik yorum: y'yi R(A)'ya proje et.",
+      "context": "EE499 · Chapter 2.4 — Case 1: Least Squares",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Least Squares problemi neden gerekli? Geometrik sezgi",
+          "text": "A: ℂᴺ → ℂᴹ, M > N (tall matrix), full column rank.\nSorun: y ∈ ℂᴹ verilen, ama R(A) ⊂ ℂᴹ (tam değil).\nÇoğu y için Ax = y'nin tam çözümü yok.\n\nNe yapabiliriz? Tam çözüm yerine en iyi yaklaşımı ara:\n  x_LS = argmin_{x} ||y - Ax||₂²\n\nBu 'en iyi yaklaşım' iki perspektiften görülebilir:\n\nPerspektif 1 — Optimizasyon:\nKayıp fonksiyonu J(x) = ||y - Ax||₂² minimize et.\nGradyeni sıfırla → Normal denklem.\n\nPerspektif 2 — Projeksiyon:\nLeast Squares çözümü geometrik olarak şu demek:\n'y'yi R(A) alt uzayına proje et, adına ŷ_LS de.\nsonra ŷ_LS = A·x_LS'i sağlayan x_LS'i bul.'\n\ny - ŷ_LS ⊥ R(A)  (ortogonallik prensibi)\n→ y - Ax_LS, R(A)'nın her sütununa dik\n→ aₖᴴ(y - Ax_LS) = 0 her k için\n→ Aᴴ(y - Ax_LS) = 0\n→ AᴴAx_LS = Aᴴy  (Normal denklem!)\n\nHer iki perspektif aynı sonucu veriyor."
+        },
+        {
+          "type": "code",
+          "heading": "Normal denklem türetimi — matris kalkülüsü ile",
+          "text": "Gerçel değerli durum için (ℝ'da):\nJ(x) = ||y - Ax||₂² = (y-Ax)ᵀ(y-Ax) = yᵀy - yᵀAx - xᵀAᵀy + xᵀAᵀAx\n\nMatris türevi kuralları:\n- ∇_x(aᵀx) = a\n- ∇_x(xᵀBx) = (B+Bᵀ)x, simetrik B için = 2Bx\n\n∇_x J(x) = 0 - Aᵀy - Aᵀy + 2AᵀAx = 0\n→ -2Aᵀy + 2AᵀAx = 0\n→ AᵀAx_LS = Aᵀy  (Normal denklem, gerçel)\n\nKarmaşık değerli durum (ℂ'de):\n  AᴴAx_LS = Aᴴy\n\nNeden AᴴA invertible? A full column rank → N(A) = {0}\nAᴴAx = 0 ⟹ xᴴAᴴAx = 0 ⟹ ||Ax||² = 0 ⟹ Ax = 0 ⟹ x = 0  (N(A)={0})\nYani N(AᴴA) = {0} → AᴴA invertible.\n\nÇözüm:\n  x_LS = (AᴴA)⁻¹Aᴴy\n\n(AᴴA)⁻¹Aᴴ buna Moore-Penrose left pseudo-inverse denir: A† = (AᴴA)⁻¹Aᴴ\n\nŷ_LS = A·x_LS = A(AᴴA)⁻¹Aᴴy = P_{R(A)} y  (y'nin R(A)'ya projeksiyonu)\nProjektion matrisi: P = A(AᴴA)⁻¹Aᴴ — bu tam olarak Chapter 1'deki projeksiyon formülü!"
+        },
+        {
+          "type": "code",
+          "heading": "Somut örnek: Dekonvolüsyon problemi",
+          "text": "Gerçek problem: Filtre h ile konvolüsyona uğramış y gözlemleniyor, orijinal x'i bul.\ny = H·x  (H: M×N konvolüsyon matrisi, M=N+K-1)\n\nCase 1 durumu: H tall (M>N), full column rank → N(H) = {0} (sütunlar bağımsız)\n- Existence: y ∈ R(H) olmayabilir (gürültü varsa genellikle değil)\n- Uniqueness: Varsa tekil\n\nLS çözümü:\n  x_LS = (HᴴH)⁻¹Hᴴy  (least squares deconvolution)\n  Hᴴy: frekans domeninde matched filtering\n  (HᴴH)⁻¹: inverting spectral distortion\n\nSorun: H kötü koşullu → (HᴴH)⁻¹ gürültüyü amplifiye eder.\nÇözüm: Regularized LS: min ||y-Hx||² + λ||x||² → x_reg = (HᴴH + λI)⁻¹Hᴴy\n\nProjektion yorumu:\nŷ_LS = Hx_LS = P·y (y'nin R(H)'a projeksiyonu)\nR(H) = reachable outputs (konvolüsyon yapılabilen sinyaller)\nŷ_LS bu kümede y'ye en yakın nokta."
+        }
+      ]
+    },
+    {
+      "title": "Case 2: Minimum Norm Çözümü — Fat Matrix",
+      "cat": "Applications",
+      "summary": "Fat matrix (M<N, full row rank): sonsuz çözüm var. T = {xₚ} + N(A). Minimum norm çözümü N(A)'ya dik olan çözüm: x_MN = Aᴴ(AAᴴ)⁻¹y. Geometrik yorum: null space'i 'kapalı tut'.",
+      "context": "EE499 · Chapter 2.4 — Case 2: Minimum Norm",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Sonsuz çözümler — solution set yapısı",
+          "text": "A: ℂᴺ → ℂᴹ, M < N (fat matrix), full row rank.\nSorun: R(A) = ℂᴹ → her y için çözüm var. Ama N(A) ≠ {0} → sonsuz çözüm!\n\nTüm çözüm kümesi:\nx_particular: özel bir çözüm (Ax_p = y)\nxₙ ∈ N(A): null space elemanı\n\nx = x_p + xₙ de bir çözüm:\n  A(x_p + xₙ) = Ax_p + Axₙ = y + 0 = y  ✓\n\nTüm çözüm kümesi:\n  T = {xₚ} + N(A) = {xₚ + xₙ : xₙ ∈ N(A)}\n\nBu T bir 'linear variety' (alt uzayın ötelenmesi). Alt uzay değil (sıfırı içermeyebilir).\n\nSomut örnek:\nA = [1 0 0],  y = [2/3]\n    [0 1 0]       [5/3]\n→ Rank = 2, N = 3, null space = span{[0,0,1]ᵀ}\nŞu x'ler hepsi çözüm: [2/3, 5/3, 0]ᵀ, [2/3, 5/3, 1]ᵀ, [2/3, 5/3, -42]ᵀ...\n\nHangisini seçelim? Ek kısıt gerekiyor."
+        },
+        {
+          "type": "code",
+          "heading": "Minimum norm çözümü — seçim kriteri ve formül",
+          "text": "Kısıt: T içinden en küçük normlu çözümü seç:\n  x_MN = argmin_{x: Ax=y} ||x||₂\n\nGeometrik sezgi:\nT = {xₚ} + N(A) bir hiperplane (subspace'in ötelenmesi).\n||x|| minimize etmek = orijine en yakın T noktasını bul.\n\nOrtogonallik prensibi:\nT'deki en yakın nokta x_MN ↔ x_MN ⊥ N(A)\n(Hata vektörü = x_MN - 0 = x_MN, alt uzay = N(A))\n\nFormül türetimi:\nx_MN ⊥ N(A) → x_MN = Aᴴz (herhangi z için — bu N(A)⊥ = R(Aᴴ) olduğundan)\n\nBunu Ax = y'ye koy:\n  A(Aᴴz) = y → (AAᴴ)z = y\n  AAᴴ ∈ ℂᴹˣᴹ — full row rank → invertible (M×M)\n  z = (AAᴴ)⁻¹y\n\nSonuç:\n  x_MN = Aᴴz = Aᴴ(AAᴴ)⁻¹y\n\nAᴴ(AAᴴ)⁻¹ buna right pseudo-inverse denir: A† = Aᴴ(AAᴴ)⁻¹\n\nTest: A·x_MN = A·Aᴴ(AAᴴ)⁻¹y = (AAᴴ)(AAᴴ)⁻¹y = y ✓"
+        },
+        {
+          "type": "compare",
+          "heading": "Least Squares vs Minimum Norm — karşılaştırma",
+          "left": {
+            "title": "Case 1 — Least Squares (Tall)",
+            "points": [
+              "M > N, full column rank",
+              "Çözüm yoksa en yakın",
+              "x_LS = (AᴴA)⁻¹Aᴴy",
+              "(AᴴA)⁻¹Aᴴ = left pseudo-inverse",
+              "ŷ_LS = A·x_LS = y'nin R(A)'ya projeksiyonu",
+              "SP: dekonvolüsyon, CT rekon."
+            ]
+          },
+          "right": {
+            "title": "Case 2 — Minimum Norm (Fat)",
+            "points": [
+              "M < N, full row rank",
+              "Sonsuz çözümden en küçüğü",
+              "x_MN = Aᴴ(AAᴴ)⁻¹y",
+              "Aᴴ(AAᴴ)⁻¹ = right pseudo-inverse",
+              "x_MN ⊥ N(A): null space bileşeni sıfır",
+              "SP: underdetermined sistem, interpolasyon"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "title": "Pseudo-Inverse — 4 Durumu Birleştiren Formül",
+      "cat": "Signal Processing",
+      "summary": "Moore-Penrose pseudo-inverse A† dört durum için de tanımlı. Case 0: A†=A⁻¹. Case 1: A†=(AᴴA)⁻¹Aᴴ. Case 2: A†=Aᴴ(AAᴴ)⁻¹. Case 3: SVD ile. A†y her zaman minimum norm LS çözümü.",
+      "context": "EE499 · Chapter 2.4 — Summary and Pseudo-Inverse",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Pseudo-inverse neden gerekli ve ne garanti eder?",
+          "text": "A: ℂᴹˣᴺ matrisi, y ∈ ℂᴹ.\nHer durumda şu soruyu sormak istiyoruz: 'En iyi x nedir?'\n\n'En iyi' derken:\n- Çözüm varsa: minimum norm çözümü seç\n- Çözüm yoksa: en küçük artık normu (LS) + o artıklar içinde minimum norm\n\nBu ikisini birleştiren şey: Moore-Penrose pseudo-inverse A†\n  x† = A†y  → minimum norm least squares çözümü\n\n4 durum için pseudo-inverse:\n\nCase 0: A square, invertible\n  A† = A⁻¹  (tam ters)\n\nCase 1: A tall (M>N), full column rank\n  A† = (AᴴA)⁻¹Aᴴ  (left pseudo-inverse)\n  A†A = I_N ✓  (left inverse)\n  AA† = P_{R(A)} ≠ I_M (projeksiyon, R(A)'ya)\n\nCase 2: A fat (M<N), full row rank\n  A† = Aᴴ(AAᴴ)⁻¹  (right pseudo-inverse)\n  AA† = I_M ✓  (right inverse)\n  A†A = P_{R(Aᴴ)} ≠ I_N (projeksiyon, R(Aᴴ)'ya)\n\nCase 3: rank-deficient\n  A† = VΣ†Uᴴ  (SVD ile hesaplanır)\n  Σ† = diag(1/σ₁,...,1/σᵣ,0,...,0)  (sıfır olmayan tekil değerlerin tersini al)"
+        },
+        {
+          "type": "code",
+          "heading": "Dersin büyük resmi — her şey nasıl birbirine bağlandı?",
+          "text": "EE499'un Chapter 1+2 tamamen bağlantılı. Büyük resim:\n\nChapter 1'den gelen araçlar:\n- Vektör uzayı → sinyaller, filtreler, görüntüler → hepsi vektör\n- Norm → 'hatanın büyüklüğü' ölçüsü\n- İç çarpım → ortogonallik, projeksiyon katsayıları\n- Projeksiyon teoremi → 'en yakın nokta = diklik koşulu'\n- Gram-Schmidt → ortonormal baz, kolay katsayı hesabı\n\nChapter 2'de bunlar nasıl kullandı:\n- Lineer operatör → sistem = F(sinyaller) → sinyaller\n- Matris gösterimi → her problemi y = Ax formuna getir\n- Range space → 'çözüm var mı?' sorusu\n- Null space → 'çözüm tekil mi?' sorusu\n- Rank-Nullity → uzayın yapısı\n- 4 durum → her gerçek problemi sınıflandır\n- LS çözümü = projeksiyon (Chapter 1!) onto R(A)\n- Min-norm çözümü = N(A)'ya diklik (Chapter 1!)\n\nOrtak mesaj:\n'Verilen y = Ax problemi için, en iyi x'i bulmak\n= doğru alt uzaya projeksiyon yapmak'\n\nVe bu her SP problemine uygulanıyor:\n- FIR filtre tasarımı: istenen frekans yanıtına en yakın gerçekleştirilebilir filtre bul\n- CT rekonstrüksiyon: sınırlı sayıda projektörden görüntüyü bul\n- Deblurring: bulanıklaştırma operatörünün psödo-inversini al\n- Örnekleme: örneklerden bantlı sinyal rekonstrüksiyonu = Sinc baz projeksiyonu"
+        },
+        {
+          "type": "table",
+          "heading": "EE499 Chapter 2 — tüm kavramlar ve bağlantılar",
+          "rows": [
+            [
+              "Kavram",
+              "Tanım",
+              "SP Anlamı"
+            ],
+            [
+              "Linear operator A: X→Y",
+              "A(αx+βy) = αA(x)+βA(y)",
+              "LTI filtre, türev, Fourier"
+            ],
+            [
+              "Matrix representation",
+              "[A(x)]_v = A·[x]_e",
+              "Sonlu boyut → matris çarpımı"
+            ],
+            [
+              "Convolution matrix H",
+              "Toeplitz, tall, M×N, M=N+K-1",
+              "LTI sistemi matris olarak"
+            ],
+            [
+              "Range space R(A)",
+              "span{columns of A}",
+              "Ulaşılabilir çıkışlar"
+            ],
+            [
+              "Null space N(A)",
+              "{x: Ax=0}",
+              "Silinip giden girişler"
+            ],
+            [
+              "Rank-Nullity",
+              "rank + nullity = N",
+              "Uzayın temel boyut ilişkisi"
+            ],
+            [
+              "Case 0: invertible",
+              "M=N, full rank, A†=A⁻¹",
+              "Nadir, noise amplification riski"
+            ],
+            [
+              "Case 1: LS",
+              "M>N, full col rank, x=(AᴴA)⁻¹Aᴴy",
+              "Dekonvolüsyon, CT rekon."
+            ],
+            [
+              "Case 2: min-norm",
+              "M<N, full row rank, x=Aᴴ(AAᴴ)⁻¹y",
+              "Underdetermined, interpolasyon"
+            ],
+            [
+              "Case 3: SVD",
+              "rank-deficient, A†=VΣ†Uᴴ",
+              "Kötü koşullu, regularize et"
+            ]
+          ]
+        }
+      ]
+    }
+  ],
   "py01": [
     {
       "title": "print()",
@@ -7885,7 +8715,9 @@
     "ida10": "Chapters ida03–ida09 focus on discriminative models that map inputs to labels or structures. Generative models take the opposite perspective: learn the data distribution $p(x)$ itself. This enables synthesising new images, learning compact latent representations without labels, translating between visual domains, and detecting anomalies as regions of low probability. Chapter ida10 covers three progressively more powerful generative frameworks: autoencoders, variational autoencoders, and generative adversarial networks.\n\nAn autoencoder consists of an encoder $E: \\mathcal{X} \\to \\mathcal{Z}$ mapping inputs to a lower-dimensional latent code, and a decoder $D: \\mathcal{Z} \\to \\mathcal{X}$ mapping codes back to reconstructions. Training minimises the reconstruction loss $\\mathcal{L} = \\|x - D(E(x))\\|^2$. The information bottleneck (the latent space is lower-dimensional than $x$) forces the encoder to compress meaningful structure; the decoder must recover the input from this compressed code. Autoencoders learn useful feature representations — the latent codes can serve as compact descriptors for retrieval or clustering — but the latent space has no probabilistic structure: there is no guarantee that a randomly sampled point in $\\mathcal{Z}$ decodes to a realistic image. The latent manifold may have large gaps and discontinuities that produce nonsense when decoded.\n\nThe Variational Autoencoder (VAE, Kingma & Welling, 2013) adds probabilistic structure to the latent space. The encoder outputs parameters $\\mu(x)$ and $\\sigma^2(x)$ of a Gaussian posterior $q(z|x) = \\mathcal{N}(z; \\mu(x), \\sigma^2(x) I)$; the decoder defines $p(x|z)$. Training maximises the Evidence Lower Bound (ELBO): $\\mathcal{L}_{\\text{ELBO}} = \\mathbb{E}_{q(z|x)}[\\log p(x|z)] - \\text{KL}(q(z|x)\\|p(z))$. The first term rewards faithful reconstruction; the second penalises deviation of the posterior from the prior $p(z) = \\mathcal{N}(0,I)$, regularising the latent space. The reparameterisation trick $z = \\mu(x) + \\varepsilon \\cdot \\sigma(x)$, $\\varepsilon \\sim \\mathcal{N}(0,I)$, makes the sampling step differentiable — the gradient flows through $\\mu$ and $\\sigma$ even though $z$ is stochastic. Forcing the posterior toward a standard Gaussian fills the latent space: interpolating between two codes $z_1$ and $z_2$ produces semantically smooth transitions through the data manifold. VAEs are the principled generative baseline from which diffusion models (ida11) are partly derived.\n\nGenerative Adversarial Networks (GANs, Goodfellow et al., 2014) train two networks in opposition. The generator $G: \\mathcal{Z} \\to \\mathcal{X}$ maps random noise $z \\sim p(z)$ to synthetic images. The discriminator $D: \\mathcal{X} \\to [0,1]$ predicts whether its input is real or generated. Training alternates between: updating $D$ to maximise $\\mathbb{E}_{x\\sim p_\\text{data}}[\\log D(x)] + \\mathbb{E}_{z\\sim p_z}[\\log(1-D(G(z)))]$; and updating $G$ to maximise $\\mathbb{E}_{z}[\\log D(G(z))]$ (making $D$ believe generated images are real). At Nash equilibrium, $G$ produces images indistinguishable from real data; $D$ outputs $0.5$ everywhere. In practice, GAN training is notoriously unstable: mode collapse (the generator produces a few high-quality samples but ignores most of the data distribution), vanishing gradients (when $D$ is too confident), and oscillation rather than convergence. DCGAN adds convolutional architectures, batch normalisation, and specific initialisation to stabilise training. Progressive GAN grows resolution from $4\\times4$ to $1024\\times1024$ incrementally. Spectral normalisation constrains the discriminator's Lipschitz constant.\n\nConditional generation enables controlled synthesis. pix2pix (Isola et al., 2017) learns paired image-to-image translation (e.g., semantic map $\\to$ photo) by conditioning both $G$ and $D$ on the input image, with a combined L1 reconstruction loss and adversarial loss — L1 reduces blurriness; adversarial loss enforces realism. CycleGAN (Zhu et al., 2017) extends this to unpaired training: learn $G: X\\to Y$ and $F: Y\\to X$ simultaneously with cycle consistency losses $\\mathcal{L}_{\\text{cyc}} = \\mathbb{E}[\\|G(F(y))-y\\|_1] + \\mathbb{E}[\\|F(G(x))-x\\|_1]$, constraining the two generators to be approximate inverses. This enables domain translation without paired examples — style transfer between artistic styles, horse-to-zebra, summer-to-winter — and connects to the broader area of domain adaptation. The GAN framework's adversarial training idea is replaced by the more stable diffusion process in chapter ida11.\n\nExercise bağlantısı — Exercise 10: Generative modellerin Keras/TensorFlow ile uygulamalı karşılığı. VAE'nin MNIST üzerinde eğitimi ve latent space sürekliliği analizi. GAN'ın minmax eğitimi, log(1-D(G(z))) gradyan sorununu max log(D(G(z)))'ye çevirme çözümü. DCGAN, Conditional GAN (label'ı one-hot olarak generator/discriminator'a ekleme). CycleGAN teorisi: 2 generator + 2 discriminator, adversarial + cycle-consistency + identity loss üçlüsü.\n\nLab bağlantısı — Lab Session 6 (GAN): PyTorch ile vanilla GAN ve DCGAN implement etme. Discriminator ve Generator'ı FC layer'larla sıfırdan yazma, BCE loss ile alternating training (discriminator step → generator step). DCGAN'da Conv/ConvTranspose2d kullanımı, MNIST 64×64'e upsample edilerek eğitim. Training sırasında üretilen görüntülerin adım adım nasıl geliştiğini gözlemleme.",
     "ida11": "GANs (ida10) generate high-quality images but are difficult to train and prone to mode collapse. Score-based generative models and diffusion models offer a principled probabilistic alternative: instead of learning to fool a discriminator, they learn to reverse a gradual noise corruption process. Diffusion models have become the dominant image synthesis paradigm, underlying Stable Diffusion, DALL-E 2, Imagen, and numerous scientific imaging applications.\n\nThe forward diffusion process adds Gaussian noise to data over $T$ steps, gradually destroying structure until the image is pure noise. Each step is defined by $q(x_t|x_{t-1}) = \\mathcal{N}(x_t; \\sqrt{1-\\beta_t}\\,x_{t-1}, \\beta_t I)$ where $\\beta_t$ is a small variance schedule (linearly increasing from $\\beta_1 = 10^{-4}$ to $\\beta_T = 0.02$ over $T=1000$ steps). The key algebraic property is that $x_t$ can be sampled directly from $x_0$ without iterating through all $t$ steps: $x_t = \\sqrt{\\bar{\\alpha}_t}\\,x_0 + \\sqrt{1-\\bar{\\alpha}_t}\\,\\varepsilon$ where $\\bar{\\alpha}_t = \\prod_{s=1}^t(1-\\beta_s)$ and $\\varepsilon \\sim \\mathcal{N}(0,I)$. At $t=T$, $\\bar{\\alpha}_T \\approx 0$ and $x_T \\approx \\varepsilon$ — the image has been completely destroyed and replaced by Gaussian noise. This reparameterisation allows efficient training without sequential simulation.\n\nThe reverse process learns to denoise: given $x_t$, predict $x_{t-1}$. Because the true reverse conditional $q(x_{t-1}|x_t)$ depends on the entire data distribution, it is intractable. DDPM (Denoising Diffusion Probabilistic Models, Ho et al., 2020) parameterises the reverse step as $p_\\theta(x_{t-1}|x_t) = \\mathcal{N}(x_{t-1}; \\mu_\\theta(x_t, t), \\Sigma_\\theta(x_t, t))$ and trains a neural network $\\varepsilon_\\theta(x_t, t)$ to predict the noise $\\varepsilon$ that was added in the forward step. The simplified training objective is $\\mathcal{L} = \\mathbb{E}_{t, x_0, \\varepsilon}\\left[\\|\\varepsilon - \\varepsilon_\\theta(\\sqrt{\\bar\\alpha_t}x_0 + \\sqrt{1-\\bar\\alpha_t}\\varepsilon,\\, t)\\|^2\\right]$ — just mean squared error between the true noise and the predicted noise. The architecture is a U-Net (ida05) with time-step conditioning (sinusoidal embeddings of $t$ injected at each layer via FiLM — Feature-wise Linear Modulation). At inference, $T=1000$ sequential denoising steps are required — substantially slower than GANs.\n\nDDIM (Denoising Diffusion Implicit Models, Song et al., 2020) reformulates the reverse process as a non-Markovian deterministic trajectory using the same trained $\\varepsilon_\\theta$: $$x_{t-1} = \\sqrt{\\bar\\alpha_{t-1}}\\underbrace{\\frac{x_t - \\sqrt{1-\\bar\\alpha_t}\\varepsilon_\\theta}{\\sqrt{\\bar\\alpha_t}}}_{\\hat{x}_0\\text{ estimate}} + \\sqrt{1-\\bar\\alpha_{t-1}}\\varepsilon_\\theta.$$ Since the trajectory is deterministic, large steps can be skipped: 50 DDIM steps produce quality comparable to 1000 DDPM steps, a $20\\times$ speedup. Classifier-free guidance (Ho & Salimans, 2022) enables conditional generation without a separate classifier. A single network $\\varepsilon_\\theta(x_t, t, c)$ is trained with conditioning $c$ (class label, text embedding) randomly dropped out with probability 10–20%, so the model learns both conditional and unconditional denoising. At inference, the guided prediction is $\\hat\\varepsilon = \\varepsilon_\\theta(x_t,t,\\varnothing) + w\\cdot(\\varepsilon_\\theta(x_t,t,c) - \\varepsilon_\\theta(x_t,t,\\varnothing))$, where $w > 1$ is the guidance scale. High $w$ produces images that strongly match the condition but lack diversity; $w=1$ recovers the conditional model. Stable Diffusion (Rombach et al., 2022) applies the diffusion process not in pixel space but in the latent space of a pre-trained VAE (ida10), reducing computational cost by $8\\times$ in each spatial dimension while preserving perceptual quality. Text conditioning is provided by CLIP text embeddings via cross-attention in the U-Net. The connection to score matching is exact: $\\varepsilon_\\theta \\approx -\\sqrt{1-\\bar\\alpha_t}\\,\\nabla_{x_t}\\log q(x_t)$, so DDPM noise prediction is equivalent to estimating the score (gradient of log-density).\n\nExercise bağlantısı — Exercise 11: Diffusion modellerinin PyTorch (HuggingFace diffusers) ile uygulaması. İlk kısımda MNIST üzerinde vanilla DDPM — UNet2DModel ile noise prediction, DDPMScheduler, backward denoising görselleştirme. İkinci kısımda class-conditioned UNet: digit label'ını embedding'e çevirip extra kanal olarak UNet input'una concatenate etme, inference'ta istenen rakamı üretme. Son kısımda Stable Diffusion pipeline'ının parçaları: VAE (512→64 latent), CLIP tokenizer + text encoder, cross-attention ile koşullanmış UNet, guidance_scale ve num_inference_steps'in etkisi.\n\nLab bağlantısı — Lab Session 7 (Diffusion Model): DDPM'yi sıfırdan implement etme — noise schedule (beta), forward corruption (Algorithm 1), backward denoising sampling (Algorithm 2), UNet2D denoising network. Sonra aynı şeyi HuggingFace diffusers ile yaparak farkı görme. CIFAR-10 üzerinde eğitim. Exercise 11'deki Stable Diffusion pipeline'ından önce temeli kavramak için ideal.",
     "ida12": "Chapter ida09 established PointNet and PointNet++ as the foundational architectures for point cloud processing. While PointNet++ adds local context through hierarchical grouping, it still relies on fixed neighbourhoods defined in Euclidean space. Chapter ida12 explores three architectures that address remaining limitations: robust density-adaptive convolution (FCPN), dynamic feature-space graph convolution (DGCNN), and shape generation through surface folding (FoldingNet).\n\nFully Convolutional Point Networks (FCPN, Rethage et al., 2018) tackle a practical limitation of both PointNet and PointNet++: sensitivity to non-uniform point density. LiDAR scans inherently produce denser point clouds for nearby surfaces and sparser ones for distant surfaces. Standard ball-query grouping (PointNet++) captures many points near the sensor and few far away, producing inconsistent local feature aggregation. FCPN replaces ball query with a sliding cylinder kernel: a vertical cylinder of fixed radius and height is placed at each centroid, and all points within it are aggregated. Cylinder grouping is invariant to the vertical distribution of points (important for outdoor 3D scenes where height is qualitatively different from lateral extent). Local convolution within the cylinder uses shared MLP features, similar to PointNet, but with the cylinder geometry providing a consistent spatial context. The fully convolutional design (no fixed-size global pooling) produces per-point or per-voxel predictions naturally, enabling dense semantic segmentation of large-scale outdoor scenes.\n\nDGCNN (Dynamic Graph CNN, Wang et al., 2019) reformulates local feature aggregation as an operation on a dynamically constructed graph. For each point $x_i$, the $k$ nearest neighbours in the current feature space are found, and edge features are computed: $e_{ij} = h_\\Theta(x_i,\\, x_j - x_i)$ where $h_\\Theta$ is a shared MLP applied to the concatenation of the central point feature and the relative neighbour feature (difference $x_j - x_i$ encodes local geometry). The EdgeConv operation aggregates over the $k$ edges: $x_i' = \\max_{j\\in\\mathcal{N}(i)} e_{ij}$. The critical word is 'dynamic': the $k$-NN graph is recomputed in the updated feature space after each EdgeConv layer. In the first layer, neighbours are the $k$ nearest points in 3D Euclidean space (geometric proximity). In deeper layers, neighbours are found in learned feature space — two points on opposite ends of an elongated object may be far in Euclidean space but close in feature space (similar geometry), and DGCNN captures this non-local semantic relationship. This graph-rewiring across layers is the key distinction from PointNet++ (fixed Euclidean grouping). DGCNN achieves state-of-the-art results on both classification and part segmentation, with the dynamic graph naturally adapting to the task.\n\nFoldingNet (Yang et al., 2018) addresses point cloud generation and reconstruction — the inverse problem of analysis. Given a point cloud, encode it into a compact codeword; given a codeword, decode a point cloud that approximates the original shape. The encoder is a PointNet-like architecture producing a fixed-length codeword $\\mathbf{c} \\in \\mathbb{R}^{512}$. The decoder is the novel contribution: it takes a fixed 2D grid of points (parameterising a flat surface) and deforms it into a 3D surface approximating the input shape through two sequential folding operations. Each folding step concatenates the 2D grid coordinates (or the intermediate folded coordinates) with the codeword $\\mathbf{c}$ and applies a shared MLP to produce 3D offsets. Two folding operations are used because one folding can only represent locally simple (nearly flat) deformations; the second folding takes the result of the first (which has folded the sheet into a rough 3D shape) and refines fine-grained surface details. Reconstruction quality is measured by Chamfer distance: $d_{\\text{CD}}(S_1,S_2) = \\sum_{x\\in S_1}\\min_{y\\in S_2}\\|x-y\\|^2 + \\sum_{y\\in S_2}\\min_{x\\in S_1}\\|y-x\\|^2$, which is symmetric, differentiable, and does not require point correspondence. FoldingNet's codewords serve as shape embeddings for retrieval and interpolation: interpolating linearly between two codewords and decoding produces a morphologically smooth transition between two 3D shapes, analogous to the VAE latent space behaviour discussed in ida10.",
-    "ida13": "The penultimate chapter examines three techniques for making image analysis systems interpretable and for understanding the representations they learn. As deep networks replace classical algorithms in scientific computing, medical imaging, and safety-critical applications, the ability to explain why a model produced a particular output, and to visualise what it has learned, is increasingly important — both for debugging and for building justified trust.\n\nBag of Visual Words (BoVW) is not an interpretability method but the dominant classical image classification framework before deep learning, presented here as the historical baseline that contextualises the shift to learned representations. The pipeline has three stages. First, local feature descriptors (typically SIFT — Scale-Invariant Feature Transform) are extracted from keypoints detected at multiple scales. SIFT descriptors are 128-dimensional gradient orientation histograms, invariant to scale, rotation, and illumination changes. Second, $k$-means clustering on a large collection of descriptors defines a visual vocabulary (codebook) of $K$ visual words (typically $K \\in [500, 5000]$). Third, each image is encoded as a histogram of visual word occurrences: each descriptor is assigned to its nearest codebook entry, and the image representation is the count vector $h \\in \\mathbb{R}^K$. A SVM classifier trained on these histograms achieves competitive accuracy on benchmark datasets. The limitation is fundamental: the codebook is fixed and task-agnostic; the histogram discards all spatial relationships between visual words; and SIFT's hand-engineered gradient orientation basis is not optimal for any specific task. End-to-end CNNs overcome all three limitations simultaneously — the connection between BoVW and CNN feature learning (both count aggregate occurrences of local patterns) is more than metaphorical: the first convolutional layer learns filters analogous to SIFT gradient templates, and spatial pyramid pooling extends BoVW with coarse spatial binning.\n\nGradCAM (Gradient-weighted Class Activation Mapping, Selvaraju et al., 2017) answers the question: which spatial regions of the input image did the network attend to when predicting class $c$? The method is architecture-agnostic to the early layers — only the final convolutional feature maps $A^k \\in \\mathbb{R}^{H\\times W}$ are required. Channel-wise importance weights are computed as $\\alpha^c_k = \\frac{1}{Z}\\sum_{i,j}\\frac{\\partial y^c}{\\partial A^k_{ij}}$ — the spatially-averaged gradient of the class score $y^c$ with respect to the $k$-th activation map. The saliency map is $L^c_{\\text{GradCAM}} = \\text{ReLU}\\!\\left(\\sum_k \\alpha^c_k A^k\\right)$, upsampled to input resolution and overlaid on the image as a heat map. The ReLU keeps only features positively associated with class $c$ (negative values indicate features of the complementary class). GradCAM is used for debugging — does the model look at the dog or the background when predicting 'dog'? — and for discovering bias. Guided Backpropagation combines GradCAM with the constraint that gradients are only backpropagated through ReLU units where both the gradient and the activation are positive, producing sharper, pixel-level attribution maps that highlight fine-grained texture evidence rather than coarse spatial regions. GradCAM++, Score-CAM, and Eigen-CAM are subsequent refinements addressing specific failure modes.\n\nDimensionality reduction visualises high-dimensional representations in 2D or 3D. PCA projects data onto the directions of maximum variance via eigendecomposition of the covariance matrix — a linear, global method that preserves large pairwise distances but collapses non-linear cluster structure. t-SNE (Stochastic Neighbour Embedding with $t$-distribution, van der Maaten & Hinton, 2008) is the standard for visualising deep representations. High-dimensional affinities are defined as $p_{j|i} = \\exp(-\\|x_i-x_j\\|^2/2\\sigma_i^2)/\\sum_{k\\neq i}\\exp(-\\|x_i-x_k\\|^2/2\\sigma_i^2)$, with $\\sigma_i$ chosen by binary search to achieve a target perplexity (typically 30–50), and symmetrised: $p_{ij} = (p_{j|i}+p_{i|j})/2N$. Low-dimensional affinities use a Student-$t$ distribution with one degree of freedom: $q_{ij} = (1+\\|y_i-y_j\\|^2)^{-1}/\\sum_{k\\neq l}(1+\\|y_k-y_l\\|^2)^{-1}$. The heavy tail of the $t$-distribution compensates for the crowding problem: in high dimensions, points can be far apart in many directions simultaneously, but in 2D there is not enough space. The $t$-distribution places well-separated clusters further apart than Gaussian low-dimensional affinities would, producing the characteristic tight clusters with visible inter-cluster gaps. Training minimises $\\text{KL}(P\\|Q)$ by gradient descent. t-SNE preserves local neighbourhood structure faithfully but does not preserve global distances — two clusters appearing close in the 2D plot may not be genuinely similar. UMAP (McInnes et al., 2018) is a graph-based alternative derived from Riemannian geometry and topological data analysis; it preserves both local and some global structure and runs faster than t-SNE, making it the method of choice for very large datasets (millions of points) such as single-cell RNA sequencing."
+    "ida13": "The penultimate chapter examines three techniques for making image analysis systems interpretable and for understanding the representations they learn. As deep networks replace classical algorithms in scientific computing, medical imaging, and safety-critical applications, the ability to explain why a model produced a particular output, and to visualise what it has learned, is increasingly important — both for debugging and for building justified trust.\n\nBag of Visual Words (BoVW) is not an interpretability method but the dominant classical image classification framework before deep learning, presented here as the historical baseline that contextualises the shift to learned representations. The pipeline has three stages. First, local feature descriptors (typically SIFT — Scale-Invariant Feature Transform) are extracted from keypoints detected at multiple scales. SIFT descriptors are 128-dimensional gradient orientation histograms, invariant to scale, rotation, and illumination changes. Second, $k$-means clustering on a large collection of descriptors defines a visual vocabulary (codebook) of $K$ visual words (typically $K \\in [500, 5000]$). Third, each image is encoded as a histogram of visual word occurrences: each descriptor is assigned to its nearest codebook entry, and the image representation is the count vector $h \\in \\mathbb{R}^K$. A SVM classifier trained on these histograms achieves competitive accuracy on benchmark datasets. The limitation is fundamental: the codebook is fixed and task-agnostic; the histogram discards all spatial relationships between visual words; and SIFT's hand-engineered gradient orientation basis is not optimal for any specific task. End-to-end CNNs overcome all three limitations simultaneously — the connection between BoVW and CNN feature learning (both count aggregate occurrences of local patterns) is more than metaphorical: the first convolutional layer learns filters analogous to SIFT gradient templates, and spatial pyramid pooling extends BoVW with coarse spatial binning.\n\nGradCAM (Gradient-weighted Class Activation Mapping, Selvaraju et al., 2017) answers the question: which spatial regions of the input image did the network attend to when predicting class $c$? The method is architecture-agnostic to the early layers — only the final convolutional feature maps $A^k \\in \\mathbb{R}^{H\\times W}$ are required. Channel-wise importance weights are computed as $\\alpha^c_k = \\frac{1}{Z}\\sum_{i,j}\\frac{\\partial y^c}{\\partial A^k_{ij}}$ — the spatially-averaged gradient of the class score $y^c$ with respect to the $k$-th activation map. The saliency map is $L^c_{\\text{GradCAM}} = \\text{ReLU}\\!\\left(\\sum_k \\alpha^c_k A^k\\right)$, upsampled to input resolution and overlaid on the image as a heat map. The ReLU keeps only features positively associated with class $c$ (negative values indicate features of the complementary class). GradCAM is used for debugging — does the model look at the dog or the background when predicting 'dog'? — and for discovering bias. Guided Backpropagation combines GradCAM with the constraint that gradients are only backpropagated through ReLU units where both the gradient and the activation are positive, producing sharper, pixel-level attribution maps that highlight fine-grained texture evidence rather than coarse spatial regions. GradCAM++, Score-CAM, and Eigen-CAM are subsequent refinements addressing specific failure modes.\n\nDimensionality reduction visualises high-dimensional representations in 2D or 3D. PCA projects data onto the directions of maximum variance via eigendecomposition of the covariance matrix — a linear, global method that preserves large pairwise distances but collapses non-linear cluster structure. t-SNE (Stochastic Neighbour Embedding with $t$-distribution, van der Maaten & Hinton, 2008) is the standard for visualising deep representations. High-dimensional affinities are defined as $p_{j|i} = \\exp(-\\|x_i-x_j\\|^2/2\\sigma_i^2)/\\sum_{k\\neq i}\\exp(-\\|x_i-x_k\\|^2/2\\sigma_i^2)$, with $\\sigma_i$ chosen by binary search to achieve a target perplexity (typically 30–50), and symmetrised: $p_{ij} = (p_{j|i}+p_{i|j})/2N$. Low-dimensional affinities use a Student-$t$ distribution with one degree of freedom: $q_{ij} = (1+\\|y_i-y_j\\|^2)^{-1}/\\sum_{k\\neq l}(1+\\|y_k-y_l\\|^2)^{-1}$. The heavy tail of the $t$-distribution compensates for the crowding problem: in high dimensions, points can be far apart in many directions simultaneously, but in 2D there is not enough space. The $t$-distribution places well-separated clusters further apart than Gaussian low-dimensional affinities would, producing the characteristic tight clusters with visible inter-cluster gaps. Training minimises $\\text{KL}(P\\|Q)$ by gradient descent. t-SNE preserves local neighbourhood structure faithfully but does not preserve global distances — two clusters appearing close in the 2D plot may not be genuinely similar. UMAP (McInnes et al., 2018) is a graph-based alternative derived from Riemannian geometry and topological data analysis; it preserves both local and some global structure and runs faster than t-SNE, making it the method of choice for very large datasets (millions of points) such as single-cell RNA sequencing.",
+    "vs01": "EE499 Vector Space Methods in Signal Processing — Chapter 1: Linear Vector Spaces.\n\nBu dersin temel iddiası şu: sinyal işlemedeki her problem, doğru matematiksel dil kurulunca tek bir çerçeveye sığar. Sinyaller vektörler olarak, sistemler operatörler olarak modellenir. Bu dil kurulunca FIR filtreleme, CT rekonstrüksiyon, deblurring ve optimal yaklaşım hepsi aynı matematikle çözülür.\n\nVektör uzayı tanımı, soyut bir yapıdır: küme, skalar cisim, toplama ve skalar çarpma operasyonları. 7 aksiyom bu yapıyı tanımlar. Önemli olan ℝ² ya da ℝ³ ile sınırlı olmamak: polinomlar, matrisler, fonksiyonlar, sonsuz uzunluklu diziler — hepsi vektör uzayı oluşturabilir. SP'de en kritik uzaylar L₂[a,b] (sonlu enerjili CT sinyaller) ve ℓ₂(ℤ) (sonlu enerjili DT diziler).\n\nAlt uzay, lineer bağımsızlık ve baz kavramları, vektör uzayının yapısını ortaya koyar. Alt uzaylar kapalılık özelliğiyle tanımlanır; kesişim alt uzay oluştururken birleşim oluşturmaz. Hamel bazı, lineer bağımsız ve span eden bir küme — boyut iyi tanımlıdır ve tüm bazlar aynı eleman sayısına sahiptir. DFT bazı ve sinc bazı, SP'deki somut baz örnekleridir: DFT frekans-zaman dönüşümünü bir baz değişimi olarak yorumlar, sinc bazı ise örnekleme teoremini bir ortonormal baz temsili olarak anlamlandırır.\n\nNorm ve iç çarpım, vektör uzayını geometrik bir yapıya kavuşturur. Norm büyüklük tanımlar; ℓ_p ailesi içinde yalnızca p=2 (Öklid normu) bir iç çarpımdan gelir — parallelogram yasasıyla test edilir. İç çarpım açı ve ortogonalliği tanımlar. Cauchy-Schwarz eşitsizliği \\|⟨x,y⟩\\| ≤ ‖x‖·‖y‖ her IPS'te geçerlidir ve korelasyon katsayısının matematiksel temelini oluşturur. Gram-Schmidt süreci, herhangi bir lineer bağımsız kümeden ortonormal baz üretir — ve ortonormal bazda temsil katsayıları basit iç çarpıma indirgenir. CTFS, DFT, örnekleme teoremi hepsi bu temelden gelir.\n\nProjektion teoremi dersin doruk noktasıdır: bir vektörün alt uzaya projeksiyonu, ortogonallik prensibiyle karakterize edilir. Projeksiyon matrisi P = B(BᴴB)⁻¹Bᴴ olup P² = P ve Pᴴ = P özelliklerini sağlar. Hilbert uzaylarında projeksiyon her zaman vardır ve tekil — ama genel IPS'te completeness olmadan projeksiyon olmayabilir.",
+    "vs02": "EE499 Vector Space Methods in Signal Processing — Chapter 2: Linear Operators and Solution of Inverse Problems.\n\nChapter 1'de kurulan vektör uzayı altyapısı, Chapter 2'de sistemleri modellemeye uygulanır. Lineer operatör iki vektör uzayı arasındaki eşleme: A(αx+βy) = αA(x)+βA(y). SP'deki her LTI sistem, her türev işlemi, her Fourier dönüşümü birer lineer operatördür. Sonlu boyutlu uzaylarda her lineer operatörün matris temsili vardır: A matrisinin k. sütunu, k. giriş baz vektörünün çıkış bazındaki koordinatlarından oluşur. Konvolüsyon operatörü Toeplitz yapılı bir matris olarak yazılır — ve bu yazımla birlikte ters problem teorisi uygulanabilir hale gelir.\n\nRange space R(A) ve null space N(A) bir operatörün iki temel anatomik yapısıdır. R(A) = {y: y=A(x) için bazı x}, A'nın erişebildiği çıkışlar kümesi. N(A) = {x: A(x)=0}, A'nın sıfıra gönderdiği girişler. Rank-Nullity teoremi: rank(A) + dim(N(A)) = N. Bu iki uzay, ters problem için yeterli ve gerekli koşulları verir: existence ↔ y ∈ R(A), uniqueness ↔ N(A) = {0}.\n\nLineer sistemler dört duruma ayrılır: Case 0 (invertible, M=N, full rank), Case 1 (tall, M>N, full column rank — uniqueness var, existence yok), Case 2 (fat, M<N, full row rank — existence var, uniqueness yok), Case 3 (rank-deficient). Case 1'de least squares çözümü x_LS = (AᴴA)⁻¹Aᴴy, y'nin R(A)'ya projeksiyonu olarak yorumlanır — Chapter 1'in projeksiyon teoremi burada devreye girer. Case 2'de minimum norm çözümü x_MN = Aᴴ(AAᴴ)⁻¹y, tüm çözümler içinden N(A)'ya dik olanı seçer. Her iki çözüm Moore-Penrose pseudo-inverse A† = (AᴴA)⁻¹Aᴴ (Case 1) veya Aᴴ(AAᴴ)⁻¹ (Case 2) ile birleştirilir."
   },
   "summary": {
     "title": "ML Dersi — Baştan Sona Motivasyon Zinciri",
