@@ -5663,6 +5663,339 @@
       ]
     }
   ],
+  "vs03": [
+    {
+      "title": "Rassal Değişkenler Neden Vektör Uzayı Oluşturur?",
+      "cat": "Foundation",
+      "summary": "Rassal değişkenler soyut bir iç çarpım uzayı oluşturur. Bu sayede beklenti E[xy] iç çarpım, RMS değer norm, korelasyon katsayısı ise açının kosinüsü olur.",
+      "context": "EE499 · Chapter 3 · Section 3.1 — IPS of RVs",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Bu chapter'ın can alıcı sorusu",
+          "text": "Chapter 1'de vektör uzayı ne demek öğrendik. Chapter 2'de lineer operatörleri, LS'yi, projeksiyon fikrini işledik.\nBu chapter'da ise şunu soruyoruz: rassal değişkenler de bir vektör uzayı olabilir mi?\n\nİlk bakışta garip gelir — x² + 2x gibi bir fonksiyon nasıl 'vektör' olabilir ki? Ama bunu zaten gördük:\nChapter 1'de 'vektör' sadece ok değil, aksiyomları sağlayan HER nesne. Fonksiyonlar da vektördü. Polinomlar da vektördü.\n\nRassal değişkenler de o listeye giriyor. Ve bu sadece teorik bir hüner değil — son derece pratik.\nÇünkü vektör uzayı kurduğunuzda, o uzayın tüm geometrik araçları elinizin altına giriyor:\nprojesiyonlar, diklik, Gram-Schmidt, her şey. Ve bunlar tahmin teorisinde hayatınızı kurtarıyor."
+        },
+        {
+          "type": "code",
+          "heading": "İç çarpımı nasıl tanımlıyoruz?",
+          "text": "Normal vektörlerde iç çarpım u·v = Σ uᵢvᵢ'di. Yani bileşen bileşen çarp, topla.\n\nFonksiyon uzayında ise integral alıyorduk: <f,g> = ∫ f(x)g(x) dx\n\nRassal değişkenler için ise beklenti değeri var:\n  <x, y> = E[xy]\n\nNeden bu? Çünkü rassal bir değişken, olası tüm değerleri ve olasılıklarıyla birlikte bir nesnedir.\n'x ve y'nin birlikte davranışını' ölçmek istiyorsak, beklenti mantıklı bir yol.\nBeklenti, ağırlıklı ortalama gibi düşün — olasılıkları ağırlık olarak kullanan bir integral.\n\nBu tanımın çalıştığını görmek için Chapter 1'deki iç çarpım aksiyomlarını kontrol edelim:\n  Simetri:   E[xy] = E[yx]   ✓ (çarpma değişmeli)\n  Lineerlik: E[(αx+βz)y] = αE[xy] + βE[zy]  ✓ (beklentinin lineerliği)\n  Pozitiflik: E[x²] ≥ 0   ✓ (kare her zaman negatif olmaz)\n              E[x²] = 0  ↔  x = 0 (neredeyse kesinlikle)\n\nHepsi sağlanıyor. Demek ki rassal değişkenler bir IPS (İç Çarpım Uzayı) kuruyor."
+        },
+        {
+          "type": "code",
+          "heading": "Buradan ne çıkıyor?",
+          "text": "IPS kurulunca iç çarpımdan otomatik olarak norm ve mesafe türetilebiliyor.\n\nNorm: ||x|| = √<x,x> = √E[x²]\nBu, bir rassal değişkenin RMS (root-mean-square) değeri. Sinyalcilere çok tanıdık.\n\nMesafe: d(x,y) = ||x-y|| = √E[(x-y)²]\nBu da MSE'nin (ortalama kare hata) kare kökü. Yani iki rassal değişken arasındaki 'uzaklık',\nbiri diğerine ne kadar 'yakın' tahmin edebileceğimizle doğrudan ilgili.\n\nVe şu çok önemli: Cauchy-Schwarz eşitsizliği otomatik olarak geçerli:\n  |E[xy]| ≤ √E[x²] · √E[y²]\n\nBu eşitsizliği normalize edince ne çıkıyor? Korelasyon katsayısı:\n  |E[xy]| / (||x|| · ||y||) ≤ 1\n  yani |ρ| ≤ 1\n\nDemek ki korelasyon katsayısının -1 ile 1 arasında olması bir kural değil, Cauchy-Schwarz'ın doğal sonucu!"
+        }
+      ]
+    },
+    {
+      "title": "Korelasyon Katsayısı = İki RV Arasındaki Açının Kosinüsü",
+      "cat": "Foundation",
+      "summary": "ρ_{xy} = cos θ. İki rassal değişken arasındaki ilişki, bu uzayda iki vektörün arasındaki açıyla tamamen ölçülür. Diklik = korelasyonsuzluk.",
+      "context": "EE499 · Chapter 3 · Section 3.1 — Correlation as Angle",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "ρ = cos θ derken ne demek istiyoruz?",
+          "text": "Hayatınızda 'iki değişken arasındaki korelasyon' diye bir terim duydunuz ve -1 ile 1 arasında bir sayı olduğunu biliyordunuz. Ama neden? Ve 'açı' ne alaka?\n\nIPS'de iki vektör arasındaki açı şöyle tanımlıydı:\n  cos θ = <u, v> / (||u|| · ||v||)\n\nBunu rassal değişkenlere uygulayalım:\n  cos θ = E[xy] / (√E[x²] · √E[y²])\n\nBu tam olarak korelasyon katsayısı ρ_{xy}! (sıfır ortalamalı durumda)\n\nYani ρ bir 'benzerlik ölçüsü' değil — gerçekten geometrik bir açı.\nİki RV, bu soyut uzayda iki vektör gibi oturuyor, ve aralarındaki açı onların ilişkisini ölçüyor.\n\nρ = 1  → açı = 0°  → aynı yönde → y = ay, mükemmel lineer bağımlılık\nρ = -1 → açı = 180° → zıt yönde  → y = -ax, mükemmel ters bağımlılık\nρ = 0  → açı = 90°  → dik         → hiç lineer ilişki yok"
+        },
+        {
+          "type": "code",
+          "heading": "Diklik = Korelasyonsuzluk — Bu çok önemli",
+          "text": "Geometrik diklik: <u, v> = 0 → u ⊥ v\n\nRassal değişkenler için: E[xy] = 0 → x ⊥ y (bu uzayda dik)\n\nVe E[xy] = 0 demek, istatistikte 'x ve y arasında lineer ilişki yok' demek, yani 'korelasyonsuz'.\n\nBir dakika — 'bağımsız' ile 'korelasyonsuz' aynı şey mi?\n  HAYIR. Bu çok yaygın bir karıştırma.\n\nBağımsızlık: f(x,y) = f(x)·f(y)  → tam bilgi, her türlü ilişki yok\nKorelasyonsuzluk: E[xy] = E[x]·E[y] → sadece lineer ilişki yok, nonlineer olabilir\n\nBağımsız ise korelasyonsuz   (tek yönlü!)\nKorelasyonsuz ise bağımsız   (YANLIŞ — genel olarak)\n\nÖrnek: x ~ Uniform(-1,1), y = x²\n  E[x] = 0, E[y·x] = E[x³] = 0 (simetri nedeniyle)\n  Ama y tamamen x'e bağımlı! y = x² bilince x'i biliyorsun.\n  Korelasyonsuz ama bağımlı.\n\nAma Gaussian için özel durum var: Gaussian RV'lerde korelasyonsuzluk ↔ bağımsızlık.\nBu neden? Çünkü Gaussian dağılım sadece ortalaması ve kovaryansıyla tamamen belirleniyor.\nKovaryans = 0 → joint Gaussian ayrışıyor → bağımsız."
+        },
+        {
+          "type": "code",
+          "heading": "Merkezi RV'ler için açı yorumu",
+          "text": "Pratikte iç çarpımı sıfır ortalamalı (merkezi) versiyonla tanımlıyoruz:\n  x̃ = x - μ_x,   ỹ = y - μ_y\n\nÇünkü 'ilişki' derken sabit kısımları değil, dalgalanmaları kastetmek istiyoruz.\nİki değişken her ikisi de 5 olan sabit değerlerse aralarında 'ilişki' aramak anlamsız.\n\nMerkezi iç çarpım: <x̃, ỹ> = E[(x-μ_x)(y-μ_y)] = Cov(x,y)\nMerkezi norm: ||x̃|| = √Var(x) = σ_x\n\nKorelasyon katsayısı:\n  ρ_{xy} = Cov(x,y) / (σ_x · σ_y)\n         = <x̃, ỹ> / (||x̃|| · ||ỹ||)\n         = cos θ\n\nBir örnekle somutlaştıralım:\nTemperature ve ice cream sales yüksek ρ (~0.9) → neredeyse aynı yönde vektörler\nTemperature ve coat sales düşük ρ (~-0.8) → neredeyse zıt yönde\nKöpek adı uzunluğu ve hisse senedi fiyatı ρ ≈ 0 → birbirine dik, alakasız"
+        }
+      ]
+    },
+    {
+      "title": "Gram Matrisi = Oto-Korelasyon Matrisi, Gram-Schmidt = Beyazlatma",
+      "cat": "Foundation",
+      "summary": "RV vektörlerinde Gram matrisi doğrudan R_x = E[xx^T] oluyor. Gram-Schmidt sürecini RV'lere uygulayınca 'whitening' elde ediyoruz.",
+      "context": "EE499 · Chapter 3 · Section 3.1 — Gram Matrix & Whitening",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Gram matrisi neydi, burada ne oluyor?",
+          "text": "Chapter 2'de bir baz {φ₁, φ₂, ..., φₙ} verilince Gram matrisini hesaplamıştık:\n  G_ij = <φᵢ, φⱼ>\n\nBu matris bize baz vektörlerinin birbirleriyle ne kadar 'örtüştüğünü' söylüyordu.\nProje yansıma katsayılarını bulmak için G·c = d sistemini çözüyorduk.\n\nŞimdi baz elemanları rassal değişkenler: x = [x₁, x₂, ..., xₙ]^T\n  G_ij = <xᵢ, xⱼ> = E[xᵢ·xⱼ]\n\nBu tam olarak oto-korelasyon matrisi:\n  R_x = E[xx^T]\n\nKöşegen elemanlar: E[xᵢ²] = güç (varyans + ortalama kare)\nKöşegen dışı: E[xᵢxⱼ] = xᵢ ve xⱼ arasındaki korelasyon\n\nYani Chapter 2'de gördüğünüz soyut Gram matrisi, istatistikte hep kullandığınız\noto-korelasyon matrisiyle tamamen aynı şey. Farklı isimler, aynı nesne."
+        },
+        {
+          "type": "code",
+          "heading": "Gram-Schmidt'i RV'lere uygulayınca ne olur?",
+          "text": "Gram-Schmidt süreci bir baz alıp onu ortogonal normalize bir baza çeviriyor.\nRassal değişkenlere uyguladığımızda da aynı adımlar işliyor, ama sonuç istatistiksel anlam taşıyor.\n\nDiyelim ki x₁, x₂, ..., xₙ rassal değişkenlerimiz var, birbirleriyle korelasyonlu.\n\nAdım 1: e₁ = x₁ / ||x₁|| = x₁ / √E[x₁²]\n  → e₁ birim varyanslı, x₁ yönünde\n\nAdım 2: x₂'den x₁ yönündeki bileşeni çıkar:\n  x₂' = x₂ - <x₂, e₁>·e₁ = x₂ - (E[x₂e₁]/1)·e₁\n  Bu işlem tam olarak 'x₂'den x₁'in etkisini arındırma'\n  e₂ = x₂' / ||x₂'||\n\nSonunda: E[eᵢ·eⱼ] = δᵢⱼ\n  → Birbirine dik (korelasyonsuz) ve birim varyanslı RV'ler\n\nBunu tek seferde matris işlemiyle yapmak da mümkün:\n  R_x = U Λ Uᵀ   (eigenvalue decomposition)\n  z = Λ^{-1/2} Uᵀ x  →  E[zzᵀ] = I\n\nİşte bu 'whitening' — beyazlatma."
+        },
+        {
+          "type": "code",
+          "heading": "Beyazlatma neden 'beyaz'?",
+          "text": "İstatistikte 'white noise' — beyaz gürültü — şu anlama gelir:\nbileşenler birbirinden bağımsız, hepsi aynı varyanslı, yani R_n = σ²I.\n\nBeyazlatma işlemi de tam bunu yapıyor: korelasyonlu bir x'i alıp\nbileşenleri birbirinden bağımsız ve eşit varyanslı bir z'ye dönüştürüyor:\n  z = Λ^{-1/2} Uᵀ x  →  R_z = I\n\nDekorelasyon ile beyazlatma arasındaki fark:\n  Dekorelasyon: E[zᵢzⱼ] = 0 (i≠j) — korelasyon kaldırıldı, ama varyanslar farklı olabilir\n  Beyazlatma:   E[zzᵀ] = I    — hem korelasyon kaldırıldı, hem varyanslar eşitlendi\n\nNerede kullanılıyor?\n  PCA (Principal Component Analysis): veriyi dekore eder, ama normalize etmez\n  ICA (Independent Component Analysis): whitening ön adım olarak kullanılır\n  Matched filtering: gürültüyü beyazlatıp sonra matched filter uygularsın\n  ZCA whitening: beyazlatma + geri döndürme (görüntülerde)  \n\nPratik not: Gram-Schmidt sayısal olarak kararsız olabilir. QR ayrışımı daha sağlam."
+        }
+      ]
+    },
+    {
+      "title": "LMMSE Tahmini — Sıfırdan Neden ve Nasıl?",
+      "cat": "Estimation",
+      "summary": "Bilinmeyen x'i gözlemler y₁,...,yN'den lineer tahmin et. En iyi katsayılar R_y α = r_xy sisteminden gelir — bu aynı zamanda x'in y uzayına projektesidir.",
+      "context": "EE499 · Chapter 3 · Section 3.2 — Scalar LMMSE",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Problem ne, neden zor?",
+          "text": "Diyelim ki bilinmeyen bir x rassal değişkeni var — ölçemiyorsunuz, gözleminiz yok.\nAma x ile ilişkili, gürültülü ölçümler yapabiliyorsunuz: y₁, y₂, ..., yN.\n\nSoru: Bu gözlemlerden x'i en iyi nasıl tahmin edersiniz?\n\nEn genel tahmin edici herhangi bir fonksiyon olabilir: x̂ = f(y₁,...,yN)\nAma bu çok genel. Keyfi bir f'i optimize etmek zor, kapalı form çözüm neredeyse hiç yok.\n\nLineer kısıt: x̂ = α₁y₁ + α₂y₂ + ... + αN·yN = αᵀy\n  → Sadece N tane katsayı α optimize edilecek\n  → Kapalı form çözüm var\n  → Sadece E[xy], E[y²] gibi ikinci dereceden momentler yeterli (tam dağılım gerekmez)\n  → Gaussian gürültüde optimal MMSE ile özdeş!\n\nBu yüzden 'LMMSE' — Linear Minimum Mean Square Error tahmin edicisi."
+        },
+        {
+          "type": "code",
+          "heading": "Katsayıları nasıl buluyoruz?",
+          "text": "Hata: e = x - x̂ = x - α₁y₁ - α₂y₂ - ... - αN·yN\nMaliyet: E[e²] = E[(x - αᵀy)²]  → minimize et\n\nα₁'e göre türev alıp sıfıra eşit:\n  ∂E[e²]/∂α₁ = E[2·e·(-y₁)] = -2E[e·y₁] = 0\n  → E[e·y₁] = 0\n\nBenzer şekilde her αk için:\n  E[e·yₖ] = 0  ∀k = 1,...,N\n\nBu, ortogonallik ilkesi. Ve şunu söylüyor:\n'Hata e, kullandığın tüm gözlemlerle korelasyonsuz olmalı.'\n\nSezgi: Eğer e ile y₁ arasında hala korelasyon varsa, y₁'den hala bir şeyler 'öğrenilmemiş' demek.\nOptimumda, gözlemlerden öğrenilecek her şey öğrenilmiş, geriye 'rastgele' bir hata kalmış.\n\nŞimdi E[e·yₖ] = 0'ı açalım:\n  E[(x - Σᵢ αᵢyᵢ)·yₖ] = 0\n  E[x·yₖ] = Σᵢ αᵢ E[yᵢ·yₖ]\n\nMatris formuna getirelim:\n  ⎡E[y₁²]   E[y₁y₂] ...⎤ ⎡α₁⎤   ⎡E[xy₁]⎤\n  ⎢E[y₂y₁] E[y₂²]  ...⎥ ⎢α₂⎥ = ⎢E[xy₂]⎥\n  ⎣...      ...     ...⎦ ⎣αN⎦   ⎣E[xyN]⎦\n\n  R_y · α = r_xy\n  ──────────────────────────────────\n  R_y: gözlemlerin Gram matrisi (= oto-korelasyon matrisi)\n  r_xy: x ile gözlemler arasındaki çapraz korelasyon vektörü\n  ──────────────────────────────────\n\nEğer R_y terslenebilirse: α_opt = R_y⁻¹ r_xy\n→ x̂_LMMSE = α_optᵀ y"
+        },
+        {
+          "type": "code",
+          "heading": "Projeksiyon bağlantısı — bunu görmek çok önemli",
+          "text": "Chapter 2'deki projeksiyon problemini hatırlayın:\nVerilen baz {φ₁,...,φN}, hedefe en yakın lineer kombinasyonu bul.\n  G·c = d  (G = Gram matrisi, d = korelasyon vektörü)\n\nBurada aynı şey oluyor ama RV dünyasında:\n  G = R_y = E[yyᵀ]  (Gram matrisi)\n  d = r_xy = E[xy]  (korelasyon vektörü)\n  → R_y α = r_xy\n\nYani LMMSE aslında x'i span{y₁,...,yN}'e projekte etmek!\nx̂, bu uzaydaki en yakın noktadır — ve en yakın nokta, minimum mesafe, minimum MSE.\n\nGeometrik sezgi:\n  x bir noktada, span{y} bir alt uzay.\n  x̂ = x'in bu alt uzaya dikkatmesi.\n  e = x - x̂ = hata, projeksiyon alt uzayına dik.\n  e ⊥ yₖ  ∀k  →  E[e·yₖ] = 0  ✓\n\nBu bağlantı sayesinde Chapter 2'de öğrendiğiniz her şey burada geçerli.\nGram-Schmidt ile baz dikleştirme, projeksiyon stabilitesi, hepsi aynı çerçevede."
+        },
+        {
+          "type": "formula",
+          "heading": "Sonuç formülleri",
+          "text": "$$\\mathbf{R}_y \\boldsymbol{\\alpha} = \\mathbf{r}_{xy}$$\n$$\\boldsymbol{\\alpha}_{opt} = \\mathbf{R}_y^{-1}\\mathbf{r}_{xy}$$\n$$\\hat{x}_{LMMSE} = \\boldsymbol{\\alpha}_{opt}^T \\mathbf{y}$$\n$$\\text{MSE} = \\sigma_x^2 - \\boldsymbol{\\alpha}_{opt}^T \\mathbf{r}_{xy} = \\sigma_x^2 - \\mathbf{r}_{xy}^T \\mathbf{R}_y^{-1}\\mathbf{r}_{xy}$$"
+        }
+      ]
+    },
+    {
+      "title": "Ortogonallik İlkesi — Optimizasyon mu, Projeksiyon mu?",
+      "cat": "Estimation",
+      "summary": "E[e·yₖ]=0 koşuluna iki farklı yoldan gelinir: türev sıfırlama ve projeksiyon dikliği. Her iki bakış açısı aynı R_y α = r_xy sistemini verir.",
+      "context": "EE499 · Chapter 3 · Section 3.2 — Orthogonality Principle",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Optimizasyon perspektifi — türev almak",
+          "text": "Bu yolu zaten gördünüz: E[e²]'yi her αk'ya göre türev alıp sıfıra eşitlemek.\n\n∂E[e²]/∂αk = 0\n→ E[2e·∂e/∂αk] = 0\n→ E[2e·(-yₖ)] = 0\n→ E[e·yₖ] = 0  ✓\n\nBu, calculus dili. 'Fonksiyon minimumda, o yüzden her yönde türev sıfır.'\n\nSezgi: Eğer hata e ile gözlem yₖ arasında hala bir korelasyon varsa,\nyₖ katsayısını biraz değiştirince MSE'yi daha da küçültebilirsin.\nOptimumda bu korelasyon sıfır — başka iyileştirme kalmamış."
+        },
+        {
+          "type": "code",
+          "heading": "Projeksiyon perspektifi — geometri",
+          "text": "Şimdi tamamen farklı bir gözle bakın.\n\nSoru: x'i span{y₁,...,yN} alt uzayına en yakın nokta nerede?\n\nChapter 1'den biliyoruz: projeksiyon noktası x̂, hata e = x - x̂'i bu alt uzaya dik yapan noktadır.\n  e ⊥ span{y₁,...,yN}\n  → e ⊥ yₖ  ∀k\n  → E[e·yₖ] = 0  ✓\n\nAynı sonuç, tamamen farklı bir yoldan.\n\nNeden aynı sonuç? Çünkü 'hata karesi minimize etmek' ile 'alt uzaya projekte etmek' aslında aynı problem.\nMSE = ||e||² = ||x - x̂||² ve bunu minimize etmek = x'e en yakın x̂'i bulmak = projeksiyonu bulmak.\n\nBu örtüşme tesadüf değil. Hilbert uzayı teorisinin temel bir sonucu.\nVe bu nedenle IPS çerçevesi bu kadar güçlü — iki farklı düşünce biçimi tek noktada birleşiyor."
+        },
+        {
+          "type": "code",
+          "heading": "Her iki yol aynı sisteme çıkıyor",
+          "text": "Projeksiyon perspektifinden:\n  e ⊥ yₖ  →  E[(x - Σᵢαᵢyᵢ)·yₖ] = 0\n  E[x·yₖ] = Σᵢ αᵢ E[yᵢ·yₖ]\n  → R_y α = r_xy\n\nOptimizasyon perspektifinden:\n  ∂E[e²]/∂αk = 0  →  E[e·yₖ] = 0\n  → R_y α = r_xy\n\nTek sistem, iki yüz.\n\nBunu görmek önemli çünkü:\n  - Optimizasyon yüzü: 'katsayıları nasıl bulacağım?' sorusunu cevaplayabiliyor\n  - Projeksiyon yüzü: 'bu neden mantıklı?' sorusunu cevaplayabiliyor\n\nMühendislik pratiğinde: bazen bir bakış açısı daha yararlı, bazen diğeri.\nKarmaşık bir problem çözüyorsanız ve takıldıysanız, diğer perspektife geçin.\nGenellikle biri direkt hesaplamaya, diğeri yoruma yardımcı olur."
+        }
+      ]
+    },
+    {
+      "title": "Denoising: Gürültülü Kanaldan SNR'ya Göre Ağırlıklandırma",
+      "cat": "Applications",
+      "summary": "c = ±1 bilinmeyenini N gürültülü gözlemden tahmin et. LMMSE, SNR'ya orantılı ağırlıklar veriyor; yüksek SNR'lı gözleme daha çok güven. N→∞'da MSE sıfıra gider.",
+      "context": "EE499 · Chapter 3 · Section 3.2 — Denoising Example",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Problem kurulumu — ne tahmin etmeye çalışıyoruz?",
+          "text": "Durum şu: Bir c sinyali var, ±1 alıyor, eşit olasılıkla.\nBu c'yi doğrudan ölçemiyorsunuz. Onun yerine gürültülü versiyonlarını görüyorsunuz:\n\n  yₖ = c + nₖ,  nₖ ~ N(0, σ²_nk),  k = 1,...,N\n\nn'ler birbirinden ve c'den bağımsız.\nHer kanal farklı gürültü varyanslı olabilir: σ²_n1 ≠ σ²_n2 ≠ ...\n\nLMMSE tahmini: ĉ = α₁y₁ + α₂y₂ + ... + αN·yN = αᵀy\nBestimize et katsayıları: R_y α = r_cy\n\nÖnce istatistikleri hesaplayalım.\n  E[c] = 0  (±1 eşit olasılıkla)  μ_c = 0\n  E[c²] = σ_c² = 1"
+        },
+        {
+          "type": "code",
+          "heading": "R_y ve r_cy hesabı — adım adım",
+          "text": "İki gözlem için (N=2):\n\nR_y hesabı:\n  E[y₁²] = E[(c+n₁)²] = E[c²] + 2E[c·n₁] + E[n₁²]\n           = σ_c² + 0 + σ²_n1         (c ve n₁ bağımsız, sıfır ortalamalı)\n           = σ_c² + σ²_n1\n\n  E[y₁y₂] = E[(c+n₁)(c+n₂)] = E[c²] + E[cn₂] + E[n₁c] + E[n₁n₂]\n            = σ_c² + 0 + 0 + 0 = σ_c²\n\n       ⎡σ_c² + σ²_n1    σ_c²        ⎤\n  R_y = ⎣σ_c²           σ_c² + σ²_n2⎦\n\nGözlemlerin korelasyonu sıfır değil! Çünkü hepsi aynı c'yi içeriyor.\n\nr_cy hesabı:\n  E[c·y₁] = E[c·(c+n₁)] = E[c²] + E[c·n₁] = σ_c² + 0 = σ_c²\n  Aynı şekilde: E[c·y₂] = σ_c²\n\n  r_cy = ⎡σ_c²⎤ = σ_c² · ⎡1⎤\n         ⎣σ_c²⎦          ⎣1⎦"
+        },
+        {
+          "type": "code",
+          "heading": "SNR formu ve sezgi",
+          "text": "R_y α = r_cy çözünce karmaşık görünür ama SNR'yi tanımlanınca güzelleşiyor:\n  SNRₖ = σ_c² / σ²_nk  (sinyal gücü / gürültü gücü, k. kanal için)\n\nR_y'yi σ_c² ile bölerek normalize edince:\n  ⎡1 + 1/SNR₁    1       ⎤ ⎡α₁⎤   ⎡1⎤\n  ⎣1             1+1/SNR₂⎦ ⎣α₂⎦ = ⎣1⎦\n\nSistemi çözünce:\n  α₁ᵒᵖᵗ = SNR₁ / (1 + SNR₁ + SNR₂)\n  α₂ᵒᵖᵗ = SNR₂ / (1 + SNR₁ + SNR₂)\n\nBu ne anlama geliyor?\n  - Her gözlemin ağırlığı o gözlemin SNR'sıyla orantılı\n  - Gürültülü kanal → düşük SNR → küçük ağırlık\n  - Temiz kanal → yüksek SNR → büyük ağırlık\n  - SNR₁ = SNR₂ → eşit ağırlık → basit ortalama\n\nBu aslında sağduyu: 'iyi' kanala daha çok güven, 'kötü' kanalı neredeyse ignore et.\nLMMSE bunu otomatik olarak yapıyor, istatistiklerden türetiyor."
+        },
+        {
+          "type": "code",
+          "heading": "N gözlem genellemesi ve ne kadar N gerekir?",
+          "text": "N gözlem için genel sonuç:\n  ĉ_LMMSE = Σₖ [SNRₖ / (1 + Σᵢ SNRᵢ)] · yₖ\n\nMSE formülü:\n  E[e²] = σ_c² / (1 + Σₖ SNRₖ)\n\nBunu yorumlayalım:\n  - Payda: 1 + toplam SNR. N arttıkça bu büyüyor → MSE küçülüyor.\n  - N → ∞ → MSE → 0. Sonsuz gözlemle hatasız tahmin!\n    Ama tabii infinitely many gözlem pratikte yok.\n  - Tüm σ_nk eşit olsa: SNRₖ = SNR, Σ SNRᵢ = N·SNR\n    → MSE = σ_c² / (1 + N·SNR)\n    → SNR yüksekse az N yeterli; SNR düşükse çok N gerekiyor\n\nBu, iletişim teorisinde çok tanıdık bir formül.\nCoherent combining kazancı: N gözlemi birleştirince SNR N kat artıyor."
+        }
+      ]
+    },
+    {
+      "title": "Vektör LMMSE ve Wiener-Hopf Denklemi",
+      "cat": "Estimation",
+      "summary": "Skaler değil vektör tahmin: x̂ = Ky. Optimal K, Wiener-Hopf KR_y = R_xy denklemini çözerek bulunur. Problem satır satır ayrışır, her satır bağımsız bir LMMSE.",
+      "context": "EE499 · Chapter 3 · Section 3.2 — Vector LMMSE",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Skaler'den vektöre geçiş",
+          "text": "Skaler durumda tek bir x'i tahmin ediyorduk: x̂ = αᵀy\nŞimdi birden fazla bilinmeyen var: x = [x₁,...,xₘ]ᵀ\n\nLineer tahmin edici:\n  x̂ = Ky,  K ∈ ℝ^{m×n}\n\nBurada K bir matris — her satırı kᵢᵀ, her xᵢ için ayrı bir katsayı vektörü.\n  x̂₁ = k₁ᵀ y  ← x₁'i y'den tahmin et\n  x̂₂ = k₂ᵀ y  ← x₂'yi y'den tahmin et\n  ...\n  x̂ₘ = kₘᵀ y  ← xₘ'yi y'den tahmin et\n\nHedef: min_K MSE = min_K E[||e||²] = min_K Σᵢ E[eᵢ²] = min_K trace(R_e)\n\nGüzel olan şu: Bu problem i üzerinden ayrışıyor!\nHer kᵢ'yi bağımsız optimize edebilirsiniz. Her biri skaler LMMSE:\n  R_y kᵢ = r_{xᵢy}  ∀i"
+        },
+        {
+          "type": "code",
+          "heading": "Wiener-Hopf denklemi nasıl çıkıyor?",
+          "text": "Her satır için: R_y · kᵢ = r_{xᵢy}\n\nBunu tüm satırlar için matris olarak yazalım:\n  R_y · [k₁ k₂ ... kₘ] = [r_{x₁y} r_{x₂y} ... r_{xₘy}]\n  R_y · Kᵀ = R_{xy}ᵀ\n  K · R_y = R_{xy}\n\n  ────────────────────────────────\n  K R_y = R_xy   ← Wiener-Hopf Denklemi\n  ────────────────────────────────\n\nEğer R_y terslenebilirse:\n  K = R_xy · R_y⁻¹\n\nTanımlar:\n  R_x = E[xxᵀ]   → m×m, x oto-korelasyon matrisi\n  R_y = E[yyᵀ]   → n×n, y oto-korelasyon matrisi\n  R_xy = E[xyᵀ]  → m×n, x ve y çapraz korelasyon\n\nWiener-Hopf ismi şuradan geliyor: Norbert Wiener ve Eberhard Hopf bu denklemi\n1931'de integral denklemleri bağlamında buldu. Bugün optimal lineer filtreleme teorisinin temel taşı."
+        },
+        {
+          "type": "code",
+          "heading": "Hata kovaryans matrisi R_e",
+          "text": "Tahmin ne kadar iyi? MSE = trace(R_e).\n\nR_e = E[eeᵀ] = E[(x-x̂)(x-x̂)ᵀ]\n\nTüreterek:\n  R_e = E[eeᵀ] = E[e·(x - x̂)ᵀ] = E[exᵀ] - E[ex̂ᵀ]\n\nOrtogonallik ilkesinden e ⊥ y → E[eyᵀ] = 0\nx̂ = Ky → E[ex̂ᵀ] = E[e(Ky)ᵀ] = E[eyᵀ]Kᵀ = 0\n\nYani: R_e = E[exᵀ] = E[(x-x̂)xᵀ] = E[xxᵀ] - E[x̂xᵀ]\n           = R_x - K · E[yxᵀ] = R_x - K · R_yx\n\nSonuç: R_e = R_x - K R_yx = R_x - R_xy R_y⁻¹ R_yx\n\nMSE ne kadar küçük olabilir?\n  Eğer R_y yüksek boyutluysa ve x-y arasında korelasyon varsa, R_e küçük.\n  Teorik minimum: 'hiçbir şey gözlemlemeden' elde edeceğinizden (ki bu R_x) daha iyi.\n  Gözlem arttıkça R_e küçülür."
+        }
+      ]
+    },
+    {
+      "title": "y=Ax+n Modeli: LMMSE'nin Deterministik Çözümlerle Bağlantısı",
+      "cat": "Estimation",
+      "summary": "Yapısal y=Ax+n modeli için LMMSE = R_x Aᵀ(AR_x Aᵀ+R_n)⁻¹y. Bu, W=R_n⁻¹ ve regularization=R_x⁻¹ olan MN çözümüyle özdeş. İstatistik, ağırlıkları otomatik belirliyor.",
+      "context": "EE499 · Chapter 3 · Section 3.2 — Structured Model",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Bu model neden bu kadar önemli?",
+          "text": "y = Ax + n modeli mühendislikte her yerde karşınıza çıkıyor:\n\n  Denoising (gürültü giderme):   A = I, y = x + n (ölçüm = sinyal + gürültü)\n  Dekonvolüsyon:                  A = konvolüsyon matrisi (bulanık görüntü)\n  Tomografi (CT, MRI):            A = Radon dönüşümü (projeksiyon operatörü)\n  Optimal filtreleme/tahmin:      FIR filtre katsayıları bulmak\n  Lineer regresyon:               A = feature matrisi, x = model katsayıları\n  Echo cancellation:              A = multi-path kanal matrisi\n\nHepsinde aynı yapı: x'i bilmiyoruz, y'yi gözlemliyoruz, A biliniyor, n gürültü.\nLMMSE bu modelin genel çözümü."
+        },
+        {
+          "type": "code",
+          "heading": "R_y ve R_xy hesabı bu model için",
+          "text": "y = Ax + n'den yola çıkarak:\n\nR_y = E[yyᵀ] = E[(Ax+n)(Ax+n)ᵀ]\n    = E[Axxᵀ Aᵀ] + E[Axnᵀ] + E[nxᵀAᵀ] + E[nnᵀ]\n\nx ve n bağımsız, sıfır ortalama → çapraz terimler sıfır:\n    = A·E[xxᵀ]·Aᵀ + E[nnᵀ]\n    = A R_x Aᵀ + R_n\n\nR_xy = E[xyᵀ] = E[x(Ax+n)ᵀ] = E[xxᵀ]Aᵀ + E[xnᵀ]\n     = R_x Aᵀ + 0 = R_x Aᵀ\n\nWiener-Hopf K = R_xy R_y⁻¹:\n  K = R_x Aᵀ (A R_x Aᵀ + R_n)⁻¹\n\n  x̂_LMMSE = R_x Aᵀ (A R_x Aᵀ + R_n)⁻¹ y"
+        },
+        {
+          "type": "code",
+          "heading": "Chapter 2 ile karşılaştırma — bağlantı ne kadar derin!",
+          "text": "Chapter 2'de deterministik çözümleri görmüştük:\n\n  LS:         x̂ = (AᴴA)⁻¹Aᴴy\n  MN:         x̂ = Aᴴ(AAᴴ)⁻¹y\n  Weighted:   x̂ = (AᴴWA)⁻¹Aᴴwy   (W: ağırlık matrisi)\n  Regularized: x̂ = (AᴴA + λI)⁻¹Aᴴy  (Tikhonov)\n\nMatrix inversion lemma ile LMMSE'yi alternatif formda yazarsak:\n  x̂_LMMSE = (Aᵀ R_n⁻¹ A + R_x⁻¹)⁻¹ Aᵀ R_n⁻¹ y\n\nKarşılaştırma:\n  W    (ağırlık matrisi)  ↔  R_n⁻¹  (gürültünün ters korelasyonu)\n  λI   (regularization)   ↔  R_x⁻¹  (sinyalin ters korelasyonu = prior)\n\nBüyük fark:\n  Deterministik yaklaşımda W ve λ keyfi seçiyordunuz.\n  'İyi' seçim yapmak için sezgi veya cross-validation gerekiyordu.\n\n  LMMSE'de ise bu değerler istatistiklerden otomatik türüyor:\n  R_x ve R_n veriden tahmin edilebilir.\n  Bu çok daha principled (ilkeli) bir seçim.\n\nSonuç: Deterministik ve stokastik framework'ler aynı noktada buluşuyor,\nama stokastik yaklaşım regularization seçimini teorik olarak motive ediyor."
+        },
+        {
+          "type": "list",
+          "heading": "LMMSE'nin sınırlamaları — ne zaman yetmez?",
+          "items": [
+            "Optimal MMSE estimator olmayabilir: Lineerlik kısıtı nedeniyle nonlineer bir tahmin edici daha küçük MSE verebilir. Örneğin bir sinyali threshold ile tahmin etmek bazen daha iyidir.",
+            "MSE tek maliyet fonksiyonu değil: Bazen medyan hata önemliyse L1, outlier'lara duyarsız olmak istiyorsanız Huber loss daha uygun.",
+            "Ortalama anlamlı maliyet: E[e²] beklenti üzerinden tanımlı — deneyi çok sayıda tekrarlayınca anlamlı. Tek seferlik ölçümde MSE minimizasyonu iyi bir seçim olmayabilir."
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Genel Tahmin Çerçevesi — Hangi Yöntem Ne Zaman?",
+      "cat": "Estimation",
+      "summary": "x ve y'nin ne kadar rassal olduğuna göre farklı yöntemler var: deterministik (LS/MN), ML (x sabit, y rassal), Bayesian (ikisi de rassal: MMSE ve MAP).",
+      "context": "EE499 · Chapter 3 · Section 3.3 — General Estimation Framework",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Büyük resim: bir problem geldiğinde ne yapıyoruz?",
+          "text": "Tahmin problemi şu: y'yi gözlemleyerek x'i bul.\nAma x ve y'nin 'ne kadar rassal' olduğuna göre yaklaşım değişiyor.\n\nBu chapter'ın öncesinde (Chapter 2'de) deterministik yaklaşım vardı:\n  x ve y sabit sayılar — rassal değil.\n  y = Ax, çöz: LS, MN, MNLS, doğrudan ters.\n\nŞimdi stokastik kısma geçiyoruz. İki senaryo var:\n\n─────────────────────────────────────────────────────────\n  x: deterministik (bilinmiyor ama sabit)\n  y: rassal (gözlem, gürültülü)\n  → Maximum Likelihood (ML) tahmini\n─────────────────────────────────────────────────────────\n  x: rassal (prior istatistiği biliniyor)\n  y: rassal (gözlem)\n  → Bayesian yaklaşım:\n       • MMSE  = E[x|y]  (optimal ama hesabı zor)\n       • LMMSE = lineer kısıtlı MMSE (pratik, kapalı form)\n       • MAP   = argmax p(x|y)  (moda optimizasyonu)\n─────────────────────────────────────────────────────────\n\nHangi bilgi var? O bilgiye göre yöntem seç."
+        },
+        {
+          "type": "code",
+          "heading": "Her yöntemin gerektirdiği bilgi ve tradeoff'ları",
+          "text": "ML:\n  Ne bilmeli: p(y|x) — yani gürültü dağılımı\n  Ne bilmemeli: x hakkında hiçbir prior bilgiye gerek yok\n  Avantaj: güçlü asimptotik özellikler (unbiased, efficient)\n  Dezavantaj: x rassal olsa bile prior bilgisini kullanamıyor\n\nMMSE (= E[x|y]):\n  Ne bilmeli: p(x,y) veya p(x|y) — tam olasılık bilgisi\n  Avantaj: MSE'yi minimum yapan en iyi Bayesian tahmin edici\n  Dezavantaj: p(x|y) hesaplamak çoğunlukla çok zor,\n              kapalı form yok, Monte Carlo simülasyonu gerekebilir\n\nLMMSE:\n  Ne bilmeli: sadece E[x], E[y], E[xy], E[yy^T] — ikinci derece momentler\n  Avantaj: kapalı form çözüm var, hesabı kolay, Gaussian'da MMSE ile özdeş\n  Dezavantaj: lineer olmayan daha iyi tahmin ediciler olabilir\n\nMAP:\n  Ne bilmeli: p(y|x) + p(x) — gürültü dağılımı + prior\n  Avantaj: prior bilgisini optimize edici çerçevede kullanıyor,\n           deterministic framework'e bağlanıyor (regularization!)\n  Dezavantaj: prior ve likelihood doğru seçilmeli"
+        }
+      ]
+    },
+    {
+      "title": "Maximum Likelihood Tahmini — En Olası x'i Seç",
+      "cat": "Estimation",
+      "summary": "x deterministik, y rassal. 'Gördüğüm y'yi en olası yapacak x hangisi?' sorusunun cevabı ML tahmini. i.i.d. Gaussian gürültüde ML = LS.",
+      "context": "EE499 · Chapter 3 · Section 3.3.1 — Maximum Likelihood",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "ML'nin temel fikri nedir?",
+          "text": "Şöyle düşünün: Bir şehrin yağış ortalamasını tahmin etmek istiyorsunuz.\nx = ortalama yağış (bilmiyoruz, ama sabit bir sayı).\nN gün boyunca yağış ölçtünüz: y₁, y₂, ..., yN.\n\nML sorusu: 'Bu ölçümleri gördüğümde, hangi x değeri bu gözlemleri\nen olası yapardı?'\n\nFormülize edelim:\n  Likelihood fonksiyonu: L(x) = p(y₁,...,yN | x)\n  x̂_ML = argmax_x L(x) = argmax_x log L(x)\n\nNeden log alıyoruz?\n  - Logaritma monotonik artış fonksiyonu, argmax değişmez\n  - Bağımsız gözlemlerde p(y|x) = Πᵢ p(yᵢ|x) → log toplamaya dönüşür → hesaplama kolaylaşır\n  - Sayısal kararlılık (çok küçük sayıların çarpımı yerine toplamı)"
+        },
+        {
+          "type": "code",
+          "heading": "i.i.d. Gaussian gürültüyle ML neden LS oluyor?",
+          "text": "Model: y = Ax + n,  n ~ N(0, σ²I)\n\nGözlemler y|x ~ N(Ax, σ²I), her biri bağımsız:\n  p(y|x) = Πᵢ p(yᵢ|x)\n          = Πᵢ (1/√2πσ) exp(-(yᵢ - (Ax)ᵢ)² / 2σ²)\n          = (1/√2πσ)ᴹ exp(-1/(2σ²) ||y-Ax||₂²)\n\nLog-likelihood:\n  log p(y|x) = -M/2 · log(2πσ²) - 1/(2σ²) ||y-Ax||₂²\n               ──────────────────  ────────────────────\n                x'e bağlı değil       x'e bağlı kısım\n\nArgmax:\n  x̂_ML = argmax_x log p(y|x)\n         = argmax_x [-||y-Ax||₂²]\n         = argmin_x  ||y-Ax||₂²\n         = x̂_LS\n\nYani: Gürültüyü Gaussian ve i.i.d. varsayarsanız, ML tahmini otomatik olarak\nEn Küçük Kareler (LS) çözümü veriyor. LS'nin stokastik temeli bu."
+        },
+        {
+          "type": "code",
+          "heading": "Farklı gürültüler farklı tahmin ediciler verir",
+          "text": "Gürültü her zaman Gaussian değil. Ölçüm cihazına göre değişir:\n\nGürültü dağılımı → log p(y|x) → ML minimizasyon terimi:\n\n  i.i.d. Gaussian:\n    n ~ N(0,σ²)  →  -log p ∝ ||y-Ax||₂²  →  x̂_ML = x̂_LS\n\n  Korelasyonlu Gaussian (R_n biliniyor):\n    -log p ∝ (y-Ax)ᵀ R_n⁻¹ (y-Ax) = ||y-Ax||²_{R_n⁻¹}\n    → Ağırlıklı LS, W = R_n⁻¹\n\n  Poisson (foton sayımı, kamera, nükleer görüntüleme):\n    n ~ Poisson → x̂_ML içinde KL-divergence minimizasyonu var\n    Doğrusal değil, iteratif çözüm gerekiyor\n\n  Laplace/Double-Exponential (generalized, p=1):\n    -log p ∝ ||y-Ax||₁  → L1 norm minimizasyonu\n    Seyrek çözüm üretiyor (bazı bileşenler tam sıfır)\n\nSeçiminiz: Fiziksel gürültü modeline uyan likelihood'u kullanın,\nML size doğru cost fonksiyonunu veriyor."
+        }
+      ]
+    },
+    {
+      "title": "Bayesian Tahmin — MMSE ve MAP",
+      "cat": "Estimation",
+      "summary": "x rassal, prior p_x(x) biliniyor. MMSE = posterior mean E[x|y] — optimal ama hesabı çok zor. MAP = posterior modu — optimizasyona indirgeniyor.",
+      "context": "EE499 · Chapter 3 · Section 3.3.2 — Bayesian Estimation",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Bayesian yaklaşım ne oluyor?",
+          "text": "ML'de x deterministik, sadece gürültüden gelen rastgelelik vardı.\nBayesian'da ise x de rassal — ve hakkında bir bilginiz var.\n\nOrneğin: Bir hastanın kan şekerini tahmin ediyorsunuz.\n  Prior bilgi: p_x(x) — kan şekeri normal insanlar için yaklaşık Gaussian, ortalama 5.5 mmol/L\n  Gözlem: y — kalibrasyonlu bir ölçüm cihazının gürültülü okuması\n  Hedef: x̂ = p(x|y) posterior dağılımını kullanarak tahmin et\n\nBayes kuralı:\n  p(x|y) = p(y|x) · p(x) / p(y)\n            ──────   ─────   ─────\n           likelihood  prior  evidence (sabit, normalizer)\n\np(x|y) 'posterior dağılım' — gözlem y'yi gördükten sonra x hakkında\ngüncellenmiş bilgi. Bayes'in özü: prior'u likelihood ile güncelleyerek posterior elde et."
+        },
+        {
+          "type": "code",
+          "heading": "MMSE = posterior mean — neden?",
+          "text": "MMSE maliyet fonksiyonu: cost(x̂, x) = (x - x̂)²\n\n  x̂_MMSE = argmin_{x̂} E[(x - x̂)²]\n\nBu beklenti x üzerinde, posterior p(x|y)'e göre alınır.\nTürev sıfırlanınca:\n  ∂/∂x̂ E[(x - x̂)²] = -2 E[x-x̂] = 0\n  → x̂_MMSE = E[x|y] = ∫ x · p(x|y) dx\n\nYani MMSE tahmini, posterior dağılımının ortalamasıdır.\n\nBu çok zarif bir sonuç: 'ortalama kare hata minimum?' diye sordunuz, cevap 'posterior ortalamasını al' çıktı.\n\nSorun nerede?\n  - p(x|y) hesaplamak çoğunlukla çok zor — Bayes kuralındaki payda ∫p(y|x)p(x)dx entegrali\n    genellikle analitik olarak çözülemiyor\n  - Kapalı form yok → Monte Carlo (örnekleme) gerekiyor → yavaş\n\n★ Önemli not:\n  Eğer x̂ = f(y) fonksiyonuna lineerlik kısıtı eklerseniz → LMMSE.\n  LMMSE sadece E[x], E[y], E[xy] istiyor. Çok daha kolay.\n  Gaussian istatistiklerde MMSE = LMMSE (!) — çünkü posterior Gaussian olunca\n  ortalaması da linear bir fonksiyon oluyor."
+        },
+        {
+          "type": "code",
+          "heading": "MAP = posterior modu — deterministik çerçeveye köprü",
+          "text": "Farklı bir maliyet fonksiyonu kullanalım: 0-1 loss\n  cost = 0 eğer |x̂-x| < ε, 1 eğer daha büyük\n\nBu maliyeti minimize etmek → en olası x'i bulmak → posterior'un modu:\n  x̂_MAP = argmax_x p(x|y)\n\nBayes kuralı ile:\n  log p(x|y) = log p(y|x) + log p(x) - log p(y)\n                                         ──── x'e bağlı değil, ignore\n\n  x̂_MAP = argmax_x [log p(y|x) + log p(x)]\n          = argmin_x [-log p(y|x) - log p(x)]\n          ──────────────────────────────────\n          data fidelity     regularization\n          (gürültü dağılımına bağlı)   (prior'a bağlı)\n\nBu son form çok önemli: MAP = data fidelity + regularization minimizasyonu!\nYani Chapter 2'de keyfi seçtiğiniz regularization terimi,\naslında bir prior dağılımına karşılık geliyor.\n\nX̂_MAP = argmin_x Δ(y, Ax) + λR(x)"
+        }
+      ]
+    },
+    {
+      "title": "MAP ile Farklı Prior ve Gürültü: Tikhonov'dan LASSO'ya",
+      "cat": "Estimation",
+      "summary": "Prior ve gürültü dağılımına göre MAP farklı optimizasyon problemlerine indirgeniyor. Gaussian prior = Tikhonov, Laplace prior = L1 regularization = sparse recovery.",
+      "context": "EE499 · Chapter 3 · Section 3.3.2 — MAP Variants & Connection to LMMSE",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Prior seçimi regularization şeklini belirliyor",
+          "text": "x̂_MAP = argmin_x [-log p(y|x) - log p(x)] = argmin_x Δ(y,Ax) + λR(x)\n\nPrior ne seçerseniz R(x) o oluyor:\n\nGaussian prior: p_x(xⱼ) ∝ exp(-xⱼ²/2σ_x²)\n  → -log p(x) ∝ Σxⱼ² = ||x||₂²\n  → R(x) = ||x||₂² — L2 regularization (Tikhonov/Ridge)\n  → Küçük ama sıfır olmayan çözümler tercih edilir\n  → Kapalı form çözüm var: x̂ = (AᴴA + λI)⁻¹Aᴴy\n\nLaplace prior: p_x(xⱼ) ∝ exp(-c|xⱼ|)\n  → -log p(x) ∝ Σ|xⱼ| = ||x||₁\n  → R(x) = ||x||₁ — L1 regularization (LASSO)\n  → Seyrek çözümler üretir: bazı bileşenler tam sıfır\n  → Compressed sensing'in temeli\n  → Kapalı form yok, convex ama non-smooth → iteratif çözüm\n\nGeneralized Gaussian: p_x ∝ exp(-c|xⱼ|^p)\n  → R(x) = ||x||_p^p  → L_p regularization\n  p=1: Laplace, p=2: Gaussian, 0<p<1: daha seyrek"
+        },
+        {
+          "type": "code",
+          "heading": "Gürültü seçimi data fidelity şeklini belirliyor",
+          "text": "Aynı şekilde gürültü dağılımı Δ(y, Ax) terimini belirliyor:\n\ni.i.d. Gaussian: n ~ N(0,σ²)\n  → -log p(y|x) ∝ ||y-Ax||₂² → L2 data fidelity\n\nKorelasyonlu Gaussian: n ~ N(0, R_n)\n  → -log p(y|x) ∝ (y-Ax)ᵀ R_n⁻¹ (y-Ax) → Mahalanobis norm\n\nPoisson: foton sayım gürültüsü (CT, PET)\n  → -log p(y|x) ∝ KL-divergence\n  → Iteratif algoritma gerekiyor (EM algoritması)\n\nGeneralized Gaussian (p≠2):\n  → ||y-Ax||_p^p → L_p data fidelity\n\nGenelleştirilmiş MAP formu:\n  x̂_MAP = argmin_x Δ(y, Ax) + λR(x)\n\nGürültü dağılımı → Δ seçimi\nPrior dağılımı → R seçimi\nλ = gürültü/prior güç oranı"
+        },
+        {
+          "type": "code",
+          "heading": "Gaussian istatistiklerde MAP = LMMSE — bu büyük!",
+          "text": "x ~ N(0, R_x) ve n ~ N(0, R_n) alırsak:\n\nLMMSE formülü:\n  x̂_LMMSE = R_x Aᵀ (AR_x Aᵀ + R_n)⁻¹ y\n            = (Aᵀ R_n⁻¹ A + R_x⁻¹)⁻¹ Aᵀ R_n⁻¹ y\n\nMAP formülü (bu istatistiklerle):\n  -log p(y|x) ∝ 1/(2σ_n²) ||y-Ax||₂²  (Gaussian noise)\n  -log p(x)   ∝ xᵀ R_x⁻¹ x / 2        (Gaussian prior)\n  x̂_MAP = argmin_x [||y-Ax||²_{R_n⁻¹} + xᵀ R_x⁻¹ x]\n  → x̂_MAP = (Aᵀ R_n⁻¹ A + R_x⁻¹)⁻¹ Aᵀ R_n⁻¹ y\n\nAynı formül! Gaussian'da MAP = MMSE = LMMSE.\n\nBu neden?\n  Gaussian posterior da Gaussian → modu = ortalaması → MAP = MMSE\n  LMMSE Gaussian'da optimal → MMSE = LMMSE\n  Zincir: MAP = MMSE = LMMSE\n\nPraktik sonuç: R_x ve R_n'i veriden tahmin edin.\nBunu yapınca hem optimal Bayesian tahmini hem de en iyi deterministik\nregularization'ı aynı anda elde ediyorsunuz. Ağırlık ve regularization seçimi\nartık keyfi değil — veriden geliyor."
+        }
+      ]
+    },
+    {
+      "title": "Büyük Ölçekli Ters Problemlerde Optimizasyon",
+      "cat": "Optimization",
+      "summary": "Her tahmin yöntemi Δ(y,Ax)+λR(x) minimizasyonuna indirgeniyor. Kapalı form yoksa sayısal yöntemler gerekiyor. Convex ise global minimum garantili.",
+      "context": "EE499 · Chapter 3 · Section 3.4 — Optimization for Inverse Problems",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Neden optimizasyon gerekiyor?",
+          "text": "Hem ML hem MAP hem de LMMSE sonuçta şu forma indirgeniyor:\n  x̂ = argmin_x Δ(y, Ax) + λR(x)\n\nBazen bu problemin kapalı form çözümü var — matris denklemi çöz, bitir.\nÖrneğin LS: x̂ = (AᴴA)⁻¹Aᴴy, Tikhonov: x̂ = (AᴴA+λI)⁻¹Aᴴy.\n\nAma çoğunlukla durum şu:\n  - A çok büyük (örneğin 10M×10M boyutlu tomografi matrisi)\n    → (AᴴA)⁻¹ almak mümkün değil, belleğe sığmıyor bile\n  - Δ veya R(x) pürüzsüz değil (L1 normu, Poisson, ...)\n    → Türev her yerde tanımlı değil → kapalı form yok\n  - A kötü koşullanmış (ill-conditioned)\n    → Sayısal ters alma kararsız\n\nÇözüm: İterasyonel (tekrarlayan) sayısal yöntemler.\nHer adımda biraz ilerle, minimize et, yakıns."
+        },
+        {
+          "type": "code",
+          "heading": "Convex ve non-convex — kritik ayrım",
+          "text": "Optimizasyon problemine dalmadan önce sorulması gereken soru:\nJ(x) maliyet fonksiyonu convex mi?\n\nMatematiksel tanım:\n  J(ax₁ + (1-a)x₂) ≤ aJ(x₁) + (1-a)J(x₂)  ∀a∈[0,1]\n  Geometrik: iki nokta arasındaki doğru parçası, fonksiyonun altında.\n\nCONVEX J(x) ise:\n  - Her lokal minimum aynı zamanda global minimum\n  - Herhangi bir yerel optimizasyon yöntemi çözüme yakınsar\n  - Sonuca ulaşılacağı garantidir\n  - LS, Tikhonov, LASSO (L1 reg.) hepsi convex\n\nNON-CONVEX J(x) ise:\n  - Birden fazla local minimum var, hangisindesiniz bilinmez\n  - Başlangıç noktası kritik — farklı başlangıç = farklı sonuç\n  - Global optimum garantisi yok\n  - Deep learning kayıp fonksiyonları genellikle non-convex\n    (ama pratikte iyi çalışıyor — neden? Hala aktif araştırma konusu)\n\nBu yüzden convex problem olduğunu fark etmek çok değerli:\n'Bu problem convex' derseniz, tüm yerel yöntemler işe yarar demek."
+        }
+      ]
+    },
+    {
+      "title": "Gradient İniş, Newton ve Conjugate Gradient",
+      "cat": "Optimization",
+      "summary": "Üç ana iteratif optimizasyon yöntemi: steepest descent (gradient tersine git, yavaş), Newton (Hessian kullan, hızlı ama pahalı), conjugate gradient (ikisi arasında pratik seçim).",
+      "context": "EE499 · Chapter 3 · Section 3.4.3-3.4.4 — Optimization Methods",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Steepest Descent — sezgiden denkleme",
+          "text": "Sezgi: Bir dağı inerken her adımda en dik yönü seçersiniz.\n\nJ(x) maliyet fonksiyonunun gradient vektörü ∇J(x) nerede en hızlı artıyor?\nTam gradient yönünde. O zaman en hızlı azalma gradient'in tam tersi yönünde:\n  d = -∇J(x)\n\nGüncelleme kuralı:\n  x^(n+1) = x^(n) - τ^(n) · ∇J(x^(n)) / ||∇J(x^(n))||₂\n\nτ adım büyüklüğü (learning rate) — ne kadar ilerliyoruz?\n  Çok büyük: sallanır, yakınsamaz\n  Çok küçük: çok yavaş yakınsar\n  Optimal: line search ile her adımda hesapla (pahalı ama kararlı)\n\nYakınsama hızı: lineer — her adımda sabit bir oran kadar hata azalıyor.\nBir oran r < 1 varsa: hata ~ r^n → logaritmik adım sayısı.\n\nSorun: 'dar vadiler'de (elongated elliptic contours) çok yavaş.\nGradient, vadinin boyunca değil, genişliğine doğru işaret ediyor → zigzag."
+        },
+        {
+          "type": "code",
+          "heading": "Newton Yöntemi — neden bu kadar hızlı?",
+          "text": "Steepest descent, J'yi her noktada düz bir yüzey (hyperplane) ile yaklaşıktı.\nNewton, J'yi ikinci derece yüzey (paraboloid) ile yaklaşıktı:\n\n  J(x + τd) ≈ J(x) + τ dᵀ∇J(x) + τ²/2 dᵀ ∇²J(x) d\n                       ──────────   ─────────────────\n                       1. derece      2. derece (Hessian)\n\nBu ikinci derece yaklaşımı minimize et:\n  ∂/∂d [birinci + ikinci terim] = 0\n  ∇J(x) + τ ∇²J(x) d = 0\n  d = -(∇²J(x))⁻¹ ∇J(x)   (τ=1 ile)\n\nGüncelleme:\n  x^(n+1) = x^(n) - (∇²J(x^(n)))⁻¹ ∇J(x^(n))\n\nYakınsama hızı: kuadratik — her adımda hata kabaca karesi kadar küçülüyor.\nYani 10⁻³ hata varsa bir adımda 10⁻⁶ olabiliyor.\n\nSorun: ∇²J(x) = Hessian matrisi, N×N boyutlu.\n  - Hesaplama: O(N²) eleman, her iterasyonda\n  - Ters alma: O(N³) işlem\n  - N büyük olunca (milyonlarca parametre) imkansız\n\nQuasi-Newton (BFGS):\n  -(∇²J)⁻¹ yerine yaklaşım B kullan, iteratif güncelle.\n  Newton'dan ucuz, Steepest descent'ten hızlı."
+        },
+        {
+          "type": "code",
+          "heading": "Conjugate Gradient — neden bu kadar popüler?",
+          "text": "Conjugate gradient (CG), steepest descent'e bir 'momentum' ekliyor.\nÇok farklı bir teorik temeli var: 'conjugate direction methods'.\n\nFikir: Her adımda, sadece gradient değil, önceki yönleri de kullan.\nBu yönler 'A-conjugate' olacak şekilde seçiliyor: dᵢᵀ A dⱼ = 0 (i≠j)\n\nGüncelleme:\n  d^(0) = -∇J(x^(0))    (ilk adım steepest descent gibi)\n  x^(n+1) = x^(n) + τ^(n) d^(n)\n  d^(n+1) = -∇J(x^(n+1)) + B^(n) d^(n)   (momentum terimi!)\n\nB^(n) iki popüler seçenek:\n  Fletcher-Reeves:  B = -||∇J(x^(n+1))||₂² / ||∇J(x^(n))||₂²\n  Polak-Ribière:    Biraz farklı — pratikte genellikle daha iyi\n\nNeden bu kadar iyi?\n  - Quadratic J için: N adımda kesin çözüme ulaşır (N = boyut)\n  - Non-quadratic için: approximation ama yine çok hızlı\n  - O(N) bellek: sadece gradient vektörü saklanıyor\n  - Newton hızına yakın, Newton maliyeti yok\n\n─────────────────────────────────────────────\nPraktik karşılaştırma:\n  Steepest descent: en basit, en yavaş, N²+ adım gerekebilir\n  Newton:           en hızlı, ama O(N³) her adımda → büyük N'de imkansız\n  Conjugate gradient: ikisi arasında, O(N) bellek, pratikte en yaygın\n  BFGS/L-BFGS:     quasi-Newton, büyük problemler için standart\n─────────────────────────────────────────────"
+        }
+      ]
+    }
+  ],
   "py01": [
     {
       "title": "print()",
@@ -9200,7 +9533,8 @@
     "ida12": "Chapter ida09 established PointNet and PointNet++ as the foundational architectures for point cloud processing. While PointNet++ adds local context through hierarchical grouping, it still relies on fixed neighbourhoods defined in Euclidean space. Chapter ida12 explores three architectures that address remaining limitations: robust density-adaptive convolution (FCPN), dynamic feature-space graph convolution (DGCNN), and shape generation through surface folding (FoldingNet).\n\nFully Convolutional Point Networks (FCPN, Rethage et al., 2018) tackle a practical limitation of both PointNet and PointNet++: sensitivity to non-uniform point density. LiDAR scans inherently produce denser point clouds for nearby surfaces and sparser ones for distant surfaces. Standard ball-query grouping (PointNet++) captures many points near the sensor and few far away, producing inconsistent local feature aggregation. FCPN replaces ball query with a sliding cylinder kernel: a vertical cylinder of fixed radius and height is placed at each centroid, and all points within it are aggregated. Cylinder grouping is invariant to the vertical distribution of points (important for outdoor 3D scenes where height is qualitatively different from lateral extent). Local convolution within the cylinder uses shared MLP features, similar to PointNet, but with the cylinder geometry providing a consistent spatial context. The fully convolutional design (no fixed-size global pooling) produces per-point or per-voxel predictions naturally, enabling dense semantic segmentation of large-scale outdoor scenes.\n\nDGCNN (Dynamic Graph CNN, Wang et al., 2019) reformulates local feature aggregation as an operation on a dynamically constructed graph. For each point $x_i$, the $k$ nearest neighbours in the current feature space are found, and edge features are computed: $e_{ij} = h_\\Theta(x_i,\\, x_j - x_i)$ where $h_\\Theta$ is a shared MLP applied to the concatenation of the central point feature and the relative neighbour feature (difference $x_j - x_i$ encodes local geometry). The EdgeConv operation aggregates over the $k$ edges: $x_i' = \\max_{j\\in\\mathcal{N}(i)} e_{ij}$. The critical word is 'dynamic': the $k$-NN graph is recomputed in the updated feature space after each EdgeConv layer. In the first layer, neighbours are the $k$ nearest points in 3D Euclidean space (geometric proximity). In deeper layers, neighbours are found in learned feature space — two points on opposite ends of an elongated object may be far in Euclidean space but close in feature space (similar geometry), and DGCNN captures this non-local semantic relationship. This graph-rewiring across layers is the key distinction from PointNet++ (fixed Euclidean grouping). DGCNN achieves state-of-the-art results on both classification and part segmentation, with the dynamic graph naturally adapting to the task.\n\nFoldingNet (Yang et al., 2018) addresses point cloud generation and reconstruction — the inverse problem of analysis. Given a point cloud, encode it into a compact codeword; given a codeword, decode a point cloud that approximates the original shape. The encoder is a PointNet-like architecture producing a fixed-length codeword $\\mathbf{c} \\in \\mathbb{R}^{512}$. The decoder is the novel contribution: it takes a fixed 2D grid of points (parameterising a flat surface) and deforms it into a 3D surface approximating the input shape through two sequential folding operations. Each folding step concatenates the 2D grid coordinates (or the intermediate folded coordinates) with the codeword $\\mathbf{c}$ and applies a shared MLP to produce 3D offsets. Two folding operations are used because one folding can only represent locally simple (nearly flat) deformations; the second folding takes the result of the first (which has folded the sheet into a rough 3D shape) and refines fine-grained surface details. Reconstruction quality is measured by Chamfer distance: $d_{\\text{CD}}(S_1,S_2) = \\sum_{x\\in S_1}\\min_{y\\in S_2}\\|x-y\\|^2 + \\sum_{y\\in S_2}\\min_{x\\in S_1}\\|y-x\\|^2$, which is symmetric, differentiable, and does not require point correspondence. FoldingNet's codewords serve as shape embeddings for retrieval and interpolation: interpolating linearly between two codewords and decoding produces a morphologically smooth transition between two 3D shapes, analogous to the VAE latent space behaviour discussed in ida10.",
     "ida13": "The penultimate chapter examines three techniques for making image analysis systems interpretable and for understanding the representations they learn. As deep networks replace classical algorithms in scientific computing, medical imaging, and safety-critical applications, the ability to explain why a model produced a particular output, and to visualise what it has learned, is increasingly important — both for debugging and for building justified trust.\n\nBag of Visual Words (BoVW) is not an interpretability method but the dominant classical image classification framework before deep learning, presented here as the historical baseline that contextualises the shift to learned representations. The pipeline has three stages. First, local feature descriptors (typically SIFT — Scale-Invariant Feature Transform) are extracted from keypoints detected at multiple scales. SIFT descriptors are 128-dimensional gradient orientation histograms, invariant to scale, rotation, and illumination changes. Second, $k$-means clustering on a large collection of descriptors defines a visual vocabulary (codebook) of $K$ visual words (typically $K \\in [500, 5000]$). Third, each image is encoded as a histogram of visual word occurrences: each descriptor is assigned to its nearest codebook entry, and the image representation is the count vector $h \\in \\mathbb{R}^K$. A SVM classifier trained on these histograms achieves competitive accuracy on benchmark datasets. The limitation is fundamental: the codebook is fixed and task-agnostic; the histogram discards all spatial relationships between visual words; and SIFT's hand-engineered gradient orientation basis is not optimal for any specific task. End-to-end CNNs overcome all three limitations simultaneously — the connection between BoVW and CNN feature learning (both count aggregate occurrences of local patterns) is more than metaphorical: the first convolutional layer learns filters analogous to SIFT gradient templates, and spatial pyramid pooling extends BoVW with coarse spatial binning.\n\nGradCAM (Gradient-weighted Class Activation Mapping, Selvaraju et al., 2017) answers the question: which spatial regions of the input image did the network attend to when predicting class $c$? The method is architecture-agnostic to the early layers — only the final convolutional feature maps $A^k \\in \\mathbb{R}^{H\\times W}$ are required. Channel-wise importance weights are computed as $\\alpha^c_k = \\frac{1}{Z}\\sum_{i,j}\\frac{\\partial y^c}{\\partial A^k_{ij}}$ — the spatially-averaged gradient of the class score $y^c$ with respect to the $k$-th activation map. The saliency map is $L^c_{\\text{GradCAM}} = \\text{ReLU}\\!\\left(\\sum_k \\alpha^c_k A^k\\right)$, upsampled to input resolution and overlaid on the image as a heat map. The ReLU keeps only features positively associated with class $c$ (negative values indicate features of the complementary class). GradCAM is used for debugging — does the model look at the dog or the background when predicting 'dog'? — and for discovering bias. Guided Backpropagation combines GradCAM with the constraint that gradients are only backpropagated through ReLU units where both the gradient and the activation are positive, producing sharper, pixel-level attribution maps that highlight fine-grained texture evidence rather than coarse spatial regions. GradCAM++, Score-CAM, and Eigen-CAM are subsequent refinements addressing specific failure modes.\n\nDimensionality reduction visualises high-dimensional representations in 2D or 3D. PCA projects data onto the directions of maximum variance via eigendecomposition of the covariance matrix — a linear, global method that preserves large pairwise distances but collapses non-linear cluster structure. t-SNE (Stochastic Neighbour Embedding with $t$-distribution, van der Maaten & Hinton, 2008) is the standard for visualising deep representations. High-dimensional affinities are defined as $p_{j|i} = \\exp(-\\|x_i-x_j\\|^2/2\\sigma_i^2)/\\sum_{k\\neq i}\\exp(-\\|x_i-x_k\\|^2/2\\sigma_i^2)$, with $\\sigma_i$ chosen by binary search to achieve a target perplexity (typically 30–50), and symmetrised: $p_{ij} = (p_{j|i}+p_{i|j})/2N$. Low-dimensional affinities use a Student-$t$ distribution with one degree of freedom: $q_{ij} = (1+\\|y_i-y_j\\|^2)^{-1}/\\sum_{k\\neq l}(1+\\|y_k-y_l\\|^2)^{-1}$. The heavy tail of the $t$-distribution compensates for the crowding problem: in high dimensions, points can be far apart in many directions simultaneously, but in 2D there is not enough space. The $t$-distribution places well-separated clusters further apart than Gaussian low-dimensional affinities would, producing the characteristic tight clusters with visible inter-cluster gaps. Training minimises $\\text{KL}(P\\|Q)$ by gradient descent. t-SNE preserves local neighbourhood structure faithfully but does not preserve global distances — two clusters appearing close in the 2D plot may not be genuinely similar. UMAP (McInnes et al., 2018) is a graph-based alternative derived from Riemannian geometry and topological data analysis; it preserves both local and some global structure and runs faster than t-SNE, making it the method of choice for very large datasets (millions of points) such as single-cell RNA sequencing.",
     "vs01": "EE499 Vector Space Methods in Signal Processing — Chapter 1: Linear Vector Spaces.\n\nBu dersin temel iddiası şu: sinyal işlemedeki her problem, doğru matematiksel dil kurulunca tek bir çerçeveye sığar. Sinyaller vektörler olarak, sistemler operatörler olarak modellenir. Bu dil kurulunca FIR filtreleme, CT rekonstrüksiyon, deblurring ve optimal yaklaşım hepsi aynı matematikle çözülür.\n\nVektör uzayı tanımı, soyut bir yapıdır: küme, skalar cisim, toplama ve skalar çarpma operasyonları. 7 aksiyom bu yapıyı tanımlar. Önemli olan ℝ² ya da ℝ³ ile sınırlı olmamak: polinomlar, matrisler, fonksiyonlar, sonsuz uzunluklu diziler — hepsi vektör uzayı oluşturabilir. SP'de en kritik uzaylar L₂[a,b] (sonlu enerjili CT sinyaller) ve ℓ₂(ℤ) (sonlu enerjili DT diziler).\n\nAlt uzay, lineer bağımsızlık ve baz kavramları, vektör uzayının yapısını ortaya koyar. Alt uzaylar kapalılık özelliğiyle tanımlanır; kesişim alt uzay oluştururken birleşim oluşturmaz. Hamel bazı, lineer bağımsız ve span eden bir küme — boyut iyi tanımlıdır ve tüm bazlar aynı eleman sayısına sahiptir. DFT bazı ve sinc bazı, SP'deki somut baz örnekleridir: DFT frekans-zaman dönüşümünü bir baz değişimi olarak yorumlar, sinc bazı ise örnekleme teoremini bir ortonormal baz temsili olarak anlamlandırır.\n\nNorm ve iç çarpım, vektör uzayını geometrik bir yapıya kavuşturur. Norm büyüklük tanımlar; ℓ_p ailesi içinde yalnızca p=2 (Öklid normu) bir iç çarpımdan gelir — parallelogram yasasıyla test edilir. İç çarpım açı ve ortogonalliği tanımlar. Cauchy-Schwarz eşitsizliği \\|⟨x,y⟩\\| ≤ ‖x‖·‖y‖ her IPS'te geçerlidir ve korelasyon katsayısının matematiksel temelini oluşturur. Gram-Schmidt süreci, herhangi bir lineer bağımsız kümeden ortonormal baz üretir — ve ortonormal bazda temsil katsayıları basit iç çarpıma indirgenir. CTFS, DFT, örnekleme teoremi hepsi bu temelden gelir.\n\nProjektion teoremi dersin doruk noktasıdır: bir vektörün alt uzaya projeksiyonu, ortogonallik prensibiyle karakterize edilir. Projeksiyon matrisi P = B(BᴴB)⁻¹Bᴴ olup P² = P ve Pᴴ = P özelliklerini sağlar. Hilbert uzaylarında projeksiyon her zaman vardır ve tekil — ama genel IPS'te completeness olmadan projeksiyon olmayabilir.",
-    "vs02": "EE499 Vector Space Methods in Signal Processing — Chapter 2: Linear Operators and Solution of Inverse Problems.\n\nChapter 1'de kurulan vektör uzayı altyapısı, Chapter 2'de sistemleri modellemeye uygulanır. Lineer operatör iki vektör uzayı arasındaki eşleme: A(αx+βy) = αA(x)+βA(y). SP'deki her LTI sistem, her türev işlemi, her Fourier dönüşümü birer lineer operatördür. Sonlu boyutlu uzaylarda her lineer operatörün matris temsili vardır: A matrisinin k. sütunu, k. giriş baz vektörünün çıkış bazındaki koordinatlarından oluşur. Konvolüsyon operatörü Toeplitz yapılı bir matris olarak yazılır — ve bu yazımla birlikte ters problem teorisi uygulanabilir hale gelir.\n\nRange space R(A) ve null space N(A) bir operatörün iki temel anatomik yapısıdır. R(A) = {y: y=A(x) için bazı x}, A'nın erişebildiği çıkışlar kümesi. N(A) = {x: A(x)=0}, A'nın sıfıra gönderdiği girişler. Rank-Nullity teoremi: rank(A) + dim(N(A)) = N. Bu iki uzay, ters problem için yeterli ve gerekli koşulları verir: existence ↔ y ∈ R(A), uniqueness ↔ N(A) = {0}.\n\nLineer sistemler dört duruma ayrılır: Case 0 (invertible, M=N, full rank), Case 1 (tall, M>N, full column rank — uniqueness var, existence yok), Case 2 (fat, M<N, full row rank — existence var, uniqueness yok), Case 3 (rank-deficient). Case 1'de least squares çözümü x_LS = (AᴴA)⁻¹Aᴴy, y'nin R(A)'ya projeksiyonu olarak yorumlanır — Chapter 1'in projeksiyon teoremi burada devreye girer. Case 2'de minimum norm çözümü x_MN = Aᴴ(AAᴴ)⁻¹y, tüm çözümler içinden N(A)'ya dik olanı seçer. Her iki çözüm Moore-Penrose pseudo-inverse A† = (AᴴA)⁻¹Aᴴ (Case 1) veya Aᴴ(AAᴴ)⁻¹ (Case 2) ile birleştirilir."
+    "vs02": "EE499 Vector Space Methods in Signal Processing — Chapter 2: Linear Operators and Solution of Inverse Problems.\n\nChapter 1'de kurulan vektör uzayı altyapısı, Chapter 2'de sistemleri modellemeye uygulanır. Lineer operatör iki vektör uzayı arasındaki eşleme: A(αx+βy) = αA(x)+βA(y). SP'deki her LTI sistem, her türev işlemi, her Fourier dönüşümü birer lineer operatördür. Sonlu boyutlu uzaylarda her lineer operatörün matris temsili vardır: A matrisinin k. sütunu, k. giriş baz vektörünün çıkış bazındaki koordinatlarından oluşur. Konvolüsyon operatörü Toeplitz yapılı bir matris olarak yazılır — ve bu yazımla birlikte ters problem teorisi uygulanabilir hale gelir.\n\nRange space R(A) ve null space N(A) bir operatörün iki temel anatomik yapısıdır. R(A) = {y: y=A(x) için bazı x}, A'nın erişebildiği çıkışlar kümesi. N(A) = {x: A(x)=0}, A'nın sıfıra gönderdiği girişler. Rank-Nullity teoremi: rank(A) + dim(N(A)) = N. Bu iki uzay, ters problem için yeterli ve gerekli koşulları verir: existence ↔ y ∈ R(A), uniqueness ↔ N(A) = {0}.\n\nLineer sistemler dört duruma ayrılır: Case 0 (invertible, M=N, full rank), Case 1 (tall, M>N, full column rank — uniqueness var, existence yok), Case 2 (fat, M<N, full row rank — existence var, uniqueness yok), Case 3 (rank-deficient). Case 1'de least squares çözümü x_LS = (AᴴA)⁻¹Aᴴy, y'nin R(A)'ya projeksiyonu olarak yorumlanır — Chapter 1'in projeksiyon teoremi burada devreye girer. Case 2'de minimum norm çözümü x_MN = Aᴴ(AAᴴ)⁻¹y, tüm çözümler içinden N(A)'ya dik olanı seçer. Her iki çözüm Moore-Penrose pseudo-inverse A† = (AᴴA)⁻¹Aᴴ (Case 1) veya Aᴴ(AAᴴ)⁻¹ (Case 2) ile birleştirilir.",
+    "vs03": "Bu chapter, Chapter 1 ve 2'de kurduğumuz soyut vektör uzayı geometrisini rassal değişkenler dünyasına taşıyor. Temel soru şu: rassal değişkenler bir iç çarpım uzayı oluşturabilir mi? Cevap evet — ve bu, tahmin teorisini tamamen geometrik bir dile çeviriyor.\n\n3.1 bölümünde rassal değişkenler için iç çarpım \\(\\langle x, y \\rangle = E[xy]\\) olarak tanımlanır. Bu tanımın bir sonucu olarak norm \\(\\|x\\| = \\sqrt{E[x^2]}\\) (RMS değeri), açı ise korelasyon katsayısı \\(\\rho_{xy} = \\cos\\theta\\) olur. Diklik \\(E[xy]=0\\) ise korelasyonsuzluğa karşılık gelir. Gram matrisi, oto-korelasyon matrisi \\(R_x = E[xx^T]\\) ile birebir örtüşür. Gram-Schmidt uygulandığında rassal değişkenler dekore edip beyazlatır (whitening).\n\n3.2 bölümünde LMMSE (Doğrusal Minimum Ortalama Kare Hatalı) tahmini incelenir. \\(\\hat{x} = \\alpha^T y\\) biçimindeki doğrusal tahmin edicilerde optimal katsayılar ortogonallik ilkesinden çıkar: hata \\(e = x - \\hat{x}\\), tüm gözlemlere dik olmalıdır. Bu \\(R_y\\alpha = r_{xy}\\) sistemini verir — Chapter 2'deki Gram matrisi denkleminin stokastik karşılığı. Vektör durumda Wiener-Hopf denklemi \\(KR_y = R_{xy}\\) ortaya çıkar. Gaussian \\(y = Ax + n\\) modeli için en zarif form \\(\\hat{x}_{LMMSE} = R_x A^T(AR_xA^T+R_n)^{-1}y\\) dir.\n\n3.3 bölümünde genel tahmin çerçevesi sunulur: deterministik (LS/MN), Maximum Likelihood (x deterministik, y rassal) ve Bayesian (her ikisi rassal) yöntemler. ML ile i.i.d. Gaussian gürültüde LS çözümüne ulaşılır. MAP tahmini ise data fidelity + regularization minimizasyonu olarak ifade edilir; Gaussian prior ile Tikhonov regularization'a indirgenir. Gaussian istatistiklerde MAP = MMSE = LMMSE birleşir.\n\n3.4 bölümü büyük ölçekli ters problemleri optimizasyon perspektifinden ele alır. Kapalı form çözüm yoksa iteratif yöntemler kullanılır: steepest descent (lineer yakınsama), Newton yöntemi (kuadratik yakınsama ama pahalı), quasi-Newton (BFGS) ve conjugate gradient (pratik denge)."
   },
   "summary": {
     "title": "ML Dersi — Baştan Sona Motivasyon Zinciri",
