@@ -4809,6 +4809,193 @@
           "text": "ℂⁿ'de projeksiyon her zaman var ve tekil. Ama genel IPS'te projeksiyon olmayabilir!\n\nÖrnek — projeksiyon olmayan durum:\nV = C∞[-1,1] (infinitely differentiable fonksiyonlar)\nS = polinomlar (sonlu dereceli)\nx(t) = eᵗ = 1 + t + t²/2! + t³/3! + ...\n\neᵗ'yi polinomlarla yaklaştırmak istiyoruz — ama her polinom derecesi için daha iyi bir polinom var!\nYani S içinde 'en iyi yaklaşım' mevcut değil — daima daha iyisi bulunabilir.\n\nNeden? S kapsamlı değil (complete değil). Taylor dizisi yakınsar ama limiti S'de değil.\n\nCompleteness (Tamlık) Tanımı:\nBir NVS X, her Cauchy dizisi X'de yakınsıyorsa taktir edilir.\n(Cauchy dizisi: dizinin terimleri birbirine keyfi yakın olabilir: ||xₙ-xₘ|| < ε)\n\nHilbert Uzayı = IPS + complete\n  - Her sonlu boyutlu IPS → Hilbert uzayı (otomatik complete)\n  - ℓ₂, L₂[a,b] → Hilbert uzayı ✓\n\nHilbert'te Projeksiyon Teoremi:\n  X Hilbert uzayı ve S kapalı (complete) alt uzaysa → projeksiyon her zaman var ve tekil."
         }
       ]
+    },
+    {
+      "title": "Dik Ayrışım ve Pisagor Teoremi — IPS Geometrisi",
+      "cat": "Geometry",
+      "summary": "V = S ⊕ S⊥: her vektör, S bileşeni (projeksiyon) ve S⊥ bileşeni (hata) olmak üzere tekil ayrışır. Pisagor: ||x||² = ||x̂||² + ||x-x̂||². SP yorumu: toplam enerji = yaklaşım enerjisi + hata enerjisi.",
+      "context": "EE499 · Chapter 1.7 — Orthogonal Decomposition",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Dik ayrışım: her vektörü iki dik parçaya böl",
+          "text": "Hilbert uzayı V, kapalı alt uzay S ve ortogonal komplementi S⊥:\n  V = S ⊕ S⊥\n\nHer x ∈ V için TAM OLARAK BİR ayrışım var:\n  x = x̂ + e\n  x̂ = P_S x  ∈ S         (projeksiyon bileşeni)\n  e = x - x̂ ∈ S⊥         (hata bileşeni, S'ye dik)\n\nTekillik kanıtı:\nİki farklı ayrışım olsaydı: x = s₁+n₁ = s₂+n₂ (sᵢ∈S, nᵢ∈S⊥)\n  s₁-s₂ = n₂-n₁ ∈ S ∩ S⊥ = {0}  →  s₁=s₂, n₁=n₂  ✓\n\nSP anlamı:\ny = s + n  (s: istenilen sinyal, n: gürültü)\nS = 'temiz sinyallerin uzayı' (örn. bantlı frekanslar)\nS⊥ = 'gürültü uzayı'\ny = P_S y + P_{S⊥} y  →  sinyal bileşeni + gürültü bileşeni\nProjektion filtreleme yapıyor — S⊥ bileşenini atar, S bileşenini tutar."
+        },
+        {
+          "type": "code",
+          "heading": "Pisagor teoremi ve enerji ayrışımı",
+          "text": "Pisagor Teoremi:\nx = x̂ + e  ve  x̂ ⊥ e  ise:\n  ||x||² = ||x̂||² + ||e||²\n\nİspat:\n  ||x||² = <x̂+e, x̂+e> = ||x̂||² + <x̂,e> + <e,x̂> + ||e||²\n                        = ||x̂||² + 0 + 0 + ||e||²  (x̂ ⊥ e)  ✓\n\nSP yorumu — enerji ayrışımı:\n  ||y||² = ||P_S y||² + ||P_{S⊥} y||²\n  Toplam enerji = S-bileşeni enerjisi + S⊥-bileşeni enerjisi\n\nSomut örnek — DFT bantlı filtreleme:\n  y[n]: gürültülü sinyal, S = K bantlı DFT bileşenleri\n  P_S y: sadece K düşük frekanslı bileşeni tut\n  Enerji kaybı: ||y - P_S y||² = Σ_{k=K+1}^{N-1} |Y[k]|²\n\nGenelleştirme: karşılıklı dik x₁,...,xₙ için:\n  ||Σ xₖ||² = Σ ||xₖ||²"
+        },
+        {
+          "type": "insight",
+          "heading": "Projeksiyon teoreminin gücü: hata her zaman dikey olmalı",
+          "text": "Projeksiyon teoremi şunu söylüyor: en iyi yaklaşım = hata dik olunca.\n\nSezgi: Eğer x̂ ile hata e = y - x̂ dik değilse, S yönünde biraz daha ilerleyip mesafeyi azaltabilirsin. Dik olmak = daha fazla iyileştirme imkânı yok = optimal nokta.\n\nBu sezgi şu problemlerin hepsinde kullanılır:\n- Least Squares: 'tahmin hatası gözlemlere dik'\n- Minimum Norm: 'çözüm null space'e dik'\n- FIR filtre: 'frekans hatası S alt uzayına dik'\n- MMSE tahminleme: 'hata gözlemlere dik (istatistiksel dik)'"
+        }
+      ]
+    },
+    {
+      "title": "Hilbert Uzayı ve Tamlık — Projeksiyon Garantisi",
+      "cat": "Foundations",
+      "summary": "Hilbert uzayı = IPS + complete (Cauchy dizileri yakınsar). Sonlu boyutlu her IPS otomatik Hilbert. L₂ ve ℓ₂ Hilbert. Kapalı alt uzayda projeksiyon her zaman var ve tekil. Tamlık olmadan yaklaşım dizisi 'sınıra ulaşamaz'.",
+      "context": "EE499 · Chapter 1.7.1 — Hilbert Spaces and Completeness",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Tamlık neden gerekli? Projeksiyon her zaman var mı?",
+          "text": "Genel IPS'te projeksiyon olmayabilir. Neden?\n\nSomut sorun: V = C∞[-1,1], S = polinomlar\nx(t) = eᵗ = 1 + t + t²/2! + ... (bu S'de değil)\nHer n için pₙ(t) = 1+t+...+tⁿ/n! daha iyi yaklaşım:\n  ||eᵗ - pₙ||² → 0  (n→∞)\nAma 'en iyi' polinom mevcut değil — her polinom için daha iyisi var!\n\nNeden? S kapsamlı değil → Taylor dizisinin limiti S'de yok.\n\nTamlık (Completeness) Tanımı:\nBir NVS X, Banach uzayıdır eğer her Cauchy dizisi X'de yakınsar:\n  ||xₙ-xₘ|| → 0  ⟹  ∃ x ∈ X s.t. xₙ → x\n(Yani dizinin limiti uzayın içinde olmalı.)\n\nHilbert Uzayı: Complete IPS\n  - Her sonlu boyutlu IPS → otomatik complete → Hilbert  ✓\n  - L₂[a,b], ℓ₂(ℤ) → complete → Hilbert  ✓\n  - C∞[-1,1] polinom normla → complete değil, Hilbert değil"
+        },
+        {
+          "type": "code",
+          "heading": "Projeksiyon Teoremi — tam versiyon",
+          "text": "Hilbert Uzayında Projeksiyon Teoremi:\nH Hilbert uzayı, S ⊆ H kapalı (closed) alt uzay olsun.\nHer x ∈ H için tam olarak bir P_S(x) ∈ S var öyle ki:\n  ||x - P_S(x)|| ≤ ||x - s||  her s ∈ S için\nVe P_S(x), (x - P_S(x)) ⊥ S koşuluyla karakterize edilir.\n\nNeden S kapalı olması gerekiyor?\nKapalı = limit noktalarını içeriyor. S'ye yaklaşan bir dizi\nvarsa, dizinin limiti de S'de olmalı → projeksiyon o 'limiti' tutabilir.\n\nSP sonuçları:\n1. ℂᴺ sonlu boyutlu → her alt uzay kapalı → projeksiyon garantili\n2. L₂'de bantlı sinyaller alt uzayı → kapalı → projeksiyon = ideal LPF\n3. Polinom yaklaşımı → S kapalı değil → projeksiyon olmayabilir\n   (Bu yüzden Chebyshev approximation daha karmaşık teoriler gerektirir)"
+        },
+        {
+          "type": "table",
+          "heading": "Uzay hiyerarşisi ve projeksiyon garantisi",
+          "rows": [
+            [
+              "Uzay Türü",
+              "Complete?",
+              "Projeksiyon Garantisi?",
+              "Örnekler"
+            ],
+            [
+              "Sonlu boyutlu IPS",
+              "✓",
+              "✓ Her alt uzayda",
+              "ℂᴺ, ℝᴺ"
+            ],
+            [
+              "Hilbert Uzayı",
+              "✓",
+              "✓ Kapalı alt uzaylarda",
+              "L₂, ℓ₂"
+            ],
+            [
+              "Banach (IPS değil)",
+              "✓",
+              "✗ Genel garantisiz",
+              "L₁, ℓ∞"
+            ],
+            [
+              "Genel IPS",
+              "✗",
+              "✗ Olmayabilir",
+              "Polinomlar (dense)"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Parseval Eşitliği ve Tam Ortonormal Sistem",
+      "cat": "Signal Processing",
+      "summary": "Tam ONS: her vektörü temsil eder, Parseval sağlanır. Parseval: ||x||² = Σ|<x,eₖ>|². Bessel eşitsizliği: eksik ONS için ≤. DFT, CTFS, örnekleme hepsi aynı yapı: tam ONS + katsayılar = iç çarpım. Sıkıştırma = büyük katsayıları tut.",
+      "context": "EE499 · Chapter 1.7.2 — Complete Orthonormal Systems and Parseval",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Tam ONS nedir ve Parseval nasıl gelir?",
+          "text": "Ortonormal sistem {eₖ} TAM (complete) olarak adlandırılır eğer:\n  <x, eₖ> = 0  her k için  ⟹  x = 0\n\nYani: eₖ'lere dik olan tek şey sıfır. Bazdan 'kaçan' vektör yok.\n\nBessel Eşitsizliği (her ONS için, tam olmayan da dahil):\n  Σₖ |<x, eₖ>|² ≤ ||x||²\n  (Enerji en fazla x'in toplam enerjisi kadar olabilir)\n\nParseval Eşitliği (TAM ONS için):\n  Σₖ |<x, eₖ>|² = ||x||²\n  (Bessel'de eşitlik: enerji kaybı yok, baz eksiksiz)\n\nEşdeğer tanım: ONS tam ⟺ her x için:\n  x = Σₖ <x, eₖ> eₖ  (tam temsil, limit Hilbert'te yakınsar)"
+        },
+        {
+          "type": "code",
+          "heading": "SP'deki somut Parseval örnekleri",
+          "text": "Örnek 1 — DFT (unitary):\n  V = ℂᴺ,  eₖ[n] = (1/√N) e^{j(2π/N)kn}\n  Parseval: Σₙ |x[n]|² = Σₖ |Xᵤ[k]|²\n  Zaman enerji = frekans enerji  ✓\n\nÖrnek 2 — CTFS:\n  V = L₂[0,T],  eₖ(t) = (1/√T) e^{jk(2π/T)t}\n  Parseval: (1/T) ∫₀ᵀ |x(t)|² dt = Σₖ |aₖ|²\n  Sinyal enerjisi = Fourier katsayılarının enerji toplamı  ✓\n\nÖrnek 3 — Örnekleme Teoremi:\n  V = bantlı L₂, eₙ(t) = (1/√T)sinc((t-nT)/T)\n  Parseval: (1/T)∫|x(t)|²dt = Σₙ |x(nT)|²\n  Sürekli sinyal enerjisi = örneklerin enerji toplamı  ✓\n\nÜç örnek farklı görünüyor ama hepsi aynı: tam ONS + Parseval.\n\nSıkıştırma (compression) bağlantısı:\nEn büyük |<x,eₖ>| katsayılarını tut, küçükleri sıfırla.\nParseval ile toplam enerji kaybı = Σ_{sıfırlanan k} |<x,eₖ>|²\n→ MP3, JPEG, MPEG hepsi bu prensibe dayanır."
+        },
+        {
+          "type": "note",
+          "heading": "Bessel ≤ ile Parseval = arasındaki fark",
+          "text": "Bessel eşitsizliği: Σ|<x,eₖ>|² ≤ ||x||² — sadece sınırlı katsayı sayısıyla gösteriliyor.\n\nParseval eşitliği: Σ|<x,eₖ>|² = ||x||² — sonsuz dizi toplam normla aynı.\n\nNe zaman eşitlik sağlanmaz? ONS tam değilse. Örneğin:\n{e₁, e₂} ∈ ℝ³, ama e₃ eksik. x = e₃ için:\n  |<x,e₁>|² + |<x,e₂>|² = 0 < 1 = ||x||²\n  Bessel sağlanır, Parseval sağlanmaz.\n\nÇıkarım: Parseval'i doğrula → ONS'nin tam olduğunu kanıtla."
+        }
+      ]
+    },
+    {
+      "title": "Optimal FIR Filtre Tasarımı — Projeksiyon Teoreminin SP Uygulaması",
+      "cat": "Applications",
+      "summary": "İdeal LPF non-causal ve IIR — gerçekleştirilemez. M-tap FIR alt uzayına projeksiyon = L₂ optimal FIR. Katsayılar: h[k] = sinc kırpması. Pencere yöntemi bu projeksiyon çözümünün pratikte kullanılan versiyonu.",
+      "context": "EE499 · Chapter 1.7 — Application: Optimal FIR Filter Design",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Problem: İdeal LPF neden gerçekleştirilemez?",
+          "text": "İdeal alçak geçiren filtre (LPF):\n  H_LPF(e^{jω}) = 1 (|ω| ≤ ωc),  0 (|ω| > ωc)\n  h_LPF[n] = (ωc/π) sinc(ωcn/π)  (zaman domeninde)\n\nProblem:\n1. h_LPF[n] ≠ 0 için n < 0 → non-causal → gerçek zamanlı uygulanamaz\n2. h_LPF[n] tüm n için sıfır değil → IIR → sonsuz katsayı → pratik değil\n\nNe yapalım? M katsayılı causal FIR filtre ile en iyi yaklaşımı bul:\n  H_FIR(e^{jω}) = Σ_{k=0}^{M-1} h[k] e^{-jωk}\n\nAlt uzay kurulumu:\n  V = Tüm DT transfer fonksiyonları (L₂[-π,π])\n  S = {H : H(e^{jω}) = Σ_{k=0}^{M-1} hₖ e^{-jωk}} (M-tap FIR alt uzayı)\n  İç çarpım: <H₁,H₂> = (1/2π)∫_{-π}^{π} H₁(e^{jω}) H₂*(e^{jω}) dω\n  Hedef: argmin_{H ∈ S} ||H_LPF - H||²"
+        },
+        {
+          "type": "code",
+          "heading": "Projeksiyon ile kapalı form çözüm",
+          "text": "Baz vektörleri: eₖ(ω) = e^{-jωk},  k = 0, ..., M-1\n  ||eₖ||² = (1/2π)∫|e^{-jωk}|²dω = 1  (birim norm)\n  <eₖ, eₗ> = (1/2π)∫e^{-jω(k-l)}dω = δ[k-l]  (ortogonal)\n→ {e₀, e₁, ..., e_{M-1}} ortonormal baz!\n\nProjektion katsayıları (optimal FIR katsayıları):\n  h_opt[k] = <H_LPF, eₖ>\n           = (1/2π) ∫_{-π}^{π} H_LPF(e^{jω}) e^{+jωk} dω\n           = (1/2π) ∫_{-ωc}^{ωc} e^{jωk} dω\n           = (ωc/π) sinc(ωc k/π)  için k = 0, 1, ..., M-1\n\nYorum: Optimal M-tap FIR = ideal LPF impuls yanıtını [0, M-1]'de kır!\nBu 'dikdörtgen pencere yöntemi' — klasik FIR tasarımının projeksiyon teoreminden gelişi."
+        },
+        {
+          "type": "code",
+          "heading": "Gibbs olayı ve pencere yöntemi",
+          "text": "Projeksiyon ideal L₂ çözümü veriyor ama pratikte aşırı sallantı (Gibbs fenomeni) görülür.\n\nNeden? Frekans domeninde dikdörtgen kırpma = zaman domeninde sinc ile konvolüsyon.\nKesim noktasında ~8.9% aşım — pencere büyük olsa bile azalmaz.\n\nDüzeltme: Katsayıları pencereleme:\n  h_window[k] = h_opt[k] · w[k]\n  w[k]: Hamming (0.54-0.46cos(2πk/M-1)), Hanning, Blackman...\n\nPencere etkisi:\n  + Gibbs sallanması azalır\n  - Geçiş bandı genişler (daha az keskin)\n  - L₂ optimum kaybedilir (projeksiyon değil artık)\n\nPencere seçimi = L₂ ile Chebyshev normu arasında trade-off.\nProjeksiyonun verdiği çözüm L₂'de en iyi ama Chebyshev'de olmayabilir.\n\nÖzet: h_opt = projeksiyon çözümü → dikdörtgen pencere\n       h_window = pratik çözüm → sallanmayı azalt, geçiş bandından fedakâr"
+        }
+      ]
+    },
+    {
+      "title": "Projeksiyon Matrisinin Özellikleri — P² = P ve Pᴴ = P",
+      "cat": "Geometry",
+      "summary": "Projeksiyon matrisi P = B(BᴴB)⁻¹Bᴴ: idempotent (P²=P) ve Hermitian (Pᴴ=P). I-P, S⊥'ya projeksiyon. Öz değerler sadece 0 ve 1. Rank(P) = dim(S). Bu iki özellik birlikte 'P bir projeksiyon' tanımını tam olarak karakterize eder.",
+      "context": "EE499 · Chapter 1.7 — Properties of Projection Matrices",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "P² = P: İkinci projeksiyon hiçbir şey yapmaz",
+          "text": "P = B(BᴴB)⁻¹Bᴴ  için:\n\nİdempotentlik (P² = P) ispatı:\n  P² = [B(BᴴB)⁻¹Bᴴ][B(BᴴB)⁻¹Bᴴ]\n     = B · (BᴴB)⁻¹ · (BᴴB) · (BᴴB)⁻¹ · Bᴴ\n     = B · I · (BᴴB)⁻¹ · Bᴴ\n     = B(BᴴB)⁻¹Bᴴ = P  ✓\n\nSezgi: Px ∈ S. P uygularsan yine S'de bir vektör çıkar.\n  P(Px) = Px  (zaten S'deydi, değişmez)\n\nP x için ne anlama geliyor?\n  Px = 0 ⟺ x ∈ N(P) = S⊥  (S'ye dik şeyler sıfıra gönderilir)\n  Px = x ⟺ x ∈ R(P) = S  (S'deki şeyler değişmez)\n\nP'nin öz değerleri:\n  Px = λx ⟹ P²x = λ²x = Px = λx ⟹ λ² = λ ⟹ λ=0 veya λ=1\n  λ=1 öz vektörleri: S  (projeksiyon değişmiyor)\n  λ=0 öz vektörleri: S⊥  (projeksiyon sıfır veriyor)"
+        },
+        {
+          "type": "code",
+          "heading": "Pᴴ = P: Simetrik projeksiyon",
+          "text": "Hermitian simetri (Pᴴ = P) ispatı:\n  Pᴴ = [B(BᴴB)⁻¹Bᴴ]ᴴ\n     = B · [(BᴴB)⁻¹]ᴴ · Bᴴ\n     = B · [(BᴴB)ᴴ]⁻¹ · Bᴴ\n     = B · [BᴴB]⁻¹ · Bᴴ  (BᴴB Hermitian: (BᴴB)ᴴ = BᴴBᴴᴴ = BᴴB)\n     = P  ✓\n\nBu ne sağlıyor?\n  <Px, y> = (Px)ᴴy = xᴴPᴴy = xᴴPy = <x, Py>  (P self-adjoint)\n\nI-P projeksiyon (S⊥'ya):\n  (I-P)² = I - 2P + P² = I - 2P + P = I-P  ✓  (idempotent)\n  (I-P)ᴴ = Iᴴ - Pᴴ = I - P  ✓  (Hermitian)\n\nP · (I-P) = P - P² = P - P = 0  →  S ve S⊥ bileşenler dik"
+        },
+        {
+          "type": "table",
+          "heading": "Projeksiyon matrisinin tüm özellikleri",
+          "rows": [
+            [
+              "Özellik",
+              "İfade",
+              "Anlam"
+            ],
+            [
+              "İdempotent",
+              "P² = P",
+              "İki kez proje = bir kez"
+            ],
+            [
+              "Hermitian",
+              "Pᴴ = P",
+              "Self-adjoint"
+            ],
+            [
+              "Komplement",
+              "(I-P)² = I-P, (I-P)ᴴ = I-P",
+              "I-P de projeksiyon (S⊥'ya)"
+            ],
+            [
+              "Diklik",
+              "P(I-P) = 0",
+              "S ve S⊥ bileşenler dik"
+            ],
+            [
+              "Öz değerler",
+              "λ ∈ {0, 1}",
+              "0-uzayı=S⊥, 1-uzayı=S"
+            ],
+            [
+              "Rank/Trace",
+              "rank(P) = tr(P) = dim(S)",
+              "Boyut sayısı"
+            ],
+            [
+              "Konverse",
+              "P² = P ve Pᴴ = P ⟹ P projeksiyon",
+              "Tam karakterizasyon"
+            ]
+          ]
+        }
+      ]
     }
   ],
   "vs02": [
@@ -5176,6 +5363,302 @@
               "Kötü koşullu, regularize et"
             ]
           ]
+        }
+      ]
+    },
+    {
+      "title": "Baz Değişimi ve Operatör Matrisi — A' = T A T⁻¹",
+      "cat": "Foundations",
+      "summary": "Aynı lineer operatörün farklı bazlarda farklı matris temsilleri var: A'_{e'→v'} = T_{v→v'} · A_{e→v} · T_{e'→e}. Konvolüsyon DFT bazında diyagonal olur — bu frekans analizinin matematiksel temeli. Baz seçimi problemi basitleştirir.",
+      "context": "EE499 · Chapter 2.2.1 — Change of Basis for Operators",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Aynı operatör, farklı baz, farklı matris",
+          "text": "A: X → Y lineer operatörü için iki farklı baz seçimi var:\n  X için e-baz ve v-baz\n  Y için f-baz ve g-baz\n\nAynı operatörün iki farklı matris temsili:\n  [A(x)]_f = A_{e→f} · [x]_e   (e-bazından f-bazına)\n  [A(x)]_g = A_{v→g} · [x]_v  (v-bazından g-bazına)\n\nBaz değişim matrisi:\n  T_{e→v}: e-koordinatlarından v-koordinatlarına\n  [x]_e = T_{v→e} [x]_v  (baz değişimi)\n\nOperatör matrisinin baz değişimi:\n  A_{v→g} = T_{f→g} · A_{e→f} · T_{v→e}\n\nSezgi: Yeni bazda aynı işlemi yapmak için:\n  1. Yeni koordinatı eski koordinata çevir (T_{v→e})\n  2. Eski bazda A uygula (A_{e→f})\n  3. Sonucu yeni koordinata çevir (T_{f→g})\n\nBenzerlik dönüşümü (kare matrisler, X=Y):\n  A' = T A T⁻¹\n  A ve A' aynı operatörü temsil ediyor, sadece koordinat sistemi farklı.\n  İz (trace) ve determinant değişmez — bunlar koordinatsız özellikler."
+        },
+        {
+          "type": "code",
+          "heading": "Türev operatörü örneği: baz değiştirince matris değişiyor",
+          "text": "A: P³ → P², A(x(t)) = dx/dt\n\nBaz 1: e-baz = {1, t, t², t³}, f-baz = {1, t, t²}\n  A(1)=0, A(t)=1, A(t²)=2t, A(t³)=3t²\n  A_e =  [0 1 0 0]\n         [0 0 2 0]\n         [0 0 0 3]\n\nBaz 2: e'-baz = {1, t, t², t³}, f'-baz = {1, t, t²} (aynı)\n  Ama şimdi X için v-baz = {1, t, t²/2, t³/6} kullan:\n  A(1)=0, A(t)=1, A(t²/2)=t, A(t³/6)=t²/2\n  Katsayılar farklı, matris farklı.\n\nAynı operatör, farklı koordinat sistemi, farklı matris görünümü.\nFiziksel içerik (türev alma) aynı.\n\nSPonucu: DFT baz değişimini uygulayınca konvolüsyon matrisi ne olur?"
+        },
+        {
+          "type": "code",
+          "heading": "Neden baz seçimi bu kadar önemli? DFT bazı problemi sadeleştirir",
+          "text": "Bir LTI sistemi, standart bazda konvolüsyon matrisi H ile temsil edilir:\n  y = H x  (H: Toeplitz yapısı, dense matris)\n\nDFT bazında ne olur?\n  W: DFT değişim matrisi (unitary: Wᴴ=W⁻¹)\n  H_DFT = W H Wᴴ  (DFT bazında aynı operator)\n\nH_DFT diyagonal bir matris:\n  H_DFT = diag(H(e^{j0}), H(e^{j2π/N}), ..., H(e^{j2π(N-1)/N}))\n\nYani: H(e^{jωₖ}) = transfer function değeri frekans ωₖ'da.\n\nDFT bazında operasyon:\n  Ŷ = H_DFT · X̂  →  Ŷ[k] = H(e^{jωₖ}) · X̂[k]\n  Her frekans bağımsız ölçekleniyor — konvolüsyon = çarpım!\n\nBu neden devrimci?\n- Dense matris → diagonal matris: O(N²) → O(N log N) (FFT)\n- Analiz kolaylaşıyor: her frekans bağımsız incelenebilir\n- H_DFT diagonal → terslemek trivial: H⁻¹_DFT = diag(1/H(e^{jωₖ}))"
+        }
+      ]
+    },
+    {
+      "title": "DFT Bazında Konvolüsyon = Çarpım — Neden ve Nasıl?",
+      "cat": "Signal Processing",
+      "summary": "DFT bazında konvolüsyon matrisi diyagonaldir. Bu demek ki: LTI sistem frekans domeninde her frekansı bağımsız ölçeklendirir. Bu özellik, SP'deki en güçlü basitleştirme. Dekonvolüsyon = 1/H(ω) ile çarpma. Gürültüde problem: küçük H(ω) değerleri.",
+      "context": "EE499 · Chapter 2.2 — DFT and Convolution Matrix",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Konvolüsyon matrisinin DFT bazında diyagonalliği",
+          "text": "Verilen: h[n] ∈ ℂᴷ filtre, x[n] ∈ ℂᴺ sinyal\nDoğrusal (tam) konvolüsyon: y = x * h ∈ ℂᴹ, M=N+K-1\nMatris formu: y = H x (H: M×N Toeplitz konvolüsyon matrisi)\n\nDöngüsel (circular) konvolüsyon durumunu düşün (N=M):\nDöngüsel konvolüsyon matrisi H_circ: N×N circulant matris.\nHer circulant matris, DFT bazında diyagonaldir:\n  W H_circ Wᴴ = diag(H[0], H[1], ..., H[N-1])\n  burada H[k] = DFT{h}[k] = Σₙ h[n]e^{-j2πkn/N}\n\nDolayısıyla döngüsel konvolüsyon:\n  y = H_circ x\n  ↓ DFT ile\n  Y[k] = H[k] · X[k]  her k için\n  Frekans domeninde nokta-nokta çarpım!\n\nNeden bu çalışıyor?\nDFT baz vektörleri, circulant matrisin öz vektörleri.\nH_circ vₖ = H[k] vₖ (vₖ: k. DFT baz vektörü)\nDiagonalleşme = öz vektör bazında temsil."
+        },
+        {
+          "type": "code",
+          "heading": "Pratik dekonvolüsyon: frekans domeninde tersle",
+          "text": "Dekonvolüsyon problemi (gürültüsüz durum):\nY[k] = H[k] · X[k]  →  X[k] = Y[k] / H[k]\n\nIdeal dekonvolution = frekanslarda böl:\n  X̂[k] = Y[k] / H[k]  (H[k] ≠ 0 ise)\n\nSorun 1 — Sıfır frekanslar:\nEğer H[k] = 0 bazı k için → o frekansta bilgi tamamen kaybolmuş.\nBölme mümkün değil → tam tersine alma imkânsız.\n\nSorun 2 — Gürültü amplifikasyonu:\nGürültülü ölçüm: Ỹ[k] = H[k]X[k] + N[k]\nNaif: X̂[k] = Ỹ[k]/H[k] = X[k] + N[k]/H[k]\nEğer |H[k]| << 1 ise  N[k]/H[k] >> N[k]  →  gürültü amplifiye!\n\nÇözüm — Wiener filter (regularized decon):\n  X̂[k] = H*[k] / (|H[k]|² + λ) · Ỹ[k]\n  λ: regularization parametresi (gürültü gücüne bağlı)\n  λ küçük → az düzenleme, gürültü amplifikasyonu riski\n  λ büyük → fazla düzenleme, yüksek frekanslar baskılanır\n\nBu DFT bazında Case 1 LS çözümünün özel hali!"
+        },
+        {
+          "type": "table",
+          "heading": "Zaman vs frekans domeninde problem karşılaştırması",
+          "rows": [
+            [
+              "İşlem",
+              "Zaman Domeninde",
+              "Frekans Domeninde"
+            ],
+            [
+              "Konvolüsyon y=x*h",
+              "Dense Toeplitz matris çarpımı O(N²)",
+              "Nokta-nokta çarpım O(N) + O(NlogN) FFT"
+            ],
+            [
+              "Dekonvolüsyon",
+              "Matris tersi alma",
+              "Her frekansta 1/H[k]"
+            ],
+            [
+              "FIR filtre uygula",
+              "y[n] = Σh[k]x[n-k]",
+              "Y[k] = H[k]X[k]"
+            ],
+            [
+              "Sistem tanımlama",
+              "Toeplitz sistem çöz",
+              "H[k] = Y[k]/X[k]"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Sistem Tanımlama ve Dekonvolüsyon — Existence/Uniqueness Analizi",
+      "cat": "Applications",
+      "summary": "Dekonvolüsyon: y=Hx bilinen, H bilinen, x bul. Sistem tanımlama: y=Hx, x bilinen, H bul. Dekonvolüsyon: R(H)≠ℂᴹ (existence yok garantisi) ama N(H)={0} (uniqueness var). Sistem tanımlama da aynı analiz. Gürültüsüz çözüm varsa tekil.",
+      "context": "EE499 · Chapter 2.3 — Deconvolution and System Identification",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Dekonvolüsyon problemi — tam analiz",
+          "text": "Setup: x ∈ ℂᴺ (orijinal sinyal), h ∈ ℂᴷ (K≥2, h≠0), y = x * h ∈ ℂᴹ (M=N+K-1)\nMatris formu: y = H x (H: M×N tall Toeplitz matrisi)\n\nExistence analizi:\n  R(H) = span{sütunlar} ⊂ ℂᴹ\n  dim(R(H)) = N < M  →  R(H) ≠ ℂᴹ\n  Keyfi y için Hx=y çözümü OLMAYACAK\n  (Gürültüsüz gerçek y=Hx₀ ise çözüm var, ama gürültülü y+n genellikle R(H)'da değil)\n\nUniqueness analizi:\n  N(H) = {x: Hx=0}\n  H sütunları = h'nin shifted versiyonları → lineer bağımsız (K≥2, h≠0 için)\n  N(H) = {0}  →  rank(H) = N  (full column rank)\n  Çözüm varsa TEKİL  ✓\n\nÖzet: Dekonvolüsyon Case 1 durumu:\n  M > N, full column rank: x_LS = (HᴴH)⁻¹Hᴴy\n  Tam çözüm yoksa (gürültü varsa) → LS en iyi yaklaşım\n  Tam çözüm varsa (y gürültüsüz ise) → LS tam çözümü verir"
+        },
+        {
+          "type": "code",
+          "heading": "Sistem tanımlama problemi — aynı matematik, farklı bilinmeyen",
+          "text": "Sistem tanımlama: Verilen x ve y = x*h, h'yi bul.\n  y = X h  (X: M×K konvolüsyon matrisi, x sabit, h bilinmeyen)\n\nX'in yapısı: X sütunları = x'in shifted versiyonları\n  X = [x₀  0   0  ]\n      [x₁  x₀  0  ]\n      [x₂  x₁  x₀ ]\n      [... ... ...]\n\nAynı existence/uniqueness analizi:\n  Existence: y ∈ R(X)? Her y için çözüm garanti değil.\n    R(X) = span{sütunlar} ⊂ ℂᴹ, rank ≤ K < M\n    → Eğer y = x*h₀ ise çözüm var; keyfi y için değil.\n\n  Uniqueness: N(X) = {h: Xh=0}?\n    Xh=0 → x'in h ile konvolüsyonu sıfır → x ve h aynı anda sıfır olmayan frekansta yok\n    → Genellikle N(X) ≠ {0} değil ama tam analiz h'nin yapısına bağlı.\n\nPratik: EKSİK veri ile sistem tanımlama (az ölçüm):\n  K >> M: fat matrix → underdetermined → min-norm çözüm\n  K << M: tall matrix → overdetermined → LS çözüm\n\nÖnemli fark dekonvolüsyon'dan:\nDekonvolüsyonda H bilinir x bilinmez → H sabit Toeplitz\nSistem tanımlamada x bilinir h bilinmez → X sabit Toeplitz"
+        },
+        {
+          "type": "compare",
+          "heading": "Dekonvolüsyon vs Sistem Tanımlama",
+          "left": {
+            "title": "Dekonvolüsyon",
+            "points": [
+              "Verilen: y ve H (filtre biliniyor)",
+              "Bul: x (orijinal sinyal)",
+              "Matris: H tall, M×N",
+              "Case 1: x_LS = (HᴴH)⁻¹Hᴴy",
+              "SP örnek: görüntü deblurring, CT",
+              "Uniqueness var, existence garantisiz"
+            ]
+          },
+          "right": {
+            "title": "Sistem Tanımlama",
+            "points": [
+              "Verilen: y ve x (giriş biliniyor)",
+              "Bul: h (filtre katsayıları)",
+              "Matris: X tall (genellikle), M×K",
+              "Case 1: h_LS = (XᴴX)⁻¹Xᴴy",
+              "SP örnek: kanal tahminleme, sistem ID",
+              "Uniqueness h'ye bağlı"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "title": "Case 0 Detayı — İnvertible Matris ve Gürültü Amplifikasyonu",
+      "cat": "Applications",
+      "summary": "A square+invertible olunca x=A⁻¹y basit görünür ama iki büyük sorun var: (1) gürültü amplifikasyonu — A kötü koşulluysa A⁻¹n >> n, (2) büyük boyutlu A'nın tersini almanın pratik imkânsızlığı. Condition number κ(A) her şeyi ölçer.",
+      "context": "EE499 · Chapter 2.4 — Case 0: Invertible Systems and Noise Issues",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Case 0 neden 'kolay' görünür ama değildir?",
+          "text": "Case 0: A ∈ ℂᴺˣᴺ, rank(A)=N (square+full rank → invertible)\n  Ax = y  →  x = A⁻¹y  (tam çözüm, tekil)\n\nGözlemde gürültü var: ỹ = y + n = Ax + n\n  x̂ = A⁻¹ỹ = A⁻¹(Ax + n) = x + A⁻¹n\n\nHata terimi: A⁻¹n\n  Göreceli hata: ||x̂ - x|| / ||x|| = ||A⁻¹n|| / ||x||\n               ≤ ||A⁻¹|| · ||n|| / ||x||\n               ≤ ||A|| · ||A⁻¹|| · (||n||/||Ax||)\n               = κ(A) · (göreli gürültü seviyesi)\n\nKondisyon sayısı:\n  κ(A) = ||A|| · ||A⁻¹|| = σ_max / σ_min  (tekil değer oranı)\n\nκ(A) ≈ 1: iyi koşullu (well-conditioned) → gürültü amplifikasyonu minimal\nκ(A) >> 1: kötü koşullu (ill-conditioned) → küçük gürültü büyük hata!"
+        },
+        {
+          "type": "code",
+          "heading": "Somut ill-conditioning örneği: dekonvolüsyon",
+          "text": "Konvolüsyon (kübik blur) etkisi: Y[k] = H[k] · X[k]\n  H[k] = 1 / (1 + (k/k₀)²)  (Lorentzian blur)\n  Yüksek frekanslar ezilir: H[k] → 0 için büyük k\n\nDekonvolüsyon: X̂[k] = Y[k] / H[k] = X[k] + N[k]/H[k]\n  Büyük k için H[k] << 1 → N[k]/H[k] >> N[k]\n  Gürültü yüksek frekanslarda katbekat amplify!\n\nNümerik örnek:\n  σ = 10⁻³ (gürültü seviyesi), H[k₀] = 10⁻³\n  → X̂[k₀] = X[k₀] + N[k₀]/10⁻³ = X[k₀] + 1000·N[k₀]\n  1:1000 amplifikasyon → çözüm kullanılamaz\n\nDüzeltme — Tikhonov regularization:\n  min ||Ax - y||² + λ||x||²\n  Çözüm: x_reg = (AᴴA + λI)⁻¹Aᴴy\n  Frekans domeninde: X̂_reg[k] = H*[k]Y[k] / (|H[k]|² + λ)\n  λ küçük → az düzenleme, gürültü amplifikasyonu devam\n  λ büyük → çok düzenleme, yüksek frekanslar kaybolur\n  Optimal λ: bias-variance tradeoff"
+        },
+        {
+          "type": "note",
+          "heading": "Pratikte büyük sistem problemi",
+          "text": "Gerçek dünyada A çok büyük olabilir (megapiksel görüntü → milyonlar×milyonlar).\nA⁻¹ depolayıp hesaplamak pratikte imkânsız.\n\nAlternatifler:\n1. İteratif yöntemler: CG (conjugate gradient), LSQR — A⁻¹ türetmeden çözer\n2. Sparse approximation: A sparse ise sparse solver'lar\n3. Frekans domeninde çöz: FFT ile O(N log N)\n4. Regularization: AᴴA + λI'yı daha iyi kondisyonlu yap\n\nÖnemli çıkarım: Case 0 matematiksel olarak temiz ama:\n- Gürültüde problem (κ(A) büyükse)\n- Boyutta problem (çok büyük A)\n- İkisi birlikte regularization zorunlu kılar"
+        }
+      ]
+    },
+    {
+      "title": "Matris Kalkülüsü Temelleri — LS Türetmek İçin Gerekli",
+      "cat": "Foundations",
+      "summary": "Least Squares'ı türetmek için matris gradyan kuralları şart: ∇_x(aᵀx)=a, ∇_x(xᵀBx)=(B+Bᵀ)x. J(x)=||y-Ax||² genişletip gradyan sıfırla → normal denklem. Karmaşık durumda Wirtinger türevi gerekir ama sonuç AᴴA·x=Aᴴy.",
+      "context": "EE499 · Chapter 2.4 — Matrix Calculus for LS Derivation",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Matris gradyan kuralları — neden bunlara ihtiyaç var?",
+          "text": "LS problemi: min_x J(x) = ||y - Ax||² = (y-Ax)ᵀ(y-Ax)  [gerçel]\n\nJ'yi minimize etmek için: ∇_x J(x) = 0\n\nBunu yapmak için matris kalkülüsü kuralları:\n\nKural 1: ∇_x(aᵀx) = a\n  aᵀx = a₁x₁ + a₂x₂ + ... + aₙxₙ\n  ∂/∂xₖ(aᵀx) = aₖ  →  ∇_x(aᵀx) = a  ✓\n\nKural 2: ∇_x(xᵀa) = a  (aynı şey, xᵀa = aᵀx skalar)\n\nKural 3: ∇_x(xᵀBx) = (B + Bᵀ)x\n  Açılım: xᵀBx = Σᵢ Σⱼ Bᵢⱼ xᵢ xⱼ\n  ∂/∂xₖ(xᵀBx) = Σⱼ Bₖⱼxⱼ + Σᵢ Bᵢₖxᵢ = (B+Bᵀ)x [k. elemanı]\n  B simetrik ise (Bᵀ=B): ∇_x(xᵀBx) = 2Bx\n\nKural 4 (chain rule): ∇_x(xᵀAᵀAx) = 2AᵀAx  (AᵀA simetrik)"
+        },
+        {
+          "type": "code",
+          "heading": "J(x) açılımı ve gradyan hesabı",
+          "text": "Gerçel LS:\nJ(x) = ||y-Ax||² = (y-Ax)ᵀ(y-Ax)\n     = yᵀy - yᵀAx - xᵀAᵀy + xᵀAᵀAx\n     = yᵀy - 2yᵀAx + xᵀAᵀAx  (xᵀAᵀy = yᵀAx skalar)\n\nGradyan:\n  ∇_x J = ∇_x(yᵀy) - 2∇_x(yᵀAx) + ∇_x(xᵀAᵀAx)\n        = 0 - 2Aᵀy + 2AᵀAx\n        (Kural 1: ∇_x(yᵀAx) = (Aᵀy)  çünkü yᵀA = (Aᵀy)ᵀ)\n        (Kural 3: ∇_x(xᵀAᵀAx) = 2AᵀAx  çünkü AᵀA simetrik)\n\n∇_x J = 0  →  -2Aᵀy + 2AᵀAx = 0  →  AᵀA x_LS = Aᵀy\n\nNormal Denklem (gerçel):\n  AᵀA x_LS = Aᵀy\n  x_LS = (AᵀA)⁻¹Aᵀy  (A full column rank ise AᵀA invertible)\n\nKarmaşık (kompleks) genelleme:\n  AᴴA x_LS = Aᴴy  →  x_LS = (AᴴA)⁻¹Aᴴy"
+        },
+        {
+          "type": "note",
+          "heading": "İkinci türev testi — neden minimum?",
+          "text": "J(x) = ||y-Ax||² convex (dışbükey). Tek yerel minimum = global minimum.\n\nHessian matrisi: ∇²_x J = 2AᵀA\n  A full column rank ise AᵀA pozitif tanımlı (positive definite).\n  Tüm öz değerler > 0 → Hessian PD → yerel minimum gerçek minimum.\n\nFull column rank yoksa (Case 3):\n  AᵀA singüler → sonsuz çözüm (birden fazla global minimum)\n  → pseudo-inverse ile minimum norm LS çözümü"
+        }
+      ]
+    },
+    {
+      "title": "Normal Denklem — Üç Farklı Türetim Yolu",
+      "cat": "Foundations",
+      "summary": "AᴴAx_LS = Aᴴy normal denklemine üç ayrı yoldan ulaşılır: (1) matris kalkülüsü ile optimizasyon, (2) projeksiyon teoremi ile geometri, (3) diklik koşulu ile doğrudan. Üçü aynı sonuç: tek matematiksel gerçek, üç perspektif.",
+      "context": "EE499 · Chapter 2.4 — Three Ways to Derive the Normal Equation",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Yol 1: Matris kalkülüsü (optimizasyon)",
+          "text": "J(x) = ||y - Ax||²\n\n∇_x J = -2Aᴴy + 2AᴴAx = 0\n\n→  AᴴAx_LS = Aᴴy  ✓\n\nBu yol: 'kayıp fonksiyonunu minimize et' perspektifi.\nGüçlü yön: Doğrudan hesaplanabilir, ikinci türev testi yapılabilir.\nZayıf yön: Geometrik sezgi yok."
+        },
+        {
+          "type": "code",
+          "heading": "Yol 2: Projeksiyon teoremi (geometri)",
+          "text": "x_LS = argmin_x ||y - Ax||²\n\nTanım: b = Ax değişkeni koy. Aslında şunu çözüyoruz:\n  b_LS = argmin_{b ∈ R(A)} ||y - b||²\n  (y'yi R(A) alt uzayına proje et)\n\nProjektion teoremi: hata ⊥ R(A) olunca minimum.\n  e = y - b_LS = y - Ax_LS ⊥ R(A)\n  Yani: <e, a_k> = 0  her k için (a_k: A'nın k. sütunu)\n  a_kᴴ(y - Ax_LS) = 0  her k için\n  Aᴴ(y - Ax_LS) = 0\n  AᴴAx_LS = Aᴴy  ✓\n\nb_LS = Ax_LS = A(AᴴA)⁻¹Aᴴy = P_{R(A)} y\nProjektion matrisi P = A(AᴴA)⁻¹Aᴴ tam olarak Chapter 1'deki formül!"
+        },
+        {
+          "type": "code",
+          "heading": "Yol 3: Direk diklik koşulu (en sezgisel)",
+          "text": "x_LS en iyi yaklaşım ↔ hata e = y - Ax_LS her sütuna dik:\n  aₖᴴ e = 0  k=1,...,N\n  →  [aₖ₁ᴴ e, ..., aₙᴴ e] = 0\n  →  Aᴴ e = 0\n  →  Aᴴ(y - Ax_LS) = 0\n  →  AᴴAx_LS = Aᴴy  ✓\n\nÜç yolun özeti:\n  Yol 1 (optimizasyon): gradyan sıfırla\n  Yol 2 (geometri): R(A)'ya projeksiyon, hata ⊥ R(A)\n  Yol 3 (diklik): her sütuna dik koşulu yaz\n\nHepsi aynı sonuç çünkü hepsi aynı fiziksel gerçeği ifade ediyor:\n'En iyi yaklaşım, hatanın R(A)'ya dik olduğu noktada.'\n\nSomut check: A full column rank ise AᴴA invertible (kanıt:\nAᴴAx=0 → xᴴAᴴAx=0 → ||Ax||²=0 → Ax=0 → x=0 since N(A)={0})"
+        }
+      ]
+    },
+    {
+      "title": "LS Çözümü Projeksiyon Olarak — Geometrik Yorum",
+      "cat": "Applications",
+      "summary": "x_LS = (AᴴA)⁻¹Aᴴy: bu A†y (left pseudo-inverse). b_LS = Ax_LS = A(AᴴA)⁻¹Aᴴy = P_{R(A)}y: y'nin R(A)'ya projeksiyonu. Hata e = y-b_LS ⊥ R(A). Chapter 1 projeksiyon formülüyle tamamen aynı — LS ve projeksiyon birleşiyor.",
+      "context": "EE499 · Chapter 2.4 — LS as Projection",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "LS, projeksiyon ve ortogonallik — üçlü birlik",
+          "text": "Şu üç ifade birbirine eşdeğer:\n\n(a) x_LS = argmin_x ||y - Ax||²\n(b) b_LS = P_{R(A)} y  (y'nin R(A)'ya projeksiyonu)\n(c) A ᴴ(y - Ax_LS) = 0  (hata R(A)'ya dik)\n\nİspat yönü (a → c → b):\n  x_LS minimize eder → gradyan = 0 → AᴴAx_LS = Aᴴy → Aᴴ(y-Ax_LS) = 0 → hata ⊥ R(A)\n  → hata ⊥ R(A) → b_LS = Ax_LS, R(A)'daki y'ye en yakın nokta → projeksiyon\n\nFormüller:\n  x_LS = (AᴴA)⁻¹Aᴴy   (input uzayında çözüm)\n  b_LS = A(AᴴA)⁻¹Aᴴy = P_{R(A)} y  (output uzayında projeksiyon)\n\n  P = A(AᴴA)⁻¹Aᴴ  →  Bu tam Chapter 1'deki P = B(BᴴB)⁻¹Bᴴ formülü!\n  (Burada B = A, S = R(A))"
+        },
+        {
+          "type": "code",
+          "heading": "Dik ayrışım ve enerji yorumu",
+          "text": "y'nin dik ayrışımı:\n  y = b_LS + e  (b_LS ∈ R(A), e ∈ R(A)⊥)\n\nPisagor:\n  ||y||² = ||b_LS||² + ||e||²\n  ||y||² = ||Ax_LS||² + ||y - Ax_LS||²\n  Toplam enerji = yaklaşım enerjisi + artık enerji\n\nArtık norm = minimum LS değeri:\n  J(x_LS) = ||e||² = ||y - Ax_LS||²\n  Bu yalnızca y ∈ R(A) ise sıfır (tam çözüm mevcut)\n\nSomut dekonvolüsyon:\n  y = gürültülü ölçüm, R(H) = ulaşılabilir çıkışlar\n  y = b_LS + e:\n  b_LS = H·x_LS: R(H)'a en yakın nokta (gürültüsüz y'nin tahmini)\n  e = y - H·x_LS: gürültü bileşeni (R(H)'a dik)\n\nLS, gürültüyü R(H)'a dik bileşen olarak algılıyor ve onu atıyor."
+        },
+        {
+          "type": "compare",
+          "heading": "Chapter 1 projeksiyon ile Chapter 2 LS — aynı şey!",
+          "left": {
+            "title": "Chapter 1: Projeksiyon Teoremi",
+            "points": [
+              "x ∈ V, S alt uzay",
+              "x̂ = argmin_{s∈S} ||x-s||",
+              "Hata (x-x̂) ⊥ S",
+              "P = B(BᴴB)⁻¹Bᴴ",
+              "x = x̂ + (x-x̂), dik ayrışım"
+            ]
+          },
+          "right": {
+            "title": "Chapter 2: Least Squares",
+            "points": [
+              "y ∈ ℂᴹ, R(A) alt uzayı",
+              "x_LS = argmin_x ||y-Ax||",
+              "Hata (y-Ax_LS) ⊥ R(A)",
+              "P = A(AᴴA)⁻¹Aᴴ",
+              "y = b_LS + e, dik ayrışım"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "title": "Case 2 Detayı — Çözüm Kümesi Yapısı T = {xp} + N(A)",
+      "cat": "Applications",
+      "summary": "Fat matrix (M<N): sonsuz çözüm. Tüm çözümler T = {xp} + N(A) şeklinde. T bir 'linear variety' — alt uzay değil, orijini içermeyebilir. Ek kısıt lazım: hangi çözümü seçelim? Cevap: minimum norm, yani N(A)'ya dik olan.",
+      "context": "EE499 · Chapter 2.4 — Case 2: Solution Set Structure",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Neden sonsuz çözüm ve tüm çözümler nasıl görünüyor?",
+          "text": "A: ℂᴺ → ℂᴹ, M < N (fat), full row rank.\nÇözüm var (R(A) = ℂᴹ) ama tekil değil (N(A) ≠ {0}).\n\nGözlem: xₙ ∈ N(A) ise Axₙ = 0.\nEğer Axp = y ise A(xp + xₙ) = y + 0 = y  → başka çözüm!\nBu yüzden xp + xₙ da çözüm, her xₙ ∈ N(A) için.\n\nTüm çözümler kümesi:\n  T = {xp + xₙ : xₙ ∈ N(A)} = {xp} + N(A)\n\nT'nin özellikleri:\n  - T bir 'linear variety' (alt uzayın ötelenmesi)\n  - T bir alt uzay DEĞİL (sıfırı içermeyebilir)\n  - T'nin boyutu = dim(N(A)) = N - rank(A) = N - M\n  - T geometrik olarak: M-boyutlu boşlukta (N-M)-boyutlu bir 'düzlem'\n\nSomut örnek:\nA = [1 0 0; 0 1 0],  y = [2/3; 5/3]\nN(A) = span{[0,0,1]ᵀ}  (3. koordinat serbest)\nÖzel çözüm: xp = [2/3, 5/3, 0]ᵀ\nTüm çözümler: [2/3, 5/3, c]ᵀ  her c ∈ ℝ için"
+        },
+        {
+          "type": "code",
+          "heading": "Hangi çözümü seçelim? Minimum norm kriteri",
+          "text": "T içinden seçim yapmak için ek kısıt gerekiyor.\nEn doğal ve yaygın kısıt: minimum ℓ₂ norm.\n\n  x_MN = argmin_{x: Ax=y} ||x||₂\n\nGeometrik soru: T'deki (hyperplane) orijine en yakın nokta hangisi?\n\nOrtogonallik prensibi:\nT'de minimum normlu nokta x_MN, N(A)'ya diktir.\nKanıt:\n  Varsay x_MN ∈ T, ve ∃ xₙ ∈ N(A) öyle ki <x_MN, xₙ> ≠ 0.\n  x_MN - ε·xₙ da T'de (xₙ ∈ N(A) olduğundan)\n  ||x_MN - ε·xₙ||² = ||x_MN||² - 2ε·Re<x_MN,xₙ> + ε²||xₙ||²\n  Uygun ε ile bu ||x_MN||²'den küçük → x_MN minimum değildi, çelişki!\n  Bu yüzden <x_MN, xₙ> = 0 her xₙ ∈ N(A) için → x_MN ⊥ N(A)  ✓\n\nBuna N(A)⊥ = R(Aᴴ) denir → x_MN ∈ R(Aᴴ)"
+        },
+        {
+          "type": "note",
+          "heading": "Minimum norm seçiminin SP anlamı",
+          "text": "Neden minimum norm?\n\n1. En 'seyrek' çözüm: gereksiz bileşenler yok\n2. 'En az enerji' çözümü: fiziksel olarak tasarruflu\n3. N(A)'ya dik: null space bileşeni tamamen sıfır\n   (Null space: 'gözlemlenemeyen' yönler. Min-norm: o yönlere sıfır ata.)\n\nSP örneği: Underdetermined frekans örnekleme.\nAz sayıda frekans ölçümünden sinyali bul → sonsuz sinyal uyumlu.\nMin-norm: minimum enerji sinyali seç.\nAlt yapı: gerçek sinyal genellikle 'seyrek' ise, bunu çözmek daha iyi yöntemler gerektirir (compressed sensing)."
+        }
+      ]
+    },
+    {
+      "title": "Minimum Norm Çözümü — Tam Türetim: x_MN = Aᴴ(AAᴴ)⁻¹y",
+      "cat": "Applications",
+      "summary": "x_MN ⊥ N(A) → x_MN ∈ R(Aᴴ) → x_MN = Aᴴz yaz → Ax_MN=y'ye koy → z çöz. Sonuç: x_MN = Aᴴ(AAᴴ)⁻¹y. AAᴴ ∈ ℂᴹˣᴹ invertible çünkü A full row rank. Simetri güzel: Case 1'de A†=(AᴴA)⁻¹Aᴴ, Case 2'de A†=Aᴴ(AAᴴ)⁻¹.",
+      "context": "EE499 · Chapter 2.4 — Case 2: Minimum Norm Derivation",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Adım adım türetim",
+          "text": "A: ℂᴺ → ℂᴹ, M < N, full row rank.\nBulmak istiyoruz: x_MN = argmin_{Ax=y} ||x||²\n\nAdım 1 — x_MN ⊥ N(A):\nÖnceki karttan: min-norm çözümü N(A)'ya dik olmak zorunda.\n  x_MN ⊥ N(A)  ↔  x_MN ∈ N(A)⊥\n\nAdım 2 — N(A)⊥ = R(Aᴴ):\nTemel uzay ilişkisi: N(A)⊥ = R(Aᴴ)\n(İspat: y ⊥ N(A) ↔ ∀x∈N(A): <y,x>=0 ↔ yᴴx=0 ↔ y ∈ R(Aᴴ))\nDolayısıyla: x_MN ∈ R(Aᴴ) → ∃ z ∈ ℂᴹ s.t. x_MN = Aᴴz\n\nAdım 3 — z'yi bul:\nAx_MN = y  →  A(Aᴴz) = y  →  (AAᴴ)z = y\n\nAdım 4 — AAᴴ invertible mi?\nA full row rank → M bağımsız satır → rank(AAᴴ) = M → AAᴴ ∈ ℂᴹˣᴹ invertible ✓\nKanıt ayrıca: (AAᴴ)z=0 → zᴴAAᴴz=0 → ||Aᴴz||²=0 → Aᴴz=0 → z=0\n\nAdım 5 — Çözüm:\n  z = (AAᴴ)⁻¹y\n  x_MN = Aᴴz = Aᴴ(AAᴴ)⁻¹y  ✓\n\nDoğrulama: A·x_MN = A·Aᴴ(AAᴴ)⁻¹y = (AAᴴ)(AAᴴ)⁻¹y = y  ✓"
+        },
+        {
+          "type": "code",
+          "heading": "Case 1 ve Case 2 türetimlerinin simetrik yapısı",
+          "text": "Case 1 (Tall, M>N, full column rank):\n  Problem: min ||y-Ax||² (en yakın nokta → projeksiyon)\n  Koşul: (y-Ax_LS) ⊥ R(A) → Aᴴ(y-Ax_LS) = 0\n  Normal denklem: AᴴAx_LS = Aᴴy\n  Çözüm: x_LS = (AᴴA)⁻¹Aᴴy\n  Left pseudo-inverse: A† = (AᴴA)⁻¹Aᴴ  (soldan birim: A†A = I_N)\n\nCase 2 (Fat, M<N, full row rank):\n  Problem: min ||x||² s.t. Ax=y (en kısa çözüm)\n  Koşul: x_MN ⊥ N(A) → x_MN ∈ R(Aᴴ) → x_MN = Aᴴz\n  Denklem: (AAᴴ)z = y\n  Çözüm: x_MN = Aᴴ(AAᴴ)⁻¹y\n  Right pseudo-inverse: A† = Aᴴ(AAᴴ)⁻¹  (sağdan birim: AA† = I_M)\n\nSimetri:\n  Case 1: A†A = I_N (sol ters), AA† = P_{R(A)} (projeksiyon)\n  Case 2: AA† = I_M (sağ ters), A†A = P_{R(Aᴴ)} (projeksiyon)\n  Her iki durumda da A†y = minimum norm LS çözümü."
+        },
+        {
+          "type": "insight",
+          "heading": "Çözümlerin geometrik birliği",
+          "text": "Case 1 ve Case 2 aslında aynı fikrin iki yüzü:\n\nCase 1: y'den R(A)'ya projeksiyon bul (en yakın nokta)\nCase 2: T={xp}+N(A)'dan orijine en yakın nokta bul\n\nHer ikisinde de:\n- 'En iyi seçim' = hata/çözüm uygun alt uzaya dik\n- Formül pseudo-inverse A†y ile\n- Chapter 1'in projeksiyon teoremi arka planda çalışıyor\n\nBu dersin ana mesajı: sinyal işlemedeki ters problemlerin hepsi 'doğru alt uzaya projeksiyon' problemi."
+        }
+      ]
+    },
+    {
+      "title": "SVD ve Case 3 — Rank-Deficient Sistemler ve Regularization",
+      "cat": "Signal Processing",
+      "summary": "SVD: A = UΣVᴴ. Pseudo-inverse: A† = VΣ†Uᴴ (sıfır olmayan tekil değerlerin tersi). Case 3 (rank-deficient): hem LS hem min-norm birleştirilir. Tikhonov regularization: A†λ = V(Σ²+λI)⁻¹ΣUᴴ — küçük tekil değerleri sönümle.",
+      "context": "EE499 · Chapter 2.4 — SVD, Case 3, and Regularization",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "SVD: her matrisin evrensel ayrışımı",
+          "text": "Singular Value Decomposition (SVD):\n  A = U Σ Vᴴ  (A ∈ ℂᴹˣᴺ)\n  U ∈ ℂᴹˣᴹ: unitary (sütunlar: sol tekil vektörler)\n  Σ ∈ ℝᴹˣᴺ: diyagonal (σ₁ ≥ σ₂ ≥ ... ≥ σᵣ > 0, r = rank(A))\n  V ∈ ℂᴺˣᴺ: unitary (sütunlar: sağ tekil vektörler)\n\nMühendislik yorumu:\n  A = Σᵢ σᵢ uᵢ vᵢᴴ  (rank-1 matris toplamı)\n  Her σᵢ uᵢ vᵢᴴ: vᵢ giriş yönünü uᵢ çıkış yönüne σᵢ ile bağlar.\n\nTemel uzaylar:\n  R(A) = span{u₁,...,uᵣ}  (sol tekil vektörler)\n  N(A) = span{v_{r+1},...,v_N}  (sağ tekil vektörler, σ=0)\n  R(Aᴴ) = span{v₁,...,vᵣ}  (σ>0 sağ tekil vektörler)\n  N(Aᴴ) = span{u_{r+1},...,u_M}"
+        },
+        {
+          "type": "code",
+          "heading": "Pseudo-inverse A† ve Case 3 çözümü",
+          "text": "SVD'den pseudo-inverse:\n  A† = V Σ† Uᴴ\n  Σ†: Σ'nın pseudo-inverse = sıfır olmayan tekil değerlerin tersini al\n  Σ† = diag(1/σ₁, 1/σ₂, ..., 1/σᵣ, 0, ..., 0)\n\nCase 3 (rank-deficient, r < min(M,N)):\n  x† = A†y = V Σ† Uᴴ y\n  Bu: minimum norm + minimum residual çözümü\n  - ||y - Ax†||₂ = minimum (LS bileşeni)\n  - ||x†||₂ = minimum (norm bileşeni)\n\nNeden SVD bu iki özelliği birleştiriyor?\n  Uᴴy: y'yi sola tekil bazda yaz\n  Σ†: σ>0 bileşenlerini ölçekle, σ=0 bileşenlerini sıfırla\n    → σ=0 yönleri sıfır bırakılır (min-norm)\n    → σ>0 yönlerde LS bileşeni hesaplanır\n  Vᴴ: tekrar orijinal bazda göster\n\n4 Durum için pseudo-inverse:\n  Case 0: r=M=N → A†=A⁻¹\n  Case 1: r=N<M → A†=(AᴴA)⁻¹Aᴴ\n  Case 2: r=M<N → A†=Aᴴ(AAᴴ)⁻¹\n  Case 3: r<min(M,N) → A†=VΣ†Uᴴ  (en genel)"
+        },
+        {
+          "type": "code",
+          "heading": "Tikhonov regularization — küçük tekil değerleri sönümle",
+          "text": "Sorun: Küçük σᵢ değerleri gürültü amplifikasyonuna yol açar.\n  x† = Σᵢ (1/σᵢ) (uᵢᴴy) vᵢ\n  σᵢ → 0 ise (1/σᵢ) → ∞ → gürültü yükselir\n\nTikhonov regularization:\n  min_x ||y - Ax||² + λ||x||²  (λ > 0)\n  Normal denklem: (AᴴA + λI) x_λ = Aᴴy\n  Çözüm: x_λ = (AᴴA + λI)⁻¹Aᴴy\n\nSVD ile ifade:\n  x_λ = Σᵢ [σᵢ / (σᵢ² + λ)] (uᵢᴴy) vᵢ\n  Filtre faktörü: fᵢ = σᵢ² / (σᵢ² + λ)\n    σᵢ >> √λ: fᵢ ≈ 1 (büyük tekil değerler korunur)\n    σᵢ << √λ: fᵢ ≈ 0 (küçük tekil değerler sönümlenir)\n\nλ seçimi:\n  λ büyük → fazla düzenleme, çözüm smooth ama yaklaşık\n  λ küçük → az düzenleme, çözüm keskin ama gürültülü\n  Optimal λ: cross-validation, L-curve, GCV yöntemleriyle"
         }
       ]
     }
