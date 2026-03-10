@@ -209,6 +209,8 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .card-cat-Signal-Processing,.cat-hdr-Signal-Processing        {--cc:#34d399}
 .card-cat-Applications.vs01,.cat-hdr-Applications.vs01        {--cc:#fb923c}
 .card-cat-Applications.vs02,.cat-hdr-Applications.vs02        {--cc:#fbbf24}
+.card-cat-Estimation.vs03,.cat-hdr-Estimation.vs03             {--cc:#a78bfa}
+.card-cat-Optimization.vs03,.cat-hdr-Optimization.vs03         {--cc:#6ee7b7}
 
 /* Code block */
 .sec-code{background:var(--code-bg,#0b1020);border:1px solid var(--border);border-radius:6px;padding:12px 14px;font-family:'Fira Code','Cascadia Code','Courier New',monospace;font-size:12px;color:#e2e8f0;white-space:pre;overflow-x:auto;line-height:1.6;display:block;margin:0}
@@ -523,6 +525,11 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
     <span class="nav-icon">🔧</span><span class="nav-num">02</span>
     <span class="nav-label">Linear Operators &amp; Inverse</span>
     <span class="nav-count" id="cnt-vs02">0</span>
+  </button>
+  <button class="nav-btn" data-sec="vs03" onclick="switchSection('vs03');closeSidebar()">
+    <span class="nav-icon">🎲</span><span class="nav-num">03</span>
+    <span class="nav-label">Random Variable Spaces</span>
+    <span class="nav-count" id="cnt-vs03">0</span>
   </button>
 
   <div class="sidebar-foot">
@@ -892,6 +899,16 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
     </div>
   </div>
 
+  <div id="hdr-vs03" class="section-header">
+    <div class="hdr-title">Vector Space of Random Variables</div>
+    <div class="hdr-sub">EE499 · Ch3 — IPS of RVs, LMMSE estimation, ML, MAP, Bayesian framework, optimization methods</div>
+    <div class="controls">
+      <select id="flt-vs03"><option value="">All categories</option></select>
+      <input type="search" id="q-vs03" placeholder="Search...">
+      <span class="pill" id="pill-vs03">0 cards</span>
+    </div>
+  </div>
+
 </header>
 
 <div id="overview-panel" class="ch-overview-panel" style="display:none">
@@ -918,7 +935,7 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 const CHAPTERS = ['ch01','ch02','ch03','ch04','ch05','ch06','ch07','ch08','ch09','ch10','ch11','ch12',
                    'ida01','ida02','ida03','ida04','ida05','ida06','ida07','ida08','ida09','ida10','ida11','ida12','ida13',
                    'py01','py02','py03','py04','py05','py06','py07',
-                   'vs01','vs02'];
+                   'vs01','vs02','vs03'];
 let DATA = {};
 CHAPTERS.forEach(c => DATA[c] = []);
 let OVERVIEWS = {};
@@ -934,7 +951,7 @@ const CH_CTX = {
   ida01:'ida01',ida02:'ida02',ida03:'ida03',ida04:'ida04',ida05:'ida05',ida06:'ida06',
   ida07:'ida07',ida08:'ida08',ida09:'ida09',ida10:'ida10',ida11:'ida11',ida12:'ida12',ida13:'ida13',
   py01:'py01',py02:'py02',py03:'py03',py04:'py04',py05:'py05',py06:'py06',py07:'py07',
-  vs01:'vs01',vs02:'vs02'
+  vs01:'vs01',vs02:'vs02',vs03:'vs03'
 };
 
 /* ==================== HELPERS ==================== */
