@@ -202,6 +202,14 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .card-cat-Training.py06,.cat-hdr-Training.py06                {--cc:#ea580c}
 .card-cat-Complexity,.cat-hdr-Complexity                      {--cc:#94a3b8}
 
+/* VS — Vector Spaces course colours */
+.card-cat-Motivation,.cat-hdr-Motivation                      {--cc:#f0abfc}
+.card-cat-Foundations,.cat-hdr-Foundations                    {--cc:#818cf8}
+.card-cat-Geometry,.cat-hdr-Geometry                          {--cc:#38bdf8}
+.card-cat-Signal-Processing,.cat-hdr-Signal-Processing        {--cc:#34d399}
+.card-cat-Applications.vs01,.cat-hdr-Applications.vs01        {--cc:#fb923c}
+.card-cat-Applications.vs02,.cat-hdr-Applications.vs02        {--cc:#fbbf24}
+
 /* Code block */
 .sec-code{background:var(--code-bg,#0b1020);border:1px solid var(--border);border-radius:6px;padding:12px 14px;font-family:'Fira Code','Cascadia Code','Courier New',monospace;font-size:12px;color:#e2e8f0;white-space:pre;overflow-x:auto;line-height:1.6;display:block;margin:0}
 .qa-mark{color:#38bdf8;margin-right:6px;font-size:8px;vertical-align:2px;opacity:1;letter-spacing:0}
@@ -503,6 +511,18 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
     <span class="nav-icon">📋</span><span class="nav-num">GD</span>
     <span class="nav-label">Guides</span>
     <span class="nav-count" id="cnt-py07">0</span>
+  </button>
+
+  <div class="course-divider">VS · Vector Spaces</div>
+  <button class="nav-btn" data-sec="vs01" onclick="switchSection('vs01');closeSidebar()">
+    <span class="nav-icon">📐</span><span class="nav-num">01</span>
+    <span class="nav-label">Linear Vector Spaces</span>
+    <span class="nav-count" id="cnt-vs01">0</span>
+  </button>
+  <button class="nav-btn" data-sec="vs02" onclick="switchSection('vs02');closeSidebar()">
+    <span class="nav-icon">🔧</span><span class="nav-num">02</span>
+    <span class="nav-label">Linear Operators &amp; Inverse</span>
+    <span class="nav-count" id="cnt-vs02">0</span>
   </button>
 
   <div class="sidebar-foot">
@@ -849,6 +869,26 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
       <select id="flt-py07"><option value="">All categories</option></select>
       <input type="search" id="q-py07" placeholder="Search...">
       <span class="pill" id="pill-py07">0 cards</span>
+    </div>
+  </div>
+
+  <div id="hdr-vs01" class="section-header">
+    <div class="hdr-title">Linear Vector Spaces</div>
+    <div class="hdr-sub">EE499 · Ch1 — Vector spaces, basis, norm, inner product, Gram-Schmidt, projection</div>
+    <div class="controls">
+      <select id="flt-vs01"><option value="">All categories</option></select>
+      <input type="search" id="q-vs01" placeholder="Search...">
+      <span class="pill" id="pill-vs01">0 cards</span>
+    </div>
+  </div>
+
+  <div id="hdr-vs02" class="section-header">
+    <div class="hdr-title">Linear Operators &amp; Inverse Problems</div>
+    <div class="hdr-sub">EE499 · Ch2 — Linear operators, matrix representation, range/null space, least squares, minimum norm</div>
+    <div class="controls">
+      <select id="flt-vs02"><option value="">All categories</option></select>
+      <input type="search" id="q-vs02" placeholder="Search...">
+      <span class="pill" id="pill-vs02">0 cards</span>
     </div>
   </div>
 
