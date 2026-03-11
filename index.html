@@ -516,6 +516,10 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
   </button>
 
   <div class="course-divider">VS · Vector Spaces</div>
+  <button class="nav-btn" data-sec="vs-summary" onclick="switchSection('vs-summary');closeSidebar()" style="border-left:3px solid #a78bfa;margin-bottom:8px">
+    <span class="nav-icon">📐</span><span class="nav-num" style="font-size:.6rem">ÖZT</span>
+    <span class="nav-label">VS Özeti</span>
+  </button>
   <button class="nav-btn" data-sec="vs01" onclick="switchSection('vs01');closeSidebar()">
     <span class="nav-icon">📐</span><span class="nav-num">01</span>
     <span class="nav-label">Linear Vector Spaces</span>
@@ -899,6 +903,11 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
     </div>
   </div>
 
+  <div id="hdr-vs-summary" class="section-header">
+    <div class="hdr-title">VS Özeti — Soyut Geometriden Bayesian Tahminine</div>
+    <div class="hdr-sub">Her adım öncekinin sınırını aşıyor: uzay → projeksiyon → operatör → SVD → RV → LMMSE → MAP</div>
+  </div>
+
   <div id="hdr-vs03" class="section-header">
     <div class="hdr-title">Vector Space of Random Variables</div>
     <div class="hdr-sub">EE499 · Ch3 — IPS of RVs, LMMSE estimation, ML, MAP, Bayesian framework, optimization methods</div>
@@ -920,6 +929,7 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 
 <div id="summary-page" style="display:none"></div>
 <div id="ida-summary-page" style="display:none"></div>
+<div id="vs-summary-page" style="display:none"></div>
 <div id="card-grid"></div>
 <div id="tx-tree-view" style="display:none"><div id="tx-container"></div></div>
 <div class="footer-text">Kart = detay popup &bull; <kbd>/</kbd> arama &bull; <kbd>ESC</kbd> kapat</div>
@@ -941,6 +951,7 @@ CHAPTERS.forEach(c => DATA[c] = []);
 let OVERVIEWS = {};
 let SUMMARY = null;
 let IDA_SUMMARY = null;
+let VS_SUMMARY = null;
 let SEC = 'ch01';
 let F = {};
 CHAPTERS.forEach(c => F[c] = {cat:'', q:''});
@@ -990,10 +1001,12 @@ function switchSection(sec){
   render();
   const isSummary = sec === 'summary';
   const isIdaSummary = sec === 'ida-summary';
+  const isVsSummary = sec === 'vs-summary';
   const isTxTree = (sec === 'ch12') && TX_VIEW === 'tree';
   $('summary-page').style.display = isSummary ? 'block' : 'none';
   $('ida-summary-page').style.display = isIdaSummary ? 'block' : 'none';
-  $('card-grid').style.display   = (isSummary || isIdaSummary || isTxTree) ? 'none' : '';
+  $('vs-summary-page').style.display = isVsSummary ? 'block' : 'none';
+  $('card-grid').style.display   = (isSummary || isIdaSummary || isVsSummary || isTxTree) ? 'none' : '';
   $('tx-tree-view').style.display = isTxTree ? '' : 'none';
   if(isTxTree){ $('overview-panel').style.display='none'; renderTransformerTree(); }
   const cc = $('ch12-card-controls');
@@ -1073,10 +1086,16 @@ function renderIdaSummary(){
   $('ida-summary-page').innerHTML = `<div id="ida-summary-page-inner">${buildSummaryHTML(IDA_SUMMARY)}</div>`;
 }
 
+function renderVsSummary(){
+  if(!VS_SUMMARY) return;
+  $('vs-summary-page').innerHTML = `<div id="vs-summary-page-inner">${buildSummaryHTML(VS_SUMMARY)}</div>`;
+}
+
 /* ==================== RENDER CARDS ==================== */
 function render(){
   if(SEC === 'summary'){ renderSummary(); return; }
   if(SEC === 'ida-summary'){ renderIdaSummary(); return; }
+  if(SEC === 'vs-summary'){ renderVsSummary(); return; }
   renderCards(SEC);
 }
 
@@ -1424,6 +1443,7 @@ function applyData(d){
   if(d.overviews) OVERVIEWS = d.overviews;
   if(d.summary) SUMMARY = d.summary;
   if(d.ida_summary) IDA_SUMMARY = d.ida_summary;
+  if(d.vs_summary) VS_SUMMARY = d.vs_summary;
   CHAPTERS.forEach(c => buildDropdown('flt-'+c, DATA[c]));
   updateCounts();
   showOverview(SEC);

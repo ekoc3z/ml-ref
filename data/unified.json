@@ -9928,5 +9928,142 @@
       "↓  FCPN · DGCNN · FoldingNet  ← 3B'yi daha iyi işle",
       "↓  BoVW · Deconv · t-SNE  ← modeli anla ve yorumla ✓"
     ]
+  },
+  "vs_summary": {
+    "title": "EE499 — Sinyal İşlemede Vektör Uzayı Yöntemleri",
+    "subtitle": "Soyut geometriden Bayesian tahminine: her adım öncekinin sınırını aşıyor",
+    "chain": [
+      {
+        "num": 1,
+        "title": "Neden Soyut Uzay?",
+        "method": "Linear Vector Spaces — Aksiyomlar ve Birleştirici Çerçeve",
+        "what": "Lineer cebir dersinde vektörü ok olarak öğrendiniz, matris işlemlerini öğrendiniz, tamam. Ama mühendislikte karşılaştığınız nesneler çok daha zengin: sürekli zaman sinyalleri, enerji spektrumları, görüntüler, rassal değişkenler. Bunların hepsi için ayrı ayrı 'iç çarpım nedir, norm nedir, projeksiyon nasıl yapılır' diye tekrar başlamak istemezsiniz. Vektör uzayı aksiyomları tam da bu sorunu çözüyor — ekleme ve skaler çarpma tanımlanabildiği her nesne bu çerçeveye giriyor. Polinomlar bir uzay, Fourier serileri başka bir uzay, karesi toplanabilir fonksiyonlar L2 uzayı, gerçek sayıların Rⁿ'si bu çerçevenin özel bir hali. Bir kez soyut kanıtı yapıyorsunuz, tüm bu nesnelere otomatik uygulanıyor. Norm, açı, projeksiyon, Gram-Schmidt — hepsi aksiyomlardan türüyor ve her uzayda geçerli.",
+        "problems": [
+          "Norm ve mesafe tanımlamak için iç çarpım gerekiyor — düz vektör uzayı yetmiyor",
+          "Sonsuz boyutlu uzaylarda (fonksiyonlar, sinyaller) yakınsaklık ve tamlık soruları var"
+        ],
+        "next": "Geometrik araçları kullanmak için iç çarpım uzayı kurmak gerekiyor"
+      },
+      {
+        "num": 2,
+        "title": "Geometriyi Kur: Norm, Açı, Diklik",
+        "method": "Inner Product Spaces — Cauchy-Schwarz, Ortogonallik, Hilbert Uzayı",
+        "what": "İç çarpım tanımlanınca her şey geometrik hale geliyor. Norm kendisiyle iç çarpımın karekökü, mesafe ise iki vektörün farkının normu. Cauchy-Schwarz eşitsizliği |⟨u,v⟩| ≤ ‖u‖‖v‖ her IPS'de ücretsiz geliyor — bunu kanıtlamak için dağılımın ne olduğunu bilmenize gerek yok. Açı bu formülden çıkıyor: cos θ = ⟨u,v⟩/(‖u‖‖v‖). Diklik ⟨u,v⟩ = 0 anlamına geliyor. Pisagor teoremi genelleşiyor: u ⊥ v ise ‖u+v‖² = ‖u‖² + ‖v‖². Parallelogram eşitliği IPS'i düz norm uzayından ayırt ediyor. Hilbert uzayı ise tüm bunlara tamlık ekliyor — Cauchy dizileri uzay içinde kalıyor, limitler uzayda var. Bu tamlık olmadan sonsuz boyutlu uzaylarda limitlerin mantıklı davranacağı garanti edilemiyor.",
+        "problems": [
+          "Baz seçimi yapılmadan vektörleri koordinatlarla ifade edemiyor, hesap yapamıyoruz",
+          "Her baz üzerinden koordinat bulmak maliyetli — ONS baz çok daha verimli"
+        ],
+        "next": "Vektörleri baz üzerinden temsil et, hesabı mümkün kıl"
+      },
+      {
+        "num": 3,
+        "title": "Baz Seç, Sinyali Temsil Et",
+        "method": "Orthonormal Bases — Fourier, DFT, Koordinat Dönüşümü",
+        "what": "Herhangi bir baz kullanabilirsiniz ama ortonormal baz (ONS) — yani birbirine dik ve birim normlı elemanlardan oluşan baz — koordinat bulmayı iç çarpıma indiriyor: cₖ = ⟨f, φₖ⟩. Gram-Schmidt prosedürü herhangi bir lineer bağımsız kümeden ONS üretiyor. Üstelik Parseval eşitliği ‖f‖² = Σ|cₖ|² diyor ki enerji, koordinatların karelerinin toplamı — bu, zaman ve frekans alanı arasındaki enerji korunumunun cebirsel ifadesi. Fourier serisi L2[-π,π]'da tam bir ONS, DFT ise bunun ayrık ve sonlu boyutlu versiyonu. DFT'de baz değişimi matris çarpımı: konvolüsyon DFT alanında nokta çarpımına dönüşüyor. Bu, FIR filtre tasarımını ve OFDM'i mümkün kılan temel özdeşlik. Baz değişimi operatörün matris temsilini de değiştiriyor — doğal baz yerine öz-baz kullanılırsa operatör köşegen matris oluyor.",
+        "problems": [
+          "Gerçek dünya problemleri genellikle tam baz genişlemesi değil, kısmi alt uzaya projeksiyon gerektiriyor",
+          "y = Ax denklemini 'en iyi' çözmek ne anlama geliyor? Tek çözüm olmayabilir"
+        ],
+        "next": "Bir alt uzaya en yakın noktayı bul — projeksiyon teoremi"
+      },
+      {
+        "num": 4,
+        "title": "En İyi Yaklaşım = Projeksiyon",
+        "method": "Projection Theorem — Gram Matrisi, Ortogonal Ayrışım",
+        "what": "Kapalı ve dışbükey bir alt uzay V verildiğinde, herhangi bir x'e en yakın nokta o alt uzayın projektesidir. Yani ‖x - x̂‖'yi minimize eden x̂, x'in V'ye dik olduğu noktadır — hata e = x - x̂, V'ye dikdir. Bu teoremi kanıtlamak için sadece IPS aksiyomları yeterli, uzayın ne olduğu önemli değil. Pratikte bulmak için Gram matrisi G (G_ij = ⟨φᵢ,φⱼ⟩) kullanılıyor: G·c = d sistemini çözünce projeksiyon katsayıları c bulunuyor. ONS bazda G = I olduğu için c = d, yani cₖ = ⟨x,φₖ⟩. Ortogonal tamamlayan (V⊥) ile x = x̂ + e şeklinde benzersiz ayrışım var; bu Pisagor'u veriyor: ‖x‖² = ‖x̂‖² + ‖e‖². Bu projeksiyon geometrisi, ilerleyen her konuda tekrar tekrar karşınıza çıkacak — bazen matris çözümü olarak, bazen istatistiksel tahmin olarak.",
+        "problems": [
+          "y = Ax modeli verildiğinde A'nın 'tersi' her zaman mevcut değil — rank sorunları var",
+          "Sistemin çözümsüz veya sonsuz çözümlü olma durumları ayrı incelenmeli"
+        ],
+        "next": "Lineer operatör ne yapıyor? Neden Ax = y her zaman çözülemiyor?"
+      },
+      {
+        "num": 5,
+        "title": "Lineer Operatörler: İki Uzay Arasındaki Harita",
+        "method": "Linear Operators — Range, Null Space, 4 Case Taxonomy",
+        "what": "Lineer operatör A: X → Y iki vektör uzayı arasında lineerliği koruyan bir harita. Matris temsiline geçmek için baz seç, koordinatları dönüştür — ve matris bazın seçimine bağlı. Range(A) = A'nın tüm olası çıktılarının kümesi, Null(A) = A tarafından sıfıra gönderilen vektörler. Rank-nullity teoremi dim(Range) + dim(Null) = dim(Domain) diyor. İşte y = Ax sisteminin davranışını bu iki alt uzay tamamen belirliyor: eğer y ∈ Range(A) ise çözüm var, değilse yok. Eğer Null(A) = {0} ise tek çözüm, değilse sonsuz çözüm. Bu ikisini kombinleyince 4 durum ortaya çıkıyor — A'nın row ve column rank'ına göre. Dual uzay ve adjoint (A*) ise 'A'nın tersine ne kadar yaklaşabilirim?' sorusunu cevaplayıyor.",
+        "problems": [
+          "Çözüm yoksa en yakın çözüm ne? Sonsuz çözüm varsa hangisini seçiyoruz?",
+          "Bu seçimleri tutarlı bir şekilde yapacak sistematik yöntem gerekiyor"
+        ],
+        "next": "4 durumun her biri için en anlamlı çözüm nedir?"
+      },
+      {
+        "num": 6,
+        "title": "Ters Problem: 4 Durumun Anatomisi",
+        "method": "Least Squares, Minimum Norm, MNLS — Normal Denklem",
+        "what": "A'nın boyutları ve rank'ına göre y = Ax dört farklı senaryoda çözülüyor. A kare ve terslenebilirse: tek çözüm x = A⁻¹y. A'nın sütunları lineer bağımsızsa (m > n, overdetermined): çözüm yok, ama ‖y - Ax‖ minimize eden Least Squares (LS) çözümü var — normal denklem AᴴAx = Aᴴy. Geometrik yorum: y'yi Range(A)'ya projekte ediyorsunuz. A'nın satırları lineer bağımsızsa (m < n, underdetermined): sonsuz çözüm var, ama ‖x‖ minimize eden Minimum Norm (MN) çözümü var — x̂ = Aᴴ(AAᴴ)⁻¹y. Genel durumda (rank deficient): hem LS hem MN; bu Minimum Norm Least Squares (MNLS) problemi. Üç türetim yolu birbirine bağlı: normal denklem (gradyan = 0), projeksiyon geometrisi (hata Range'e dik), ve Lagrange çarpanları (kısıtlı optimizasyon). Regularization ise 'tamam ama x çok büyümesin' kısıtını ekliyor.",
+        "problems": [
+          "A kötü koşullanmışsa (ill-conditioned) matris tersini sayısal olarak almak güvenilmez",
+          "Hangi singular value'lar sıfıra 'yakın'? Bu sınır nasıl çiziliyor?"
+        ],
+        "next": "SVD: her matrisi temel parçalarına ayr, hem çözümü hem gürültüye duyarlılığı anla"
+      },
+      {
+        "num": 7,
+        "title": "SVD: Her Matrisin İçini Gör",
+        "method": "Singular Value Decomposition — Pseudo-Inverse, Koşul Sayısı",
+        "what": "Her A matrisi A = UΣVᴴ şeklinde ayrışıyor: U ve V ortonormal, Σ köşegen ve negatif olmayan tekil değerler içeriyor. Bu ayrışım her matris için var, kare olmak şart değil. Geometrik anlam zarif: V uzayında bir ONS baz seçin, her baz vektörünü σᵢ ile ölçekleyip U'nun ilgili sütununa eşleyin. Sistem ayrı ayrı ranktan 1'lik haritalama toplamı: A = Σᵢ σᵢ uᵢ vᵢᴴ. Pseudo-inverse A† = VΣ†Uᴴ ile tüm 4 durum tek formülle çözülüyor. Koşul sayısı κ(A) = σ_max/σ_min girişteki küçük bir bozulmanın çıkışta ne kadar büyüyebileceğini söylüyor — κ büyükse sistem kötü koşullanmış, küçük ölçüm gürültüsü bile tahmin sonucunu mahvedebilir. Regularization (Tikhonov) küçük singular value'ları bastırarak koşul sayısını düşürüyor. Truncated SVD ise en güçlü r ayrışımı tutup geri kalanını sıfırlıyor — hem regularization hem boyut indirgeme.",
+        "problems": [
+          "Deterministic y = Ax: x ve y sabit sayılar, gürültü istatistiği yok",
+          "Gerçek dünyada ölçümler rassal — gürültü modeli ve istatistiksel çerçeve gerekiyor"
+        ],
+        "next": "Rassal değişkenler de vektör uzayı oluşturuyor — aynı geometri, yeni yorum"
+      },
+      {
+        "num": 8,
+        "title": "Rassal Değişkenler de Vektör",
+        "method": "IPS of Random Variables — E[xy] İç Çarpım, Korelasyon Geometrisi",
+        "what": "Şimdiye kadar hep deterministik nesnelerle çalıştık. Ama sinyal işlemede veriler rassal. Ve rassal değişkenler de aksiyomları sağlıyor: ⟨x,y⟩ = E[xy] bir iç çarpım, ‖x‖ = √E[x²] normu RMS değeri, mesafe ‖x-y‖ = √E[(x-y)²] ise MSE'nin kareköküdür. Buradan doğan geometri: Cauchy-Schwarz'dan korelasyon katsayısının |ρ| ≤ 1 olması kendiliğinden çıkıyor, formüle ihtiyaç yok. İki RV arasındaki ρ bu uzaydaki iki vektörün açısının kosinüsü. Diklik E[xy] = 0 korelasyonsuzluğa karşılık geliyor. Gram matrisi = oto-korelasyon matrisi Rₓ = E[xxᵀ]. Gram-Schmidt bu uzayda uygulandığında whitening (beyazlatma) elde edilir: bileşenler korelasyonsuz ve birim varyanslı hale geliyor. Tüm Chapter 1-2 geometrisi artık rassal dünyada geçerli.",
+        "problems": [
+          "Bilinmeyen rassal x'i gözlemler y'den nasıl tahmin edelim?",
+          "Herhangi bir tahmin edici değil, MSE'yi minimize eden lineer tahmin edici"
+        ],
+        "next": "Projeksiyon teoremini stokastiğe uygula — LMMSE'yi türet"
+      },
+      {
+        "num": 9,
+        "title": "LMMSE: Projeksiyon Stokastikte",
+        "method": "LMMSE — Ortogonallik İlkesi, Wiener-Hopf, MSE Analizi",
+        "what": "x̂ = αᵀy biçimindeki lineer tahmin ediciler arasında MSE'yi minimize eden hangisi? İki türetim yolu aynı yere çıkıyor. Optimizasyon yolu: E[e²]'yi αₖ'ya göre türevini alıp sıfırla, E[e·yₖ] = 0 çıkıyor. Projeksiyon yolu: x̂, span{y₁,...,yN} alt uzayına projektedir, hata bu uzaya dik olmalı, aynı koşul. Bu ortogonallik ilkesi R_y α = r_xy sistemini veriyor — tam olarak Chapter 2'deki G·c = d. Gram matrisi = oto-korelasyon, hedef = çapraz korelasyon. Vektör duruma geçince Wiener-Hopf denklemi KR_y = R_xy ortaya çıkıyor. y = Ax + n modeli için optimal LMMSE filtresi K = RₓAᵀ(ARₓAᵀ+Rₙ)⁻¹, ki bu matrix inversion lemma ile deterministik ağırlıklı+regularized MN çözümüyle özdeş. Fark şu: deterministik çözümde W ve λ keyfi seçiyordunuz, LMMSE'de istatistiklerden otomatik türüyor. MSE = σ²ₓ - rᵀ_xy R⁻¹_y r_xy; N arttıkça bu küçülüyor, N→∞'da sıfıra gidiyor.",
+        "problems": [
+          "Lineer kısıt gereksiz yere sınırlayıcı olabilir — nonlineer tahmin ediciler daha iyi MSE verebilir",
+          "x rassal ve prior bilgisi varsa bunu kullanmak için daha zengin çerçeve gerekiyor"
+        ],
+        "next": "Tam Bayesian çerçeve: prior bilgisini sistematik olarak kullan"
+      },
+      {
+        "num": 10,
+        "title": "Bayesian Çerçeve: Prior Bilgisini Kullan",
+        "method": "ML, MMSE, MAP — Likelihood × Prior → Posterior",
+        "what": "Tahmin problemlerini üç kategoriye ayırıyoruz. x deterministik, y rassal ise Maximum Likelihood (ML): gözlemi en olası yapan x'i seç. i.i.d. Gaussian gürültüde bu Least Squares'e indirgiyor — LS'nin stokastik meşruiyeti burada. Korelasyonlu Gaussian ağırlıklı LS veriyor, Poisson KL-divergence minimizasyonu, Laplace ise L1 norm. x de rassal ve prior p_x(x) biliniyorsa Bayesian yöntemler devreye giriyor: MMSE = E[x|y] = posterior mean, teorik olarak optimal ama hesabı zor. MAP = argmax p(x|y) = argmin [-log p(y|x) - log p(x)] = argmin [Δ(y,Ax) + λR(x)]. Bu son form çok önemli: MAP, data fidelity + regularization minimizasyonu. Gaussian prior → Tikhonov, Laplace prior → L1/LASSO (compressed sensing), yapısal prior → Tikhonov genellemesi. Gaussian istatistiklerde ML = MAP = MMSE = LMMSE hepsi aynı çözüme yakınsar — Bayesian ve deterministik çerçeveler buluşuyor.",
+        "problems": [
+          "Kapalı form çözüm her zaman mevcut değil — büyük A matrisleri, non-smooth R(x), Poisson gürültüsü",
+          "Matris tersi almak hem bellekte hem hesapta imkansız olabilir"
+        ],
+        "next": "Kapalı form yoksa iteratif sayısal optimizasyon"
+      },
+      {
+        "num": 11,
+        "title": "Büyük Ölçekli Problemleri İterasyonla Çöz",
+        "method": "Gradient Descent, Newton, Conjugate Gradient — Convexity",
+        "what": "Her tahmin yöntemi sonunda x̂ = argmin Δ(y,Ax) + λR(x) formuna geliyor. Bu problemi çözmek için önce convexity kontrol edilir: J(x) convex ise her lokal minimum global, herhangi bir yerel yöntem işe yarar. Steepest descent her adımda gradient'in tam tersine gider, güncelleme x^(n+1) = x^(n) - τ∇J(x^(n)). Yakınsama lineer, adım sayısı koşul sayısıyla orantılı — kötü koşullanmış problemlerde çok yavaş. Newton yöntemi Hessian ∇²J(x) ile ikinci derece yaklaşım yapar, quadratic yakınsama sağlar — ama N×N Hessian'ı her iterasyonda ters almak O(N³), büyük N'de imkansız. Quasi-Newton (BFGS) Hessian'ı iteratif yaklaşımla güncelleyerek ikisi arasında bir yerde durur. Conjugate gradient (CG) sadece gradient saklayarak O(N) bellek kullanır, quadratic J için tam çözümü N adımda bulur, pratikte en yaygın seçim. Bu yöntemleri bilmek, tersini alamayacağınız büyük A matrislerinde bile optimal tahmin yapabilmenizi sağlıyor.",
+        "problems": [],
+        "next": "Ders tamamlandı — deterministik uzay geometrisinden Bayesian optimizasyonuna tam bir çerçeve"
+      }
+    ],
+    "bigpicture": [
+      "Soyut vektör uzayı · polinomlar, sinyaller, RV'ler hepsi aynı çerçevede",
+      "↓  İç çarpım uzayı · norm, açı, diklik, projeksiyon aksiyomlardan geliyor",
+      "↓  ONS baz · koordinat bulmak iç çarpım, Parseval enerji eşitliği, DFT",
+      "↓  Projeksiyon teoremi · en iyi yaklaşım = alt uzaya dikme, hata ⊥ uzay",
+      "↓  Lineer operatörler · Range, Null, rank-nullity — 4 durum anatomisi",
+      "↓  LS / MN / MNLS · her durum için projeksiyon tabanlı optimal çözüm",
+      "↓  SVD · A = UΣVᴴ her matris için, pseudo-inverse, koşul sayısı κ",
+      "↓  RV uzayı · E[xy] iç çarpım, ρ = cos θ, diklik = korelasyonsuzluk",
+      "↓  LMMSE · R_y α = r_xy ortogonallik ilkesi, Wiener-Hopf, projeksiyon yine",
+      "↓  ML + MAP · likelihood × prior → data fidelity + regularization",
+      "↓  Steepest descent / Newton / CG · kapalı form yoksa iterasyon ✓"
+    ]
   }
 }
