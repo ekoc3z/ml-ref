@@ -1614,6 +1614,128 @@
       ]
     },
     {
+      "title": "Mini-batch Gradient Hesabı",
+      "cat": "Gradient-Methods",
+      "summary": "32 örnek aynı weight'lerle forward pass yapar, her biri farklı aktivasyon ve loss üretir. Backprop sırasında computational graph her örneğin kendi aktivasyonlarını kullanarak w'ya kadar gider, gradientler toplanıp ortalaması alınır, weight bir kez güncellenir.",
+      "context": "Lectures 14–15 · 18–20.12.2023 — Optimising neural networks",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Forward Pass",
+          "text": "32 örnek aynı weight'lerle geçiyor. Weight'ler ortak, her örnek farklı aktivasyon üretiyor, farklı loss üretiyor. Bu aktivasyonlar bellekte tutuluyor — backprop için lazım olacak."
+        },
+        {
+          "type": "code",
+          "heading": "Forward Pass Akışı",
+          "text": "x₁  → [w ile hesapla] → aktivasyonlar a₁  → L₁\nx₂  → [w ile hesapla] → aktivasyonlar a₂  → L₂\n...\nx₃₂ → [w ile hesapla] → aktivasyonlar a₃₂ → L₃₂"
+        },
+        {
+          "type": "code",
+          "heading": "Loss",
+          "text": "L_avg = (L₁ + L₂ + ... + L₃₂) / 32"
+        },
+        {
+          "type": "text",
+          "heading": "Backprop",
+          "text": "w, 32 örneğin hepsinde kullanıldı. Backprop başlayınca computational graph üzerinden her örnek kendi dalına gidiyor, kendi saklanan aktivasyonları üzerinden w'ya kadar chain rule ile ilerliyor. Her örnek kendi aktivasyon yolundan geçiyor, birbirinden bağımsız. Sonuçta w için tek bir gradient çıkıyor."
+        },
+        {
+          "type": "code",
+          "heading": "Gradient Hesabı",
+          "text": "∂L_avg/∂w = (1/32) · ∂L₁/∂w   ← a₁ aktivasyonları üzerinden\n           + (1/32) · ∂L₂/∂w   ← a₂ aktivasyonları üzerinden\n           + ...\n           + (1/32) · ∂L₃₂/∂w  ← a₃₂ aktivasyonları üzerinden"
+        },
+        {
+          "type": "code",
+          "heading": "Weight Update",
+          "text": "w = w - α · ∂L_avg/∂w"
+        },
+        {
+          "type": "code",
+          "heading": "Özet",
+          "text": "Forward:   32 örnek → 32 farklı aktivasyon → 32 farklı loss\nAvg:       32 loss → 1 scalar L_avg\nBackprop:  L_avg → computational graph → 32 ayrı dal →\n           her dal kendi aktivasyonlarını kullanıyor →\n           w'da gradient'ler toplanıp ortalaması alınıyor\nUpdate:    w bir kez güncelleniyor"
+        },
+        {
+          "type": "note",
+          "heading": "Önemli Not",
+          "text": "\"Önce avg al sonra backprop yap\" ile \"ayrı ayrı backprop yap sonra ortala\" aynı sonucu veriyor — içeride her zaman 32 aktivasyon seti ayrı ayrı kullanılıyor, kaçınılmaz. w 32 yerde kullanıldığı için her birinin katkısı hesaplanmak zorunda."
+        }
+      ]
+    },
+    {
+      "title": "Weight Initialization ve Batch Normalization",
+      "cat": "Regularization",
+      "summary": "Weight initialization training başlamadan önce bir kere yapılır — başlangıç çok büyük veya küçük olursa gradient'ler patlar ya da sıfırlanır. Batch normalization ise training boyunca her mini-batch'te çalışır, her layer'ın input dağılımını stabil tutar.",
+      "context": "Lecture 15 · 20.12.2023 — Preventing overfitting and starting well",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Problem: Ne Kadar Büyük Başlamalı?",
+          "text": "Network başlarken weight'ler rastgele seçiliyor. Ama ne kadar büyük olmalı?\n\nHer layer'ın output varyansı şöyle büyüyor: n_in tane input var, her biri weight ile çarpılıyor. n_in büyükse varyans katlanıyor. 10 layer sonra ya patlıyor ya sıfırlanıyor."
+        },
+        {
+          "type": "code",
+          "heading": "Varyans Büyümesi",
+          "text": "Var(output) = n_in · Var(W) · Var(input)"
+        },
+        {
+          "type": "text",
+          "heading": "Çok Büyük Weight",
+          "text": "Aktivasyondan önce W · x hesaplanıyor. Büyük W → büyük W · x.\n\nReLU: sadece negatifleri sıfırlıyor, büyük pozitif değerlere dokunmuyor → patlama durmuyor → exploding gradient.\n\nSigmoid/Tanh: çok büyük input gelince düzleşiyor — eğim sıfıra yaklaşıyor, gradient geçemiyor → vanishing gradient (saturasyon)."
+        },
+        {
+          "type": "text",
+          "heading": "Çok Küçük Weight",
+          "text": "Her layer'dan geçerken sinyal küçülüyor, küçülüyor — 10 layer sonra sıfıra yaklaşıyor. Her ikisinde de vanishing gradient."
+        },
+        {
+          "type": "text",
+          "heading": "Amaç",
+          "text": "Her layer'dan geçerken varyans korunmalı. Initialization sadece başlangıç noktasını belirliyor — training başlayınca weight'ler gradient descent ile serbestçe güncelleniyor. Ama başlangıç kötüyse ilk gradient'ler ya patlıyor ya sıfırlanıyor, training hiç başlayamıyor."
+        },
+        {
+          "type": "code",
+          "heading": "Glorot (Xavier) — Sigmoid/Tanh için",
+          "text": "Hem forward hem backward pass'te varyansı korumak için:\n\nVar(W) = 2 / (n_in + n_out)"
+        },
+        {
+          "type": "code",
+          "heading": "He — ReLU için",
+          "text": "ReLU input'ların yarısını sıfırlıyor, efektif n_in yarıya düşüyor. Glorot'tan 2 kat büyük başlamak lazım:\n\nVar(W) = 2 / n_in"
+        },
+        {
+          "type": "text",
+          "heading": "Batch Normalization",
+          "text": "Initialization training'in başında bir kere yapılıyor. Ama training ilerledikçe yeni bir sorun çıkıyor: her layer'ın input dağılımı kayıyor.\n\nÖnceki layer'ların weight'leri güncellendikçe sonraki layer'a gelen verinin ortalaması ve varyansı değişiyor. Her layer sürekli değişen bir input'a adapte olmaya çalışıyor — training yavaşlıyor. Buna internal covariate shift deniyor.\n\nBatch norm ne yapıyor: her layer'dan önce o mini-batch'in aktivasyonlarını normalize et. μ ve σ o anki mini-batch'ten hesaplanıyor. γ ve β öğrenilen parametreler — normalizasyonu geri almak gerekirse model kendisi öğreniyor.\n\nHer layer her adımda stabil bir input dağılımı görüyor. Daha hızlı training, daha yüksek learning rate kullanılabiliyor, hafif regularization etkisi de var."
+        },
+        {
+          "type": "code",
+          "heading": "Batch Norm Formülü",
+          "text": "x̂ = (x - μ) / σ       ← sıfır ortalama, birim varyans\ny  = γ · x̂ + β         ← öğrenilebilir scale ve shift"
+        },
+        {
+          "type": "table",
+          "heading": "Fark",
+          "rows": [
+            [
+              "",
+              "Ne zaman",
+              "Ne sıklıkla"
+            ],
+            [
+              "Initialization",
+              "Training başlamadan önce",
+              "Bir kere"
+            ],
+            [
+              "Batch norm",
+              "Training boyunca, her layer'da",
+              "Her mini-batch'te"
+            ]
+          ]
+        }
+      ]
+    },
+    {
       "title": "Regularisation and Initialisation",
       "cat": "Learning-Rate",
       "summary": "Dropout randomly zeros activations during training, forcing redundancy. Glorot/He initialisation ensures gradients neither vanish nor explode at the start of training — crucial for training deep networks from scratch.",
