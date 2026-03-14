@@ -1430,6 +1430,77 @@
       ]
     },
     {
+      "title": "Adam, SGD+Momentum ve AdamW — Tam Açıklama",
+      "cat": "Adaptive-Methods",
+      "summary": "Vanilla gradient descent iki problemle boğuşur: gradient zigzag çizer ve tüm parametreler aynı hızda güncellenir. SGD+Momentum zigzag'ı çözer, Adam ikisini birden çözer, AdamW ise Adam'ın bozuk weight decay'ini düzeltir.",
+      "context": "Lecture 15 · 20.12.2023 — Beyond plain gradient descent",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Problem: Vanilla Gradient Descent Yetersiz",
+          "text": "Temel güncelleme:\n\nx = x - α · g\n\nİki büyük sorunu var:\n\nSorun 1: Gradient her adımda farklı yönlere sıçrıyor\n\nLoss surface düzgün bir kase değil. Bazı yönlerde çok dik, bazılarında düz. Gradient bu dik yönlerde sürekli ileri-geri sallanıyor, düz yönde çok yavaş ilerliyor. Zigzag çiziyorsun, hedefe doğru düz gidemiyorsun.\n\nSorun 2: Tüm parametreler aynı hızda güncelleniyor\n\nBazı weight'ler sürekli büyük gradient alıyor (sık aktive olan nöronlar, yaygın kelimeler), bazıları nadiren küçük gradient alıyor (nadir kelimeler, az aktive olan nöronlar). Aynı α ile ikisine de davranıyorsun — biri çok hızlı güncelleniyor, diğeri hiç öğrenemiyor.\n\nHer optimizer bu iki problemi farklı şekilde çözüyor."
+        },
+        {
+          "type": "code",
+          "heading": "SGD + Momentum",
+          "text": "Sorun 1'i çözüyor, Sorun 2'ye dokunmuyor.\n\nAccelerates along directions with consistent gradients, enables consistent gradients with less zig zagging.\n\nm = β·m + g          ← gradient'lerin birikimli toplamı\nx = x - α·m\n\nm gradient'in exponential moving average'ı. β = 0.9 — yani %90 geçmiş, %10 yeni gradient.\n\nNe oluyor?\n\nZigzag çizilen yönde gradient sürekli işaret değiştiriyor (+, -, +, -) → m'de birbirini iptal ediyor → o yönde adım küçülüyor.\nDoğru yönde gradient hep aynı tarafı gösteriyor → m'de birikip büyüyor → o yönde hızlanıyorsun.\n\nFiziksel analoji: top bir yüzeyde yuvarlanıyor. Her küçük çukurda durmuyor, momentumuyla devam ediyor. Düz zeminde giderek hızlanıyor, engebeli zeminde sallanma sönümleniyor.\n\nNeden hala yaygın kullanılıyor?\n\nSGD+Momentum'da hiçbir weight Adam'daki gibi yapay olarak \"optimal\" baskılanmıyor — her weight kendi gradient'i kadar güncelleniyor, bir de momentum ile ekstra zigzaglardan kurtulup gradient yönüne gidiyor. Daha yavaş convergence ama çok optimal fixlenmediği için daha iyi genelleme.\n\nAdaptive rate yok — her weight kendi gradient büyüklüğüne göre doğrudan güncelleniyor. Hiçbir weight yapay olarak baskılanmıyor. Bu daha \"dürüst\" bir optimizasyon. Daha yavaş converge ediyor ama bulduğu minimum daha düz oluyor.\n\nDüz minimum ne demek? Loss surface'te geniş bir vadi. Parametrelerde küçük bir kayma olsa bile loss çok değişmiyor. Bu test setinde de iyi performans demek — model ezberlememiş, gerçek pattern'i öğrenmiş.\n\nResNet, ViT gibi büyük vision modelleri SGD+momentum ile daha iyi test accuracy veriyor. Adam training loss'u daha hızlı düşürüyor ama test'te geri kalıyor."
+        },
+        {
+          "type": "code",
+          "heading": "Adam",
+          "text": "İki sorunu da çözüyor.\n\nm = β₁·m + (1-β₁)·g       ← 1. moment: gradient ortalaması (momentum)\nv = β₂·v + (1-β₂)·g²      ← 2. moment: gradient² ortalaması (adaptive rate)\n\nm̂ = m / (1 - β₁ᵗ)         ← bias correction\nv̂ = v / (1 - β₂ᵗ)         ← bias correction\n\nx = x - α · m̂ / (√v̂ + ε)\n\nm momentum'u çözüyor — aynı SGD+momentum mantığı, zigzag sönümleniyor.\n\nv adaptive rate'i çözüyor — her weight'in gradient karelerinin ortalaması. Büyük gradient alan weight'in v'si büyük → α/√v küçülüyor → adım küçülüyor. Nadir güncellenen weight'in v'si küçük → α/√v büyüyor → adım büyüyor. Her weight kendi geçmişine göre efektif learning rate ayarlıyor.\n\nBias correction neden var?\n\nm ve v sıfırdan başlıyor. İlk adımlarda gerçek gradient büyük olsa bile m sıfıra yakın — geçmiş yok, ortalama sıfıra çekiyor. Bu yapay olarak küçük güncellemeler üretiyor. 1 - β₁ᵗ bölmesi bunu düzeltiyor. t büyüdükçe β₁ᵗ → 0, düzeltme faktörü → 1, etkisi kayboluyor. Sadece başlangıçta önemli.\n\nε neden var?\n\n√v̂ sıfıra yaklaşırsa sıfıra bölme olur. ε = 10⁻⁸ bunu önlüyor.\n\nTipik değerler: β₁ = 0.9, β₂ = 0.999, α = 0.001, ε = 10⁻⁸.\n\nFast convergence: adaptive learning rates sayesinde her weight kendi optimal hızına göre güncelleniyor — ne overshooting (çok fazla update), ne de çok yavaş küçük updateler. Optimal hız her weight için ayrı ayrı belirleniyor, daha az epoch'ta daha düşük training loss.\n\nAdam'ın sorunu:\n\nWeight decay düzgün çalışmıyor — bunun için AdamW var."
+        },
+        {
+          "type": "code",
+          "heading": "AdamW",
+          "text": "Adam'ın weight decay problemi:\n\nL2 regularization loss'a λ·‖x‖² ekliyor, bu da gradient'e λ·x ekliyor:\n\ng = ∇task_loss + λ·x\n\nBu g Adam'a girince v'ye de karışıyor — adaptive rate weight decay'i de etkiliyor. Büyük weight'in decay'i zayıflıyor, küçük weight'in decay'i güçleniyor. İstediğin uniform decay, ama elde ettiğin bozuk decay.\n\nAdamW'nin çözümü:\n\nWeight decay'i gradient'ten tamamen ayır, direkt weight'e uygula:\n\nm = β₁·m + (1-β₁)·g         ← sadece task gradient\nv = β₂·v + (1-β₂)·g²        ← sadece task gradient\n\nx = x - α · m̂/(√v̂+ε) - α·λ·x    ← decay ayrı, adaptive rate etkilemiyor\n\nİki terim tamamen bağımsız. Adaptive rate sadece task loss'a bakıyor, weight decay her weight'e uniform uygulanıyor.\n\nTransformer'larda weight decay kritik — milyarlarca parametre var, regularization olmadan overfitting kaçınılmaz. GPT-2'den itibaren neredeyse tüm LLM'ler AdamW kullanıyor."
+        },
+        {
+          "type": "code",
+          "heading": "Özet Karşılaştırma",
+          "text": "Vanilla GD:      sabit α, gradient direkt → zigzag, uniform adım\nSGD+Momentum:    gradient ortalaması → zigzag söner, hala uniform adım\nAdam:            gradient ort. + adaptive rate → zigzag söner + per-weight adım\nAdamW:           Adam + weight decay düzeltmesi → transformer'lar için ideal\n\n                  SGD+Momentum    Adam      AdamW\nZigzag sönümü:   Var             Var       Var\nAdaptive rate:   Yok             Var       Var\nWeight decay:    Düzgün          Bozuk     Düzgün\nConvergence:     Yavaş           Hızlı     Hızlı\nGenelleme:       İyi             Orta      İyi\nKullanım:        CNN, vision     Eskidi    Transformer, LLM\n\nTek zincir:\n\nGradient sallanıyor → Momentum ekle (m)\nHer weight farklı hız istiyor → Adaptive rate ekle (v)\nm + v = Adam\nWeight decay bozuluyor → Gradient'ten ayır = AdamW"
+        }
+      ]
+    },
+    {
+      "title": "Regularization ve Weight Decay",
+      "cat": "Regularization",
+      "summary": "Model loss düşürmek için weight'leri büyütmeye meyillidir — bu overfitting'e yol açar. Regularization, loss'a complexity penalty ekleyerek modeli basit kalmaya zorlar. Weight decay (L2) büyük weight'leri pahalı hale getirir, böylece model sadece gerçekten önemli pattern'ler için weight büyütür.",
+      "context": "Lecture 15 · 20.12.2023 — Preventing overfitting",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Problem: Model Ezberliyor",
+          "text": "Training'de model şunu yapıyor: \"Bu data'ya en iyi uyan parametreleri bul.\" Ama en iyi uyan her zaman en iyi öğrenen demek değil.\n\nNeden? Çünkü loss düşürmenin en kolay yolu weight'leri büyütmek.\n\nSomut örnek:\n\noutput = w · x\nloss = (output - target)²\n\nTarget 1, output 0.3 → loss yüksek\nÇözüm: w'yu büyüt → output büyür → loss düşer\n\nGradient descent bunu doğal olarak buluyor çünkü en hızlı yol bu. Ama büyük weight ne anlama geliyor?"
+        },
+        {
+          "type": "code",
+          "heading": "Büyük Weight = Aşırı Duyarlılık",
+          "text": "output = w₁·x₁ + w₂·x₂ + w₃·x₃\n\nw₁ = 0.5 → x₁ çıktıyı orta düzeyde etkiliyor\nw₁ = 500 → x₁'deki küçük değişiklik devasa output değişikliğine yol açıyor\n\nModel training data'daki her küçük detaya, gürültüye aşırı duyarlı hale geliyor.\n\nSomut örnek:\n\nTraining data'da:\n→ Kedi resimlerinde sağ kulak piksel 47 tesadüfen parlak\n→ Model bunu öğrendi, w₄₇ = 800 oldu\n\nTest data'da:\n→ Yeni kedi geldi, piksel 47 parlak değil\n→ Model \"bu kedi değil\" diyor → yanlış\n\nGerçek pattern'i (kulak şekli, yüz yapısı) değil, training data'ya özgü tesadüfi detayı ezberliyor. Buna overfitting deniyor."
+        },
+        {
+          "type": "code",
+          "heading": "Regularization: \"Basit Kal\" Baskısı",
+          "text": "Çözüm: loss fonksiyonuna bir complexity penalty ekle.\n\ntotal_loss = task_loss + λ · penalty\n\nModel artık iki şeyi aynı anda minimize etmek zorunda:\n- Data'ya uymak\n- Basit kalmak\n\nλ ikisi arasındaki dengeyi ayarlıyor:\n- λ çok küçük → penalty önemsiz → overfitting\n- λ çok büyük → model hiçbir şey öğrenemiyor → underfitting\n- Doğru λ → validation set'te en iyi performans"
+        },
+        {
+          "type": "code",
+          "heading": "Weight Decay: Basitliği \"Küçük Weight\" Olarak Tanımla",
+          "text": "L2 regularization penalty'yi şöyle tanımlıyor:\n\npenalty = ‖w‖² = w₁² + w₂² + w₃² + ...\n\ntotal_loss = task_loss + λ·‖w‖²\n\nŞimdi w'yu büyütmek iki şeyi etkiliyor:\n\n- Task loss düşüyor ✓\n- Penalty yükseliyor ✗\n\nw = 10 iken task loss'tan 5 kazanıyorsun ama penalty'den 100 kaybediyorsun — net zarar. Model büyük weight tutmayı bırakıyor.\n\nSonuç: model sadece gerçekten önemli pattern'ler için weight büyütüyor. Gürültü için weight büyütmek artık \"pahalı\" — total loss artıyor."
+        },
+        {
+          "type": "code",
+          "heading": "\"Basitlik\" Farklı Tanımlanabilir",
+          "text": "L2 tek seçenek değil:\n\nL1 (Lasso):\npenalty = |w₁| + |w₂| + |w₃| + ...\nGereksiz weight'leri tamamen sıfıra itiyor → sparse model. \"Bu feature önemli değilse komple unut.\"\n\nDropout:\nTraining sırasında random nöronları kapat. Her adımda farklı nöronlar aktif → model tek bir yola bağımlı olamıyor, her nöron bağımsız öğrenmek zorunda kalıyor."
+        },
+        {
+          "type": "code",
+          "heading": "Özet Zinciri",
+          "text": "Loss düşürmenin kolay yolu → weight'leri büyüt\nBüyük weight → input'taki küçük değişikliklere aşırı duyarlılık\nAşırı duyarlılık → gürültüyü de ezberle → overfitting\n\nÇözüm: loss'a complexity penalty ekle (regularization)\nL2 penalty → büyük weight pahalı hale geliyor\nModel → sadece gerçekten önemli pattern için weight büyütüyor\nSonuç → gürültü ezberlenemiyor → genelleme iyileşiyor\n\nTek cümle: Regularization, modele \"data'ya uymak kadar basit kalmak da önemli\" diyor — weight decay bunu büyük weight'lere penalty uygulayarak hayata geçiriyor."
+        }
+      ]
+    },
+    {
       "title": "Regularisation and Initialisation",
       "cat": "Learning-Rate",
       "summary": "Dropout randomly zeros activations during training, forcing redundancy. Glorot/He initialisation ensures gradients neither vanish nor explode at the start of training — crucial for training deep networks from scratch.",
