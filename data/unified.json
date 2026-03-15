@@ -2434,6 +2434,65 @@
   ],
   "ch12": [
     {
+      "title": "RNN Attention'dan Self-Attention'a: h'ı Neden Kaldırdık?",
+      "cat": "Attention",
+      "summary": "RNN encoder-decoder attention'da alignment ve context vector decoder'ın hidden state h'ına bağlıydı — decoder feedback olmadan çalışmıyordu. Self-attention bu bağımlılığı kaldırıyor: h'ı da inputtan üretiyor, decoder'a gerek kalmıyor.",
+      "context": "Lecture 21 · 29.01.2024 — General Attention Layer → Self-Attention geçişi",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Başlangıç: RNN Attention Neye Muhtaç?",
+          "text": "Image captioning'de encoder CNN üzerinden spatial feature'lar üretir: z₁, z₂, ..., z_L — her bölge için bir D boyutlu vektör. Decoder'ın o adımdaki hidden state'i h ile her z_l arasında alignment score hesaplanır, softmax ile ağırlığa çevrilir, context vector alınır. Bu üç adımın hepsi decoder'ın h'ına bağlı — h olmadan alignment hesaplanamaz, alignment olmadan context vector çıkmaz. Sistem decoder feedback'e muhtaç."
+        },
+        {
+          "type": "code",
+          "heading": "RNN Attention Akışı",
+          "text": "e_{t,l} = f_att(h, z_l)    ← h ile z_l ne kadar uyumlu?\na_{t,l} = softmax(e_{t,l}) ← ağırlığa çevir\nc_t     = Σ a_{t,l} × z_l  ← context vector"
+        },
+        {
+          "type": "text",
+          "heading": "Geçiş: h'ı da Inputtan Üretemez miyiz?",
+          "text": "Self-attention'da soru şu: decoder'a hiç gerek var mı? h decoder'ın hidden state'i — alignment hesaplamak için decoder'ın o anki durumuna muhtacız. Peki h'ı da inputtan üretemez miyiz? Evet. Önce z(H×W×D) → x(N×D) flatten, sonra üç ayrı parametre matrisi öğreniyoruz."
+        },
+        {
+          "type": "table",
+          "heading": "RNN Attention → Self-Attention Eşleştirmesi",
+          "rows": [
+            [
+              "RNN Attention",
+              "Self-Attention",
+              "Rolü"
+            ],
+            [
+              "h (decoder hidden state)",
+              "q = x × W_q",
+              "\"Ne arıyorum?\""
+            ],
+            [
+              "alignment  f_att(h, z_l)",
+              "k = x × W_k",
+              "\"Benimle karşılaştır\""
+            ],
+            [
+              "context vector  Σ a × z_l",
+              "v = x × W_v ağırlıklı toplamı",
+              "\"İçerik olarak ne alıyorum?\""
+            ]
+          ]
+        },
+        {
+          "type": "code",
+          "heading": "Self-Attention Hesabı",
+          "text": "e_{i,j} = qᵢ · kⱼ / √D\na       = softmax(e)\nyᵢ      = Σⱼ a_{i,j} × vⱼ"
+        },
+        {
+          "type": "text",
+          "heading": "Ne Değişti?",
+          "text": "h'nın yaptığını artık q yapıyor — ama decoder'dan değil, inputtan üretiliyor. f_att'ın h ile z_l'yi karşılaştırmasını dot product + k üstleniyor. z_l'nin context'teki ağırlıklı toplam rolünü v üstleniyor. Decoder feedback tamamen ortadan kalkıyor — her token sadece x'e bakarak kendi q, k, v'sini üretiyor ve tüm tokenlar birbirini paralel inceliyor."
+        }
+      ]
+    },
+    {
       "title": "General Attention Layer: Image Captioning'den Self-Attention'a",
       "cat": "Attention",
       "summary": "Image captioning attention'dan başlayarak adım adım general attention layer'a, oradan da self-attention'a nasıl gelindiğinin evrimi. Her adım bir şeyi değiştiriyor: MLP → dot product → scale → multi-query → key/value ayrımı → self-attention.",
