@@ -2340,6 +2340,61 @@
           "type": "code",
           "heading": "Neden Attention Daha İyi?",
           "text": "\"John, who was the king's friend and had visited Paris in 1789\n when the revolution began, was executed.\"\n\nVanilla RNN: \"executed\" üretirken \"John\" çoktan unutulmuş\n             c = h_son → 30 adım önceki bilgi yok\n\nAttention:   \"executed\" üretirken z_John'a bakabiliyor\n             attention weight → a_John yüksek\n             \"John was executed\" bağlantısı kurulabiliyor"
+        },
+        {
+          "type": "note",
+          "heading": "Bu Örnekler Hangi Mimari?",
+          "text": "Bu örnekler RNN'in kullanıldığı language translation yapmaya yönelik ML architecture'ları — encoder-decoder şeklinde, encoder'da bir RNN var, decoder'da ayrı bir RNN. Bu encoder-decoder architecture'ı RNN demek değil, içinde 2 RNN ile yapılan bir model. Cümleyi encoder context vector'üne sokuyor ve çeviri dilde decode ediliyor bu vector'e göre. Sadece vanilla RNN mantığında tek context vector yetersiz — attention kullanılınca hangi kelimenin hangi kelimeye daha çok dikkat etmesi gerektiğini gösteren weight'ler ve her time step'te yeni kelimeye özel context vector'leri ile bu sorundan kurtuluyor."
+        },
+        {
+          "type": "text",
+          "heading": "Vanilla Seq2Seq vs MLP Varyantı vs Attention",
+          "text": "Vanilla seq2seq: son hidden state h_T direkt context vector oluyor — encoder sadece son adımın hafızasını geçiriyor, başı hatırlamama sorunu burada.\n\nMLP varyantı: tüm encoder hidden state'leri h₁, h₂, ..., h_T bir MLP'ye giriyor, tek bir c çıkıyor. Daha iyi çünkü tüm adımların bilgisi oraya giriyor — ama yine de tek bir fixed-size vektöre sıkıştırılıyor. Sorun \"başı unutmak\" değil, \"her şeyi tek vektöre sığdırmak.\"\n\nAttention: hiç sıkıştırmıyor. Tüm z₁, z₂, ..., z_T ayrı ayrı saklanıyor, decoder her adımda bunlara doğrudan erişiyor."
+        },
+        {
+          "type": "code",
+          "heading": "Üç Yaklaşım",
+          "text": "Vanilla seq2seq:  h_T → c                    (son adım)\nMLP varyantı:     MLP(h₁...h_T) → c          (hepsi var ama sıkıştırılmış)\nAttention:        z₁...z_T hepsi saklanıyor  (sıkıştırma yok)"
+        },
+        {
+          "type": "text",
+          "heading": "\"Büyük c Kullansak Olmaz mı?\"",
+          "text": "Çalışıyor ama elegant değil:\n\nParametre patlar: decoder'ın ilk katmanı c'yi alıyor, c 10,000 boyutlu olursa o katmanın weight matrisi devasa büyüyor.\n\nOptimizasyon zorlaşıyor: MLP'nin \"bu 10,000 boyutun neresine ne yazayım?\" sorusunu öğrenmesi gerek. Attention'da böyle bir problem yok, her z_l zaten kendi yerinde duruyor.\n\nSequence uzunluğu değişken: c sabit boyutlu olmak zorunda — ama sequence bazen 10 kelime bazen 100 kelime. Büyük c kısa sequence'larda boşa gidiyor, çok uzun sequence'larda yine yetersiz kalıyor. Attention sequence uzunluğuna göre doğal olarak ölçekleniyor."
+        },
+        {
+          "type": "text",
+          "heading": "Attention'daki c_t de Fixed-Size Değil mi?",
+          "text": "Evet, attention'daki c_t de fixed-size — z vektörlerinin ağırlıklı toplamı olduğu için z ile aynı boyutta.\n\nAma fark şu: c_t her decoder adımında yeniden hesaplanıyor ve farklı bilgi taşıyor. \"The cat sat\" çevirisinde:\n\nc₁ → ağırlıklı olarak \"cat\" bilgisini taşıyor\nc₂ → ağırlıklı olarak \"sat\" bilgisini taşıyor\n\nMLP varyantında tek bir c var, tüm sequence'ı aynı anda taşımak zorunda. Attention'da her adım kendi c'sini üretiyor — o adım için neye bakması gerekiyorsa onu taşıyor. Sıkıştırma problemi ortadan kalkıyor çünkü her c_t küçük bir alt kümeye odaklanıyor."
+        },
+        {
+          "type": "text",
+          "heading": "RNN'in İki Temel Problemi",
+          "text": "Uzun sequence'larda RNN iki ayrı sorunla boğuşuyor:\n\n1. Focus problemi — uzak bağımlılıklar: RNN hangi kaynak token'a odaklanması gerektiğini bilmiyor. \"John... was executed\" bağlantısını kurmak için \"John\"a focus etmesi lazım ama böyle bir mekanizma yok. Her şey hidden state üzerinden geçiyor, uzaktaki bilgi silinip gidiyor.\n\n2. Sıkıştırma bottleneck'i: tüm bağlantıları, anlamı, grameri tek bir fixed-size c'ye sığdırmak zorunda. Sequence uzadıkça bu imkansızlaşıyor.\n\nİkisi birbirini besliyor — focus olmadığı için her şeyi c'ye doldurmaya çalışıyor, c de taşıyor."
+        },
+        {
+          "type": "text",
+          "heading": "RNN Attention'ın Sınırı: Self-Attention Eksikliği",
+          "text": "RNN attention'da attention mekanizması şunu soruyor: \"çeviriyi üretirken kaynak cümlenin neresine bakayım?\" — sadece decoder → encoder yönünde çalışıyor.\n\nAma kaynak cümle encode edilirken kendi içinde hiçbir attention yok. \"Animal\", \"it\", \"street\" arasındaki ilişki, zamirler, özne-yüklem uyumu — bunlar RNN'in sıralı hidden state'ine sığdırılmaya çalışılıyor. Kendi dili içinde hangi kelimenin hangisiyle alakalı olduğu ölçülmüyor."
+        },
+        {
+          "type": "code",
+          "heading": "Self-Attention Eksikliği — Örnek",
+          "text": "\"The animal didn't cross the street because it was too tired\"\n\nRNN encoder: sırayla işliyor\n  \"it\" geldiğinde → \"animal\" mı \"street\" mi? bilmiyor\n  hidden state üzerinden dolaylı taşınıyor, ilişki kurulmuyor\n\nRNN attention: decoder → encoder bakıyor\n  \"çeviri üretirken kaynak cümlenin neresine bakayım?\" ✓\n  \"kaynak cümlede it → animal bağlantısı var mı?\"      ✗"
+        },
+        {
+          "type": "text",
+          "heading": "Transformer'ın Çözümü: Self-Attention",
+          "text": "Transformer encoder'da self-attention var — kaynak cümle encode edilirken her kelime diğer tüm kelimelere bakıyor. \"it\" zaten encode aşamasında \"animal\"a yüksek attention vermiş oluyor. Decoder'a çok daha zengin, ilişkileri zaten kurulmuş bir representation geliyor."
+        },
+        {
+          "type": "code",
+          "heading": "Self-Attention Örneği",
+          "text": "\"it\" → \"animal\"e ne kadar bak?    → yüksek\n\"it\" → \"street\"e ne kadar bak?    → düşük\n\"it\" → \"tired\"e ne kadar bak?     → orta"
+        },
+        {
+          "type": "text",
+          "heading": "Özet: Neden Transformer?",
+          "text": "RNN attention üç sorunu çözemiyor:\n\n1. Sequential hesaplama: RNN her adımı sırayla işlemek zorunda, GPU'nun paralel gücü boşa gidiyor, training yavaş.\n\n2. Uzak bağımlılık + vanishing gradient: Backprop through time'da gradient 30 adım geriye gitmek zorunda, her adımda W_hh ile çarpılıyor, sıfırlanıyor. Uzak token'lar öğrenilemiyor.\n\n3. Self-attention eksikliği: Encoder kendi içinde token'lar arası ilişkiyi ölçmüyor. Kaynak cümle kendi context'ini kaybedebiliyor — \"it\"in \"animal\"a mı \"street\"e mi işaret ettiği encode aşamasında belirlenemiyor.\n\nTransformer RNN'i tamamen atıyor. Sadece attention var — self-attention (sequence kendi içinde) ve cross-attention (encoder-decoder arası). Sıralı hesaplama yok, tüm token'lar paralel işleniyor, her token direkt her token'a bakabiliyor."
         }
       ]
     },
