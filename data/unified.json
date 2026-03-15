@@ -2301,6 +2301,49 @@
       ]
     },
     {
+      "title": "Vanilla RNN vs Attention — Adım Adım Karşılaştırma",
+      "cat": "Attention",
+      "summary": "Vanilla seq2seq RNN tüm input sequence'ı tek bir context vector'e sıkıştırır — decoder her adımda aynı c'ye bakar. Attention'da encoder'ın tüm hidden state'leri saklanır, her decoder adımı kendi context vector'ünü hesaplar ve farklı encoder token'larına odaklanabilir.",
+      "context": "Lecture 20 · 24.01.2024 — Attention Models (Bahdanau et al. 2015)",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Vanilla RNN (Seq2Seq) — Adım Adım",
+          "text": "ENCODER — \"The cat sat\" → Türkçeye çevir\n\nx₁=\"The\" → h₁ = RNN(x₁, h₀)\nx₂=\"cat\" → h₂ = RNN(x₂, h₁)\nx₃=\"sat\" → h₃ = RNN(x₃, h₂)\n\nc = h₃    ← TEK context vector, tüm sequence burada\n           ← \"The cat sat\" sıkıştırıldı"
+        },
+        {
+          "type": "code",
+          "heading": "Vanilla RNN — Decoder",
+          "text": "DECODER — hepsi aynı c'ye bakıyor\n\nt=1:  h₁_dec = RNN([START], h₃, c)\n      y₁ = softmax(W × h₁_dec)    → \"Kedi\"\n\nt=2:  h₂_dec = RNN(y₁, h₁_dec, c)\n      y₂ = softmax(W × h₂_dec)    → \"oturdu\"\n\nHer decoder adımı aynı c'ye bakıyor — tüm bilgi tek vektörde."
+        },
+        {
+          "type": "code",
+          "heading": "Attention — Encoder",
+          "text": "ENCODER — aynı, ama tüm hidden state'ler saklanıyor\n\nx₁=\"The\" → z₁ = h₁\nx₂=\"cat\" → z₂ = h₂\nx₃=\"sat\" → z₃ = h₃\n\nh₀_dec = MLP(z₃)   ← decoder başlangıcı"
+        },
+        {
+          "type": "code",
+          "heading": "Attention — Decoder t=1",
+          "text": "DECODER t=1 — \"Kedi\" üretecek\n\nAttention: h₀_dec ile tüm encoder state'lerine bak\n  e₁ = f_att(h₀_dec, z₁)   ← \"The\" ne kadar ilgili?\n  e₂ = f_att(h₀_dec, z₂)   ← \"cat\" ne kadar ilgili?\n  e₃ = f_att(h₀_dec, z₃)   ← \"sat\" ne kadar ilgili?\n\n  a = softmax([e₁, e₂, e₃])  →  [0.1, 0.8, 0.1]\n                                   ↑ \"cat\" e yüksek ağırlık\n\n  c₁ = 0.1×z₁ + 0.8×z₂ + 0.1×z₃   ← bu adıma özel context\n\nh₁_dec = RNN([START], h₀_dec, c₁)\ny₁ = softmax(W × h₁_dec)   → \"Kedi\""
+        },
+        {
+          "type": "code",
+          "heading": "Attention — Decoder t=2",
+          "text": "DECODER t=2 — \"oturdu\" üretecek\n\nAttention: bu sefer h₁_dec ile bakıyor\n  a = softmax([...])   →  [0.1, 0.1, 0.8]\n                                        ↑ \"sat\" e yüksek ağırlık\n\n  c₂ = 0.1×z₁ + 0.1×z₂ + 0.8×z₃   ← farklı context\n\nh₂_dec = RNN(y₁, h₁_dec, c₂)\ny₂ = softmax(W × h₂_dec)   → \"oturdu\""
+        },
+        {
+          "type": "code",
+          "heading": "Karşılaştırma",
+          "text": "Vanilla RNN:\n  Encoder → tek c → tüm decoder adımları aynı c'ye bakıyor\n  Uzun sequence → c tüm bilgiyi tutamıyor → bilgi kaybı\n\nAttention:\n  Encoder → z₁, z₂, ..., z_T hepsi saklanıyor\n  Her decoder adımı → kendi context vector'ü\n  Her adım \"şu an hangi kaynak token önemli?\" diye soruyor\n  Output sequence ne kadar uzun → o kadar context vector\n\nParametre farkı:\n  Vanilla: W_xh, W_hh, W_hy — sabit\n  Attention: + W_a (alignment için) — yine sabit, sequence uzunluğundan bağımsız"
+        },
+        {
+          "type": "code",
+          "heading": "Neden Attention Daha İyi?",
+          "text": "\"John, who was the king's friend and had visited Paris in 1789\n when the revolution began, was executed.\"\n\nVanilla RNN: \"executed\" üretirken \"John\" çoktan unutulmuş\n             c = h_son → 30 adım önceki bilgi yok\n\nAttention:   \"executed\" üretirken z_John'a bakabiliyor\n             attention weight → a_John yüksek\n             \"John was executed\" bağlantısı kurulabiliyor"
+        }
+      ]
+    },
+    {
       "title": "GRU and Seq2Seq with Attention",
       "cat": "GRU",
       "summary": "GRU (Cho et al., 2014) simplifies LSTM to two gates and no separate cell state. Seq2seq with attention (Bahdanau 2015) solves the information bottleneck of compressing a whole sequence into one vector by giving the decoder dynamic access to all encoder states.",
