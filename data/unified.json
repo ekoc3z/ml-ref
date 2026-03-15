@@ -2509,6 +2509,11 @@
           "text": "D boyutunu H parçaya böl, her parça ayrı bir head'de işlensin. Her head D/H boyutunda çalışıyor, kendi W matrislerine sahip. Head'ler bağımsız olduğu için her biri farklı bir pattern öğrenebiliyor. Parametre sayısı değişmiyor: H × (D × D/H) = D² — tek head ile aynı."
         },
         {
+          "type": "formula",
+          "heading": "Attention Denklemi",
+          "text": "$$\\text{Attention}(Q, K, V) = \\text{softmax}\\!\\left(\\frac{QK^\\top}{\\sqrt{d_k}}\\right)V$$\n\nMulti-head için her head ayrı hesap, sonra concat + proje:\n$$\\text{MultiHead}(X) = \\text{Concat}(\\text{head}_1, \\ldots, \\text{head}_H)\\, W_O$$\n$$\\text{head}_i = \\text{Attention}(XW_{Q_i},\\, XW_{K_i},\\, XW_{V_i})$$"
+        },
+        {
           "type": "code",
           "heading": "Büyük Resim",
           "text": "Input: X  (N × D)\n         │\n         ├─── Head 1: Linear → Scaled Dot-Product Attn → (N × D/H)\n         ├─── Head 2: Linear → Scaled Dot-Product Attn → (N × D/H)\n         ├─── ...\n         └─── Head H: Linear → Scaled Dot-Product Attn → (N × D/H)\n                                        │\n                                   Concat  (N × D)\n                                        │\n                                  Linear W_O\n                                        │\n                                  Output  (N × D)"
@@ -10683,6 +10688,7 @@
       ],
       "summary": "Tek bir attention head tek bir bakış açısı öğrenebiliyor. Ama bir cümlede aynı anda birden fazla ilişki türü var — subject-verb uyumu, zamir referansı, yerel komşuluk. Tek head bunların hepsini aynı W_Q, W_K, W_V ile öğrenmeye çalışırken biri kazanır öbürü kaybeder. Çözüm: D boyutunu H parçaya böl, her head kendi subspace'inde farklı bir pattern öğrensin. Parametre sayısı değişmiyor: H × (D × D/H) = D².",
       "points": [
+        "Denklem: Attention(Q,K,V) = softmax(QKᵀ/√d_k) × V. Multi-head: head_i = Attention(X×W_Qi, X×W_Ki, X×W_Vi), sonuç Concat(head_1...head_H) × W_O.",
         "Giriş X (N×D). Her head i için: Q_i = X×W_Q_i, K_i = X×W_K_i, V_i = X×W_V_i — W matrisleri D×(D/H) boyutunda, her head'e özel.",
         "Scaled Dot-Product içi: MatMul(Q_i, K_i^T) → N×N skor matrisi. ÷√d_k ile scale — büyük dot product softmax'ı one-hot yapar, gradient ölür. (Mask decoder'da: gelecek pozisyonlara −∞.) Softmax row-wise. MatMul(attn_weights, V_i) → N×d_v output.",
         "Neden scale? d_k=64 ise dot product ~8, d_k=512 ise ~22 büyüklüğünde. Büyük değer → softmax tek yere yığılır → diğer pozisyonların gradientleri sıfır → model o bağlantıları öğrenemiyor. √d_k ile variance ≈1'e çekiliyor.",
