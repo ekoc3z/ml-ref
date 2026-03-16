@@ -2854,6 +2854,64 @@
       ]
     },
     {
+      "title": "Encoder'dan Decoder'a: Tam Mimari ve Boyutlar",
+      "cat": "Architecture",
+      "summary": "Transformer mimarisinin encoder girişinden decoder çıkışına tam akışı, IDA notasyonu ve boyutlarıyla. n = kaynak uzunluğu, m = hedef uzunluğu, d_model=512, H=8, d_k=d_v=64, N=6.",
+      "context": "Lecture 21 · 29.01.2024 — Full Transformer Architecture",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Notasyon",
+          "text": "n = kaynak uzunluğu, m = hedef uzunluğu, d_model=512, H=8, d_k=d_v=64, N=6"
+        },
+        {
+          "type": "code",
+          "heading": "ENCODER — Encoder #0 Girişi",
+          "text": "n token → Embedding → X ∈ (n × 512)\n+ Positional Encoding → X ∈ (n × 512)"
+        },
+        {
+          "type": "code",
+          "heading": "Encoder #0 — Multi-Head Self-Attention",
+          "text": "Her head i için (paralel, 8 head):\n  Q_i = X × W^Q_i → (n×512)×(512×64) = (n × 64)\n  K_i = X × W^K_i → (n × 64)\n  V_i = X × W^V_i → (n × 64)\n  Z_i = softmax(Q_i K_i^T / √64) × V_i → (n×n)×(n×64) = (n × 64)\nConcat(Z_0…Z_7) → (n × 512)\n× W^O (512×512) → Z ∈ (n × 512)\n\nAdd & Norm: LayerNorm(X + Z) → (n × 512)\nFFN: Linear(512→2048) → ReLU → Linear(2048→512)\nAdd & Norm: → R ∈ (n × 512)  ← encoder #0 çıktısı"
+        },
+        {
+          "type": "code",
+          "heading": "Encoder #1 … #N",
+          "text": "Giriş: R ∈ (n × 512) (embedding yok, doğrudan)\nAynı işlem, farklı W matrisleri\nÇıktı: R ∈ (n × 512)\n\nFinal encoder çıktısı: E ∈ (n × 512) → tüm decoder katmanlarına"
+        },
+        {
+          "type": "code",
+          "heading": "DECODER — Decoder #0 Girişi",
+          "text": "m token (shifted right) → Embedding + PE → Y ∈ (m × 512)"
+        },
+        {
+          "type": "code",
+          "heading": "1. Masked Self-Attention",
+          "text": "Encoder ile aynı mekanizma, ama causal mask var (gelecek tokenlara bakamaz)\nÇıktı: S ∈ (m × 512)\nAdd & Norm → (m × 512)"
+        },
+        {
+          "type": "code",
+          "heading": "2. Cross-Attention",
+          "text": "Q: decoder'dan → S × W^Q_i → (m × 64)\nK: encoder çıktısından → E × W^K_i → (n × 64)\nV: encoder çıktısından → E × W^V_i → (n × 64)\nQ_i K_i^T → (m × n)  ← her decoder token'ı tüm encoder token'larına bakıyor\n× V_i → (m × 64)\nConcat + W^O → (m × 512)\nAdd & Norm → (m × 512)"
+        },
+        {
+          "type": "code",
+          "heading": "3. FFN + Add & Norm",
+          "text": "Çıktı: (m × 512)"
+        },
+        {
+          "type": "code",
+          "heading": "Decoder #1 … #N",
+          "text": "Giriş: (m × 512)\nAynı 3 blok, her katman aynı E'yi kullanıyor\nÇıktı: (m × 512)"
+        },
+        {
+          "type": "code",
+          "heading": "ÇIKIŞ",
+          "text": "Linear: (m × 512) → (m × vocab_size)\nSoftmax → her pozisyon için token olasılıkları\nArgmax → tahmin edilen tokenlar"
+        }
+      ]
+    },
+    {
       "title": "BERT and GPT: Pre-trained Transformers",
       "cat": "Pretrained-Models",
       "summary": "Pre-trained Transformers showed that training on massive unlabeled text produces representations that transfer to dozens of tasks with minimal fine-tuning. BERT uses bidirectional encoder attention; GPT uses causal decoder attention (next-token prediction).",
