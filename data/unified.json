@@ -2861,6 +2861,11 @@
       "sections": [
         {
           "type": "code",
+          "heading": "Token Nedir?",
+          "text": "Token = modelin işlediği en küçük metin birimi.\n\nAma \"kelime\" değil tam olarak. Örnek:\n\n\"unhappiness\"  →  [\"un\", \"happiness\"]       2 token\n\"Thinking\"     →  [\"Thinking\"]              1 token\n\"ChatGPT\"      →  [\"Chat\", \"G\", \"PT\"]       3 token\n\"hello\"        →  [\"hello\"]                 1 token\n\nNeden kelimeyi bölüyoruz? Vocabulary problemi:\n- Tüm kelimeler vocabulary'e girerse 500k+ kelime → embedding tablosu devasa\n- Bilinmeyen kelimeler (\"COVID\", isimler, typo) → model hiç görmemiş, ne yapacak?\n\nÇözüm: subword tokenization (BPE, WordPiece).\nSık geçen kombinasyonlar bir token, nadir kelimeler parçalanıyor.\nVocab ~30k-50k token yeterli oluyor."
+        },
+        {
+          "type": "code",
           "heading": "Notasyon",
           "text": "n = kaynak uzunluğu, m = hedef uzunluğu, d_model=512, H=8, d_k=d_v=64, N=6"
         },
@@ -4137,6 +4142,115 @@
               "Scales better: performance ∝ data and params"
             ]
           }
+        },
+        {
+          "type": "code",
+          "heading": "ViT Nedir? — Temel Fikir",
+          "text": "Temel fikir: görüntüyü patch'lere böl, her patch'i token gibi işle,\nstandart Transformer encoder'ı uygula."
+        },
+        {
+          "type": "code",
+          "heading": "Notasyon",
+          "text": "görüntü H×W×C, patch boyutu P×P, d_model=768 (ViT-Base), H_heads=12, d_k=64, L=12 katman"
+        },
+        {
+          "type": "code",
+          "heading": "1. Patch Extraction",
+          "text": "Görüntü: (224 × 224 × 3)\nPatch: 16×16 piksel\n\nN = (224/16) × (224/16) = 14 × 14 = 196 patch\nHer patch flatten: 16×16×3 = 768 boyut\n\n→ (196 × 768)"
+        },
+        {
+          "type": "code",
+          "heading": "2. Linear Projection (Patch Embedding)",
+          "text": "Her patch (768) × W_E (768 × 768) → (768)\n\n→ (196 × 768)\n\nBu adım CNN'deki ilk conv gibi — ham pikselleri anlamlı bir uzaya projekte ediyor."
+        },
+        {
+          "type": "code",
+          "heading": "3. [CLS] Token Ekleme",
+          "text": "Öğrenilen [CLS] vektörü (1 × 768) başa ekleniyor\n\n→ (197 × 768)   [N+1 token]\n\n[CLS] tüm patch'lere attention uygulayarak \"görüntünün özeti\" haline geliyor."
+        },
+        {
+          "type": "code",
+          "heading": "4. Positional Encoding",
+          "text": "Öğrenilen pozisyon embedding'leri ekleniyor (NLP'deki sinusoidal değil)\n\n→ (197 × 768)"
+        },
+        {
+          "type": "code",
+          "heading": "5. Transformer Encoder (L=12 katman)",
+          "text": "Giriş: (197 × 768)\nHer katman aynı — NLP encoder ile birebir aynı mekanizma:\n  Multi-Head Self-Attention → Add & Norm\n  FFN (768→3072→768)       → Add & Norm\nÇıktı: (197 × 768)\n\nHer patch her diğer patch'e attention uygulayabiliyor —\nCNN'in aksine global bağlantı ilk katmandan itibaren var."
+        },
+        {
+          "type": "code",
+          "heading": "6. Classification Head",
+          "text": "Sadece [CLS] token çıktısı alınıyor: (1 × 768)\nLinear: (768 → num_classes)\nSoftmax → sınıf olasılıkları"
+        },
+        {
+          "type": "table",
+          "heading": "ViT Varyantları",
+          "rows": [
+            [
+              "Model",
+              "d_model",
+              "Katman",
+              "Head",
+              "Params"
+            ],
+            [
+              "ViT-Base",
+              "768",
+              "12",
+              "12",
+              "86M"
+            ],
+            [
+              "ViT-Large",
+              "1024",
+              "24",
+              "16",
+              "307M"
+            ],
+            [
+              "ViT-Huge",
+              "1280",
+              "32",
+              "16",
+              "632M"
+            ]
+          ]
+        },
+        {
+          "type": "code",
+          "heading": "CNN'den Farkı Neden Önemli?",
+          "text": "CNN'de receptive field adım adım büyüyor — ilk katman sadece 3×3 görüyor,\nglobal bağlantı için çok katman gerekiyor.\n\nViT'te patch #1 ile patch #196 ilk katmandan itibaren birbirine\nattention uygulayabiliyor.\n\nAma bunun bedeli: N² attention — 196 patch için 196²=38,416 entry'lik\nattention matrisi.\n\nÇok büyük görüntüler için (patch sayısı arttıkça) bu pahalılaşıyor,\nSwin Transformer gibi varyantlar bunu windowed attention ile çözüyor."
+        },
+        {
+          "type": "code",
+          "heading": "Attention Hangi Boyutta Çalışıyor?",
+          "text": "768 boyutu = her tokenın \"ne olduğu\" — içerik bilgisi\n197        = kaç token var — patch sayısı\n\nAttention scoring tokenlar arasında oluyor, 768 boyutu içinde değil.\n\nX ∈ (197 × 768)\n         │\n         ├── × W_Q (768×64) → Q ∈ (197 × 64)\n         ├── × W_K (768×64) → K ∈ (197 × 64)\n         └── × W_V (768×64) → V ∈ (197 × 64)\n\nQ × K^T = (197×64) × (64×197) = (197 × 197)  ← attention matrix\n\nBu (197 × 197) matrisin entry'si (i, j) = \"patch i, patch j'ye ne kadar dikkat etmeli?\"\n\n         patch_0  patch_1  patch_2  ...  CLS\npatch_0 [  0.8     0.1      0.05   ...  0.05 ]  ← patch_0'ın dağılımı\npatch_1 [  0.2     0.6      0.1    ...  0.1  ]\npatch_2 [  ...                              ]\n...\nCLS     [  0.1     0.1      0.1    ...  0.1  ]  ← CLS her yere bakıyor\n\nSoftmax row-wise uygulanıyor — her satır kendi başına bir probability distribution.\n\nSonra:\n(197×197) × V (197×64) = (197 × 64)\n\nHer token için 64-dim çıktı — o tokenın \"bu head'den topladığı bilgi\".\n\nYani 768 boyutu hiç \"skorlanmıyor\" — W_Q ve W_K onu 64'e indiriyor,\n64-dim vektörler arasında dot product yapılıyor.\nScoring tamamen token ekseni (197) üzerinde —\n\"hangi patch hangi patch'e ne kadar baksın?\""
+        },
+        {
+          "type": "code",
+          "heading": "Eğitim Öncesi ve Öğrenilen Şeyler",
+          "text": "Eğitim öncesi: W_Q, W_K, W_V random, CLS token da random bir 768-dim vektör.\nHiçbir şey \"kuş\" bilmiyor.\n\nÖğrenilen şeyler:\n  1. CLS token'ın kendisi          ← learnable parameter (768 sayı)\n  2. W_Q, W_K, W_V matrisleri      ← attention weights\n  3. Classification head (MLP)     ← CLS çıktısı → sınıf\n\nTek bir loss var: cross-entropy — \"doğru sınıfı tahmin et\".\nBu loss sinyali backprop ile tüm ağa geri yayılıyor —\nW_Q, W_K, W_V, FFN, positional encoding, ve CLS token'ın kendisi\nhep birden güncelleniyor."
+        },
+        {
+          "type": "code",
+          "heading": "CLS Neden Özet Olmayı Öğreniyor?",
+          "text": "Classification head sadece CLS token'ına bakıyor.\nDoğru tahmin yapabilmek için CLS'in görüntünün tamamını özetlemesi zorunlu.\nBunu yapabilmesinin tek yolu attention — diğer patch'lerden bilgi toplaması lazım.\nModel bunu kendisi keşfediyor:\n\n  \"ben (CLS) eğer kanat patch'lerine, gövde patch'ine\n   yüksek attention verirsem, MLP doğru sınıfı üretebiliyor.\"\n\nEğitim sinyali W matrislerini şu yönde zorluyor:\n\n  patch_3  (kanat)  →  k_3  = \"ben kanat içeren bir patch'im\"\n  patch_47 (kanat)  →  k_47 = \"ben kanat içeren bir patch'im\"\n  patch_22 (gövde)  →  k_22 = \"ben gövde içeren bir patch'im\"\n\n  q_CLS · k_3  → yüksek   (kanat patch'i, kuşla alakalı)\n  q_CLS · k_47 → yüksek   (kanat patch'i)\n  q_CLS · k_22 → yüksek   (gövde)\n  q_CLS · k_91 → düşük    (arka plan grass patch'i)\n\nPatch'ler de birbirini attend ediyor — patch_3, patch_47'ye yüksek attention\nveriyor çünkü ikisi de \"kanat\", aynı nesnenin parçaları olduğunu öğreniyor.\n\nSonuç: CLS token tüm yüksek-attention patch'lerden V vektörlerini toplayınca\nelde ettiği 768-dim vektör \"kuş görüntüsünün özeti\" haline geliyor.\nClassification head bunu \"kuş\" sınıfına map etmeyi öğreniyor.\n\nKısaca: loss ne istiyorsa model onu optimize ediyor.\nCLS özet olmayı zorlanmış değil — doğru sınıfı üretmenin en kolay yolu\nbu olduğu için öğreniyor."
+        },
+        {
+          "type": "code",
+          "heading": "CLS 1×768, ama 197×197 Matrisinde de Var — Çelişki Değil mi?",
+          "text": "İki farklı aşama:\n\nAttention sırasında → CLS bir token, 197'den biri:\n  Q × K^T = (197×64) × (64×197) = (197×197)\n  CLS satırı: [0.1, 0.1, 0.8, 0.7, 0.6, ...]  ← 197 ağırlık dağıtıyor\n\nAttention sonrası → ağırlıklarla V'yi çarpınca:\n  CLS_output = Σ weight_i × V_i  →  (1×768)   ← tek vektör\n\n197×197 matris bir ara hesap — bitti, kullanıldı, gitti.\nFinal temsil 1×768."
+        },
+        {
+          "type": "code",
+          "heading": "196 Patch Hepsi 768-dim, 1×768 CLS Yeterli mi?",
+          "text": "Evet — çünkü 196 patch'in her birini ayrı sınıflandırmıyorsun.\nTek soru: \"Bu görüntü kuş mu?\"\nCLS attention ile hangi patch'ler önemliyse onlardan bilgi toplayıp\n1×768'e sıkıştırıyor. MLP bu 1×768'e bakıp \"kuş\" diyor.\n\nCNN'de de aynı şey oluyor:\n  CNN: (224×224×3) → conv katmanları → (7×7×512) → Global Avg Pool → (1×512) → FC → sınıf\n  ViT: (224×224×3) → patch embedding → (197×768) → Transformer    → CLS (1×768) → MLP → sınıf\n\nCLS'in rolü CNN'deki Global Average Pool'a benziyor —\nama sabit bir ortalama değil, öğrenilmiş attention ile."
+        },
+        {
+          "type": "code",
+          "heading": "Fotoğrafta Hem Kedi Hem Kuş Varsa?",
+          "text": "ViT bunu yapamaz — tek etiket, tek soru.\n\"Kedi\" veya \"kuş\" der, ikisini birden söyleyemez.\nDETR tam bu problemi çözüyor:\n\nViT:   1 CLS token → 1 sınıf\n\nDETR:  100 object query → 100 ayrı tahmin\n         query_1  → \"kedi, x:0.2, y:0.3, w:0.1, h:0.15\"\n         query_2  → \"kuş, x:0.7, y:0.1, w:0.2, h:0.2\"\n         query_3  → \"no object\"\n         ...\n         query_100 → \"no object\"\n\nHer query bağımsız bir \"CLS gibi\" — encoder çıktısına cross-attention\nuygulayarak görüntünün farklı bölgelerinden bilgi toplayıp kendi tahminini üretiyor.\n\nViT  → \"bu görüntü ne?\"               — tek cevap\nDETR → \"bu görüntüde ne var, nerede?\" — çok cevap, bounding box ile"
         }
       ]
     },
