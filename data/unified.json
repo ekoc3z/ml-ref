@@ -2922,6 +2922,142 @@
       ]
     },
     {
+      "title": "Transformer (LLM) — Baştan Sona",
+      "cat": "Architecture",
+      "summary": "LLM'in token embedding'den sonraki token tahminine kadar tam akışı: tokenization, positional encoding, multi-head attention (Q/K/V projeksiyonları, attention weights, weighted sum), W_O projeksiyonu, residual + layer norm, FFN ve bloğun üst üste yığılması.",
+      "context": "Lecture 21 · 29.01.2024 — Transformer tam mimarisi",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Amaç",
+          "text": "Bir kelimenin LUT'tan gelen statik embedding'i cümledeki context'ten habersiz. Transformer'ın amacı bu embedding'i, token'ın o cümledeki gerçek anlamına göre vector space'de doğru konuma taşımak."
+        },
+        {
+          "type": "code",
+          "heading": "1. Giriş",
+          "text": "Token'lar LUT'tan embed edilir + positional encoding eklenir\nX: (N, d_model)       N = sequence length, d_model = 512"
+        },
+        {
+          "type": "code",
+          "heading": "2. Positional Encoding",
+          "text": "X = X + PE                     shape: (N, d_model)"
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Attention mekanizması token sırasını bilmiyor — hangi token nerede sorusunu PE cevaplıyor. Her pozisyona özgü sinüs/kosinüs vektörü eklenir."
+        },
+        {
+          "type": "code",
+          "heading": "3. Multi-Head Attention — Projeksiyonlar",
+          "text": "W_Q: (d_model, d_k)    d_k = d_model / h = 64\nW_K: (d_model, d_k)\nW_V: (d_model, d_v)    d_v = 64\n\nQ = X @ W_Q            shape: (N, d_k)\nK = X @ W_K            shape: (N, d_k)\nV = X @ W_V            shape: (N, d_v)"
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Q, K, V birer matris — her satırı bir token'ın projeksiyonu. Her head bunları farklı W matrisleriyle hesaplıyor, farklı alaka türleri öğreniyor."
+        },
+        {
+          "type": "code",
+          "heading": "4. Attention Weights",
+          "text": "A = softmax(Q @ K^T / sqrt(d_k))    shape: (N, N)"
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "`Q @ K^T` her token'ın Q'sunu her token'ın K'sıyla dot product yapıyor — token çiftleri arasındaki alaka skoru. `sqrt(d_k)` ile scale: d_k büyüyünce dot product değerleri büyür, softmax'ı aşırı keskin yapar, scale bunu önler. Softmax sonrası her satır toplamı 1 — normalize alaka dağılımı."
+        },
+        {
+          "type": "code",
+          "heading": "5. Value ile Weighted Sum",
+          "text": "head_i = A @ V                      shape: (N, d_v)"
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Her token: \"alakalı bulduğum token'ların V'lerini, alaka ağırlıklarıyla topla.\" Sonuç o token'ın context'ten derlediği bilgi."
+        },
+        {
+          "type": "code",
+          "heading": "6. Multi-Head Concat",
+          "text": "concat([head_1, ..., head_8])       shape: (N, h × d_v) = (N, 512)"
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "8 head yan yana dizildi — her biri farklı bir alaka türü öğrendi (syntax, coreference, position...) ama henüz birbirleriyle konuşmadılar."
+        },
+        {
+          "type": "code",
+          "heading": "7. W_O Projeksiyonu",
+          "text": "W_O: (h × d_v, d_model)\ndelta = concat(...) @ W_O           shape: (N, d_model)"
+        },
+        {
+          "type": "list",
+          "heading": "İki iş yapıyor",
+          "items": [
+            "Head'lerin öğrendiklerini birbirleriyle karıştırır",
+            "\"Bu context bilgisi embedding'in hangi boyutlarına ne kadar etki etmeli\" kararını öğrenir — residual'a eklenebilecek formata getirir"
+          ]
+        },
+        {
+          "type": "code",
+          "heading": "8. Residual + Layer Norm",
+          "text": "x = LayerNorm(x + delta)            shape: (N, d_model)"
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "`delta` bir güncelleme — token'ın embedding'ini context'e göre vector space'de doğru yöne iter. LayerNorm stabilize eder: mean 0, std 1'e çekip öğrenilmiş γ, β uygular."
+        },
+        {
+          "type": "code",
+          "heading": "9. Feed-Forward Network",
+          "text": "FFN(x) = ReLU(x @ W_1 + b_1) @ W_2 + b_2\n\nW_1: (d_model, d_ff)    d_ff = 2048\nW_2: (d_ff, d_model)\n\nshape: (N, 512) → (N, 2048) → (N, 512)"
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Her token bağımsız olarak aynı MLP'den geçiyor. Attention token'lar arası ilişki kuruyordu, FFN her token'ın kendi embedding'ini derinlemesine işliyor — geniş uzaya açıp non-linearity uygulayıp geri sıkıştırıyor."
+        },
+        {
+          "type": "code",
+          "heading": "10. Residual + Layer Norm",
+          "text": "x = LayerNorm(x + FFN(x))           shape: (N, d_model)"
+        },
+        {
+          "type": "code",
+          "heading": "11. Tek Blok Özeti",
+          "text": "x = LayerNorm(x + MultiHeadAttention(x))    ← token'lar arası context\nx = LayerNorm(x + FFN(x))                  ← per-token refinement"
+        },
+        {
+          "type": "code",
+          "heading": "12. L Blok Üst Üste",
+          "text": "Input Embedding + PE\n      ↓\n[ Block 1 ]   aynı yapı, farklı ağırlıklar\n      ↓\n[ Block 2 ]\n      ↓\n     ...\n[ Block L ]   GPT-2: 12,  GPT-3: 96,  LLaMA-3 70B: 80\n      ↓\nx_final: (N, d_model)"
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Alt bloklar syntax ve yakın ilişkileri öğrenir. Üst bloklar semantik, soyut, uzun menzilli bağımlılıkları öğrenir. Her bloktan sonra token'ların konumu daha context-aware hale gelir."
+        },
+        {
+          "type": "code",
+          "heading": "13. Çıktı — Sonraki Token Tahmini",
+          "text": "W_unembed: (d_model, vocab_size)\nlogits = x_final @ W_unembed        shape: (N, vocab_size)\nprobs  = softmax(logits[-1])        son token'ın satırı"
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Son token'ın vektörü tüm cümleyi sindirmiş — vocab üzerinde olasılık dağılımına dönüştürülür, en olası sonraki token seçilir."
+        },
+        {
+          "type": "code",
+          "heading": "Genel Akış",
+          "text": "Statik embedding + konum bilgisi\n  → [Attention: token'lar arası context topla] × L\n  → [FFN: her token'ı kendi içinde refine et]  × L\n  → Her token tüm cümleyi sindirmiş contextualized vektör\n  → Vocab'a project → sonraki token"
+        }
+      ]
+    },
+    {
       "title": "BERT and GPT: Pre-trained Transformers",
       "cat": "Pretrained-Models",
       "summary": "Pre-trained Transformers showed that training on massive unlabeled text produces representations that transfer to dozens of tasks with minimal fine-tuning. BERT uses bidirectional encoder attention; GPT uses causal decoder attention (next-token prediction).",
