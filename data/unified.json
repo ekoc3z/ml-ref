@@ -7625,6 +7625,115 @@
           "text": "def np_whc_to_tensor_bcwh(img):\n    return torch.tensor(img).permute(2, 0, 1).unsqueeze(0).float()\n# torchmetrics SSIM [B,C,H,W] bekliyor"
         }
       ]
+    },
+    {
+      "title": "LogSoftmax + NLL — Neden Daha Stabil?",
+      "cat": "Classification Loss",
+      "summary": "Manuel Softmax büyük değerlerde overflow verir. LogSoftmax log-sum-exp trick ile bunu önler — sonuç aynı, nan yok.",
+      "context": "ML Lab · Session 2",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Problem: büyük değerlerde Softmax patlar",
+          "text": "x değerleri büyükse exp(x) direkt inf'e gider:"
+        },
+        {
+          "type": "code",
+          "heading": "",
+          "text": "x = torch.tensor([1000.0, 1001.0, 999.0])\n\nexp_x = torch.exp(x)        # → [inf, inf, inf]  ← overflow!\nprobs = exp_x / exp_x.sum() # → [nan, nan, nan]  ← inf/inf = nan\nlog_p = torch.log(probs)    # → tamamen bozuldu"
+        },
+        {
+          "type": "text",
+          "heading": "Manuel implementasyonda ne yapıyorduk?",
+          "text": "Lab 2'de şunu yazdık:"
+        },
+        {
+          "type": "code",
+          "heading": "",
+          "text": "exp_x = torch.exp(input - input.max(dim=1, keepdim=True).values)"
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "input.max() çıkararak önce değerleri küçültüyorduk — ama bu el yapımı bir düzeltme. LogSoftmax bunu sistematik olarak yapıyor."
+        },
+        {
+          "type": "text",
+          "heading": "LogSoftmax neden daha iyi? — Adım adım",
+          "text": "Adım 1 — log bölmeyi çıkarmaya çevir:"
+        },
+        {
+          "type": "code",
+          "heading": "",
+          "text": "log( exp(x_i) / sum(exp(x_j)) )\n= log(exp(x_i)) - log(sum(exp(x_j)))\n= x_i - log(sum(exp(x_j)))"
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Sorun log(sum(exp(x_j))) kısmında — x büyükse exp(x) overflow."
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Adım 2 — log-sum-exp trick: max çıkar, geri ekle:"
+        },
+        {
+          "type": "code",
+          "heading": "",
+          "text": "# m = max(x) olsun. Bu eşitlik her zaman doğru:\nlog(sum(exp(x_j)))\n= log(sum(exp(x_j - m) * exp(m)))\n= m + log(sum(exp(x_j - m)))\n\n# x_j - m en fazla 0 olur → exp(x_j - m) hep [0, 1] arasında, overflow yok"
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Adım 3 — birleştir:"
+        },
+        {
+          "type": "code",
+          "heading": "",
+          "text": "log_softmax(x_i)\n= x_i - log(sum(exp(x_j)))\n= x_i - m - log(sum(exp(x_j - m)))"
+        },
+        {
+          "type": "code",
+          "heading": "Somut sayı",
+          "text": "x = [1000.0, 1001.0, 999.0]\nm = 1001.0\n\n# exp(x - m) = exp([-1, 0, -2]) = [0.368, 1.0, 0.135]  ← overflow yok\n# sum = 1.503\n# log(1.503) = 0.408\n\n# x_0 için: 1000 - 1001 - 0.408 = -1.408\n# x_1 için: 1001 - 1001 - 0.408 = -0.408\n# x_2 için:  999 - 1001 - 0.408 = -2.408\n\n# LogSoftmax ile doğrula:\nnn.LogSoftmax(dim=0)(torch.tensor(x))\n# → [-1.408, -0.408, -2.408]  ← aynı sonuç, overflow olmadan"
+        },
+        {
+          "type": "note",
+          "heading": "Değerlerin birbirine yakın olması şart değil",
+          "text": "Trick değerlerin yakınlığına bağlı değil. m = max(x) olduğu için x_j - m her zaman <= 0 — yani exp(x_j - m) her zaman [0, 1] arasında. Değerler ne kadar aralıklı olursa olsun:"
+        },
+        {
+          "type": "code",
+          "heading": "",
+          "text": "x = [1000.0, 500.0, 1.0]\nm = 1000.0\n\nexp(x - m) = exp([0, -500, -999])\n           = [1.0, ~0.0, ~0.0]   ← yine [0,1] arasında, overflow yok\n\n# Direkt deneersen:\nexp([1000, 500, 1])  # → [inf, 1.4e217, 2.7]  ← inf var"
+        },
+        {
+          "type": "table",
+          "heading": "Özet fark",
+          "rows": [
+            [
+              "",
+              "Manuel Softmax + log",
+              "LogSoftmax"
+            ],
+            [
+              "Büyük x'te",
+              "exp(x) = inf → nan",
+              "Sorun yok"
+            ],
+            [
+              "Düzeltme gerekir mi?",
+              "Evet, max çıkarman lazım",
+              "Hayır, içinde var"
+            ],
+            [
+              "Numerik hassasiyet",
+              "Düşük",
+              "Yüksek"
+            ]
+          ]
+        }
+      ]
     }
   ],
   "lab03": [
