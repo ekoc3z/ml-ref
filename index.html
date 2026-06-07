@@ -621,6 +621,53 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
     <span class="nav-count" id="cnt-vs03">0</span>
   </button>
 
+  <div class="course-divider">ML Lab · Sessions</div>
+  <button class="nav-btn" data-sec="lab01" onclick="switchSection('lab01');closeSidebar()">
+    <span class="nav-icon">🔢</span><span class="nav-num">01</span>
+    <span class="nav-label">Basics &amp; NumPy</span>
+    <span class="nav-count" id="cnt-lab01">0</span>
+  </button>
+  <button class="nav-btn" data-sec="lab02" onclick="switchSection('lab02');closeSidebar()">
+    <span class="nav-icon">📉</span><span class="nav-num">02</span>
+    <span class="nav-label">Loss &amp; Metric</span>
+    <span class="nav-count" id="cnt-lab02">0</span>
+  </button>
+  <button class="nav-btn" data-sec="lab03" onclick="switchSection('lab03');closeSidebar()">
+    <span class="nav-icon">🔗</span><span class="nav-num">03</span>
+    <span class="nav-label">NN &amp; Backprop</span>
+    <span class="nav-count" id="cnt-lab03">0</span>
+  </button>
+  <button class="nav-btn" data-sec="lab04" onclick="switchSection('lab04');closeSidebar()">
+    <span class="nav-icon">👁</span><span class="nav-num">04</span>
+    <span class="nav-label">CNN Classification</span>
+    <span class="nav-count" id="cnt-lab04">0</span>
+  </button>
+  <button class="nav-btn" data-sec="lab05" onclick="switchSection('lab05');closeSidebar()">
+    <span class="nav-icon">✂️</span><span class="nav-num">05</span>
+    <span class="nav-label">CNN Segmentation</span>
+    <span class="nav-count" id="cnt-lab05">0</span>
+  </button>
+  <button class="nav-btn" data-sec="lab06" onclick="switchSection('lab06');closeSidebar()">
+    <span class="nav-icon">⚔️</span><span class="nav-num">06</span>
+    <span class="nav-label">GAN</span>
+    <span class="nav-count" id="cnt-lab06">0</span>
+  </button>
+  <button class="nav-btn" data-sec="lab07" onclick="switchSection('lab07');closeSidebar()">
+    <span class="nav-icon">🌫️</span><span class="nav-num">07</span>
+    <span class="nav-label">Diffusion Model</span>
+    <span class="nav-count" id="cnt-lab07">0</span>
+  </button>
+  <button class="nav-btn" data-sec="lab08" onclick="switchSection('lab08');closeSidebar()">
+    <span class="nav-icon">🤖</span><span class="nav-num">08</span>
+    <span class="nav-label">Transformer</span>
+    <span class="nav-count" id="cnt-lab08">0</span>
+  </button>
+  <button class="nav-btn" data-sec="lab09" onclick="switchSection('lab09');closeSidebar()">
+    <span class="nav-icon">🔍</span><span class="nav-num">09</span>
+    <span class="nav-label">Anomaly Detection</span>
+    <span class="nav-count" id="cnt-lab09">0</span>
+  </button>
+
   <div class="sidebar-foot">
     <button id="btn-import">&#128194; JSON Yükle</button>
     <input type="file" id="fileInput" accept=".json" hidden>
@@ -1008,6 +1055,97 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
     </div>
   </div>
 
+  <!-- LAB section headers -->
+  <div id="hdr-lab01" class="section-header">
+    <div class="hdr-title">Lab 01 · Basics &amp; NumPy</div>
+    <div class="hdr-sub">Python temelleri, NumPy array operasyonları, broadcasting, matplotlib</div>
+    <div class="controls">
+      <select id="flt-lab01"><option value="">All categories</option></select>
+      <input type="search" id="q-lab01" placeholder="Search...">
+      <span class="pill" id="pill-lab01">0 cards</span>
+    </div>
+  </div>
+
+  <div id="hdr-lab02" class="section-header">
+    <div class="hdr-title">Lab 02 · Loss &amp; Metric</div>
+    <div class="hdr-sub">MSE, cross-entropy, accuracy, precision, recall, confusion matrix</div>
+    <div class="controls">
+      <select id="flt-lab02"><option value="">All categories</option></select>
+      <input type="search" id="q-lab02" placeholder="Search...">
+      <span class="pill" id="pill-lab02">0 cards</span>
+    </div>
+  </div>
+
+  <div id="hdr-lab03" class="section-header">
+    <div class="hdr-title">Lab 03 · Neural Network &amp; Backpropagation</div>
+    <div class="hdr-sub">NumPy ile sıfırdan NN — Linear layer, MSE, Network, backprop, MNIST training</div>
+    <div class="controls">
+      <select id="flt-lab03"><option value="">All categories</option></select>
+      <input type="search" id="q-lab03" placeholder="Search...">
+      <span class="pill" id="pill-lab03">0 cards</span>
+    </div>
+  </div>
+
+  <div id="hdr-lab04" class="section-header">
+    <div class="hdr-title">Lab 04 · CNN Classification</div>
+    <div class="hdr-sub">Conv2d, pooling, stride, padding, PyTorch nn.Module, training loop</div>
+    <div class="controls">
+      <select id="flt-lab04"><option value="">All categories</option></select>
+      <input type="search" id="q-lab04" placeholder="Search...">
+      <span class="pill" id="pill-lab04">0 cards</span>
+    </div>
+  </div>
+
+  <div id="hdr-lab05" class="section-header">
+    <div class="hdr-title">Lab 05 · CNN Segmentation</div>
+    <div class="hdr-sub">U-Net, encoder-decoder, skip connections, ConvTranspose2d, segmentation loss</div>
+    <div class="controls">
+      <select id="flt-lab05"><option value="">All categories</option></select>
+      <input type="search" id="q-lab05" placeholder="Search...">
+      <span class="pill" id="pill-lab05">0 cards</span>
+    </div>
+  </div>
+
+  <div id="hdr-lab06" class="section-header">
+    <div class="hdr-title">Lab 06 · GAN</div>
+    <div class="hdr-sub">Generator, Discriminator, adversarial training, mode collapse</div>
+    <div class="controls">
+      <select id="flt-lab06"><option value="">All categories</option></select>
+      <input type="search" id="q-lab06" placeholder="Search...">
+      <span class="pill" id="pill-lab06">0 cards</span>
+    </div>
+  </div>
+
+  <div id="hdr-lab07" class="section-header">
+    <div class="hdr-title">Lab 07 · Diffusion Model</div>
+    <div class="hdr-sub">DDPM, forward/reverse process, noise schedule, U-Net denoiser, sampling</div>
+    <div class="controls">
+      <select id="flt-lab07"><option value="">All categories</option></select>
+      <input type="search" id="q-lab07" placeholder="Search...">
+      <span class="pill" id="pill-lab07">0 cards</span>
+    </div>
+  </div>
+
+  <div id="hdr-lab08" class="section-header">
+    <div class="hdr-title">Lab 08 · Transformer</div>
+    <div class="hdr-sub">Self-attention, multi-head attention, positional encoding, encoder-decoder</div>
+    <div class="controls">
+      <select id="flt-lab08"><option value="">All categories</option></select>
+      <input type="search" id="q-lab08" placeholder="Search...">
+      <span class="pill" id="pill-lab08">0 cards</span>
+    </div>
+  </div>
+
+  <div id="hdr-lab09" class="section-header">
+    <div class="hdr-title">Lab 09 · Anomaly Detection</div>
+    <div class="hdr-sub">Reconstruction-based, score-based, threshold, evaluation</div>
+    <div class="controls">
+      <select id="flt-lab09"><option value="">All categories</option></select>
+      <input type="search" id="q-lab09" placeholder="Search...">
+      <span class="pill" id="pill-lab09">0 cards</span>
+    </div>
+  </div>
+
 </header>
 
 <div id="overview-panel" class="ch-overview-panel" style="display:none">
@@ -1035,7 +1173,8 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 const CHAPTERS = ['ch01','ch02','ch03','ch04','ch05','ch06','ch07','ch08','ch09','ch10','ch11','ch12',
                    'ida01','ida02','ida03','ida04','ida05','ida06','ida07','ida08','ida09','ida10','ida11','ida12','ida13',
                    'py01','py02','py03','py04','py05','py06','py07',
-                   'vs01','vs02','vs03'];
+                   'vs01','vs02','vs03',
+                   'lab01','lab02','lab03','lab04','lab05','lab06','lab07','lab08','lab09'];
 let DATA = {};
 CHAPTERS.forEach(c => DATA[c] = []);
 let OVERVIEWS = {};
@@ -1052,7 +1191,9 @@ const CH_CTX = {
   ida01:'ida01',ida02:'ida02',ida03:'ida03',ida04:'ida04',ida05:'ida05',ida06:'ida06',
   ida07:'ida07',ida08:'ida08',ida09:'ida09',ida10:'ida10',ida11:'ida11',ida12:'ida12',ida13:'ida13',
   py01:'py01',py02:'py02',py03:'py03',py04:'py04',py05:'py05',py06:'py06',py07:'py07',
-  vs01:'vs01',vs02:'vs02',vs03:'vs03'
+  vs01:'vs01',vs02:'vs02',vs03:'vs03',
+  lab01:'lab01',lab02:'lab02',lab03:'lab03',lab04:'lab04',lab05:'lab05',
+  lab06:'lab06',lab07:'lab07',lab08:'lab08',lab09:'lab09'
 };
 
 /* ==================== HELPERS ==================== */

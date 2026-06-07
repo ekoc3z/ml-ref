@@ -7183,6 +7183,853 @@
       ]
     }
   ],
+  "lab01": [
+    {
+      "title": "Session 1 — Genel Çerçeve",
+      "cat": "Overview",
+      "summary": "NumPy temelleri, görüntü işleme, Iris veri seti, PCA, SVM, k-NN, K-means, GMM.",
+      "context": "ML Lab · Session 1",
+      "sections": [
+        {
+          "type": "list",
+          "heading": "Kapsam",
+          "items": [
+            "1. NumPy temel operasyonlar (array, reshape, concatenate, slicing)",
+            "2. Python veri tipleri (list, tuple, sequence types)",
+            "3. Görüntü işleme (cv2, matplotlib, grayscale, normalizasyon)",
+            "4. Iris dataset, sklearn, data visualization",
+            "5. PCA — eigendecomposition, dimensionality reduction",
+            "6. Supervised: SVM, k-NN",
+            "7. Unsupervised: K-means, GMM"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "NumPy — Temel Operasyonlar",
+      "cat": "NumPy",
+      "summary": "Array oluşturma, reshape, concatenate, where, slicing. ML'in vektörel hesaplarının temeli.",
+      "context": "ML Lab · Session 1",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Array Oluşturma",
+          "text": "np.zeros(10)              # sıfır dolu\nnp.ones((3, 4))           # birler, 3x4\nnp.arange(0, 10, 2)       # [0,2,4,6,8]\nnp.random.randn(5)        # N(0,1) gaussian\nnp.random.rand(3, 4)      # [0,1) uniform"
+        },
+        {
+          "type": "code",
+          "heading": "Reshape / Stack",
+          "text": "a = np.arange(10)\na.reshape(2, 5)           # (2,5)\nnp.vstack([a, b])         # dikey birleştir\nnp.hstack([a, b])         # yatay birleştir\nnp.concatenate([a,b], axis=0)"
+        },
+        {
+          "type": "code",
+          "heading": "Slicing",
+          "text": "M[0]          # ilk satır\nM[:, 0]       # ilk sütun\nM[1:3, 2:4]   # alt matris\nM[M > 0]      # boolean masking"
+        },
+        {
+          "type": "code",
+          "heading": "Faydalı Fonksiyonlar",
+          "text": "np.where(a == b)           # aynı eleman pozisyonları\nnp.argmax(a)               # max index\nnp.argsort(a)              # sıralama indexleri\nnp.unique(a)               # tekil elemanlar"
+        }
+      ]
+    },
+    {
+      "title": "Python Veri Tipleri — List vs Tuple",
+      "cat": "Python Temelleri",
+      "summary": "List mutable (değiştirilebilir), tuple immutable. Her ikisi de sequence type — 'in' operatörü çalışır.",
+      "context": "ML Lab · Session 1",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "List",
+          "text": "lst = [1, 'hello', True]\nlst[0] = 99               # değiştirilebilir\nlst.append(4)             # sona ekle (tek eleman)\nlst.extend([5, 6])        # sona ekle (liste)\nlst.pop(1)                # index ile çıkar, döndürür\nlst.remove('hello')       # değer ile çıkar"
+        },
+        {
+          "type": "code",
+          "heading": "Tuple",
+          "text": "t = (1, 'hello', True)\n# t[0] = 99  → TypeError! immutable\n\n# Değiştirmek için: list'e çevir\nls = list(t)\nls[0] = 99\nt = tuple(ls)"
+        },
+        {
+          "type": "insight",
+          "heading": "append vs extend farkı",
+          "text": "append tek eleman ekler: [1,2].append([3,4]) → [1,2,[3,4]]. extend listeyi açar: [1,2].extend([3,4]) → [1,2,3,4]."
+        },
+        {
+          "type": "note",
+          "heading": "Sequence 'in' operatörü",
+          "text": "'us' in 'let us learn' → True (substring check). [10,20] in [10,20,30] → False! Listede element-level bakıyor, [10,20] tek eleman olarak aranıyor. [2,3] in [[2,3],'hello'] → True çünkü [2,3] direkt eleman."
+        }
+      ]
+    },
+    {
+      "title": "Görüntü İşleme — cv2 + matplotlib",
+      "cat": "Görüntü",
+      "summary": "cv2 BGR okur, RGB'ye çevirmek şart. Grayscale: 0.2989R + 0.5870G + 0.1140B. Normalizasyon: min-max veya z-score.",
+      "context": "ML Lab · Session 1",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Yükleme ve Gösterme",
+          "text": "img = cv2.imread('path.png')\nimg = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)  # cv2 BGR okur!\nplt.imshow(img)\nplt.axis('off')\nplt.show()\nimg.shape  # (H, W, 3)"
+        },
+        {
+          "type": "code",
+          "heading": "Grayscale",
+          "text": "# Manuel\nirisGray = 0.2989*img[:,:,0] + 0.5870*img[:,:,1] + 0.1140*img[:,:,2]\n\n# cv2 ile\nirisGray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)"
+        },
+        {
+          "type": "code",
+          "heading": "Normalizasyon",
+          "text": "# Method 1: min-max → [0,1]\nnorm1 = (img - np.min(img)) / (np.max(img) - np.min(img))\n\n# Method 2: z-score → mean=0, std=1\nnorm2 = (img - np.mean(img)) / np.std(img)"
+        },
+        {
+          "type": "insight",
+          "heading": "Neden normalizasyon?",
+          "text": "Piksel değerleri [0,255] aralığında. Gradient descent için büyük değerler eğitimi yavaşlatır, dengesizleştirir. Normalizasyon ile tüm feature'lar benzer ölçeğe gelir → daha hızlı convergence."
+        }
+      ]
+    },
+    {
+      "title": "PCA — Principal Component Analysis",
+      "cat": "Boyut İndirgeme",
+      "summary": "Veriyi en fazla variance'ı açıklayan yönlere project eder. Eigenvalue decomposition ile yapılır.",
+      "context": "ML Lab · Session 1",
+      "sections": [
+        {
+          "type": "list",
+          "heading": "Algoritma",
+          "items": [
+            "1. Veriyi standardize et (z-score)",
+            "2. Covariance matrix hesapla: cov_mat = np.cov(X.T)",
+            "3. Eigenvalue decomposition: eig_vals, eig_vecs = np.linalg.eig(cov_mat)",
+            "4. Eigenvalue'lara göre büyükten küçüğe sırala",
+            "5. İlk k eigenvector'ü seç → projection matrix W (d x k)",
+            "6. Transform: Y = X @ W"
+          ]
+        },
+        {
+          "type": "code",
+          "heading": "Explained Variance",
+          "text": "total = sum(eig_vals)\nvar_exp = [(i/total)*100 for i in sorted(eig_vals, reverse=True)]\n# Iris'te PC1 ~73%, PC2 ~23% → 2 bileşen yeterli"
+        },
+        {
+          "type": "insight",
+          "heading": "PCA vs LDA",
+          "text": "PCA unsupervised — label kullanmaz, max variance yönünü bulur. LDA supervised — sınıflar arası mesafeyi maximize eder, sınıf içi variance'ı minimize eder. PCA genel boyut indirgeme, LDA classification öncesi feature extraction."
+        },
+        {
+          "type": "code",
+          "heading": "sklearn ile",
+          "text": "from sklearn.decomposition import PCA\npca = PCA(n_components=2)\nX_pca = pca.fit_transform(X)"
+        }
+      ]
+    },
+    {
+      "title": "SVM — Support Vector Machine",
+      "cat": "Supervised Learning",
+      "summary": "İki sınıfı en geniş margin ile ayıran hyperplane'i bulur. Sadece support vector'lar karar sınırını belirler.",
+      "context": "ML Lab · Session 1",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Temel Fikir",
+          "text": "Training noktalarına maximum margin sağlayan hyperplane'i bul. Margin'e en yakın noktalara support vectors denir. Sadece bu noktalar modeli belirler → memory efficient."
+        },
+        {
+          "type": "list",
+          "heading": "Hyperparametreler",
+          "items": [
+            "Kernel: linear (düz sınır), RBF (radyal, non-linear), polynomial",
+            "C (regularization): küçük C → geniş margin, bazı hata tolere; büyük C → dar margin, az hata",
+            "Gamma (RBF/poly için): büyük gamma → yakın noktalar etkiler, küçük gamma → uzak noktalar da etkiler"
+          ]
+        },
+        {
+          "type": "code",
+          "heading": "sklearn ile",
+          "text": "from sklearn import svm\nclf = svm.SVC(kernel='rbf', C=1.0, gamma='scale')\nclf.fit(X_train, y_train)\ny_pred = clf.predict(X_test)"
+        }
+      ]
+    },
+    {
+      "title": "K-means Clustering",
+      "cat": "Unsupervised Learning",
+      "summary": "k centroid başlatır, her noktayı en yakın centroid'e atar, centroid'leri günceller. WCSS minimize eder.",
+      "context": "ML Lab · Session 1",
+      "sections": [
+        {
+          "type": "list",
+          "heading": "Algoritma",
+          "items": [
+            "1. k centroid rastgele başlat",
+            "2. Her noktayı en yakın centroid'e ata",
+            "3. Her cluster için centroid'i güncelle (ortalama al)",
+            "4. Değişim durduğunda bitir"
+          ]
+        },
+        {
+          "type": "text",
+          "heading": "Elbow Method",
+          "text": "k=1'den k=10'a kadar WCSS (within-cluster sum of squares) hesapla. WCSS'nin keskin düştüğü yerdeki k optimal. Grafikte 'dirsek' şeklinde kırılma."
+        },
+        {
+          "type": "insight",
+          "heading": "K-means vs GMM",
+          "text": "K-means: hard assignment — her nokta bir cluster'da. Dairesel cluster varsayımı. GMM: soft assignment — her nokta her cluster'da bir olasılıkla. Eliptik cluster'lara uyum sağlar. GMM daha zengin ama daha pahalı."
+        }
+      ]
+    },
+    {
+      "title": "GMM — Gaussian Mixture Model",
+      "cat": "Unsupervised Learning",
+      "summary": "Veriyi K Gaussian'ın karışımı ile modeller. Soft assignment: her nokta için her cluster'ın olasılığını verir.",
+      "context": "ML Lab · Session 1",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "K-means'ten farkı",
+          "text": "K-means her noktaya tek bir label verir (hard). GMM her nokta için tüm cluster'ların olasılıklarını verir (soft). Örnek: [0.85, 0.12, 0.03] — bu nokta %85 cluster 0'a ait."
+        },
+        {
+          "type": "code",
+          "heading": "sklearn ile",
+          "text": "from sklearn.mixture import GaussianMixture\ngmm = GaussianMixture(n_components=3)\ngmm.fit(X)\nprobs = gmm.predict_proba(X)  # soft labels, (N, K)\nlabels = gmm.predict(X)       # hard labels"
+        },
+        {
+          "type": "insight",
+          "heading": "Ne zaman GMM tercih edilir?",
+          "text": "Cluster'lar dairesel değilse (eliptik şekil). Belirsizliği ölçmek istiyorsan (soft prob). K-means'in mode collapse sorununda. Bağlantı: GMM'in EM algoritması ile fitting'i, MAP/Bayesian inference ile doğrudan ilişkili."
+        }
+      ]
+    }
+  ],
+  "lab02": [
+    {
+      "title": "Session 2 — Genel Çerçeve",
+      "cat": "Overview",
+      "summary": "PyTorch ile loss ve metrik implementasyonu. MSE/MAE, Cross-Entropy, Cosine Similarity, Accuracy, ROC, Dice, SSIM.",
+      "context": "ML Lab · Session 2",
+      "sections": [
+        {
+          "type": "list",
+          "heading": "Kapsam",
+          "items": [
+            "1. MSE, MAE — regression loss",
+            "2. Cross-Entropy (CE, BCE) — classification loss",
+            "3. Cosine Similarity — vektör benzerliği",
+            "4. Accuracy — classification metriği",
+            "5. ROC Curve — threshold-based değerlendirme",
+            "6. Dice Score — segmentation metriği",
+            "7. SSIM — görüntü kalite metriği",
+            "8. (Optional) PSNR"
+          ]
+        },
+        {
+          "type": "note",
+          "heading": "Kural",
+          "text": "Her metrik/loss için: önce torch math operasyonlarıyla manuel implement et, sonra torch.nn veya torchmetrics ile doğrula."
+        }
+      ]
+    },
+    {
+      "title": "MSE ve MAE",
+      "cat": "Regression Loss",
+      "summary": "MSE: kare hata, büyük hatalara daha duyarlı. MAE: mutlak hata, outlier'lara daha robust.",
+      "context": "ML Lab · Session 2",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Formül ve Implementasyon",
+          "text": "# MAE: mean absolute error\nMAEloss = torch.mean(torch.abs(input - target))\n\n# MSE: mean squared error\nMSEloss = torch.mean((input - target) ** 2)\n\n# torch.nn ile doğrula\nnn.L1Loss()(input, target)   # MAE\nnn.MSELoss()(input, target)  # MSE"
+        },
+        {
+          "type": "compare",
+          "heading": "MSE vs MAE",
+          "left": {
+            "title": "MSE",
+            "points": [
+              "Büyük hataları daha çok cezalandırır (kare)",
+              "Türevi her yerde var (smooth)",
+              "Outlier'lara hassas",
+              "Regression'da yaygın"
+            ]
+          },
+          "right": {
+            "title": "MAE",
+            "points": [
+              "Tüm hataları eşit cezalandırır",
+              "z=0'da türev yok (subgradient lazım)",
+              "Outlier'lara robust",
+              "Medyan'a yakınsar (MSE ortalamaya)"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "title": "Cross-Entropy (CE)",
+      "cat": "Classification Loss",
+      "summary": "CE = negative log likelihood. PyTorch'ta CrossEntropyLoss içinde Softmax zaten var — input raw logit olmalı.",
+      "context": "ML Lab · Session 2",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Manuel Implementasyon",
+          "text": "# input: (N, C) raw logits,  target: (N,) class indices\ndef cross_entropy(input, target):\n    # softmax\n    exp_x = torch.exp(input - input.max(dim=1, keepdim=True).values)  # stability\n    probs = exp_x / exp_x.sum(dim=1, keepdim=True)   # (N, C)\n    # log prob of correct class\n    log_probs = torch.log(probs[range(len(target)), target])\n    return -log_probs.mean()"
+        },
+        {
+          "type": "code",
+          "heading": "PyTorch ile",
+          "text": "# CrossEntropyLoss = LogSoftmax + NLLLoss\nnn.CrossEntropyLoss()(input, target)\n\n# Aynı şey:\nlog_probs = nn.LogSoftmax(dim=1)(input)\nnn.NLLLoss()(log_probs, target)"
+        },
+        {
+          "type": "insight",
+          "heading": "Neden LogSoftmax + NLL daha iyi?",
+          "text": "Softmax → log → NLL üç adım. LogSoftmax tek adımda daha numerik stabil — log(exp(x)/sum(exp)) = x - log(sum(exp(x))). Büyük değerlerde Softmax overflow verir ama LogSoftmax vermez. input*100 ile dene: manuel CE bozulur, LogSoftmax+NLL stabil kalır."
+        },
+        {
+          "type": "note",
+          "heading": "BCE vs CE",
+          "text": "BCE: binary classification için (2 sınıf). Input sigmoid'den geçmeli [0,1]. BCEWithLogitsLoss: sigmoid + BCE birleşik, numerik stabil. CE: multiclass için. PyTorch CE'si içinde softmax var — input raw logit ol, sigmoid/softmax geçirme."
+        }
+      ]
+    },
+    {
+      "title": "Cosine Similarity",
+      "cat": "Benzerlik Metriği",
+      "summary": "İki vektör arasındaki açıyı ölçer. Büyüklükten bağımsız, yönü karşılaştırır. [-1, 1] aralığında.",
+      "context": "ML Lab · Session 2",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Formül ve Implementasyon",
+          "text": "# cos_sim(x,y) = (x . y) / (||x|| * ||y||)\ndef cosine_sim(x, y):\n    dot = (x * y).sum(dim=1)             # (N,)\n    norm_x = torch.norm(x, dim=1)        # (N,)\n    norm_y = torch.norm(y, dim=1)        # (N,)\n    return dot / (norm_x * norm_y)"
+        },
+        {
+          "type": "list",
+          "heading": "Intuition",
+          "items": [
+            "1.0: aynı yön — tamamen benzer",
+            "0.0: 90 derece — ilişkisiz",
+            "-1.0: tam zıt yön",
+            "Büyüklük fark etmez: [1,2,3,4] ve [0.1,0.2,0.3,0.4] → cos_sim = 1.0"
+          ]
+        },
+        {
+          "type": "insight",
+          "heading": "Ne zaman kullanılır?",
+          "text": "NLP'de word embedding benzerliği. Recommendation'da kullanıcı/item benzerliği. Contrastive learning'de (SimCLR, CLIP). Mutlak büyüklük değil yön önemliyse MSE yerine cosine loss tercih edilir."
+        }
+      ]
+    },
+    {
+      "title": "Accuracy ve F1 Score",
+      "cat": "Classification Metriği",
+      "summary": "Accuracy: doğru tahminlerin oranı. Dengesiz class dağılımında yanıltıcı. F1: precision ve recall'un harmonik ortalaması.",
+      "context": "ML Lab · Session 2",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Accuracy",
+          "text": "accuracy = (preds == target).float().mean()\n\n# torchmetrics\nfrom torchmetrics import Accuracy\nacc = Accuracy(task='multiclass', num_classes=3)\nacc(preds, target)"
+        },
+        {
+          "type": "insight",
+          "heading": "Dengesiz class problemi",
+          "text": "100 örnekte: 80 healthy, 12 hastalık A, 8 hastalık B. Hepsini 'healthy' desen accuracy = 80%. Ama hastalıkları hiç yakalamadın. Bu yüzden macro/weighted averaging önemli: her sınıfa eşit ağırlık (macro) veya sample sayısına göre ağırlık (weighted)."
+        },
+        {
+          "type": "code",
+          "heading": "Confusion Matrix",
+          "text": "from sklearn.metrics import confusion_matrix, classification_report\n# satırlar: gerçek, sütunlar: tahmin\ncm = confusion_matrix(y_true, y_pred)\nprint(classification_report(y_true, y_pred))"
+        }
+      ]
+    },
+    {
+      "title": "ROC Curve ve AUROC",
+      "cat": "Classification Metriği",
+      "summary": "Farklı threshold'larda TPR vs FPR. AUROC: eğri altındaki alan — 0.5 rastgele, 1.0 mükemmel.",
+      "context": "ML Lab · Session 2",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Manuel ROC",
+          "text": "thresholds = torch.linspace(1, 0, 11)\nfor th in thresholds:\n    pred_bin = (preds >= th).int()\n    tp = ((pred_bin == 1) & (target == 1)).sum()\n    fp = ((pred_bin == 1) & (target == 0)).sum()\n    tn = ((pred_bin == 0) & (target == 0)).sum()\n    fn = ((pred_bin == 0) & (target == 1)).sum()\n    tpr = tp / (tp + fn)   # sensitivity / recall\n    fpr = fp / (fp + tn)   # 1 - specificity"
+        },
+        {
+          "type": "list",
+          "heading": "Terimler",
+          "items": [
+            "TPR (True Positive Rate) = TP / (TP + FN) = Recall = Sensitivity",
+            "FPR (False Positive Rate) = FP / (FP + TN) = 1 - Specificity",
+            "AUROC = 0.5 → rastgele sınıflandırıcı",
+            "AUROC = 1.0 → mükemmel sınıflandırıcı",
+            "Random predictions → AUROC ~0.5 (threshold'dan bağımsız)"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Dice Score",
+      "cat": "Segmentation Metriği",
+      "summary": "Segmentation için overlap ölçer. Dice = 2|X∩Y| / (|X|+|Y|). 0: örtüşme yok, 1: mükemmel.",
+      "context": "ML Lab · Session 2",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Implementasyon",
+          "text": "def dice_(pred, gt, ignore_index=2):\n    # background'u ignore et\n    mask = gt != ignore_index\n    pred_m = pred[mask]\n    gt_m   = gt[mask]\n    intersect = (pred_m == gt_m).sum()\n    union = len(pred_m) + len(gt_m)\n    return 2 * intersect / union"
+        },
+        {
+          "type": "insight",
+          "heading": "Dice vs IoU",
+          "text": "IoU = |X∩Y| / |X∪Y|. Dice = 2*IoU / (1+IoU). Her zaman Dice >= IoU. Segmentation'da Dice daha yaygın. Detection'da IoU daha yaygın (bounding box overlap)."
+        },
+        {
+          "type": "note",
+          "heading": "Background ignore neden?",
+          "text": "Segmentation maskelerinde background genellikle çok fazla piksel tutar. Background'u dahil edersen Dice yapay olarak yüksek çıkar. Gerçek performansı foreground (nesne) üzerinden ölçmek daha anlamlı."
+        }
+      ]
+    },
+    {
+      "title": "SSIM — Structural Similarity Index",
+      "cat": "Görüntü Kalite Metriği",
+      "summary": "İki görüntü arasındaki yapısal benzerliği ölçer. Luminance, contrast, structure bileşenlerini karşılaştırır.",
+      "context": "ML Lab · Session 2",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Formül",
+          "text": "SSIM(x,y) = (2*mu_x*mu_y + C1)(2*sigma_xy + C2) /\n            (mu_x^2 + mu_y^2 + C1)(sigma_x^2 + sigma_y^2 + C2)\n\n# 11x11 Gaussian kernel ile local mu ve sigma hesaplanır\n# C1, C2: numerik stabilite sabitleri\n# SSIM: [-1, 1], genellikle [0, 1]"
+        },
+        {
+          "type": "list",
+          "heading": "Örnek değerler",
+          "items": [
+            "Low resolution: düşük (yapısal detay kayıp)",
+            "Rotation 180°: düşük (yapısal konum değişti)",
+            "Low intensity (img/2): yüksek (yapı korundu, sadece parlaklık değişti)",
+            "Flip: düşük (yapı aynalı)",
+            "Shift: orta (yapı biraz kaydı)"
+          ]
+        },
+        {
+          "type": "insight",
+          "heading": "MSE vs SSIM",
+          "text": "MSE pixel-wise hata ölçer — yapıyı görmez. Aynı MSE'ye sahip iki görüntüden biri bulanık, diğeri gürültülü olabilir ama SSIM bunları ayırt eder. Görüntü kalitesi değerlendirmesinde SSIM insan algısına daha yakın."
+        },
+        {
+          "type": "code",
+          "heading": "numpy [H,W,C] → tensor [B,C,H,W]",
+          "text": "def np_whc_to_tensor_bcwh(img):\n    return torch.tensor(img).permute(2, 0, 1).unsqueeze(0).float()\n# torchmetrics SSIM [B,C,H,W] bekliyor"
+        }
+      ]
+    }
+  ],
+  "lab03": [
+    {
+      "title": "Session 3 — Genel Çerçeve",
+      "cat": "Overview",
+      "summary": "MNIST digit classification. PyTorch yok, sıfırdan NumPy. Forward pass, backward pass, parametre güncelleme tamamen manuel.",
+      "context": "ML Lab · Session 3",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Amaç",
+          "text": "Backpropagation algoritmasını derin öğrenme kütüphanesi kullanmadan NumPy ile sıfırdan implement etmek. Her Layer kendi forward ve backward'ını biliyor."
+        },
+        {
+          "type": "list",
+          "heading": "Task Sırası",
+          "items": [
+            "Task 1 — vectorize(), sigmoid, sigmoid_derivative",
+            "Task 2 — Linear layer (forward, backward, update) + MSE cost",
+            "Task 3 — Network sınıfı (layer'ları birleştiren wrapper)",
+            "Task 4 — MNIST üzerinde training",
+            "Task 5 — Daha iyi ağ mimarisi",
+            "Task 6 (bonus) — SoftMax + CrossEntropy"
+          ]
+        },
+        {
+          "type": "code",
+          "heading": "Veri Boyutları",
+          "text": "MNIST: 70,000 görüntü, 28x28 piksel → flatten → 784 boyut\nTraining: 50,000 | Validation: 20,000\n\ninput:  (batch_size, 784)   ← her satır bir görüntü\ntarget: (batch_size, 10)    ← one-hot encoded\n                               örn: 3 → [0,0,0,1,0,0,0,0,0,0]"
+        }
+      ]
+    },
+    {
+      "title": "vectorize(j)",
+      "cat": "Task 1 — Helpers",
+      "summary": "Integer j → 10-boyutlu one-hot vektör. j. pozisyon 1.0, diğerleri 0.",
+      "context": "ML Lab · Session 3",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Implementasyon",
+          "text": "def vectorize(j):\n    label_vector = np.zeros(10)\n    label_vector[j] = 1\n    return label_vector"
+        },
+        {
+          "type": "text",
+          "heading": "Neden Gerekli",
+          "text": "MSE ile training için target bir sınıf indexi değil, vektör olmalı. load_data() zaten one-hot yapıyor ama bu fonksiyon manual kullanım için."
+        }
+      ]
+    },
+    {
+      "title": "sigmoid / sigmoid_derivative",
+      "cat": "Task 1 — Helpers",
+      "summary": "sigmoid: 1/(1+exp(-z)), herhangi bir sayıyı (0,1) aralığına sıkıştırır. Türevi: s*(1-s).",
+      "context": "ML Lab · Session 3",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Implementasyon",
+          "text": "def sigmoid_function(var):\n    return 1 / (1 + np.exp(-var))\n\ndef sigmoid_derivative(z):\n    s = sigmoid_function(z)\n    return s * (1 - s)"
+        },
+        {
+          "type": "list",
+          "heading": "Özellikler",
+          "items": [
+            "Element-wise — boyut değişmez, vektöre/matrise direkt uygulanır",
+            "Çıktı her zaman (0, 1) aralığında",
+            "z=0'da türev maksimum (~0.25), uçlarda 0'a yaklaşır",
+            "Vanishing gradient: derin ağlarda uçlardaki gradient neredeyse sıfır"
+          ]
+        },
+        {
+          "type": "text",
+          "heading": "Backward'da kullanım",
+          "text": "Sigmoid'in backward'ı: d_in = d_out * sigmoid_derivative(x_in). Zincir kuralı: upstream * local türev."
+        }
+      ]
+    },
+    {
+      "title": "Layer / Cost — Base Classes",
+      "cat": "Task 2 — Mimari",
+      "summary": "Layer ve Cost abstract base class'ları. forward/backward/zero_gradients/update_parameters interface'i tanımlıyor.",
+      "context": "ML Lab · Session 3",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Layer Interface",
+          "text": "class Layer:\n    def forward(self, x_in):          # x_out döndür, x_in sakla\n    def backward(self, d_out):         # d_in döndür, dw/db biriktir\n    def zero_gradients(self):          # dw, db sıfırla\n    def update_parameters(self, lr):   # w -= lr*dw"
+        },
+        {
+          "type": "code",
+          "heading": "Cost Interface",
+          "text": "class Cost:\n    def estimate(self, target, pred):  # loss hesapla, pred sakla\n    def gradient(self):                # dL/d_pred döndür (zincirin başlangıcı)"
+        },
+        {
+          "type": "insight",
+          "heading": "gradient() vs backward() farkı",
+          "text": "gradient(): zincirin ilk adımı — loss'un prediction'a göre türevi. Upstream gradient yok, kendisi üretiyor. backward(): zincirin ortasındaki adımlar — upstream alır, local türevle çarpar, d_in döndürür."
+        }
+      ]
+    },
+    {
+      "title": "Linear Layer — Forward",
+      "cat": "Task 2 — Linear",
+      "summary": "x_out = x_in @ w.T + b. Parametreler: w (n_out, n_in), b (1, n_out). x_in saklanmalı.",
+      "context": "ML Lab · Session 3",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Parametreler",
+          "text": "w: (n_out, n_in)    ← random init: sigma * np.random.randn(n_out, n_in)\nb: (1, n_out)       ← sıfır init: np.zeros((1, n_out))"
+        },
+        {
+          "type": "code",
+          "heading": "Forward",
+          "text": "def forward(self, x_in):\n    self.x_in = x_in           # backward için sakla\n    x_out = x_in @ self.w.T + self.b\n    return x_out"
+        },
+        {
+          "type": "code",
+          "heading": "Boyutlar",
+          "text": "x_in:  (batch, n_in)\nw.T:   (n_in,  n_out)\nx_out: (batch, n_out)\nb:     (1,     n_out)  ← broadcast ile her satıra eklenir"
+        },
+        {
+          "type": "insight",
+          "heading": "Neden w.T?",
+          "text": "w tanımı (n_out, n_in) — her satır bir nöronun ağırlıkları. x_in (batch, n_in) ile çarpmak için (n_in, n_out)'a transpose edilmeli. Sonuç: her nöronun batch'teki tüm örnekler için aktivasyonu."
+        }
+      ]
+    },
+    {
+      "title": "Linear Layer — Backward",
+      "cat": "Task 2 — Linear",
+      "summary": "d_in = d_out @ w, dw = d_out.T @ x_in, db = d_out.sum(axis=0). Hepsi zincir kuralı.",
+      "context": "ML Lab · Session 3",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Backward",
+          "text": "def backward(self, d_out):\n    d_in = d_out @ self.w                           # (batch, n_in)\n    self.dw += d_out.T @ self.x_in                 # (n_out, n_in)\n    self.db += d_out.sum(axis=0, keepdims=True)    # (1, n_out)\n    return d_in"
+        },
+        {
+          "type": "code",
+          "heading": "Boyutlar",
+          "text": "d_out:  (batch, n_out)    ← upstream gradient\nd_in:   (batch, n_in)     ← önceki katmana\ndw:     (n_out, n_in)     ← w ile aynı shape\ndb:     (1, n_out)        ← b ile aynı shape"
+        },
+        {
+          "type": "insight",
+          "heading": "Neden dw = d_out.T @ x_in?",
+          "text": "dL/dw zincir kuralıyla: upstream d_out ile x_in'in outer product'larının batch boyunca toplamı. Matris çarpımı bu toplamanın vektörize hali. Her örneğin katkısı akümüle ediliyor."
+        },
+        {
+          "type": "insight",
+          "heading": "Neden db = sum(axis=0)?",
+          "text": "Forward'da b, broadcast ile 600 satıra kopyalandı — 600 kez kullanıldı. Loss'a 600 farklı yoldan katkı sağladı. Zincir kuralıyla hepsini toplamak lazım. Kural: forward'da broadcast → backward'da sum."
+        },
+        {
+          "type": "note",
+          "heading": "d_in self. gerektirmiyor",
+          "text": "d_in return ediliyor, başka hiçbir yerde kullanılmıyor. self.d_in yerine local variable yeterli. dw ve db ise += ile biriktirildiği için self. şart."
+        }
+      ]
+    },
+    {
+      "title": "Linear Layer — update_parameters / zero_gradients",
+      "cat": "Task 2 — Linear",
+      "summary": "SGD update: w -= lr*dw, b -= lr*db. Her batch öncesi zero_gradients çağrılır.",
+      "context": "ML Lab · Session 3",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Implementasyon",
+          "text": "def update_parameters(self, learning_rate):\n    self.w -= learning_rate * self.dw\n    self.b -= learning_rate * self.db\n\ndef zero_gradients(self):\n    self.dw = np.zeros((self.n_out, self.n_in))\n    self.db = np.zeros((1, self.n_out))"
+        },
+        {
+          "type": "text",
+          "heading": "Neden zero_gradients gerekli?",
+          "text": "dw ve db += ile biriktirildiği için her yeni batch'te sıfırlanmalı. Sıfırlanmazsa önceki batch'in gradient'ı bir sonrakine karışır. train_epoch her batch başında net.zero_gradients() çağırıyor."
+        }
+      ]
+    },
+    {
+      "title": "MSE Cost — estimate / gradient",
+      "cat": "Task 2 — MSE",
+      "summary": "estimate: 0.5 * mean((pred-target)^2). gradient: (pred-target)/size. İkisi tutarlı normalizasyon kullanmalı.",
+      "context": "ML Lab · Session 3",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Implementasyon",
+          "text": "def estimate(self, target, prediction):\n    self.prediction = prediction\n    self.target = target\n    cost = 0.5 * np.mean((prediction - target) ** 2)\n    return cost\n\ndef gradient(self):\n    return (self.prediction - self.target) / self.prediction.size"
+        },
+        {
+          "type": "insight",
+          "heading": "Normalizasyon tutarlılığı",
+          "text": "np.mean tüm elemanlara böler (batch * n_out = prediction.size). gradient'ta da aynı bölme olmalı. shape[0] ile bölmek yanlış — sadece batch'e böler, mean ile tutarsız. 0.5 koyunca türevdeki 2 iptal olur."
+        },
+        {
+          "type": "text",
+          "heading": "MLE bağlantısı",
+          "text": "MSE minimize etmek = Gaussian noise varsayımı altında MLE. Cross-entropy = categorical distribution altında MLE. İkisi de negative log likelihood."
+        }
+      ]
+    },
+    {
+      "title": "Network Sınıfı",
+      "cat": "Task 3 — Network",
+      "summary": "Layer'ları sırayla tutan wrapper. Forward: soldan sağa. Backward: sağdan sola. zero_gradients/update: hepsine ilet.",
+      "context": "ML Lab · Session 3",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Implementasyon",
+          "text": "class Network(Layer):\n    def __init__(self, layers):\n        self.layers = layers\n\n    def forward(self, x_in):\n        for layer in self.layers:\n            x_in = layer.forward(x_in)\n        return x_in\n\n    def backward(self, d_out):\n        for layer in reversed(self.layers):\n            d_out = layer.backward(d_out)\n        return d_out\n\n    def zero_gradients(self):\n        for layer in self.layers:\n            layer.zero_gradients()\n\n    def update_parameters(self, lr):\n        for layer in self.layers:\n            layer.update_parameters(lr)"
+        },
+        {
+          "type": "insight",
+          "heading": "Neden reversed?",
+          "text": "Zincir kuralı: gradient son katmandan ilk katmana akıyor. Her katman bir öncekinin gradient'ına ihtiyaç duyuyor. Forward sırası [L1, L2, L3] ise backward sırası [L3, L2, L1]."
+        }
+      ]
+    },
+    {
+      "title": "Backprop — Zincir Kuralı Intuition",
+      "cat": "Backprop Teorisi",
+      "summary": "Her operasyonun backward'ı: d_in = upstream * local. Local ne ise ona göre: matris çarpımı, element-wise çarpım veya toplama.",
+      "context": "ML Lab · Session 3",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Her operasyon için local türev",
+          "text": "Y = X @ w.T    →  local(w) = X,   local(X) = w      (matris çarpımı)\nY = X + b      →  local(b) = 1                       (toplama)\nY = sigmoid(X) →  local    = sigmoid'(X)             (element-wise)"
+        },
+        {
+          "type": "code",
+          "heading": "Kural",
+          "text": "dL/d_input = upstream * local\n\nLinear w:  d_out.T @ x_in    ← local = x_in\nLinear b:  d_out.sum(axis=0) ← local = 1, broadcast tersine\nSigmoid:   d_out * sigmoid'  ← local = türev"
+        },
+        {
+          "type": "insight",
+          "heading": "Matris transpose neden?",
+          "text": "forward: x_out = x_in @ w.T. Boyut denklemi: (batch,n_in)@(n_in,n_out) = (batch,n_out). Backward'da d_in = d_out @ w: (batch,n_out)@(n_out,n_in) = (batch,n_in). Transpose doğal olarak çıkıyor — boyutların doğru eşleşmesi için."
+        }
+      ]
+    },
+    {
+      "title": "Training Loop",
+      "cat": "Training",
+      "summary": "Her batch: zero_gradients → forward → estimate → gradient → backward → update_parameters. epoch_cost monitoring amaçlı.",
+      "context": "ML Lab · Session 3",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "train_epoch içindeki döngü",
+          "text": "for i in range(0, len(images), batch_size):\n    batch_images = images[i:i+batch_size]\n    batch_labels = labels[i:i+batch_size]\n\n    net.zero_gradients()                          # dw, db sıfırla\n    prediction = net.forward(batch_images)        # forward\n    cost = cost_function.estimate(labels, pred)   # loss\n    dprediction = cost_function.gradient()        # zincir başlangıcı\n    net.backward(dprediction)                     # backprop\n    net.update_parameters(learning_rate)          # SGD"
+        },
+        {
+          "type": "text",
+          "heading": "epoch_cost neden?",
+          "text": "Monitoring için. Her batch'in cost'u toplanıyor, epoch sonunda yazdırılıyor. Modelin genel olarak iyileşip iyileşmediğini görmek için. Training'e etkisi yok, çıkarsan training devam eder."
+        },
+        {
+          "type": "code",
+          "heading": "Hyperparametreler (Task 4)",
+          "text": "input_size = 784   # 28*28\nlabel_size = 10\nbatch_size = 600\nlearning_rate = 0.01\nnumber_epochs = 100\n\n# Basit ağ\nnet = Network([Linear(784, 10), Sigmoid()])\n\n# Daha iyi ağ (Task 5)\nnet = Network([Linear(784, 256), Sigmoid(), Linear(256, 10), Sigmoid()])"
+        }
+      ]
+    },
+    {
+      "title": "Batch ve Parametre Boyutları",
+      "cat": "Boyutlar",
+      "summary": "w ve b batch'ten bağımsız sabit shape. Batch sadece training verimliliği için — öğrenilen parametreler değişmez.",
+      "context": "ML Lab · Session 3",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "784 → 256 → 10 ağı için tam boyutlar",
+          "text": "x_in           (600, 784)\nLinear_1.w     (256, 784)  →  x_out: (600, 256)\nSigmoid_1                     aynı boyut: (600, 256)\nLinear_2.w     (10,  256)  →  x_out: (600,  10)\nSigmoid_2                     aynı boyut: (600,  10)\nMSE gradient                  (600,  10)  ← backward başlar"
+        },
+        {
+          "type": "insight",
+          "heading": "Batch neden var?",
+          "text": "Tek örnek: gürültülü gradient, yavaş. Full dataset: çok yavaş hesaplama. Mini-batch: ikisinin ortası — hem hızlı hem stabil. w ve b shape'i batch_size'dan bağımsız, sadece n_in ve n_out belirler."
+        }
+      ]
+    },
+    {
+      "title": "SoftMax + CrossEntropy (Task 6)",
+      "cat": "Task 6 — Bonus",
+      "summary": "SoftMax: exp(z)/sum(exp(z)). CrossEntropy: -sum(target*log(pred+eps)). Birlikte gradient: softmax(z) - target.",
+      "context": "ML Lab · Session 3",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "SoftMax Forward",
+          "text": "def forward(self, x_in):\n    # numerik stabilite: max çıkar\n    x_shifted = x_in - x_in.max(axis=1, keepdims=True)\n    exp_x = np.exp(x_shifted)\n    self.x_out = exp_x / exp_x.sum(axis=1, keepdims=True)\n    return self.x_out"
+        },
+        {
+          "type": "code",
+          "heading": "CrossEntropy",
+          "text": "def estimate(self, target, x_in):\n    self.x_in = x_in\n    self.target = target\n    cost = -np.mean(np.sum(target * np.log(x_in + self.eps), axis=1))\n    return cost\n\ndef gradient(self):\n    return -self.target / (self.x_in + self.eps) / self.x_in.shape[0]"
+        },
+        {
+          "type": "insight",
+          "heading": "SoftMax backward neden temiz?",
+          "text": "SoftMax Jacobian'ı karmaşık ama CrossEntropy ile birleşince: dL/dz = softmax(z) - target. Bu yüzden ikisini hep birlikte kullanıyoruz. Ayrı ayrı backward implement etmek yerine combined gradient kullanılabilir."
+        },
+        {
+          "type": "note",
+          "heading": "Numerik stabilite",
+          "text": "exp(z) büyük z için overflow verir. z - max(z) çıkarmak matematiksel sonucu değiştirmiyor (pay ve paydada iptal oluyor) ama taşmayı önlüyor. CrossEntropy'deki eps de log(0) = -inf önlemek için."
+        }
+      ]
+    }
+  ],
+  "lab04": [
+    {
+      "title": "Session 4 — Genel Çerçeve",
+      "cat": "Overview",
+      "summary": "CNN ile classification. Conv2d, pooling, stride, padding. PyTorch ile MNIST veya CIFAR-10.",
+      "context": "ML Lab · Session 4",
+      "sections": [
+        {
+          "type": "note",
+          "heading": "İçerik",
+          "text": "Bu section ilerleyen zamanlarda doldurulacak. Lab 4 içeriği: Conv2d operasyonu, feature map boyutları, MaxPool, flatten, PyTorch nn.Module, DataLoader, training loop."
+        }
+      ]
+    }
+  ],
+  "lab05": [
+    {
+      "title": "Session 5 — Genel Çerçeve",
+      "cat": "Overview",
+      "summary": "CNN ile segmentation. U-Net mimarisi, encoder-decoder, skip connections, pixel-wise classification.",
+      "context": "ML Lab · Session 5",
+      "sections": [
+        {
+          "type": "note",
+          "heading": "İçerik",
+          "text": "Bu section ilerleyen zamanlarda doldurulacak. Lab 5 içeriği: U-Net mimarisi, encoder (downsample), decoder (upsample), skip connections, ConvTranspose2d, segmentation loss (BCE, Dice)."
+        }
+      ]
+    }
+  ],
+  "lab06": [
+    {
+      "title": "Session 6 — Genel Çerçeve",
+      "cat": "Overview",
+      "summary": "GAN: Generator ve Discriminator adversarial training. Generator sahte görüntü üretir, Discriminator gerçek/sahte ayırt eder.",
+      "context": "ML Lab · Session 6",
+      "sections": [
+        {
+          "type": "note",
+          "heading": "İçerik",
+          "text": "Bu section ilerleyen zamanlarda doldurulacak. Lab 6 içeriği: GAN mimarisi, Generator/Discriminator loss, adversarial training loop, mode collapse, training instability."
+        }
+      ]
+    }
+  ],
+  "lab07": [
+    {
+      "title": "Session 7 — Genel Çerçeve",
+      "cat": "Overview",
+      "summary": "Diffusion Models: DDPM. Forward process (noise ekle), reverse process (noise çıkar). U-Net denoiser.",
+      "context": "ML Lab · Session 7",
+      "sections": [
+        {
+          "type": "note",
+          "heading": "İçerik",
+          "text": "Bu section ilerleyen zamanlarda doldurulacak. Lab 7 içeriği: DDPM forward/reverse process, noise schedule (beta), U-Net denoiser, timestep embedding, sampling loop. CS231n assignment3/DDPM.ipynb da iyi referans."
+        }
+      ]
+    }
+  ],
+  "lab08": [
+    {
+      "title": "Session 8 — Genel Çerçeve",
+      "cat": "Overview",
+      "summary": "Transformer mimarisi. Self-attention, multi-head attention, positional encoding, encoder-decoder.",
+      "context": "ML Lab · Session 8",
+      "sections": [
+        {
+          "type": "note",
+          "heading": "İçerik",
+          "text": "Bu section ilerleyen zamanlarda doldurulacak. Lab 8 içeriği: Self-attention (Q, K, V), scaled dot-product attention, multi-head attention, positional encoding, feed-forward layers, layer norm."
+        }
+      ]
+    }
+  ],
+  "lab09": [
+    {
+      "title": "Session 9 — Genel Çerçeve",
+      "cat": "Overview",
+      "summary": "Anomaly Detection. Unsupervised yaklaşım — normal veri ile eğitim, anormal olanı tespit.",
+      "context": "ML Lab · Session 9",
+      "sections": [
+        {
+          "type": "note",
+          "heading": "İçerik",
+          "text": "Bu section ilerleyen zamanlarda doldurulacak. Lab 9 içeriği: Anomaly detection yöntemleri, reconstruction-based (autoencoder), score-based, threshold belirleme, evaluation metrics."
+        }
+      ]
+    }
+  ],
   "py01": [
     {
       "title": "print()",
@@ -8395,9 +9242,9 @@
       "context": "Python · OOP · PyTorch",
       "sections": [
         {
-          "type": "text",
+          "type": "code",
           "heading": "Temel fikir",
-          "text": "Class = veri + o veriye ait fonksiyonların paketi. Normal variable sadece veri tutar, class'tan üretilen obje ise veriyi ve o veriyle ne yapabileceğini birlikte tutar.<br><br><strong>\"Bu class bir X'tir\"</strong> → inheritance<br><strong>\"Bu class bir X içerir\"</strong> → instance olarak tut"
+          "text": "Class = veri + o veriye ait fonksiyonların paketi.\nNormal variable sadece veri tutar, class'tan üretilen obje ise\nveriyi ve o veriyle ne yapabileceğini birlikte tutar.\n\n\"Bu class bir X'tir\"    → inheritance\n\"Bu class bir X içerir\" → instance olarak tut"
         },
         {
           "type": "code",
