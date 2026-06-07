@@ -8297,6 +8297,250 @@
       ]
     },
     {
+      "title": "Lab 3 vs nn.Module — Tam Karşılaştırma",
+      "cat": "PyTorch",
+      "summary": "Lab 3'te her şeyi NumPy ile manuel yazdık. nn.Module aynı fikrin PyTorch implementasyonu — iskelet aynı, altyapıyı PyTorch hallediyor.",
+      "context": "ML Lab · Session 4",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Lab 3'te sıfırdan bir sinir ağı yazdık — NumPy ile, her şeyi manuel. nn.Module aynı fikrin PyTorch implementasyonu. Genel mantık aynı, sadece altyapıyı PyTorch hallediyor."
+        },
+        {
+          "type": "text",
+          "heading": "Temel fikir — iskelet",
+          "text": "Layer ve nn.Module aynı soruya cevap veriyor: \"Bir layer (ya da layer grubu) ne yapabilmeli?\""
+        },
+        {
+          "type": "code",
+          "heading": "",
+          "text": "__init__()   — parametreleri başlat (W, b)\nforward()    — hesap yap\nbackward()   — gradyan hesapla"
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Tek layer da olsa, 4 layer'lı ağ da olsa bu iskelet aynı. Lab 3'te Linear tek başına da çalışıyordu, Network içinde de — çünkü aynı interface. Layer ve nn.Module bu iskeleti tanımlıyor."
+        },
+        {
+          "type": "text",
+          "heading": "Lab 3 Layer ↔ nn.Module",
+          "text": "Lab 3'te Linear ve Sigmoid Layer'dan türedi:"
+        },
+        {
+          "type": "code",
+          "heading": "",
+          "text": "class Layer:                                   # sadece interface — init'i boş\n    def forward(self, x): raise NotImplementedError\n    def backward(self, d_out): raise NotImplementedError\n\nclass Linear(Layer): ...     # Layer'dan türedi\nclass Sigmoid(Layer): ...    # Layer'dan türedi"
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "PyTorch'ta aynı yapı, ama nn.Module'ün init'i gerçek iş yapıyor:"
+        },
+        {
+          "type": "code",
+          "heading": "",
+          "text": "class Module:\n    def __init__(self):\n        self._modules = {}      # layer'ları saklamak için — Lab 3'te yoktu\n        self._parameters = {}   # W, b saklamak için — Lab 3'te yoktu\n\nclass nn.Linear(nn.Module): ...    # nn.Module'den türedi\nclass nn.Conv2d(nn.Module): ...    # nn.Module'den türedi"
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Layer saf interface — \"şu metodları implement et\" diyor, altyapı yok. nn.Module hem interface hem altyapı. PyTorch daha fazla sorumluluk üstlendiği için init daha kompleks, ama intuition aynı."
+        },
+        {
+          "type": "text",
+          "heading": "Weight sıfırlama ve güncelleme",
+          "text": "Lab 3'te layer'ın içindeydi:"
+        },
+        {
+          "type": "code",
+          "heading": "",
+          "text": "class Linear(Layer):\n    def zero_gradients(self):\n        self.dW = np.zeros_like(self.W)    # layer kendi gradyanını sıfırlıyor\n        self.db = np.zeros_like(self.b)"
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "PyTorch'ta layer'dan bağımsız, optimizer hallediyor:"
+        },
+        {
+          "type": "code",
+          "heading": "",
+          "text": "optimizer.zero_grad()   # tüm layer'ların .grad'larını tek seferde sıfırla\noptimizer.step()        # tüm W ve b'leri tek seferde güncelle"
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Sebebi: onlarca layer olabilir, her birine ayrı ayrı demek yerine optimizer network.parameters() üzerinden hepsine erişiyor. İskelet aynı, sorumluluk dışarı taşındı."
+        },
+        {
+          "type": "text",
+          "heading": "Layer'ları saklama",
+          "text": "Lab 3'te layer'ları düz Python listesine koyduk:"
+        },
+        {
+          "type": "code",
+          "heading": "",
+          "text": "class Network:\n    def __init__(self):\n        # düz Python listesi — PyTorch'un haberi yok\n        self.layers = [Linear(784, 256), Sigmoid(), Linear(256, 10)]"
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "nn.Module'de isimli attribute olarak tanımlıyorsun, PyTorch bunları otomatik _modules dict'ine kaydediyor:"
+        },
+        {
+          "type": "code",
+          "heading": "",
+          "text": "class Network(nn.Module):\n    def __init__(self):\n        super().__init__()                      # _modules ve _parameters dict'lerini kurar\n        self.fc1 = nn.Linear(784, 256)          # → _modules['fc1'] = <Linear object>\n        self.fc2 = nn.Linear(256, 10)           # → _modules['fc2'] = <Linear object>"
+        },
+        {
+          "type": "text",
+          "heading": "W ve b'yi saklama",
+          "text": "Lab 3'te her layer kendi parametrelerini düz attribute olarak tutuyordu:"
+        },
+        {
+          "type": "code",
+          "heading": "",
+          "text": "class Linear(Layer):\n    def __init__(self, n_in, n_out):\n        self.W = np.random.randn(n_in, n_out)   # numpy array, PyTorch bilmiyor\n        self.b = np.zeros((1, n_out))            # numpy array, PyTorch bilmiyor"
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "nn.Linear hazır bir class, içini sen yazmıyorsun. Ama içi kabaca şöyle:"
+        },
+        {
+          "type": "code",
+          "heading": "",
+          "text": "class Linear(nn.Module):      # PyTorch'un yazdığı, senin değil\n    def __init__(self, n_in, n_out):\n        super().__init__()\n        self.weight = nn.Parameter(torch.randn(n_in, n_out))   # → _parameters['weight']\n        self.bias   = nn.Parameter(torch.zeros(n_out))         # → _parameters['bias']"
+        },
+        {
+          "type": "code",
+          "heading": "Hiyerarşi",
+          "text": "Network._modules = {\n    'fc1': <Linear object>,     ← layer nesnesinin kendisi\n    'fc2': <Linear object>\n}\n         ↓ her Linear'ın içinde\nLinear._parameters = {\n    'weight': tensor(...),      ← gerçek W tensoru\n    'bias':   tensor(...)       ← gerçek b tensoru\n}"
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "_modules layer nesnelerini tutar. W ve b ise her layer'ın kendi _parameters'ında yaşar."
+        },
+        {
+          "type": "text",
+          "heading": "Forward",
+          "text": "Lab 3'te liste olduğu için for loop zorunluydu:"
+        },
+        {
+          "type": "code",
+          "heading": "",
+          "text": "def forward(self, x):\n    for layer in self.layers:\n        x = layer.forward(x)   # .forward() manuel çağrı — başka yolu yok\n    return x\n\n# ya da index ile — aynı şey, sadece daha verbose\nx = self.layers[0].forward(x)\nx = self.layers[1].forward(x)\nx = self.layers[2].forward(x)"
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "nn.Module'de layer'ların isimleri var, direkt çağırıyorsun:"
+        },
+        {
+          "type": "code",
+          "heading": "",
+          "text": "def forward(self, x):\n    x = self.fc1(x)    # self.fc1.__call__(x) → forward() + PyTorch hook'ları\n    x = torch.relu(x)\n    x = self.fc2(x)\n    return x"
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "self.fc1(x) yazmak aslında self.fc1.__call__(x). nn.Module __call__'ı override etmiş — içinde .forward(x)'i çağırıyor artı PyTorch hook'larını çalıştırıyor. Lab 3'te __call__ yoktu, .forward() diye çağırmak zorundaydık."
+        },
+        {
+          "type": "text",
+          "heading": "Backward ve weight update",
+          "text": "Lab 3'te bunları tamamen kendin yazıyordun:"
+        },
+        {
+          "type": "code",
+          "heading": "",
+          "text": "# backward — gradyanları elle zincirle\ndef backward(self, d_out):\n    for layer in reversed(self.layers):\n        d_out = layer.backward(d_out)   # her layer kendi dW, db'sini hesaplar\n\n# weight update — her parametreyi elle güncelle\nfor layer in self.layers:\n    if hasattr(layer, 'W'):\n        layer.W -= lr * layer.dW        # gradient descent adımı\n        layer.b -= lr * layer.db"
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "nn.Module'de autograd ve optimizer hallediyor:"
+        },
+        {
+          "type": "code",
+          "heading": "",
+          "text": "optimizer = torch.optim.Adam(network.parameters(), lr=1e-3)\n# network.parameters() → tüm _modules'leri gezip her birinin _parameters'ını toplar\n\noptimizer.zero_grad()    # önceki adımın .grad'larını sıfırla\noutput = network(x)      # forward\nloss = criterion(output, target)\nloss.backward()          # autograd her parametrenin .grad'ını doldurur\noptimizer.step()         # tüm .grad'lara bakıp W ve b'yi günceller"
+        },
+        {
+          "type": "text",
+          "heading": "Neden super().__init__() zorunlu?",
+          "text": "Lab 3'te weight update layer'ın içindeydi — layer kendi parametrelerini biliyordu. PyTorch'ta optimizer dışarıdan hallediyor, bu yüzden tüm layer'ların ve güncellenebilir parametrelerinin bir yerde saklanması lazım. _modules ve _parameters bu iş için var. Bunları kuran nn.Module.__init__() — super().__init__() bunu çağırıyor. Çağırmazsan dict'ler yok, optimizer neyi güncelleyeceğini bilmiyor."
+        },
+        {
+          "type": "code",
+          "heading": "",
+          "text": "class Network(nn.Module):\n    def __init__(self):\n        # super().__init__() OLMADAN:\n        # self.fc1 = nn.Linear(...) → __setattr__ çağrılır\n        # __setattr__ \"bu bir nn.Module, _modules'e kaydet\" der\n        # ama _modules henüz yok → AttributeError!\n\n        super().__init__()   # nn.Module.__init__() çalışır\n                             # self._modules = {}     ← kuruldu\n                             # self._parameters = {}  ← kuruldu\n        self.fc1 = nn.Linear(784, 256)   # artık _modules'e kaydedebilir"
+        },
+        {
+          "type": "table",
+          "heading": "Özet",
+          "rows": [
+            [
+              "",
+              "Lab 3",
+              "nn.Module"
+            ],
+            [
+              "İskelet rolü",
+              "Layer base class",
+              "nn.Module base class"
+            ],
+            [
+              "Init içeriği",
+              "Boş — sadece interface",
+              "Dolu — _modules, _parameters kurar"
+            ],
+            [
+              "Layer saklama",
+              "self.layers = [...] liste",
+              "_modules = {...} otomatik dict"
+            ],
+            [
+              "W, b saklama",
+              "self.W, self.b numpy array",
+              "_parameters içinde tensor"
+            ],
+            [
+              "Forward çağırma",
+              "layer.forward(x) zorunlu",
+              "layer(x) — __call__ override"
+            ],
+            [
+              "Backward",
+              "Manuel for loop, kendin yaz",
+              "loss.backward() autograd"
+            ],
+            [
+              "Weight sıfırlama",
+              "layer.zero_gradients() içinde",
+              "optimizer.zero_grad() dışarıda"
+            ],
+            [
+              "Weight update",
+              "Manuel W -= lr * dW içinde",
+              "optimizer.step() dışarıda"
+            ],
+            [
+              "Parametre toplama",
+              "if hasattr(layer, 'W') elle",
+              "network.parameters() otomatik"
+            ],
+            [
+              "super().__init__()",
+              "Gerekmiyor",
+              "Zorunlu — altyapıyı kurar"
+            ]
+          ]
+        }
+      ]
+    },
+    {
       "title": "Device — MPS (Mac M4)",
       "cat": "PyTorch",
       "summary": "Lab sunucusunda CUDA var. Mac'te MPS kullan — Apple Silicon GPU. Orijinal kodda cuda→mps değiştir.",
