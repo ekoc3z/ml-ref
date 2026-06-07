@@ -7944,13 +7944,340 @@
     {
       "title": "Session 4 — Genel Çerçeve",
       "cat": "Overview",
-      "summary": "CNN ile classification. Conv2d, pooling, stride, padding. PyTorch ile MNIST veya CIFAR-10.",
+      "summary": "PyTorch ile VGG16 ve ResNet18 implement edilip PascalVOC üzerinde multi-label classification. nn.Module, DataLoader, training loop.",
       "context": "ML Lab · Session 4",
       "sections": [
         {
+          "type": "list",
+          "heading": "Kapsam",
+          "items": [
+            "1. Conv2d — matematiksel operasyon, boyutlar",
+            "2. BatchNorm, ReLU, MaxPool",
+            "3. nn.Module — PyTorch'ta ağ tanımlama pattern'i",
+            "4. VGGBlock + VGG16 mimarisi",
+            "5. Multi-label classification — BCE vs CE farkı",
+            "6. DataLoader, transforms, data augmentation",
+            "7. PyTorch training loop — optimizer, backward, zero_grad",
+            "8. Validation loop — torch.no_grad()",
+            "9. Top-N accuracy",
+            "10. ResNet-18 — skip connections"
+          ]
+        },
+        {
           "type": "note",
-          "heading": "İçerik",
-          "text": "Bu section ilerleyen zamanlarda doldurulacak. Lab 4 içeriği: Conv2d operasyonu, feature map boyutları, MaxPool, flatten, PyTorch nn.Module, DataLoader, training loop."
+          "heading": "Lab 3'ten farkı",
+          "text": "Lab 3: sıfırdan NumPy, her şey manuel. Lab 4: PyTorch nn.Module, otomatik autograd, optimizer. Backward pass artık .backward() ile — kendimiz yazmıyoruz."
+        }
+      ]
+    },
+    {
+      "title": "Conv2d — Matematiksel Operasyon",
+      "cat": "CNN Temelleri",
+      "summary": "Bir kernel, input üzerinde sliding window ile çarpılıp toplanır. Her pozisyon bir output piksel üretir.",
+      "context": "ML Lab · Session 4",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Operasyon",
+          "text": "Kernel input üzerinde kayar. Her pozisyonda: kernel ile örtüşen bölgenin element-wise çarpımı toplanır → tek bir sayı çıkar. Bu sayı output feature map'teki bir piksel."
+        },
+        {
+          "type": "code",
+          "heading": "Output Boyutu Formülü",
+          "text": "H_out = floor( (H_in + 2*padding - kernel_size) / stride ) + 1\nW_out = floor( (W_in + 2*padding - kernel_size) / stride ) + 1\n\n# Örnek: 224x224, kernel=3, padding=1, stride=1\nH_out = (224 + 2*1 - 3) / 1 + 1 = 224   ← boyut korunur\n\n# padding=0, stride=1 ile\nH_out = (224 - 3) / 1 + 1 = 222          ← 2 piksel küçülür"
+        },
+        {
+          "type": "code",
+          "heading": "Channel boyutları",
+          "text": "# Conv2d(in_channels, out_channels, kernel_size, padding)\nnn.Conv2d(3, 64, kernel_size=3, padding=1)\n\n# Input:  (batch, 3,  H, W)   ← RGB\n# Output: (batch, 64, H, W)   ← 64 feature map\n\n# Her output channel için ayrı kernel var\n# Parametre sayısı: out_ch * in_ch * kH * kW + out_ch (bias)\n# Örnek: 64 * 3 * 3 * 3 + 64 = 1792 parametre"
+        },
+        {
+          "type": "insight",
+          "heading": "Neden Conv, neden Linear değil?",
+          "text": "224x224x3 görüntüye Linear uygulasan: 150528 input, 64 output → 9.6M parametre sadece ilk katmanda. Conv2d aynı işi 1792 parametreyle yapar — weight sharing sayesinde. Ayrıca spatial locality: her nöron sadece küçük bir bölgeye bakıyor."
+        }
+      ]
+    },
+    {
+      "title": "BatchNorm, ReLU, MaxPool",
+      "cat": "CNN Temelleri",
+      "summary": "BatchNorm: aktivasyonları normalize eder. ReLU: negatifi sıfırlar. MaxPool: spatial boyutu küçültür.",
+      "context": "ML Lab · Session 4",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "BatchNorm2d",
+          "text": "nn.BatchNorm2d(num_features)  # num_features = channel sayısı\n\n# Her mini-batch'te channel bazında normalize et:\n# x_norm = (x - mean) / sqrt(var + eps)\n# sonra learnable scale (gamma) ve shift (beta) uygula\n\n# Faydaları:\n# - Training stabilize eder\n# - Daha yüksek learning rate kullanılabilir\n# - Hafif regularization etkisi\n# - Conv'dan sonra, activation'dan önce gelir"
+        },
+        {
+          "type": "code",
+          "heading": "ReLU",
+          "text": "nn.ReLU(inplace=True)\n\n# f(x) = max(0, x)\n# Negatif değerleri sıfırlar, pozitifi olduğu gibi geçirir\n# inplace=True: memory'de yerinde değiştir (daha verimli)\n\n# Sigmoid'e göre avantajı:\n# - Vanishing gradient yok (pozitif bölgede türev=1)\n# - Hesaplaması çok hızlı"
+        },
+        {
+          "type": "code",
+          "heading": "MaxPool2d",
+          "text": "nn.MaxPool2d(kernel_size=2, stride=2)\n\n# 2x2 penceredeki maksimum değeri al\n# Input:  (batch, C, H,   W)\n# Output: (batch, C, H/2, W/2)   ← boyut yarıya iner\n\n# Spatial bilgiyi küçültür → daha az parametre\n# Translasyon invariance sağlar\n# Learnable parametre YOK"
+        },
+        {
+          "type": "compare",
+          "heading": "MaxPool vs AvgPool",
+          "left": {
+            "title": "MaxPool",
+            "points": [
+              "En güçlü aktivasyonu geçirir",
+              "Feature detection için iyi",
+              "CNN'lerde daha yaygın"
+            ]
+          },
+          "right": {
+            "title": "AvgPool",
+            "points": [
+              "Ortalama alır",
+              "Global average pooling'de yaygın",
+              "Sınıflandırma katmanı öncesi"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "title": "nn.Module — PyTorch Ağ Pattern'i",
+      "cat": "PyTorch",
+      "summary": "Tüm PyTorch ağları nn.Module'dan türer. __init__'te katmanları tanımla, forward'da veriyi geçir.",
+      "context": "ML Lab · Session 4",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Temel Pattern",
+          "text": "class MyNetwork(nn.Module):\n    def __init__(self):\n        super(MyNetwork, self).__init__()  # şart!\n        self.conv1 = nn.Conv2d(3, 64, kernel_size=3, padding=1)\n        self.bn1   = nn.BatchNorm2d(64)\n        self.relu  = nn.ReLU(inplace=True)\n        self.pool  = nn.MaxPool2d(2, 2)\n        self.fc    = nn.Linear(64 * 112 * 112, 10)\n\n    def forward(self, x):\n        x = self.conv1(x)     # (B, 64, 224, 224)\n        x = self.bn1(x)\n        x = self.relu(x)\n        x = self.pool(x)      # (B, 64, 112, 112)\n        x = x.flatten(1)      # (B, 64*112*112)\n        x = self.fc(x)        # (B, 10)\n        return x"
+        },
+        {
+          "type": "list",
+          "heading": "Önemli Kurallar",
+          "items": [
+            "super().__init__() çağırmayı unutma — PyTorch hook'ları bozulur",
+            "__init__'te tüm learnable katmanları self. ile tanımla — autograd takip eder",
+            "forward'da aktivasyon sırası: Conv → BN → ReLU (standart)",
+            "nn.Sequential ile daha kısa yazılabilir ama daha az esneklik"
+          ]
+        },
+        {
+          "type": "code",
+          "heading": "nn.Sequential alternatifi",
+          "text": "self.block = nn.Sequential(\n    nn.Conv2d(3, 64, 3, padding=1),\n    nn.BatchNorm2d(64),\n    nn.ReLU(inplace=True)\n)\n# forward'da: x = self.block(x)"
+        }
+      ]
+    },
+    {
+      "title": "VGGBlock Mimarisi",
+      "cat": "VGG16",
+      "summary": "Her VGGBlock: N adet Conv-BN-ReLU + MaxPool. N=2 veya N=3. Derinlik arttıkça channel sayısı ikiye katlanır.",
+      "context": "ML Lab · Session 4",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "VGGBlock Implementasyonu",
+          "text": "class VGGBlock(nn.Module):\n    def __init__(self, ifeat, ofeat, N=2):\n        super(VGGBlock, self).__init__()\n        layers = []\n        layers += [nn.Conv2d(ifeat, ofeat, 3, padding=1),\n                   nn.BatchNorm2d(ofeat), nn.ReLU(inplace=True)]\n        for _ in range(N-1):\n            layers += [nn.Conv2d(ofeat, ofeat, 3, padding=1),\n                       nn.BatchNorm2d(ofeat), nn.ReLU(inplace=True)]\n        layers.append(nn.MaxPool2d(2, 2))\n        self.block = nn.Sequential(*layers)\n\n    def forward(self, x):\n        return self.block(x)"
+        },
+        {
+          "type": "code",
+          "heading": "VGG16 Boyut Akışı",
+          "text": "Input:         (B,   3, 224, 224)\nBlock1 (N=2):  (B,  64, 112, 112)   ← 3→64, pool\nBlock2 (N=2):  (B, 128,  56,  56)   ← 64→128, pool\nBlock3 (N=3):  (B, 256,  28,  28)   ← 128→256, pool\nBlock4 (N=3):  (B, 512,  14,  14)   ← 256→512, pool\nBlock5 (N=3):  (B, 512,   7,   7)   ← 512→512, pool\nFlatten:       (B, 512*7*7) = (B, 25088)\nFC1:           (B, 1024)\nFC2:           (B, 1024)\nFC3:           (B, 20)               ← PascalVOC: 20 class"
+        },
+        {
+          "type": "insight",
+          "heading": "Neden 3x3 kernel?",
+          "text": "İki adet 3x3 conv = 5x5 conv'un receptive field'ı ama daha az parametre: 2*(3*3)=18 vs 5*5=25. Üç adet 3x3 = 7x7. Daha derin + daha az parametre + daha fazla non-linearity."
+        }
+      ]
+    },
+    {
+      "title": "Multi-label Classification — BCE",
+      "cat": "Loss",
+      "summary": "PascalVOC'ta bir görüntüde birden fazla nesne var. Her sınıf bağımsız binary karar → Sigmoid + BCE, Softmax + CE değil.",
+      "context": "ML Lab · Session 4",
+      "sections": [
+        {
+          "type": "compare",
+          "heading": "Single-label vs Multi-label",
+          "left": {
+            "title": "Single-label (CE)",
+            "points": [
+              "Görüntüde tek nesne",
+              "Softmax: olasılıklar toplamı=1",
+              "nn.CrossEntropyLoss",
+              "target: integer class index"
+            ]
+          },
+          "right": {
+            "title": "Multi-label (BCE)",
+            "points": [
+              "Görüntüde birden fazla nesne",
+              "Sigmoid: her sınıf bağımsız [0,1]",
+              "nn.BCEWithLogitsLoss",
+              "target: one-hot float vektörü"
+            ]
+          }
+        },
+        {
+          "type": "code",
+          "heading": "Target formatı",
+          "text": "# PascalVOC'ta bir görüntü: cat + dog\ntarget = [0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0]\n#                          ^cat                ^dog\n# shape: (20,) float\n\n# Network output: (B, 20) raw logits\n# BCEWithLogitsLoss içinde sigmoid var → logit ver, sigmoid geçirme\ncriterion = nn.BCEWithLogitsLoss()\nloss = criterion(output, target)"
+        },
+        {
+          "type": "note",
+          "heading": "Inference'ta sigmoid",
+          "text": "Training'de BCEWithLogitsLoss kullanıyorsun (içinde sigmoid var). Prediction yaparken sigmoid'i elle uygula: res = torch.sigmoid(network(inputs)). 0.5 threshold ile binary karar ver."
+        }
+      ]
+    },
+    {
+      "title": "DataLoader ve Transforms",
+      "cat": "Veri",
+      "summary": "DataLoader veriyi batch batch yükler. Transforms görüntüyü tensor'a çevirir, resize, normalize eder.",
+      "context": "ML Lab · Session 4",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Transforms",
+          "text": "inp_transform = transforms.Compose([\n    transforms.Resize((224, 224)),        # boyut normalize\n    transforms.RandomHorizontalFlip(),    # data augmentation\n    transforms.ToTensor(),                # [0,255] → [0,1], HWC → CHW\n    transforms.Normalize(                 # ImageNet mean/std\n        mean=[0.485, 0.456, 0.406],\n        std=[0.229, 0.224, 0.225])\n])"
+        },
+        {
+          "type": "code",
+          "heading": "DataLoader",
+          "text": "train_loader = DataLoader(\n    train_set,\n    batch_size=8,      # kaç örnek bir batch'te\n    num_workers=1,     # paralel yükleme için worker sayısı\n    shuffle=True       # her epoch'ta karıştır\n)\n\n# Kullanım:\nfor batch_nr, data in enumerate(train_loader):\n    imgs, labels = data\n    # imgs:   (8, 3, 224, 224)\n    # labels: (8, 20)"
+        },
+        {
+          "type": "insight",
+          "heading": "ToTensor ne yapıyor?",
+          "text": "PIL Image: (H, W, C), uint8, [0,255]. ToTensor: (C, H, W), float32, [0,1]. PyTorch Conv2d (B, C, H, W) bekliyor — channel first. Normalize sonrası değerler negatif de olabilir."
+        }
+      ]
+    },
+    {
+      "title": "PyTorch Training Loop",
+      "cat": "Training",
+      "summary": "Her batch: zero_grad → forward → loss → backward → optimizer.step. Validation'da torch.no_grad().",
+      "context": "ML Lab · Session 4",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Tam Training Loop",
+          "text": "network = VGG16().to(device)\ncriterion = nn.BCEWithLogitsLoss()\noptimizer = torch.optim.Adam(network.parameters(), lr=1e-4)\n\nfor epoch in range(num_epochs):\n    network.train()                          # training modu\n    for batch_nr, (imgs, labels) in enumerate(train_loader):\n        imgs   = imgs.to(device)\n        labels = labels.to(device)\n\n        optimizer.zero_grad()                # gradient sıfırla\n        output = network(imgs)               # forward\n        loss   = criterion(output, labels)   # loss hesapla\n        loss.backward()                      # backprop\n        optimizer.step()                     # parametre güncelle\n\n    # Validation\n    network.eval()                           # eval modu\n    with torch.no_grad():                    # gradient hesaplama\n        for imgs, labels in val_loader:\n            imgs = imgs.to(device)\n            output = network(imgs)\n            val_loss = criterion(output, labels.to(device))"
+        },
+        {
+          "type": "list",
+          "heading": "Her adım neden var?",
+          "items": [
+            "zero_grad(): PyTorch gradient'ları biriktirir — her batch öncesi sıfırla",
+            "loss.backward(): autograd ile tüm parametrelerin gradientını hesapla",
+            "optimizer.step(): w -= lr * grad ile parametreleri güncelle",
+            "network.train(): BatchNorm ve Dropout training modunda davranır",
+            "network.eval(): BatchNorm running stats kullanır, Dropout kapatır",
+            "torch.no_grad(): gradient graph oluşturma — memory ve hız için"
+          ]
+        },
+        {
+          "type": "compare",
+          "heading": "Lab 3 vs Lab 4 Training",
+          "left": {
+            "title": "Lab 3 (NumPy)",
+            "points": [
+              "net.zero_gradients()",
+              "net.forward(x) — manuel",
+              "cost_function.gradient()",
+              "net.backward(d)",
+              "net.update_parameters(lr)"
+            ]
+          },
+          "right": {
+            "title": "Lab 4 (PyTorch)",
+            "points": [
+              "optimizer.zero_grad()",
+              "output = network(x)",
+              "loss = criterion(output, y)",
+              "loss.backward()",
+              "optimizer.step()"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "title": "Optimizer — Adam vs SGD",
+      "cat": "Training",
+      "summary": "SGD: sabit learning rate. Adam: her parametre için adaptive learning rate, momentum ile. Genellikle Adam daha hızlı yakınsar.",
+      "context": "ML Lab · Session 4",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Kullanım",
+          "text": "# SGD\noptimizer = torch.optim.SGD(network.parameters(), lr=0.01, momentum=0.9)\n\n# Adam (genellikle tercih edilir)\noptimizer = torch.optim.Adam(network.parameters(), lr=1e-4)\n\n# network.parameters() → tüm learnable parametreler (w, b)\n# lr: learning rate"
+        },
+        {
+          "type": "insight",
+          "heading": "Adam neden iyi?",
+          "text": "Her parametre için ayrı learning rate tutar. Gradient'ın hem momentumunu (1. moment) hem de kare ortalamasını (2. moment) izler. Sık güncellenen parametreler küçük adım, seyrek güncellenenler büyük adım atar. Learning rate ayarlamaya daha az duyarlı."
+        }
+      ]
+    },
+    {
+      "title": "Top-N Accuracy",
+      "cat": "Metrik",
+      "summary": "Top-5: modelin en yüksek olasılık verdiği 5 tahmin arasında gerçek label var mı? Multi-label için daha adil.",
+      "context": "ML Lab · Session 4",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Implementasyon",
+          "text": "# output: (B, 20) sigmoid sonrası olasılıklar\ntop5 = np.argsort(output, axis=1)[:, -5:]   # (B, 5)\ntop1 = np.argsort(output, axis=1)[:, -1]    # (B,)\n\n# Bir örnek için: gerçek label'lardan herhangi biri top5'te mi?\nfor i in range(batch_size):\n    true_labels = np.where(labels[i] > 0.5)[0]   # gerçek sınıflar\n    hit = any(l in top5[i] for l in true_labels)\n    top_5_scores.append(hit)"
+        },
+        {
+          "type": "insight",
+          "heading": "Neden Top-5 daha adil?",
+          "text": "PascalVOC multi-label — bir görüntüde cat ve dog var. Model cat'i 1. sırada, dog'u 3. sırada tahmin etti. Top-1 accuracy: 1 doğru, 1 yanlış. Top-5 accuracy: her ikisi de top-5'te → hit. Multi-label senaryoda Top-5 daha gerçekçi."
+        }
+      ]
+    },
+    {
+      "title": "ResNet — Skip Connection",
+      "cat": "ResNet18",
+      "summary": "Derin ağlarda gradient vanishing sorununu çözer. x + F(x) — katman değişimi öğrenir, sıfırdan öğrenmez.",
+      "context": "ML Lab · Session 4",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "BasicResnetBlock",
+          "text": "class BasicResnetBlock(nn.Module):\n    def __init__(self, in_channels, out_channels, stride=1):\n        super().__init__()\n        self.conv1 = nn.Conv2d(in_channels, out_channels, 3,\n                               stride=stride, padding=1, bias=False)\n        self.bn1   = nn.BatchNorm2d(out_channels)\n        self.conv2 = nn.Conv2d(out_channels, out_channels, 3,\n                               stride=1, padding=1, bias=False)\n        self.bn2   = nn.BatchNorm2d(out_channels)\n\n        # channel sayısı veya boyut değişince shortcut projection lazım\n        self.shortcut = nn.Sequential()\n        if stride != 1 or in_channels != out_channels:\n            self.shortcut = nn.Sequential(\n                nn.Conv2d(in_channels, out_channels, 1, stride=stride, bias=False),\n                nn.BatchNorm2d(out_channels)\n            )\n\n    def forward(self, x):\n        out = F.relu(self.bn1(self.conv1(x)))\n        out = self.bn2(self.conv2(out))\n        out += self.shortcut(x)   # ← skip connection\n        return F.relu(out)"
+        },
+        {
+          "type": "insight",
+          "heading": "Neden skip connection çalışıyor?",
+          "text": "Derin ağda katman işe yaramıyorsa F(x)=0 öğrenmesi yeterli → output = x (identity). Bu VGG'de imkansız. ResNet en kötü ihtimalle identity öğrenir, hiç bozulmaz. Gradient doğrudan skip connection üzerinden geçebiliyor — vanishing gradient azalıyor."
+        },
+        {
+          "type": "code",
+          "heading": "Shortcut neden projection gerekiyor?",
+          "text": "out += x   işlemi için ikisi aynı shape olmalı.\nStride=2 ise spatial boyut yarıya indi → x ile out toplanamaz.\nIn/out channel farklıysa da toplanamaz.\nBu durumlarda 1x1 Conv ile x'i project et → boyutları eşitle."
+        }
+      ]
+    },
+    {
+      "title": "Device — MPS (Mac M4)",
+      "cat": "PyTorch",
+      "summary": "Lab sunucusunda CUDA var. Mac'te MPS kullan — Apple Silicon GPU. Orijinal kodda cuda→mps değiştir.",
+      "context": "ML Lab · Session 4",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Device Ayarı",
+          "text": "# Orijinal kod (sunucu için)\ndevice = torch.device('cuda' if torch.cuda.is_available() else 'cpu')\n\n# Mac M4 için\ndevice = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')\n\n# Test\nprint(device)  # → mps\n\n# Ağı ve veriyi device'a gönder\nnetwork = VGG16().to(device)\nimgs    = imgs.to(device)\nlabels  = labels.to(device)"
+        },
+        {
+          "type": "note",
+          "heading": "MPS dikkat",
+          "text": "Bazı PyTorch operasyonlar MPS'te desteklenmiyor — hata alırsan cpu'ya düşür. DataLoader'da num_workers=0 dene, MPS + multiprocessing bazen çakışıyor."
         }
       ]
     }
