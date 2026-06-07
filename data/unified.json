@@ -8042,30 +8042,63 @@
       ]
     },
     {
-      "title": "nn.Module — PyTorch Ağ Pattern'i",
+      "title": "nn.Module — Nedir, Neden Var?",
       "cat": "PyTorch",
-      "summary": "Tüm PyTorch ağları nn.Module'dan türer. __init__'te katmanları tanımla, forward'da veriyi geçir.",
+      "summary": "PyTorch'un tüm ağ katmanları nn.Module'dan türer. Parametreleri otomatik takip eder, .to(device), .train(), .eval(), .parameters() gibi özellikleri ücretsiz verir.",
       "context": "ML Lab · Session 4",
       "sections": [
         {
-          "type": "code",
-          "heading": "Temel Pattern",
-          "text": "class MyNetwork(nn.Module):\n    def __init__(self):\n        super(MyNetwork, self).__init__()  # şart!\n        self.conv1 = nn.Conv2d(3, 64, kernel_size=3, padding=1)\n        self.bn1   = nn.BatchNorm2d(64)\n        self.relu  = nn.ReLU(inplace=True)\n        self.pool  = nn.MaxPool2d(2, 2)\n        self.fc    = nn.Linear(64 * 112 * 112, 10)\n\n    def forward(self, x):\n        x = self.conv1(x)     # (B, 64, 224, 224)\n        x = self.bn1(x)\n        x = self.relu(x)\n        x = self.pool(x)      # (B, 64, 112, 112)\n        x = x.flatten(1)      # (B, 64*112*112)\n        x = self.fc(x)        # (B, 10)\n        return x"
+          "type": "text",
+          "heading": "nn.Module ne sağlıyor?",
+          "text": "nn.Module bir base class. Sen ondan türetince PyTorch şunları otomatik yapıyor:\n- self. ile atanan tüm nn.* katmanların parametrelerini takip eder\n- network.parameters() ile tüm w ve b'leri optimizer'a verebilirsin\n- network.to(device) ile tüm parametreleri GPU'ya taşır\n- network.train() / network.eval() modları (BatchNorm, Dropout davranışı)\n- loss.backward() sonrası tüm parametrelere .grad atanır"
         },
         {
-          "type": "list",
-          "heading": "Önemli Kurallar",
-          "items": [
-            "super().__init__() çağırmayı unutma — PyTorch hook'ları bozulur",
-            "__init__'te tüm learnable katmanları self. ile tanımla — autograd takip eder",
-            "forward'da aktivasyon sırası: Conv → BN → ReLU (standart)",
-            "nn.Sequential ile daha kısa yazılabilir ama daha az esneklik"
-          ]
+          "type": "text",
+          "heading": "Lab 3'te neden yazmamıştık?",
+          "text": "Lab 3'te sıfırdan NumPy ile yazdık — w ve b düz numpy array'di. Kendi Layer sınıfımızı yazdık, zero_gradients/backward/update_parameters hepsini manuel implement ettik. PyTorch autograd yoktu.\n\nLab 4'te artık PyTorch kullanıyoruz. PyTorch'un autograd sistemi sadece nn.Module'dan türeyen sınıfları anlıyor. Bu yüzden nn.Module'dan türetmek zorunlu."
+        },
+        {
+          "type": "code",
+          "heading": "Temel Pattern",
+          "text": "class MyNetwork(nn.Module):\n    def __init__(self):\n        super(MyNetwork, self).__init__()   # ← kritik satır\n        self.conv1 = nn.Conv2d(3, 64, 3, padding=1)\n        self.bn1   = nn.BatchNorm2d(64)\n        self.fc    = nn.Linear(64*112*112, 10)\n\n    def forward(self, x):\n        x = self.conv1(x)\n        x = self.bn1(x)\n        x = x.flatten(1)\n        x = self.fc(x)\n        return x\n\nnet = MyNetwork()\nprint(list(net.parameters()))   # tüm w ve b'ler burada"
         },
         {
           "type": "code",
           "heading": "nn.Sequential alternatifi",
-          "text": "self.block = nn.Sequential(\n    nn.Conv2d(3, 64, 3, padding=1),\n    nn.BatchNorm2d(64),\n    nn.ReLU(inplace=True)\n)\n# forward'da: x = self.block(x)"
+          "text": "self.block = nn.Sequential(\n    nn.Conv2d(3, 64, 3, padding=1),\n    nn.BatchNorm2d(64),\n    nn.ReLU(inplace=True)\n)\n# forward'da: x = self.block(x)\n# Daha kısa ama if/else gibi koşullu logic yazamazsın"
+        }
+      ]
+    },
+    {
+      "title": "super().__init__() — Ne Yapar, Olmazsa Ne Olur?",
+      "cat": "PyTorch",
+      "summary": "Parent class'ın (nn.Module) __init__'ini çalıştırır. Olmadan PyTorch'un iç altyapısı kurulmaz, her şey hata verir.",
+      "context": "ML Lab · Session 4",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Python'da super() nedir?",
+          "text": "super() parent class'a erişim sağlar. MyNetwork, nn.Module'dan türüyor:\n\nclass MyNetwork(nn.Module):\n    ...\n\nBu demek: MyNetwork, nn.Module'un tüm özelliklerini miras alıyor. Ama miras almak için parent'ın __init__'inin de çalışması lazım — super().__init__() bunu yapıyor."
+        },
+        {
+          "type": "code",
+          "heading": "super() syntax",
+          "text": "# İki yazım biçimi — ikisi de aynı\nsuper(MyNetwork, self).__init__()   # eski Python 2 stili\nsuper().__init__()                  # Python 3 kısa stili\n\n# İkisi de: 'nn.Module'un __init__'ini çalıştır' demek"
+        },
+        {
+          "type": "text",
+          "heading": "nn.Module.__init__() ne kuruyor?",
+          "text": "nn.Module'un __init__'i çalışınca PyTorch şu iç yapıları kuruyor:\n- _parameters: learnable parametreleri saklayan dict\n- _modules: alt module'leri saklayan dict\n- _buffers: gradient takip etmeyen tensorlar için\n- training flag: train/eval modu için\n\nBunlar kurulmadan self.conv1 = nn.Conv2d(...) yazdığında PyTorch onu 'parametre olarak kaydet' diye anlayamıyor."
+        },
+        {
+          "type": "code",
+          "heading": "Olmazsa ne olur?",
+          "text": "class BrokenNetwork(nn.Module):\n    def __init__(self):\n        # super().__init__() yok!\n        self.conv1 = nn.Conv2d(3, 64, 3)\n\nnet = BrokenNetwork()\n# → AttributeError: cannot assign module before Module.__init__() call\n# İlk self. atamasında patlıyor"
+        },
+        {
+          "type": "insight",
+          "heading": "self. ile atama neden şart?",
+          "text": "nn.Module __setattr__'ı override etmiş. self.conv1 = nn.Conv2d(...) yazdığında PyTorch bunu yakalar ve conv1'i _modules dict'ine kaydeder. Böylece network.parameters() çağrısında conv1'in weight ve bias'ları otomatik döner.\n\nEğer local variable kullansaydın (conv1 = nn.Conv2d(...) — self. yok), PyTorch bunu göremez, parameters() boş döner, optimizer hiçbir şey güncellemez."
         }
       ]
     },
