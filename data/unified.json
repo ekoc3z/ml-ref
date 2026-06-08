@@ -8042,6 +8042,48 @@
           "text": "SoftMax Jacobian'ı karmaşık ama CrossEntropy ile birleşince: dL/dz = softmax(z) - target. Bu yüzden ikisini hep birlikte kullanıyoruz. Ayrı ayrı backward implement etmek yerine combined gradient kullanılabilir."
         },
         {
+          "type": "text",
+          "heading": "SoftMax + CE neden, SoftMax + MSE neden değil?",
+          "text": "CE gradient'ında paydada p_i var. SoftMax türevinde paydada da p_i var. Chain rule ile çarpınca p_i sadeleniyor:"
+        },
+        {
+          "type": "code",
+          "heading": "",
+          "text": "CE gradient:      dL/dp_i = -target_i / p_i    ← paydada p_i\nSoftMax türevi: dp_i/dz_j =  p_i * (...)        ← paydada p_i\n\nÇarpınca: -target_i/p_i * p_i * (...) → p_i sadelenir → p - target"
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "MSE gradient'ında ise paydada p_i yok:"
+        },
+        {
+          "type": "code",
+          "heading": "",
+          "text": "MSE gradient:   dL/dp_i = 2(p_i - target_i)    ← paydada p_i yok\nSoftMax türevi: dp_i/dz_j = p_i * (delta_ij - p_j)\n\nÇarpınca: 2(p_i - target_i) * p_i * (...) → p_i sadelenmez\n→ matrix çarpımı olarak kalır, gradient küçük ve karmaşık"
+        },
+        {
+          "type": "compare",
+          "heading": "SoftMax + CE vs SoftMax + MSE",
+          "left": {
+            "title": "SoftMax + CE",
+            "points": [
+              "p_i pay-paydada sadelenir",
+              "gradient = p - target",
+              "temiz, büyük, stabil",
+              "classification standardı"
+            ]
+          },
+          "right": {
+            "title": "SoftMax + MSE",
+            "points": [
+              "p_i sadelenmez",
+              "matrix çarpımı kalır",
+              "gradient küçülür, bozulur",
+              "training yavaşlar veya ıraksır"
+            ]
+          }
+        },
+        {
           "type": "note",
           "heading": "Numerik stabilite",
           "text": "exp(z) büyük z için overflow verir. z - max(z) çıkarmak matematiksel sonucu değiştirmiyor (pay ve paydada iptal oluyor) ama taşmayı önlüyor. CrossEntropy'deki eps de log(0) = -inf önlemek için."
@@ -8147,6 +8189,66 @@
               "Sınıflandırma katmanı öncesi"
             ]
           }
+        }
+      ]
+    },
+    {
+      "title": "BatchNorm — Neden Var? (İntuition)",
+      "cat": "CNN Temelleri",
+      "summary": "Batch içindeki aktivasyon dağılımını dengeler + adımlar arası dağılım kaymasını önler. İkisi birlikte training'i stabilize eder.",
+      "context": "ML Lab · Session 4",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Problem 1 — Batch içi dağılım",
+          "text": "600 fotoğraf aynı anda ağa giriyor. Aynı weightlerden geçiyorlar ama her fotoğrafın piksel değerleri farklı olduğu için aktivasyonlar birbirinden çok farklı çıkıyor. Katman katman ilerledikçe bu fark daha da büyüyor — bir fotoğrafın aktivasyonu 0.1 iken diğerininki 50 olabiliyor."
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Weight update aşamasında gradient bu çok farklı aktivasyonların ortalamasına göre hesaplanıyor. Ağ ortak bir şey öğrenmeye çalışırken dağılmış sinyallerle boğuşuyor — weightler adam akıllı güncellenemiyor."
+        },
+        {
+          "type": "text",
+          "heading": "Problem 2 — Adımlar arası dağılım kayması (internal covariate shift)",
+          "text": "Weightler her adımda güncelleniyor. Bir sonraki batch geldiğinde önceki katmanın çıkardığı dağılım değişmiş oluyor — sonraki katman sürekli değişen bir girişe uyum sağlamaya çalışıyor. Katman sayısı arttıkça bu kayma birikiyor, training yavaşlıyor ve dengesizleşiyor."
+        },
+        {
+          "type": "text",
+          "heading": "Çözüm — BatchNorm",
+          "text": "BatchNorm her katmandan sonra aktivasyonları normalize ederek ikisini de çözüyor — hem batch içindeki fotoğrafların aktivasyonlarını ortak bir çerçevede tutuyor, hem de bir adımdan diğerine dağılımın çok kaymasını önlüyor. Ağ her katmanda tutarlı bir dağılımla karşılaşıyor, gradientlar daha anlamlı akıyor, weight update'ler daha kararlı oluyor."
+        },
+        {
+          "type": "formula",
+          "heading": "Operasyon",
+          "text": "$$\\hat{x} = \\frac{x - \\mu_B}{\\sqrt{\\sigma_B^2 + \\epsilon}}$$\n$$y = \\gamma \\hat{x} + \\beta$$\n\n$\\mu_B$, $\\sigma_B^2$: batch mean ve variance. $\\gamma$, $\\beta$: learnable scale ve shift."
+        },
+        {
+          "type": "compare",
+          "heading": "FC vs CNN'de BatchNorm",
+          "left": {
+            "title": "BatchNorm1d (FC)",
+            "points": [
+              "Her nöron için ayrı normalize",
+              "Input: (B, F) — B batch, F feature",
+              "F tane mean/std hesaplanır",
+              "Her nöronun batch'teki çıktısını normalize eder"
+            ]
+          },
+          "right": {
+            "title": "BatchNorm2d (CNN)",
+            "points": [
+              "Her filter/channel için ayrı normalize",
+              "Input: (B, C, H, W)",
+              "C tane mean/std hesaplanır",
+              "Bir filter'ın tüm batch+spatial çıktısını normalize eder"
+            ]
+          }
+        },
+        {
+          "type": "insight",
+          "heading": "Conv2d sonrası neden BN, sonra ReLU?",
+          "text": "Conv ham değerler üretiyor — dağılım kontrolsüz. BN bu değerleri normalize ediyor, sonra ReLU negatifi sıfırlıyor. BN'i ReLU'dan sonra koysaydık: normalize edilmiş değerlerin yarısı zaten 0 olurdu, BN'nin istatistikleri anlamsızlaşırdı."
         }
       ]
     },
