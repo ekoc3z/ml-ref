@@ -8314,6 +8314,66 @@
       ]
     },
     {
+      "title": "nn.Sequential — Neden Var, Ne Kolaylaştırıyor?",
+      "cat": "PyTorch",
+      "summary": "Katmanları sırayla çalıştıran container. Ayrı ayrı tanımlayıp forward'da tek tek çağırmak yerine, hepsini bir blokta toplar.",
+      "context": "ML Lab · Session 4",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Problem",
+          "text": "nn.Module'de her katmanı ayrı attribute olarak tanımlayıp forward'da tek tek çağırmak zorundasın. Katman sayısı arttıkça hem __init__ hem forward uzuyor — aynı şeyi iki yerde yazıyorsun."
+        },
+        {
+          "type": "compare",
+          "heading": "CNN4 — elle yazım vs Sequential",
+          "left": {
+            "title": "Elle yazım",
+            "points": [
+              "Her katman ayrı self.conv1, self.conv2...",
+              "forward'da tek tek çağırma",
+              "Katman ekleyince iki yeri değiştir",
+              "__init__ ve forward birbirini tekrar eder"
+            ]
+          },
+          "right": {
+            "title": "Sequential ile",
+            "points": [
+              "Tüm katmanlar self.features içinde",
+              "forward: x = self.features(x) — tek satır",
+              "Katman ekleyince sadece Sequential'ı değiştir",
+              "forward hiç değişmez"
+            ]
+          }
+        },
+        {
+          "type": "code",
+          "heading": "CNN4 — elle yazım",
+          "text": "class CNN4(nn.Module):\n    def __init__(self):\n        super().__init__()\n        self.conv1   = nn.Conv2d(1, 16, 3)\n        self.relu    = nn.ReLU()\n        self.conv2   = nn.Conv2d(16, 8, 3)\n        self.conv3   = nn.Conv2d(8, 16, 5)\n        self.maxpool = nn.MaxPool2d(2, 2)\n        self.conv4   = nn.Conv2d(16, 16, 5)\n        self.fc      = nn.Linear(16*4*4, 10)\n\n    def forward(self, x):\n        x = self.relu(self.conv1(x))\n        x = self.relu(self.conv2(x))\n        x = self.relu(self.conv3(x))\n        x = self.maxpool(x)\n        x = self.relu(self.conv4(x))\n        x = self.maxpool(x)\n        x = x.flatten(1)\n        return self.fc(x)"
+        },
+        {
+          "type": "code",
+          "heading": "CNN4 — Sequential ile",
+          "text": "class CNN4(nn.Module):\n    def __init__(self):\n        super().__init__()\n        self.features = nn.Sequential(\n            nn.Conv2d(1, 16, 3),  nn.ReLU(),\n            nn.Conv2d(16, 8, 3),  nn.ReLU(),\n            nn.Conv2d(8, 16, 5),  nn.ReLU(),\n            nn.MaxPool2d(2, 2),\n            nn.Conv2d(16, 16, 5), nn.ReLU(),\n            nn.MaxPool2d(2, 2)\n        )\n        self.fc = nn.Linear(16*4*4, 10)\n\n    def forward(self, x):\n        x = self.features(x)\n        x = x.flatten(1)\n        return self.fc(x)\n\n# Sonuç birebir aynı — forward tek satıra indi"
+        },
+        {
+          "type": "text",
+          "heading": "VGGBlock — Sequential + loop",
+          "text": "VGG'de N=2 veya N=3 Conv-BN-ReLU tekrarı var. Sequential'a loop ile doldurulmuş liste veriliyor — N kaç olursa olsun kod aynı uzunlukta kalıyor. N=3 için elle yazsaydın init'te 9 satır Conv/BN/ReLU, forward'da da 9 satır — ve N değişince tümünü değiştirmen lazım."
+        },
+        {
+          "type": "code",
+          "heading": "VGGBlock — Sequential + loop",
+          "text": "class VGGBlock(nn.Module):\n    def __init__(self, ifeat, ofeat, N=2):\n        super().__init__()\n        layers = []\n        for _ in range(N):\n            layers.append(nn.Conv2d(ifeat, ofeat, 3, padding=1))\n            layers.append(nn.BatchNorm2d(ofeat))\n            layers.append(nn.ReLU(inplace=True))\n            ifeat = ofeat\n        layers.append(nn.MaxPool2d(2, 2))\n        self.block = nn.Sequential(*layers)  # *layers: listeyi tek tek argümana açar\n\n    def forward(self, x):\n        return self.block(x)  # N=2 de N=3 de forward hep tek satır"
+        },
+        {
+          "type": "note",
+          "heading": "Ne zaman Sequential yeterli değil?",
+          "text": "forward'da if/else, dal budak logic, skip connection (ResNet) varsa Sequential kullanılamaz — o zaman katmanları ayrı ayrı tanımlayıp forward'ı kendin yazman gerekir."
+        }
+      ]
+    },
+    {
       "title": "VGGBlock Mimarisi",
       "cat": "VGG16",
       "summary": "Her VGGBlock: N adet Conv-BN-ReLU + MaxPool. N=2 veya N=3. Derinlik arttıkça channel sayısı ikiye katlanır.",
@@ -8817,21 +8877,6 @@
   ],
   "lab08": [
     {
-      "title": "Session 8 — Genel Çerçeve",
-      "cat": "Overview",
-      "summary": "Transformer mimarisi. Self-attention, multi-head attention, positional encoding, encoder-decoder.",
-      "context": "ML Lab · Session 8",
-      "sections": [
-        {
-          "type": "note",
-          "heading": "İçerik",
-          "text": "Bu section ilerleyen zamanlarda doldurulacak. Lab 8 içeriği: Self-attention (Q, K, V), scaled dot-product attention, multi-head attention, positional encoding, feed-forward layers, layer norm."
-        }
-      ]
-    }
-  ],
-  "lab09": [
-    {
       "title": "Session 9 — Genel Çerçeve",
       "cat": "Overview",
       "summary": "Anomaly Detection. Unsupervised yaklaşım — normal veri ile eğitim, anormal olanı tespit.",
@@ -8841,6 +8886,21 @@
           "type": "note",
           "heading": "İçerik",
           "text": "Bu section ilerleyen zamanlarda doldurulacak. Lab 9 içeriği: Anomaly detection yöntemleri, reconstruction-based (autoencoder), score-based, threshold belirleme, evaluation metrics."
+        }
+      ]
+    }
+  ],
+  "labsp": [
+    {
+      "title": "Session 8 — Genel Çerçeve",
+      "cat": "Overview",
+      "summary": "Transformer mimarisi. Self-attention, multi-head attention, positional encoding, encoder-decoder.",
+      "context": "ML Lab · Session 8",
+      "sections": [
+        {
+          "type": "note",
+          "heading": "İçerik",
+          "text": "Bu section ilerleyen zamanlarda doldurulacak. Lab 8 içeriği: Self-attention (Q, K, V), scaled dot-product attention, multi-head attention, positional encoding, feed-forward layers, layer norm."
         }
       ]
     }
