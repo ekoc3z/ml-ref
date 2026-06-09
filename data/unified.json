@@ -8877,9 +8877,9 @@
   ],
   "lab08": [
     {
-      "title": "Lab 08 · Anomaly Detection — Genel Çerçeve",
+      "title": "Session 8 — Genel Çerçeve",
       "cat": "Overview",
-      "summary": "Anomaly Detection: normal veriyle eğitilmiş model anormal olanı tespit eder. Reconstruction-based, score-based yaklaşımlar.",
+      "summary": "Anomaly Detection. Unsupervised yaklaşım — normal veriyle eğitim, anormal olanı reconstruction error veya score ile tespit.",
       "context": "ML Lab · Session 8",
       "sections": [
         {
