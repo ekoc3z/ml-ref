@@ -621,6 +621,88 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
     <span class="nav-count" id="cnt-vs03">0</span>
   </button>
 
+  <div class="course-divider">Stanford CS231n</div>
+  <button class="nav-btn" data-sec="cs01" onclick="switchSection('cs01');closeSidebar()">
+    <span class="nav-icon">📊</span><span class="nav-num">L2</span>
+    <span class="nav-label">Linear Classifiers</span>
+    <span class="nav-count" id="cnt-cs01">0</span>
+  </button>
+  <button class="nav-btn" data-sec="cs02" onclick="switchSection('cs02');closeSidebar()">
+    <span class="nav-icon">⚙️</span><span class="nav-num">L3</span>
+    <span class="nav-label">Regularization & Optim</span>
+    <span class="nav-count" id="cnt-cs02">0</span>
+  </button>
+  <button class="nav-btn" data-sec="cs03" onclick="switchSection('cs03');closeSidebar()">
+    <span class="nav-icon">🔗</span><span class="nav-num">L4</span>
+    <span class="nav-label">Backpropagation</span>
+    <span class="nav-count" id="cnt-cs03">0</span>
+  </button>
+  <button class="nav-btn" data-sec="cs04" onclick="switchSection('cs04');closeSidebar()">
+    <span class="nav-icon">👁</span><span class="nav-num">L5</span>
+    <span class="nav-label">CNNs</span>
+    <span class="nav-count" id="cnt-cs04">0</span>
+  </button>
+  <button class="nav-btn" data-sec="cs05" onclick="switchSection('cs05');closeSidebar()">
+    <span class="nav-icon">🏋️</span><span class="nav-num">L6</span>
+    <span class="nav-label">Training CNNs</span>
+    <span class="nav-count" id="cnt-cs05">0</span>
+  </button>
+  <button class="nav-btn" data-sec="cs06" onclick="switchSection('cs06');closeSidebar()">
+    <span class="nav-icon">🔄</span><span class="nav-num">L7</span>
+    <span class="nav-label">RNNs</span>
+    <span class="nav-count" id="cnt-cs06">0</span>
+  </button>
+  <button class="nav-btn" data-sec="cs07" onclick="switchSection('cs07');closeSidebar()">
+    <span class="nav-icon">🤖</span><span class="nav-num">L8</span>
+    <span class="nav-label">Attention & Transformers</span>
+    <span class="nav-count" id="cnt-cs07">0</span>
+  </button>
+  <button class="nav-btn" data-sec="cs08" onclick="switchSection('cs08');closeSidebar()">
+    <span class="nav-icon">🎯</span><span class="nav-num">L9</span>
+    <span class="nav-label">Detection & Seg</span>
+    <span class="nav-count" id="cnt-cs08">0</span>
+  </button>
+  <button class="nav-btn" data-sec="cs09" onclick="switchSection('cs09');closeSidebar()">
+    <span class="nav-icon">🎬</span><span class="nav-num">L10</span>
+    <span class="nav-label">Video Understanding</span>
+    <span class="nav-count" id="cnt-cs09">0</span>
+  </button>
+  <button class="nav-btn" data-sec="cs10" onclick="switchSection('cs10');closeSidebar()">
+    <span class="nav-icon">🖥️</span><span class="nav-num">L11</span>
+    <span class="nav-label">Distributed Training</span>
+    <span class="nav-count" id="cnt-cs10">0</span>
+  </button>
+  <button class="nav-btn" data-sec="cs11" onclick="switchSection('cs11');closeSidebar()">
+    <span class="nav-icon">🔍</span><span class="nav-num">L12</span>
+    <span class="nav-label">Self-Supervised</span>
+    <span class="nav-count" id="cnt-cs11">0</span>
+  </button>
+  <button class="nav-btn" data-sec="cs12" onclick="switchSection('cs12');closeSidebar()">
+    <span class="nav-icon">🎨</span><span class="nav-num">L13</span>
+    <span class="nav-label">Generative I</span>
+    <span class="nav-count" id="cnt-cs12">0</span>
+  </button>
+  <button class="nav-btn" data-sec="cs13" onclick="switchSection('cs13');closeSidebar()">
+    <span class="nav-icon">🌫️</span><span class="nav-num">L14</span>
+    <span class="nav-label">Generative II</span>
+    <span class="nav-count" id="cnt-cs13">0</span>
+  </button>
+  <button class="nav-btn" data-sec="cs14" onclick="switchSection('cs14');closeSidebar()">
+    <span class="nav-icon">🧊</span><span class="nav-num">L15</span>
+    <span class="nav-label">3D Vision</span>
+    <span class="nav-count" id="cnt-cs14">0</span>
+  </button>
+  <button class="nav-btn" data-sec="cs15" onclick="switchSection('cs15');closeSidebar()">
+    <span class="nav-icon">🌐</span><span class="nav-num">L16</span>
+    <span class="nav-label">Foundation Models</span>
+    <span class="nav-count" id="cnt-cs15">0</span>
+  </button>
+  <button class="nav-btn" data-sec="cs16" onclick="switchSection('cs16');closeSidebar()">
+    <span class="nav-icon">🦾</span><span class="nav-num">L17</span>
+    <span class="nav-label">Robot Learning</span>
+    <span class="nav-count" id="cnt-cs16">0</span>
+  </button>
+
   <div class="course-divider">ML Lab · Sessions</div>
   <button class="nav-btn" data-sec="lab01" onclick="switchSection('lab01');closeSidebar()">
     <span class="nav-icon">🔢</span><span class="nav-num">01</span>
@@ -1055,6 +1137,152 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
     </div>
   </div>
 
+  <!-- CS231n section headers -->
+  <div id="hdr-cs01" class="section-header">
+    <div class="hdr-title">CS231n L2 · Linear Classifiers</div>
+    <div class="hdr-sub">Score function · SVM loss · Softmax loss · Regularization · Gradient descent</div>
+    <div class="controls">
+      <select id="flt-cs01"><option value="">All categories</option></select>
+      <input type="search" id="q-cs01" placeholder="Search...">
+      <span class="pill" id="pill-cs01">0 cards</span>
+    </div>
+  </div>
+  <div id="hdr-cs02" class="section-header">
+    <div class="hdr-title">CS231n L3 · Regularization and Optimization</div>
+    <div class="hdr-sub">L1/L2 · SGD · Momentum · Adam · BatchNorm · Weight Init</div>
+    <div class="controls">
+      <select id="flt-cs02"><option value="">All categories</option></select>
+      <input type="search" id="q-cs02" placeholder="Search...">
+      <span class="pill" id="pill-cs02">0 cards</span>
+    </div>
+  </div>
+  <div id="hdr-cs03" class="section-header">
+    <div class="hdr-title">CS231n L4 · Neural Networks and Backpropagation</div>
+    <div class="hdr-sub">Computational graph · Chain rule · Gate sezgisi · Vectorized backprop</div>
+    <div class="controls">
+      <select id="flt-cs03"><option value="">All categories</option></select>
+      <input type="search" id="q-cs03" placeholder="Search...">
+      <span class="pill" id="pill-cs03">0 cards</span>
+    </div>
+  </div>
+  <div id="hdr-cs04" class="section-header">
+    <div class="hdr-title">CS231n L5 · Convolutional Neural Networks</div>
+    <div class="hdr-sub">Conv layer · Output boyutu · Receptive field · Pooling · CNN mimarisi</div>
+    <div class="controls">
+      <select id="flt-cs04"><option value="">All categories</option></select>
+      <input type="search" id="q-cs04" placeholder="Search...">
+      <span class="pill" id="pill-cs04">0 cards</span>
+    </div>
+  </div>
+  <div id="hdr-cs05" class="section-header">
+    <div class="hdr-title">CS231n L6 · Training CNNs</div>
+    <div class="hdr-sub">Activation functions · Weight init · Data augmentation · Transfer learning</div>
+    <div class="controls">
+      <select id="flt-cs05"><option value="">All categories</option></select>
+      <input type="search" id="q-cs05" placeholder="Search...">
+      <span class="pill" id="pill-cs05">0 cards</span>
+    </div>
+  </div>
+  <div id="hdr-cs06" class="section-header">
+    <div class="hdr-title">CS231n L7 · Recurrent Neural Networks</div>
+    <div class="hdr-sub">RNN · Vanishing gradient · LSTM · GRU · BPTT</div>
+    <div class="controls">
+      <select id="flt-cs06"><option value="">All categories</option></select>
+      <input type="search" id="q-cs06" placeholder="Search...">
+      <span class="pill" id="pill-cs06">0 cards</span>
+    </div>
+  </div>
+  <div id="hdr-cs07" class="section-header">
+    <div class="hdr-title">CS231n L8 · Attention and Transformers</div>
+    <div class="hdr-sub">Q, K, V · Scaled dot-product · Multi-head · Positional encoding · Encoder-decoder</div>
+    <div class="controls">
+      <select id="flt-cs07"><option value="">All categories</option></select>
+      <input type="search" id="q-cs07" placeholder="Search...">
+      <span class="pill" id="pill-cs07">0 cards</span>
+    </div>
+  </div>
+  <div id="hdr-cs08" class="section-header">
+    <div class="hdr-title">CS231n L9 · Detection, Segmentation, Visualization</div>
+    <div class="hdr-sub">R-CNN · YOLO · FCN · Mask R-CNN · RNN vs CNN vs Attention</div>
+    <div class="controls">
+      <select id="flt-cs08"><option value="">All categories</option></select>
+      <input type="search" id="q-cs08" placeholder="Search...">
+      <span class="pill" id="pill-cs08">0 cards</span>
+    </div>
+  </div>
+  <div id="hdr-cs09" class="section-header">
+    <div class="hdr-title">CS231n L10 · Video Understanding</div>
+    <div class="hdr-sub">3D conv · Optical flow · Two-stream network · Action recognition</div>
+    <div class="controls">
+      <select id="flt-cs09"><option value="">All categories</option></select>
+      <input type="search" id="q-cs09" placeholder="Search...">
+      <span class="pill" id="pill-cs09">0 cards</span>
+    </div>
+  </div>
+  <div id="hdr-cs10" class="section-header">
+    <div class="hdr-title">CS231n L11 · Large-Scale Distributed Training</div>
+    <div class="hdr-sub">Data parallelism · Model parallelism · All-reduce · Batch size scaling</div>
+    <div class="controls">
+      <select id="flt-cs10"><option value="">All categories</option></select>
+      <input type="search" id="q-cs10" placeholder="Search...">
+      <span class="pill" id="pill-cs10">0 cards</span>
+    </div>
+  </div>
+  <div id="hdr-cs11" class="section-header">
+    <div class="hdr-title">CS231n L12 · Self-Supervised Learning</div>
+    <div class="hdr-sub">Contrastive learning · SimCLR · MAE · DINO · Pretext tasks</div>
+    <div class="controls">
+      <select id="flt-cs11"><option value="">All categories</option></select>
+      <input type="search" id="q-cs11" placeholder="Search...">
+      <span class="pill" id="pill-cs11">0 cards</span>
+    </div>
+  </div>
+  <div id="hdr-cs12" class="section-header">
+    <div class="hdr-title">CS231n L13 · Generative Models I</div>
+    <div class="hdr-sub">Discriminative vs Generative · Autoencoder · VAE · ELBO · Reparameterization</div>
+    <div class="controls">
+      <select id="flt-cs12"><option value="">All categories</option></select>
+      <input type="search" id="q-cs12" placeholder="Search...">
+      <span class="pill" id="pill-cs12">0 cards</span>
+    </div>
+  </div>
+  <div id="hdr-cs13" class="section-header">
+    <div class="hdr-title">CS231n L14 · Generative Models II</div>
+    <div class="hdr-sub">GAN · Mode collapse · Diffusion · DDPM · Conditional generation</div>
+    <div class="controls">
+      <select id="flt-cs13"><option value="">All categories</option></select>
+      <input type="search" id="q-cs13" placeholder="Search...">
+      <span class="pill" id="pill-cs13">0 cards</span>
+    </div>
+  </div>
+  <div id="hdr-cs14" class="section-header">
+    <div class="hdr-title">CS231n L15 · 3D Vision</div>
+    <div class="hdr-sub">Voxel · Point cloud · Mesh · Implicit · NeRF · Depth estimation</div>
+    <div class="controls">
+      <select id="flt-cs14"><option value="">All categories</option></select>
+      <input type="search" id="q-cs14" placeholder="Search...">
+      <span class="pill" id="pill-cs14">0 cards</span>
+    </div>
+  </div>
+  <div id="hdr-cs15" class="section-header">
+    <div class="hdr-title">CS231n L16 · Multi-Modal Foundation Models</div>
+    <div class="hdr-sub">CLIP · Zero-shot · GPT-4V · Fine-tuning · LoRA</div>
+    <div class="controls">
+      <select id="flt-cs15"><option value="">All categories</option></select>
+      <input type="search" id="q-cs15" placeholder="Search...">
+      <span class="pill" id="pill-cs15">0 cards</span>
+    </div>
+  </div>
+  <div id="hdr-cs16" class="section-header">
+    <div class="hdr-title">CS231n L17 · Robot Learning</div>
+    <div class="hdr-sub">Supervised · Self-supervised · RL · Sim-to-real · Vision-based control</div>
+    <div class="controls">
+      <select id="flt-cs16"><option value="">All categories</option></select>
+      <input type="search" id="q-cs16" placeholder="Search...">
+      <span class="pill" id="pill-cs16">0 cards</span>
+    </div>
+  </div>
+
   <!-- LAB section headers -->
   <div id="hdr-lab01" class="section-header">
     <div class="hdr-title">Lab 01 · Basics &amp; NumPy</div>
@@ -1174,6 +1402,7 @@ const CHAPTERS = ['ch01','ch02','ch03','ch04','ch05','ch06','ch07','ch08','ch09'
                    'ida01','ida02','ida03','ida04','ida05','ida06','ida07','ida08','ida09','ida10','ida11','ida12','ida13',
                    'py01','py02','py03','py04','py05','py06','py07',
                    'vs01','vs02','vs03',
+                   'cs01','cs02','cs03','cs04','cs05','cs06','cs07','cs08','cs09','cs10','cs11','cs12','cs13','cs14','cs15','cs16',
                    'lab01','lab02','lab03','lab04','lab05','lab06','lab07','lab08','labsp'];
 let DATA = {};
 CHAPTERS.forEach(c => DATA[c] = []);
@@ -1193,6 +1422,8 @@ const CH_CTX = {
   py01:'py01',py02:'py02',py03:'py03',py04:'py04',py05:'py05',py06:'py06',py07:'py07',
   vs01:'vs01',vs02:'vs02',vs03:'vs03',
   lab01:'lab01',lab02:'lab02',lab03:'lab03',lab04:'lab04',lab05:'lab05',
+  cs01:'cs01',cs02:'cs02',cs03:'cs03',cs04:'cs04',cs05:'cs05',cs06:'cs06',cs07:'cs07',cs08:'cs08',
+  cs09:'cs09',cs10:'cs10',cs11:'cs11',cs12:'cs12',cs13:'cs13',cs14:'cs14',cs15:'cs15',cs16:'cs16',
   lab06:'lab06',lab07:'lab07',lab08:'lab08',labsp:'labsp'
 };
 
