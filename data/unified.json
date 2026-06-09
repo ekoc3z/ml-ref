@@ -8877,30 +8877,57 @@
   ],
   "lab08": [
     {
-      "title": "Session 9 — Genel Çerçeve",
+      "title": "Lab 08 · Anomaly Detection — Genel Çerçeve",
       "cat": "Overview",
-      "summary": "Anomaly Detection. Unsupervised yaklaşım — normal veri ile eğitim, anormal olanı tespit.",
-      "context": "ML Lab · Session 9",
+      "summary": "Anomaly Detection: normal veriyle eğitilmiş model anormal olanı tespit eder. Reconstruction-based, score-based yaklaşımlar.",
+      "context": "ML Lab · Session 8",
       "sections": [
+        {
+          "type": "list",
+          "heading": "Kapsam",
+          "items": [
+            "Anomaly detection nedir — normal vs anormal tanımı",
+            "Reconstruction-based: autoencoder normal veriyle eğitilir, anormal yüksek reconstruction error verir",
+            "Score-based: normallik skoru, threshold belirleme",
+            "Evaluation: AUROC, precision-recall, threshold seçimi"
+          ]
+        },
         {
           "type": "note",
           "heading": "İçerik",
-          "text": "Bu section ilerleyen zamanlarda doldurulacak. Lab 9 içeriği: Anomaly detection yöntemleri, reconstruction-based (autoencoder), score-based, threshold belirleme, evaluation metrics."
+          "text": "Detaylı kartlar ilerleyen zamanlarda eklenecek."
         }
       ]
     }
   ],
   "labsp": [
     {
-      "title": "Session 8 — Genel Çerçeve",
+      "title": "Özel · EN-DE Transformer — Genel Çerçeve",
       "cat": "Overview",
-      "summary": "Transformer mimarisi. Self-attention, multi-head attention, positional encoding, encoder-decoder.",
-      "context": "ML Lab · Session 8",
+      "summary": "Almanca-İngilizce çeviri için sıfırdan Transformer implementasyonu. ResViT paper okuyunca Transformer yapalım kararı — self project.",
+      "context": "Özel Proje",
       "sections": [
+        {
+          "type": "text",
+          "heading": "Motivasyon",
+          "text": "ResViT paper'ını okurken Transformer mimarisini daha iyi anlamak için sıfırdan implement etmeye karar verdim. Almanya'da okumak ve Almanca öğrenmekte olmak EN-DE çeviriyi doğal bir hedef yaptı."
+        },
+        {
+          "type": "list",
+          "heading": "Kapsam",
+          "items": [
+            "Self-attention: Q, K, V matrisleri, scaled dot-product attention",
+            "Multi-head attention — farklı representation subspace'lerde paralel attention",
+            "Positional encoding — sıra bilgisini sinüs/kosinüs ile ekleme",
+            "Encoder-decoder mimarisi — encoder kaynak dili encode eder, decoder hedef dili üretir",
+            "Cross-attention — decoder encoder çıktısına bakarak çeviriyi üretir",
+            "EN-DE dataset ile eğitim, BLEU score ile değerlendirme"
+          ]
+        },
         {
           "type": "note",
           "heading": "İçerik",
-          "text": "Bu section ilerleyen zamanlarda doldurulacak. Lab 8 içeriği: Self-attention (Q, K, V), scaled dot-product attention, multi-head attention, positional encoding, feed-forward layers, layer norm."
+          "text": "Detaylı implementasyon kartları ilerleyen zamanlarda eklenecek."
         }
       ]
     }
