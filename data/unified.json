@@ -8934,587 +8934,1107 @@
   ],
   "cs01": [
     {
-      "title": "Lecture 2 — Image Classification with Linear Classifiers",
-      "cat": "Overview",
-      "summary": "Score function f(x) = Wx + b ile her sınıf için bir skor. SVM ve Softmax loss ile optimize edilir.",
-      "context": "CS231n · Lecture 2",
+      "title": "Image Classification: The Problem",
+      "cat": "CS231n",
+      "summary": "Image classification assigns a label from a fixed set to an input image. The core challenge is bridging the semantic gap between raw pixel arrays and human concepts.",
+      "context": "CS231n Lecture 2 · Stanford",
       "sections": [
         {
+          "type": "text",
+          "heading": "The Semantic Gap",
+          "text": "To a computer, an image is just a 3D array of integers in [0, 255] with shape H x W x C (e.g. 800x600x3). There is a massive gap between these raw numbers and the high-level concept 'cat'. This is the core difficulty of computer vision."
+        },
+        {
           "type": "list",
-          "heading": "Kapsam",
+          "heading": "Challenges",
           "items": [
-            "Score function: f(x) = Wx + b",
-            "SVM loss (hinge loss)",
-            "Softmax loss (cross-entropy)",
-            "Regularization — overfitting önleme",
-            "Optimization: gradient descent temelleri"
+            "Viewpoint variation: same object looks different from different angles",
+            "Illumination: lighting changes dramatically alter pixel values",
+            "Deformation: objects (like cats) can contort their bodies",
+            "Occlusion: only part of the object may be visible",
+            "Background clutter: object may blend into surroundings",
+            "Intraclass variation: 'chair' can refer to thousands of different shapes"
+          ]
+        },
+        {
+          "type": "insight",
+          "heading": "Data-Driven Approach",
+          "text": "Instead of hard-coding rules (e.g., 'an ear looks like a triangle'), collect a dataset of images with labels, train a model to learn patterns from data, and evaluate on held-out test images. This is the core paradigm of modern computer vision."
+        },
+        {
+          "type": "code",
+          "heading": "API",
+          "text": "def train(images, labels):\n    # Machine learning: build a model from data\n    return model\n\ndef predict(model, test_image):\n    # Use model to predict label for new image\n    return test_label"
+        }
+      ]
+    },
+    {
+      "title": "k-Nearest Neighbors (kNN)",
+      "cat": "CS231n",
+      "summary": "kNN memorizes training data then classifies test examples by majority vote of k nearest neighbors. Conceptually simple but computationally infeasible for real images.",
+      "context": "CS231n Lecture 2 · Stanford",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Algorithm",
+          "text": "Training: just memorize all training data — O(1) time. Prediction: find k training images most similar to the test image, return the majority class among those k neighbors — O(N) per test image, which is very slow."
+        },
+        {
+          "type": "formula",
+          "heading": "Distance Metrics",
+          "text": "L1 (Manhattan): $d_1(I_1, I_2) = \\sum_p |I_1^p - I_2^p|$\n\nL2 (Euclidean): $d_2(I_1, I_2) = \\sqrt{\\sum_p (I_1^p - I_2^p)^2}$\n\nL1 depends on orientation of coordinate axes; L2 is rotation-invariant. If features have different units, L1 may be preferred. If features are comparable components of a vector, L2 is natural."
+        },
+        {
+          "type": "compare",
+          "heading": "k=1 vs k>1",
+          "left": {
+            "title": "k=1 (Nearest Neighbor)",
+            "points": [
+              "Decision boundary perfectly fits training data",
+              "Noisy, jagged boundaries",
+              "Overfit to individual outliers",
+              "Training accuracy = 100%"
+            ]
+          },
+          "right": {
+            "title": "k=5 or k=7",
+            "points": [
+              "Smoother decision boundaries",
+              "More robust to outliers",
+              "Better generalization",
+              "Choose k via cross-validation"
+            ]
+          }
+        },
+        {
+          "type": "note",
+          "heading": "Why kNN Fails on Images",
+          "text": "L2 distance on pixels is not perceptually meaningful. An image shifted by 1 pixel has a large L2 distance from the original. Two images with very different content can have similar pixel-level L2 distances. kNN also suffers from the curse of dimensionality: to densely cover a space, you need exponentially many samples with dimension. CIFAR-10 best result with kNN: ~40% accuracy. Neural networks: >95%."
+        }
+      ]
+    },
+    {
+      "title": "Hyperparameters and Model Selection",
+      "cat": "CS231n",
+      "summary": "Hyperparameters (like k in kNN, or distance metric) must be set before training. The correct protocol is train/validation/test split — never use test data for tuning.",
+      "context": "CS231n Lecture 2 · Stanford",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "What Are Hyperparameters?",
+          "text": "Hyperparameters are choices about the learning algorithm itself, not learned from data. For kNN: the value of k and the distance metric (L1 vs L2). For neural networks: learning rate, regularization strength, network architecture."
+        },
+        {
+          "type": "list",
+          "heading": "How to Set Hyperparameters",
+          "items": [
+            "Idea 1 (bad): choose hyperparameters that work best on training data — always picks k=1 (perfect train accuracy)",
+            "Idea 2 (bad): split data into train+test, choose hyperparameters that work best on test — you have 'used up' your test data",
+            "Idea 3 (correct): split into train/validation/test. Tune on validation, evaluate ONCE on test at the very end",
+            "Idea 4 (better for small datasets): k-fold cross validation — split train into k folds, rotate which fold is validation"
+          ]
+        },
+        {
+          "type": "insight",
+          "heading": "Golden Rule",
+          "text": "The test set is sacred. It represents held-out data from the real world. If you peek at the test set during development, your reported accuracy is overly optimistic and will not generalize. In practice with deep learning: train/val/test split is standard. Cross-validation is mainly used for small datasets."
+        },
+        {
+          "type": "table",
+          "heading": "CIFAR-10 Dataset",
+          "rows": [
+            [
+              "Property",
+              "Value"
+            ],
+            [
+              "Training images",
+              "50,000"
+            ],
+            [
+              "Test images",
+              "10,000"
+            ],
+            [
+              "Classes",
+              "10 (airplane, car, bird, cat, deer, dog, frog, horse, ship, truck)"
+            ],
+            [
+              "Image size",
+              "32x32x3 pixels"
+            ],
+            [
+              "kNN accuracy",
+              "~40%"
+            ],
+            [
+              "Modern CNN accuracy",
+              ">95%"
+            ]
           ]
         }
       ]
     },
     {
-      "title": "Score Function ve Linear Classification",
-      "cat": "Linear Classifiers",
-      "summary": "Her sınıf için bir skor üretir. W ağırlık matrisi, b bias. Skor en yüksek olan sınıf tahmin.",
-      "context": "CS231n · Lecture 2",
+      "title": "Linear Classifier: f(x, W) = Wx + b",
+      "cat": "CS231n",
+      "summary": "The linear classifier scores each class as a weighted sum of pixel values. It is the simplest parametric model and the building block for neural networks.",
+      "context": "CS231n Lecture 2-3 · Stanford",
       "sections": [
         {
-          "type": "text",
-          "heading": "Score Function",
-          "text": "f(x, W) = Wx + b\n\nx: input (örn. 32x32x3 = 3072 boyutlu vektör)\nW: (C x D) ağırlık matrisi — C sınıf sayısı, D input boyutu\nb: (C,) bias vektörü\nÇıktı: C boyutlu skor vektörü — her sınıf için bir skor"
+          "type": "formula",
+          "heading": "Formulation",
+          "text": "For an image $x \\in \\mathbb{R}^D$ (stretched to a vector), the score for each class:\n\n$$f(x, W) = Wx + b$$\n\nwhere $W$ is $C \\times D$ (C classes, D dimensions), $b$ is $C \\times 1$ bias. For CIFAR-10: $x$ is 3072-dim, $W$ is $10 \\times 3072$, $b$ is 10-dim, output is 10 scores."
+        },
+        {
+          "type": "list",
+          "heading": "Three Viewpoints",
+          "items": [
+            "Algebraic: f(x,W) = Wx+b is a matrix multiplication — each output score is a dot product of a row of W with x, plus bias",
+            "Visual (template matching): each row of W is a template for a class; the score is how similar x is to that template. We can visualize rows of W as images",
+            "Geometric: each class boundary is a hyperplane in pixel space. The classifier carves pixel space into regions using linear cuts"
+          ]
         },
         {
           "type": "insight",
-          "heading": "W satırları ne anlama gelir?",
-          "text": "Her satır bir sınıfın 'şablonu'. Resmi W'nin o satırıyla dot product yapıyorsun — ne kadar benziyorsa skor o kadar yüksek. Görselleştirilince her sınıfın öğrenilmiş ortalama görünümü çıkıyor — cat satırı kedi şablonuna benziyor."
+          "heading": "Limitations of Linear Classifiers",
+          "text": "A linear classifier can only draw straight lines (hyperplanes) as decision boundaries. It cannot learn non-linear patterns. For example, it cannot correctly classify XOR. It also cannot handle multi-modal distributions (a class that appears in two different parts of pixel space). However, it is the foundation for deep networks: a neural network is many linear classifiers chained with non-linearities."
         },
         {
-          "type": "compare",
-          "heading": "SVM Loss vs Softmax Loss",
-          "left": {
-            "title": "SVM (Hinge) Loss",
-            "points": [
-              "L = Σ max(0, s_j - s_yi + 1)",
-              "Doğru skor yeterince yüksekse loss=0",
-              "Margin kavramı: en az 1 fark iste",
-              "Olasılık yorumu yok"
-            ]
-          },
-          "right": {
-            "title": "Softmax (Cross-Entropy) Loss",
-            "points": [
-              "L = -log(exp(s_yi) / Σ exp(s_j))",
-              "Tüm skorları olasılığa çevirir",
-              "Her zaman iyileştirme baskısı var",
-              "Olasılık yorumu var: p(y|x)"
-            ]
-          }
-        },
-        {
-          "type": "formula",
-          "heading": "Regularization",
-          "text": "$$L = \\frac{1}{N} \\sum_i L_i + \\lambda R(W)$$\n\nL2: $R(W) = \\sum_{k,l} W_{k,l}^2$ → ağırlıkları sıfıra çek, model basitleşsin\nL1: $R(W) = \\sum_{k,l} |W_{k,l}|$ → sparse weights\n\n$\\lambda$: regularization strength — ne kadar baskı uygulansın"
+          "type": "note",
+          "heading": "Bias Trick",
+          "text": "Append a 1 to input x, and append b as an extra column of W. Now f(x,W) = Wx handles bias implicitly — one fewer parameter to track."
         }
       ]
     },
     {
-      "title": "Optimization — Gradient Descent",
-      "cat": "Optimization",
-      "summary": "Loss'u minimize etmek için W'yi gradient yönünün tersine güncelle. Analytic gradient hesabı sayısal yöntemden çok daha verimli.",
-      "context": "CS231n · Lecture 2",
+      "title": "Loss Functions: SVM and Softmax",
+      "cat": "CS231n",
+      "summary": "Loss functions measure how bad the current classifier is. SVM loss (hinge) wants the correct score to be higher than all wrong scores by a margin. Softmax treats scores as log-probabilities.",
+      "context": "CS231n Lecture 3 · Stanford",
       "sections": [
         {
-          "type": "text",
-          "heading": "Temel Fikir",
-          "text": "Loss L(W) bir yüzey. W'yi bu yüzeyin en dip noktasına götürmek istiyoruz. Gradient ∇L(W) en dik çıkış yönünü gösteriyor — tersine gidersek en dik iniş."
+          "type": "formula",
+          "heading": "Multiclass SVM Loss (Hinge Loss)",
+          "text": "For training example $(x_i, y_i)$, where $s = f(x_i, W)$ are the class scores:\n\n$$L_i = \\sum_{j \\neq y_i} \\max(0, s_j - s_{y_i} + 1)$$\n\nThe +1 is the safety margin. If the correct class score exceeds all wrong class scores by at least 1, loss is 0. If a wrong class scores too high, we pay a linear penalty."
         },
         {
-          "type": "code",
-          "heading": "Gradient Descent Adımı",
-          "text": "W = W - learning_rate * dL/dW\n\n# Stochastic Gradient Descent (SGD):\n# Her adımda tüm veri yerine mini-batch kullan\n# Çok daha hızlı, noise ekler ama genellikle iyi\n\nfor batch in data_loader:\n    loss = compute_loss(W, batch)\n    grad = compute_gradient(W, batch)\n    W = W - lr * grad"
+          "type": "formula",
+          "heading": "Softmax / Cross-Entropy Loss",
+          "text": "Softmax turns scores into probabilities via the softmax function:\n\n$$P(Y=k|X=x_i) = \\frac{e^{s_k}}{\\sum_j e^{s_j}}$$\n\nCross-entropy loss:\n\n$$L_i = -\\log P(Y=y_i|X=x_i) = -\\log\\left(\\frac{e^{s_{y_i}}}{\\sum_j e^{s_j}}\\right)$$\n\nMinimizing this maximizes the log-probability of the correct class."
+        },
+        {
+          "type": "compare",
+          "heading": "SVM vs Softmax",
+          "left": {
+            "title": "SVM (Hinge Loss)",
+            "points": [
+              "Wants margin of 1 above competitors",
+              "Once margin is satisfied, does not care about further separation",
+              "Scores themselves are not normalized",
+              "More robust to outliers in scores"
+            ]
+          },
+          "right": {
+            "title": "Softmax (Cross-Entropy)",
+            "points": [
+              "Wants to maximize correct class probability",
+              "Always tries to push correct class higher",
+              "Outputs are normalized probabilities",
+              "More sensitive, always improving"
+            ]
+          }
+        },
+        {
+          "type": "note",
+          "heading": "Sanity Check",
+          "text": "At initialization with random small weights, all scores are approximately equal. For SVM: expected loss is (C-1) * 1 = 9 for CIFAR-10. For Softmax: expected loss is -log(1/C) = log(C) ≈ 2.3 for CIFAR-10. If your initial loss is wildly different, something is wrong."
+        }
+      ]
+    },
+    {
+      "title": "Regularization",
+      "cat": "CS231n",
+      "summary": "Regularization penalizes model complexity to prevent overfitting. The full loss L = data_loss + lambda * R(W) balances fit to training data with generalization.",
+      "context": "CS231n Lecture 3 · Stanford",
+      "sections": [
+        {
+          "type": "formula",
+          "heading": "Regularized Loss",
+          "text": "$$L(W) = \\underbrace{\\frac{1}{N}\\sum_{i=1}^N L_i(f(x_i, W), y_i)}_{\\text{data loss}} + \\underbrace{\\lambda R(W)}_{\\text{regularization}}$$\n\n$\\lambda$ is the regularization strength hyperparameter. Higher $\\lambda$ = stronger regularization = simpler model."
+        },
+        {
+          "type": "table",
+          "heading": "Common Regularizers",
+          "rows": [
+            [
+              "Type",
+              "Formula",
+              "Effect"
+            ],
+            [
+              "L2 (Ridge)",
+              "$R(W) = \\sum_k \\sum_l W_{k,l}^2$",
+              "Spreads weight mass; prefers many small weights over few large ones"
+            ],
+            [
+              "L1 (Lasso)",
+              "$R(W) = \\sum_k \\sum_l |W_{k,l}|$",
+              "Induces sparsity; many weights become exactly zero"
+            ],
+            [
+              "Elastic Net",
+              "$R(W) = \\alpha \\|W\\|_2^2 + (1-\\alpha)\\|W\\|_1$",
+              "Combination of L1 and L2"
+            ],
+            [
+              "Dropout",
+              "Randomly zero out neurons",
+              "Implicit ensemble, prevents co-adaptation"
+            ],
+            [
+              "Batch Norm",
+              "Normalize activations",
+              "Regularizing effect, enables higher learning rates"
+            ]
+          ]
         },
         {
           "type": "insight",
-          "heading": "Sayısal vs Analytic Gradient",
-          "text": "Sayısal: her ağırlığı biraz değiştir, loss farkına bak → O(W) forward pass gerekir, çok yavaş, sadece debug için.\nAnalytic: matematiksel türev → O(1) — her zaman bunu kullan. Sayısal ile kontrol et (gradient check)."
+          "heading": "Why L2 Prefers Spread Weights",
+          "text": "Consider input x = [1,1,1,1] and two weight vectors w1 = [1,0,0,0] and w2 = [0.25,0.25,0.25,0.25]. Both give score 1, but L2 penalty of w1 is 1 while L2 penalty of w2 is 0.25. L2 regularization prefers w2 because spreading weights means the classifier uses all input features rather than relying on one. This tends to generalize better."
         }
       ]
     }
   ],
   "cs02": [
     {
-      "title": "Lecture 3 — Regularization and Optimization",
-      "cat": "Overview",
-      "summary": "L1/L2 regularization, SGD varyantları, momentum, BatchNorm, weight initialization.",
-      "context": "CS231n · Lecture 3",
-      "sections": [
-        {
-          "type": "list",
-          "heading": "Kapsam",
-          "items": [
-            "L1, L2, Elastic Net regularization",
-            "SGD, Momentum, RMSProp, Adam",
-            "Learning rate schedule",
-            "Batch Normalization",
-            "Weight initialization: Xavier, He"
-          ]
-        }
-      ]
-    },
-    {
-      "title": "SGD Varyantları — Optimizer Karşılaştırma",
-      "cat": "Optimization",
-      "summary": "Vanilla SGD yavaş ve gürültülü. Momentum geçmişi kullanır, Adam her parametre için adaptive lr tutar.",
-      "context": "CS231n · Lecture 3",
-      "sections": [
-        {
-          "type": "code",
-          "heading": "Vanilla SGD",
-          "text": "# Basit ama yavaş — her parametre aynı lr alır\nw = w - lr * dw\n\n# Problem: dar vadilerde titreşir, geniş yönde yavaş ilerler"
-        },
-        {
-          "type": "code",
-          "heading": "SGD + Momentum",
-          "text": "# Geçmiş gradyanları biriktirir — ivme kazanır\nv = momentum * v - lr * dw   # velocity güncelle\nw = w + v\n\n# momentum genellikle 0.9\n# Dar vadilerden çıkmayı kolaylaştırır"
-        },
-        {
-          "type": "code",
-          "heading": "Adam",
-          "text": "# Her parametre için adaptive lr\n# 1. moment: gradyanların ortalaması (momentum gibi)\n# 2. moment: gradyanların kare ortalaması (RMSProp gibi)\n\nm = beta1 * m + (1 - beta1) * dw       # 1. moment\nv = beta2 * v + (1 - beta2) * dw**2   # 2. moment\nm_hat = m / (1 - beta1**t)             # bias correction\nv_hat = v / (1 - beta2**t)\nw = w - lr * m_hat / (sqrt(v_hat) + eps)\n\n# Varsayılan: beta1=0.9, beta2=0.999, eps=1e-8\n# Çoğu zaman iyi default — lr=1e-3 ile başla"
-        },
-        {
-          "type": "insight",
-          "heading": "Adam neden iyi?",
-          "text": "Seyrek gradient'larda (NLP, sparse features) çok iyi. Sık güncellenen parametreler küçük adım, seyrek güncellenenler büyük adım atar. Learning rate'e daha az duyarlı — başlangıç lr seçimi daha kolay."
-        }
-      ]
-    },
-    {
-      "title": "Weight Initialization — Xavier ve He",
-      "cat": "Training",
-      "summary": "Yanlış initialization: aktivasyonlar sıfırlanır veya patlar. Xavier sigmoid/tanh için, He ReLU için.",
-      "context": "CS231n · Lecture 3",
+      "title": "Optimization: Finding the Minimum",
+      "cat": "CS231n",
+      "summary": "Optimization finds weights W that minimize the loss function. The key insight: follow the negative gradient, the direction of steepest descent.",
+      "context": "CS231n Lecture 3 · Stanford",
       "sections": [
         {
           "type": "text",
-          "heading": "Neden önemli?",
-          "text": "W=0 ile başlarsan: tüm nöronlar aynı gradient alır, simetri kırılmaz — ağ öğrenemez.\nÇok büyük W: aktivasyonlar patlar, gradient explode.\nÇok küçük W: aktivasyonlar sıfırlanır, gradient vanish."
+          "heading": "The Optimization Problem",
+          "text": "Given the loss L(W), we want to find the W* that minimizes it. The loss landscape is a high-dimensional surface — for a 10x3072 weight matrix, it is a function of 30,720 dimensions. We cannot search it exhaustively; we need a principled strategy."
         },
         {
-          "type": "formula",
-          "heading": "Xavier ve He",
-          "text": "Xavier (sigmoid/tanh için):\n$$W \\sim \\mathcal{N}\\left(0, \\sqrt{\\frac{1}{\\text{fan\\_in}}}\\right)$$\n\nHe (ReLU için):\n$$W \\sim \\mathcal{N}\\left(0, \\sqrt{\\frac{2}{\\text{fan\\_in}}}\\right)$$\n\nReLU negatifi sıfırladığı için varyansın yarısı gidiyor — He bunu 2 faktörüyle telafi ediyor."
+          "type": "list",
+          "heading": "Strategies (from bad to good)",
+          "items": [
+            "Random search: try random W values, keep best — 15% accuracy on CIFAR-10. Never use.",
+            "Random local search: take small random steps, keep if loss decreases — better but still awful",
+            "Follow the gradient: use calculus to find the exact direction of steepest descent — this is what we use"
+          ]
         },
         {
-          "type": "code",
-          "heading": "PyTorch'ta",
-          "text": "# PyTorch Linear ve Conv2d için He initialization varsayılan\nnn.init.kaiming_normal_(layer.weight)   # He\nnn.init.xavier_normal_(layer.weight)    # Xavier"
+          "type": "insight",
+          "heading": "The Gradient",
+          "text": "The gradient $\\nabla_W L$ is a vector (same shape as W) where each element tells us: if we increase this weight slightly, how does the loss change? The negative gradient points in the direction of steepest descent. Moving in that direction always decreases the loss (locally)."
         }
       ]
     },
     {
-      "title": "Batch Normalization",
-      "cat": "Training",
-      "summary": "Her mini-batch'te aktivasyonları normalize eder. Training stabilize eder, daha yüksek lr kullanılabilir.",
-      "context": "CS231n · Lecture 3",
+      "title": "Numeric vs Analytic Gradient",
+      "cat": "CS231n",
+      "summary": "Numerical gradient uses finite differences (slow, approximate). Analytic gradient uses calculus (fast, exact). Always use analytic; use numerical only to verify (gradient check).",
+      "context": "CS231n Lecture 3 · Stanford",
       "sections": [
         {
           "type": "formula",
-          "heading": "BN Operasyonu",
-          "text": "$$\\hat{x} = \\frac{x - \\mu_B}{\\sqrt{\\sigma_B^2 + \\epsilon}}$$\n$$y = \\gamma \\hat{x} + \\beta$$\n\n$\\mu_B$, $\\sigma_B^2$: batch mean/variance. $\\gamma$, $\\beta$: learnable — ağın istediği dağılıma döndürmesine izin verir."
+          "heading": "Numerical Gradient",
+          "text": "$$\\frac{df(x)}{dx} = \\lim_{h \\to 0} \\frac{f(x+h) - f(x)}{h}$$\n\nFor each dimension i of W: perturb W[i] by h=0.0001, compute loss, compute finite difference. Repeat for all dimensions."
         },
         {
-          "type": "list",
-          "heading": "Faydaları",
-          "items": [
-            "Internal covariate shift azalır",
-            "Daha yüksek learning rate kullanılabilir",
-            "Weight initialization'a daha az duyarlı",
-            "Hafif regularization etkisi (batch noise)",
-            "Conv'dan sonra, activation'dan önce"
-          ]
+          "type": "code",
+          "heading": "Numerical Gradient Code",
+          "text": "# Slow! Must loop over all dimensions\n# W has 30,720 elements for CIFAR-10\nfor i in range(W.size):\n    W_perturbed = W.copy()\n    W_perturbed[i] += h\n    loss_plus = compute_loss(W_perturbed)\n    dW[i] = (loss_plus - loss_original) / h\n# This is O(N * D) — very slow!"
+        },
+        {
+          "type": "compare",
+          "heading": "Numerical vs Analytic",
+          "left": {
+            "title": "Numerical Gradient",
+            "points": [
+              "Approximate (finite difference)",
+              "Slow: O(N*D) forward passes",
+              "Easy to implement — no calculus",
+              "Only useful for verification (gradient check)"
+            ]
+          },
+          "right": {
+            "title": "Analytic Gradient",
+            "points": [
+              "Exact — computes true gradient",
+              "Fast: one forward + one backward pass",
+              "Requires deriving the gradient formula",
+              "Error-prone, must be checked"
+            ]
+          }
+        },
+        {
+          "type": "insight",
+          "heading": "Gradient Check",
+          "text": "In practice: always use the analytic gradient (fast, exact). But when implementing it, verify correctness by comparing with the numerical gradient on a small sample. If they match (within numerical precision), the analytic implementation is correct. This is called gradient checking."
+        }
+      ]
+    },
+    {
+      "title": "Gradient Descent and SGD",
+      "cat": "CS231n",
+      "summary": "Gradient descent updates weights in the negative gradient direction. Stochastic gradient descent uses minibatches to approximate the full gradient cheaply.",
+      "context": "CS231n Lecture 3 · Stanford",
+      "sections": [
+        {
+          "type": "formula",
+          "heading": "Vanilla Gradient Descent",
+          "text": "$$x_{t+1} = x_t - \\alpha \\nabla f(x_t)$$\n\nwhere $\\alpha$ is the learning rate (step size), a critical hyperparameter."
+        },
+        {
+          "type": "code",
+          "heading": "Vanilla GD Code",
+          "text": "# Vanilla Gradient Descent\nwhile True:\n    weights_grad = evaluate_gradient(loss_fun, data, weights)\n    weights += - step_size * weights_grad  # parameter update\n\n# Problem: full sum over N examples is expensive when N is large!"
+        },
+        {
+          "type": "formula",
+          "heading": "SGD with Minibatch",
+          "text": "Full gradient sum: $\\nabla_W L(W) = \\frac{1}{N}\\sum_{i=1}^N \\nabla_W L_i(x_i, y_i, W) + \\lambda \\nabla_W R(W)$\n\nWhen N is large (millions), computing full gradient is expensive. Approximate with a minibatch of 32/64/128/256 examples:\n\n$$\\nabla_W L(W) \\approx \\frac{1}{|\\mathcal{B}|} \\sum_{i \\in \\mathcal{B}} \\nabla_W L_i$$"
+        },
+        {
+          "type": "code",
+          "heading": "Minibatch SGD Code",
+          "text": "# Vanilla Minibatch Gradient Descent\nwhile True:\n    data_batch = sample_training_data(data, 256)  # sample 256 examples\n    weights_grad = evaluate_gradient(loss_fun, data_batch, weights)\n    weights += - step_size * weights_grad  # parameter update\n\n# 32 / 64 / 128 are also common batch sizes"
+        }
+      ]
+    },
+    {
+      "title": "Problems with SGD",
+      "cat": "CS231n",
+      "summary": "SGD has three fundamental failure modes: poor conditioning (zigzag), local minima/saddle points (stuck), and gradient noise (minibatch). SGD+Momentum addresses all three.",
+      "context": "CS231n Lecture 3 · Stanford",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Problem 1: Poor Conditioning",
+          "text": "If the loss changes quickly in one direction (w2) and slowly in another (w1), the gradient points mostly in the steep direction. SGD makes large steps sideways and tiny steps forward, creating a zigzag pattern. This is the poor conditioning problem. High condition number = ratio of largest to smallest singular value of the Hessian is large."
+        },
+        {
+          "type": "text",
+          "heading": "Problem 2: Local Minima and Saddle Points",
+          "text": "At local minima and saddle points, the gradient is zero, so SGD gets stuck. In high dimensions, saddle points are much more common than local minima (Dauphin et al., 2014). A saddle point in 2D: f(x,y) = x^2 - y^2. The gradient is zero at (0,0) but it is neither a max nor min — it is a minimum along x but a maximum along y."
+        },
+        {
+          "type": "text",
+          "heading": "Problem 3: Gradient Noise",
+          "text": "Since gradients come from minibatches, they are noisy estimates of the true gradient. This causes erratic updates, especially near the optimum."
+        },
+        {
+          "type": "insight",
+          "heading": "Solution: SGD + Momentum",
+          "text": "Momentum maintains a velocity vector in the direction of past gradient updates, dampening oscillations and building up speed in consistent directions. It helps overcome poor conditioning, escape saddle points via accumulated velocity, and smooth out gradient noise. The SGD+Momentum trajectory is much smoother than vanilla SGD on the same loss landscape."
+        }
+      ]
+    },
+    {
+      "title": "Optimizers: Momentum, RMSProp, Adam",
+      "cat": "CS231n",
+      "summary": "Better optimizers add per-parameter adaptive learning rates or velocity. Adam combines momentum and RMSProp and is the default choice for deep learning.",
+      "context": "CS231n Lecture 3 · Stanford",
+      "sections": [
+        {
+          "type": "formula",
+          "heading": "SGD + Momentum",
+          "text": "Maintain velocity v, update as:\n\n$$v_{t+1} = \\rho v_t + \\nabla f(x_t)$$\n$$x_{t+1} = x_t - \\alpha v_{t+1}$$\n\nTypical $\\rho = 0.9$ or $0.99$. Velocity accumulates past gradients — acts like a ball rolling downhill, building up speed."
+        },
+        {
+          "type": "formula",
+          "heading": "RMSProp",
+          "text": "Maintain per-element squared gradient running average:\n\n$$\\text{grad\\_sq}_{t+1} = \\beta \\cdot \\text{grad\\_sq}_t + (1-\\beta)(\\nabla f)^2$$\n$$x_{t+1} = x_t - \\frac{\\alpha}{\\sqrt{\\text{grad\\_sq} + \\epsilon}} \\cdot \\nabla f$$\n\nDimensions with large gradients get smaller effective LR; small-gradient dimensions get larger LR. Fixes poor conditioning."
+        },
+        {
+          "type": "formula",
+          "heading": "Adam (Momentum + RMSProp)",
+          "text": "$$m_{t+1} = \\beta_1 m_t + (1-\\beta_1)\\nabla f \\quad \\text{(first moment = momentum)}$$\n$$v_{t+1} = \\beta_2 v_t + (1-\\beta_2)(\\nabla f)^2 \\quad \\text{(second moment = RMSProp)}$$\n$$\\hat{m} = m/(1-\\beta_1^t), \\quad \\hat{v} = v/(1-\\beta_2^t) \\quad \\text{(bias correction)}$$\n$$x_{t+1} = x_t - \\alpha \\hat{m} / (\\sqrt{\\hat{v}} + \\epsilon)$$\n\nDefault: $\\beta_1=0.9, \\beta_2=0.999, \\epsilon=10^{-8}$. Adam is the default optimizer for most deep learning."
         },
         {
           "type": "note",
-          "heading": "Train vs Test farkı",
-          "text": "Train: batch mean/variance kullanılır. Test: training sırasında biriken running mean/variance kullanılır (tek örnek için batch istatistiği hesaplanamaz). Bu yüzden model.train() ve model.eval() önemli."
+          "heading": "Learning Rate Schedules",
+          "text": "The learning rate alpha is the most important hyperparameter. Common schedules: Step decay (reduce by factor at fixed epochs), Cosine annealing (smooth decay following cosine curve), Warmup + cosine (ramp up first, then decay). A learning rate too high diverges; too low converges slowly. Rule of thumb: start with 3e-4 for Adam."
         }
       ]
     }
   ],
   "cs03": [
     {
-      "title": "Lecture 4 — Neural Networks and Backpropagation",
-      "cat": "Overview",
-      "summary": "Computational graph üzerinde chain rule ile gradient hesabı. Forward pass değerleri hesaplar, backward pass gradyanları geri yayar.",
-      "context": "CS231n · Lecture 4",
+      "title": "Neural Networks: Beyond Linear",
+      "cat": "CS231n",
+      "summary": "Neural networks stack multiple linear transformations with non-linear activations to learn complex, non-linear decision boundaries. The key insight: without activation functions, the whole network collapses to a single linear classifier.",
+      "context": "CS231n Lecture 4 · Stanford",
       "sections": [
         {
-          "type": "list",
-          "heading": "Kapsam",
-          "items": [
-            "Computational graph ve node'lar",
-            "Forward / backward pass",
-            "Chain rule uygulaması",
-            "Gradient flow — add, mul, max gate'leri",
-            "Vectorized backprop"
-          ]
+          "type": "formula",
+          "heading": "From Linear to 2-Layer Network",
+          "text": "Linear classifier (not enough): $f = Wx$\n\n2-layer neural network:\n$$f = W_2 \\max(0, W_1 x)$$\n\n3-layer neural network:\n$$f = W_3 \\max(0, W_2 \\max(0, W_1 x))$$\n\nWhere $\\max(0, \\cdot)$ is the ReLU activation. Each layer: linear transformation + non-linearity."
+        },
+        {
+          "type": "insight",
+          "heading": "Why Non-Linearity is Essential",
+          "text": "Without activation functions: $W_2(W_1 x) = (W_2 W_1) x = W' x$ — just another linear classifier! Activation functions break this: once ReLU is applied, the composition is no longer linear. The stacking of linear + nonlinear layers is what gives neural networks their expressive power."
+        },
+        {
+          "type": "text",
+          "heading": "Naming Convention",
+          "text": "N-layer neural network counts hidden + output layers (not input). A '2-layer neural network' has 1 hidden layer and 1 output layer. A single linear classifier is a 1-layer neural network. More neurons = more capacity to model complex functions."
+        },
+        {
+          "type": "code",
+          "heading": "Full 2-Layer NN in ~20 Lines",
+          "text": "import numpy as np\n\n# Random initialization\nW1 = np.random.randn(H, D) * 0.01  # hidden layer weights\nW2 = np.random.randn(C, H) * 0.01  # output layer weights\n\nfor i in range(num_steps):\n    # Forward pass\n    H_layer = np.maximum(0, W1.dot(X))    # ReLU\n    scores = W2.dot(H_layer)               # class scores\n\n    # Compute loss (softmax)\n    exp_scores = np.exp(scores)\n    probs = exp_scores / exp_scores.sum(axis=0)\n    loss = -np.log(probs[y, np.arange(N)]).mean()\n\n    # Backward pass (analytic gradients)\n    dscores = probs.copy()\n    dscores[y, np.arange(N)] -= 1\n    dscores /= N\n    dW2 = dscores.dot(H_layer.T)\n    dH = W2.T.dot(dscores)\n    dH[H_layer <= 0] = 0  # ReLU gradient\n    dW1 = dH.dot(X.T)\n\n    # Gradient descent update\n    W1 -= learning_rate * dW1\n    W2 -= learning_rate * dW2"
         }
       ]
     },
     {
-      "title": "Computational Graph ve Backprop",
-      "cat": "Backpropagation",
-      "summary": "Her operasyon bir node. Forward: değerleri hesapla. Backward: upstream gradient * local gradient = downstream gradient.",
-      "context": "CS231n · Lecture 4",
+      "title": "Activation Functions",
+      "cat": "CS231n",
+      "summary": "Activation functions introduce non-linearity between layers. ReLU is the default for hidden layers. Sigmoid and Tanh suffer from saturation and vanishing gradients.",
+      "context": "CS231n Lecture 4 · Stanford",
       "sections": [
         {
-          "type": "text",
-          "heading": "Temel Fikir",
-          "text": "Hesaplamayı bir graph olarak düşün. Her node bir fonksiyon — local gradient'ını hesaplayabilir. Upstream gradient (loss'tan gelen) ile local gradient'ı çarpınca downstream gradient (bir önceki node'a gönderilecek) çıkıyor."
-        },
-        {
-          "type": "code",
-          "heading": "Basit Örnek: f = (x + y) * z",
-          "text": "# Forward pass\nq = x + y        # q = 3 (x=1, y=2)\nf = q * z        # f = -12 (z=-4)\n\n# Backward pass — upstream df/df = 1\ndf/dq = z = -4   # local gradient of * w.r.t q\ndf/dz = q = 3    # local gradient of * w.r.t z\ndf/dx = df/dq * dq/dx = -4 * 1 = -4\ndf/dy = df/dq * dq/dy = -4 * 1 = -4"
-        },
-        {
-          "type": "list",
-          "heading": "Gate'lerin Sezgisi",
-          "items": [
-            "Add gate: upstream gradient'ı değiştirmeden dağıtır — 'gradient distributor'",
-            "Mul gate: upstream * diğer input — 'gradient switcher'",
-            "Max gate: sadece max olan'a gradient gönderir, diğerine 0 — 'gradient router'",
-            "Sigmoid gate: σ(1-σ) yerel gradient — vanishing gradient kaynağı"
+          "type": "table",
+          "heading": "Activation Function Comparison",
+          "rows": [
+            [
+              "Name",
+              "Formula",
+              "Range",
+              "Issues"
+            ],
+            [
+              "ReLU",
+              "$\\max(0, x)$",
+              "$[0, \\infty)$",
+              "Dead neurons (never activate if x<0)"
+            ],
+            [
+              "Leaky ReLU",
+              "$\\max(0.1x, x)$",
+              "$(-\\infty, \\infty)$",
+              "Fixes dead neuron problem"
+            ],
+            [
+              "ELU",
+              "$x$ if $x>0$, else $\\alpha(e^x-1)$",
+              "$(-\\infty, \\infty)$",
+              "Smooth at 0, negative saturation"
+            ],
+            [
+              "Sigmoid",
+              "$\\sigma(x)=1/(1+e^{-x})$",
+              "$(0,1)$",
+              "Vanishing gradients, not zero-centered"
+            ],
+            [
+              "Tanh",
+              "$\\tanh(x)$",
+              "$(-1,1)$",
+              "Vanishing gradients (zero-centered)"
+            ],
+            [
+              "GELU",
+              "$x \\cdot \\Phi(x)$",
+              "$(-\\infty, \\infty)$",
+              "Used in GPT/BERT Transformers"
+            ],
+            [
+              "SiLU/Swish",
+              "$x \\cdot \\sigma(x)$",
+              "$(-\\infty, \\infty)$",
+              "Smooth, used in modern architectures"
+            ]
           ]
         },
         {
           "type": "insight",
-          "heading": "Neden chain rule çalışıyor?",
-          "text": "Her node sadece kendi local gradient'ını bilmesi yeterli. Upstream gradient gelince çarpıp arkaya gönderiyor. Global resmi bilmesine gerek yok — modüler tasarım. PyTorch autograd tam bunu yapıyor."
+          "heading": "Why Sigmoid is Problematic",
+          "text": "Two main issues: (1) Saturation: for large |x|, sigmoid squashes to 0 or 1, gradient is nearly zero — gradients vanish during backprop through many layers. (2) Not zero-centered: sigmoid outputs are always positive (0 to 1), so gradients on weights are always all-positive or all-negative, causing zigzag updates."
+        },
+        {
+          "type": "insight",
+          "heading": "ReLU: The Default Choice",
+          "text": "ReLU (Rectified Linear Unit) is the most widely used. Advantages: no saturation for positive inputs, computationally efficient (just a threshold), converges faster empirically. Disadvantage: 'dead ReLU' problem — if a neuron's pre-activation is always negative, its gradient is always zero and it never learns. Leaky ReLU, ELU solve this."
+        },
+        {
+          "type": "note",
+          "heading": "Modern Activations",
+          "text": "GELU (x * Phi(x), where Phi is CDF of standard normal) is used in BERT, GPT, ViT. SiLU (x * sigmoid(x)), also called Swish, is used in EfficientNet, modern vision models. Both are smooth approximations to ReLU with better gradient flow properties."
         }
       ]
     },
     {
-      "title": "Vectorized Backprop",
-      "cat": "Backpropagation",
-      "summary": "Scalar yerine matris/tensor işlemleri. Gradient shape her zaman input ile aynı shape'te.",
-      "context": "CS231n · Lecture 4",
+      "title": "Backpropagation",
+      "cat": "CS231n",
+      "summary": "Backpropagation is an efficient algorithm to compute gradients through a computational graph using the chain rule. It flows gradients backwards from loss to parameters.",
+      "context": "CS231n Lecture 4 · Stanford",
       "sections": [
         {
           "type": "text",
-          "heading": "Kural",
-          "text": "Her zaman: dL/dx'in shape'i x'in shape'i ile aynı. dL/dW'nin shape'i W'nin shape'i ile aynı. Bu kontrol her zaman yapılabilir."
+          "heading": "Computational Graph",
+          "text": "Express the computation as a directed acyclic graph (DAG). Each node is an operation (add, multiply, max, etc.). Forward pass: evaluate operations left to right to compute loss. Backward pass: apply chain rule right to left to compute gradients."
+        },
+        {
+          "type": "formula",
+          "heading": "Chain Rule",
+          "text": "For composed functions $f(g(x))$:\n\n$$\\frac{\\partial f}{\\partial x} = \\frac{\\partial f}{\\partial g} \\cdot \\frac{\\partial g}{\\partial x}$$\n\nAt each node in the graph, the local gradient is multiplied by the upstream gradient flowing back. Each node only needs to know its local gradient — a simple, modular design."
         },
         {
           "type": "code",
-          "heading": "Linear Layer Backward",
-          "text": "# Forward: y = xW + b\n# x: (N, D), W: (D, M), b: (M,), y: (N, M)\n\n# Backward: upstream dy shape = (N, M)\ndx = dy @ W.T        # (N, M) @ (M, D) = (N, D) ✓\ndW = x.T @ dy        # (D, N) @ (N, M) = (D, M) ✓\ndb = dy.sum(axis=0)  # (M,) — batch üzerinden topla ✓"
+          "heading": "Gradient Rules for Common Operations",
+          "text": "# Addition node: gradient distributes to both inputs\n# x + y → upstream grad flows unchanged to both x and y\n\n# Multiplication node: gradient swaps with the other value\n# x * y → grad_x = upstream * y, grad_y = upstream * x\n\n# Max node: gradient flows to the winning input only\n# max(x, y) → grad flows to whichever was larger\n\n# ReLU: gradient is 1 if x > 0, else 0\n# d/dx max(0,x) = 1 if x > 0 else 0"
+        },
+        {
+          "type": "insight",
+          "heading": "Why Backprop is Efficient",
+          "text": "Naive approach: compute each partial derivative separately — O(N*D) evaluations. Backprop reuses intermediate computations in the forward pass. It requires only one forward pass and one backward pass — O(1) times the cost of a forward pass, regardless of how many parameters you have. This is the key insight that makes training deep networks feasible."
+        }
+      ]
+    },
+    {
+      "title": "Neural Network Architecture",
+      "cat": "CS231n",
+      "summary": "Fully connected (FC) networks stack linear layers with activations. The 'depth vs width' tradeoff: deeper networks learn hierarchical features; wider networks learn more diverse features.",
+      "context": "CS231n Lecture 4 · Stanford",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Fully Connected Layers",
+          "text": "Every neuron in layer l connects to every neuron in layer l+1. For an image input: flatten to a vector (32x32x3 = 3072 dims), apply W (10x3072) to get 10 scores. The number of operations is proportional to n_in * n_out — fully connected layers are parameter-heavy."
+        },
+        {
+          "type": "list",
+          "heading": "Design Choices",
+          "items": [
+            "Number of layers (depth): more layers = more capacity, hierarchical features, but harder to train",
+            "Number of neurons per layer (width): more neurons = more capacity within a layer",
+            "Activation function: ReLU is default",
+            "Regularization: dropout, weight decay, batch norm",
+            "Rule of thumb: prefer deeper over wider — same parameter count, but deeper generalizes better"
+          ]
+        },
+        {
+          "type": "insight",
+          "heading": "More Neurons = More Capacity",
+          "text": "A neural net with more neurons can represent more complex decision boundaries. But more capacity without regularization leads to overfitting — perfectly memorizing training data but failing on test. The universal approximation theorem says a single hidden layer with enough neurons can approximate any continuous function — but this does not mean shallow is better; deeper architectures require fewer parameters for the same expressivity."
         },
         {
           "type": "note",
-          "heading": "Shape kontrolü",
-          "text": "Backprop yazarken her gradient'ın shape'ini kontrol et. dx shape'i x shape'i ile aynı olmalı — bu kural yanlış implementasyonu anında yakalar."
+          "heading": "Practical Guidelines",
+          "text": "Use at least 2-3 hidden layers for most tasks. Use ReLU activations. Initialize weights with small random values (e.g., N(0, 0.01)). Use batch normalization to ease training deep networks. Use dropout for regularization. Start with Adam optimizer, learning rate 1e-3 or 3e-4."
         }
       ]
     }
   ],
   "cs04": [
     {
-      "title": "Lecture 5 — Convolutional Neural Networks",
-      "cat": "Overview",
-      "summary": "Spatial structure'ı koruyan conv layers. Weight sharing ile parametreleri azaltır, local connectivity ile spatial özellik öğrenir.",
-      "context": "CS231n · Lecture 5",
+      "title": "From Image Features to CNNs",
+      "cat": "CS231n",
+      "summary": "Before CNNs, computer vision used hand-crafted features (HoG, BoW). CNNs learn features end-to-end directly from pixels, dramatically outperforming hand-crafted pipelines.",
+      "context": "CS231n Lecture 5 · Stanford",
       "sections": [
         {
+          "type": "text",
+          "heading": "Hand-Crafted Feature Pipelines",
+          "text": "Before deep learning, the pipeline was: raw image → compute hand-crafted features → train a linear classifier on features. The hard work was feature engineering — domain experts devised clever ways to encode useful image structure."
+        },
+        {
           "type": "list",
-          "heading": "Kapsam",
+          "heading": "Classic Image Features",
           "items": [
-            "Conv layer — sliding window, feature map",
-            "Output boyutu formülü",
-            "Receptive field ve hierarchical features",
-            "Pooling: max, average",
-            "CNN mimarisi: conv-pool stack"
+            "Color Histogram: count pixels in each color bin across the whole image; invariant to spatial arrangement",
+            "Histogram of Oriented Gradients (HoG): divide image into 8x8 pixel cells, compute gradient direction histograms in 9 bins per cell; captures local edge patterns",
+            "Bag of Words (BoW): extract local patches, cluster into K visual 'words', represent image as histogram over visual words"
           ]
+        },
+        {
+          "type": "insight",
+          "heading": "The Problem with Hand-Crafted Features",
+          "text": "Spatial structure in images contains rich information: edges, textures, shapes, objects have specific spatial relationships. Flattening to a vector (as FC layers do) destroys this structure. HoG/BoW partially preserve local structure but are still hand-crafted. CNNs preserve and exploit full 2D spatial structure automatically — the features are learned, not designed."
+        },
+        {
+          "type": "text",
+          "heading": "CNN Revolution",
+          "text": "2012: AlexNet (Krizhevsky, Sutskever, Hinton) won ImageNet with 16.4% top-5 error, vs 26.2% for the best non-CNN. Trained on 2x NVIDIA GTX 580 GPUs. The gap was so large it proved CNNs had fundamentally better inductive biases for images. From 2012-2020 ConvNets dominated computer vision. 2021+: Transformers (ViT) began competing."
         }
       ]
     },
     {
-      "title": "Conv Layer — Nasıl Çalışıyor?",
-      "cat": "CNN",
-      "summary": "Küçük filter input üzerinde kayar. Her pozisyonda dot product → tek sayı. Tüm pozisyonlar feature map oluşturur.",
-      "context": "CS231n · Lecture 5",
+      "title": "Convolutional Layer",
+      "cat": "CS231n",
+      "summary": "A convolutional layer slides a small filter over the 2D spatial extent of the input, preserving spatial structure. The output is an activation map — one per filter.",
+      "context": "CS231n Lecture 5 · Stanford",
       "sections": [
         {
-          "type": "text",
-          "heading": "Operasyon",
-          "text": "Bir filter (örn. 3x3x3) input üzerinde sliding window ile kayar. Her pozisyonda filter ile örtüşen bölgenin element-wise çarpımı toplanır → bir sayı. Tüm pozisyonlar bir feature map oluşturur. 64 filter → 64 feature map."
-        },
-        {
-          "type": "formula",
-          "heading": "Output Boyutu",
-          "text": "$$H_{out} = \\frac{H_{in} + 2P - F}{S} + 1$$\n\nP: padding, F: filter size, S: stride\n\nBoyutu korumak için: P=1, F=3, S=1 → H_out = H_in\nYarıya düşürmek için: P=0, F=2, S=2 (MaxPool) veya S=2 conv"
-        },
-        {
           "type": "compare",
-          "heading": "Conv vs Fully Connected",
+          "heading": "FC Layer vs Conv Layer",
           "left": {
-            "title": "Fully Connected",
+            "title": "Fully Connected Layer",
             "points": [
-              "Her nöron tüm inputa bağlı",
-              "Spatial structure yok sayılır",
-              "224x224x3 → 150K+ parametre sadece ilk katmanda",
-              "Translation equivariance yok"
+              "32x32x3 image → stretch to 3072x1 vector",
+              "Apply W (10x3072) to get 10 scores",
+              "1 output = dot product with all 3072 inputs",
+              "Destroys all spatial structure"
             ]
           },
           "right": {
-            "title": "Conv",
+            "title": "Convolutional Layer",
             "points": [
-              "Her nöron küçük local bölgeye bağlı",
-              "Weight sharing: aynı filter tüm pozisyonlarda",
-              "224x224x3 → 3x3x3x64 = 1728 parametre",
-              "Translation equivariance: feature nerede olursa"
+              "32x32x3 image → preserve spatial structure",
+              "Slide 5x5x3 filter over all spatial positions",
+              "1 output = dot product with 5*5*3=75 local inputs",
+              "Same filter weights used everywhere (weight sharing)"
             ]
           }
         },
         {
-          "type": "insight",
-          "heading": "Receptive Field",
-          "text": "İlk conv layer: 3x3 bölge görüyor. İkinci conv layer: 5x5 bölge görüyor (3x3 üzerine 3x3). Derinleştikçe receptive field büyüyor — derin katmanlar daha büyük bölgeleri 'anlıyor'. Bu hiyerarşik özellik öğrenmenin temelidir."
+          "type": "formula",
+          "heading": "Output Size Formula",
+          "text": "Input: $W \\times W$, filter: $F \\times F$, stride: $S$, padding: $P$:\n\n$$\\text{Output size} = \\frac{W - F + 2P}{S} + 1$$\n\nExample: 32x32 input, 5x5 filter, stride 1, no padding:\n$(32 - 5 + 0)/1 + 1 = 28$, so output is 28x28.\n\nTo preserve size (\"same\" padding): use $P = (F-1)/2$.\nE.g., F=3, P=1, S=1 → output = input size."
+        },
+        {
+          "type": "text",
+          "heading": "Each Output Value is a Dot Product",
+          "text": "For a 32x32x3 image and a 5x5x3 filter: at each spatial location, take a 5x5x3 chunk of the image, compute dot product with filter weights + bias: $w^T x + b$. This is a 75-dimensional dot product (5*5*3 = 75). Slide over all 28x28 positions → one 28x28 activation map. Filters always extend the full depth of the input volume."
+        },
+        {
+          "type": "text",
+          "heading": "Multiple Filters",
+          "text": "Use K filters → K activation maps, each of size 28x28. Stack them: output volume is 28x28xK. For 6 filters of size 5x5x3: input 3x32x32, output 6x28x28. Each filter learns to detect a different pattern (edge, color blob, texture). Include a bias term: 6-dim bias vector, one per filter. Equivalently: 28x28 grid of 6-dim vectors."
         }
       ]
     },
     {
-      "title": "Pooling ve CNN Mimarisi",
-      "cat": "CNN",
-      "summary": "Pooling spatial boyutu küçültür, translation invariance sağlar. CNN: conv-BN-ReLU blokları + pooling, sonda FC.",
-      "context": "CS231n · Lecture 5",
+      "title": "Pooling and CNN Architecture",
+      "cat": "CS231n",
+      "summary": "Pooling layers downsample spatial dimensions, reducing computation and providing spatial invariance. A full CNN stacks conv+pool layers followed by FC layers.",
+      "context": "CS231n Lecture 5-6 · Stanford",
       "sections": [
         {
-          "type": "code",
-          "heading": "MaxPool",
-          "text": "# 2x2 MaxPool, stride=2:\n# Input:  (B, C, H, W)\n# Output: (B, C, H/2, W/2)\n# Her 2x2 bölgeden maksimumu al\n# Learnable parametre YOK\n# Translation invariance: feature biraz kaysa hâlâ aynı output"
+          "type": "text",
+          "heading": "Pooling Layer",
+          "text": "Pooling makes feature maps smaller and more manageable, providing a form of spatial invariance. Applied independently per channel. No learned parameters. Common: 2x2 max pooling with stride 2 halves spatial dimensions (e.g., 224x224x64 → 112x112x64)."
         },
         {
-          "type": "code",
-          "heading": "Tipik CNN Stack",
-          "text": "Input → [Conv-BN-ReLU] x N → Pool → [Conv-BN-ReLU] x N → Pool → ... → Flatten → FC → Output\n\n# Her pool ile spatial boyut yarıya iner\n# Genellikle channel sayısı ikiye katlanır: 64→128→256→512\n# Derinlik artar, spatial küçülür — özellikler giderek soyutlaşır"
+          "type": "compare",
+          "heading": "Max vs Average Pooling",
+          "left": {
+            "title": "Max Pooling",
+            "points": [
+              "Takes the maximum value in each pool region",
+              "2x2, stride 2: most common",
+              "Captures presence of a feature anywhere in region",
+              "More widely used"
+            ]
+          },
+          "right": {
+            "title": "Average Pooling",
+            "points": [
+              "Takes the average value",
+              "Often used as final global pooling",
+              "Smoother representation",
+              "Used in GoogLeNet, modern architectures"
+            ]
+          }
+        },
+        {
+          "type": "list",
+          "heading": "Typical CNN Architecture Pattern",
+          "items": [
+            "Input image (e.g., 224x224x3)",
+            "Multiple rounds of: [CONV → ReLU] → POOL",
+            "As depth increases: spatial dims decrease, number of feature maps increases",
+            "Flatten → Fully Connected layers → Softmax output",
+            "Pattern: [CONV-ReLU] x N → POOL → [CONV-ReLU] x M → POOL → ... → FC → FC → Output"
+          ]
         },
         {
           "type": "insight",
-          "heading": "Neden derinlik önemli?",
-          "text": "Sığ ağ: basit özellikler. Derin ağ: edges → shapes → parts → objects. Her katman bir öncekinin üzerine inşa ediyor. İki 3x3 conv = bir 5x5 conv'un receptive field'ı ama daha az parametre ve daha fazla non-linearity."
+          "heading": "Receptive Field",
+          "text": "First conv layer sees a 3x3 (or 5x5) region. Second conv layer sees a 5x5 (or 9x9) region of the original input. The receptive field grows with depth — deeper layers 'see' larger regions. This is why depth allows learning hierarchical features: edges → shapes → object parts → whole objects."
+        }
+      ]
+    },
+    {
+      "title": "CNN History: From LeNet to ViT",
+      "cat": "CS231n",
+      "summary": "CNNs were invented by LeCun in 1998. AlexNet's 2012 ImageNet victory launched the deep learning era. Vision Transformers (ViT) challenged ConvNets from 2021.",
+      "context": "CS231n Lecture 5 · Stanford",
+      "sections": [
+        {
+          "type": "list",
+          "heading": "Key Milestones",
+          "items": [
+            "1998: LeCun — LeNet for digit recognition (MNIST). First practical CNN, used backprop, limited by compute",
+            "2012: AlexNet (Krizhevsky, Sutskever, Hinton) — ImageNet 16.4% vs 26.2% for non-CNNs. Used ReLU, dropout, GPU training",
+            "2014: VGGNet — very deep (16-19 layers), only 3x3 filters, proved depth matters",
+            "2014: GoogLeNet — Inception modules, 22 layers, much fewer parameters",
+            "2015: ResNet — skip connections, 152 layers, 3.6% ImageNet error, won ILSVRC 2015",
+            "2021: ViT (Dosovitskiy et al.) — 'An Image is Worth 16x16 Words', Transformers for image recognition, ICLR 2021"
+          ]
+        },
+        {
+          "type": "text",
+          "heading": "AlexNet Details",
+          "text": "AlexNet (2012): 5 conv layers + 3 FC layers, ~60M parameters, ~650K neurons. Key innovations: (1) ReLU activation — much faster training than sigmoid/tanh. (2) Dropout for regularization. (3) Data augmentation (random crops, flips, color jitter). (4) Trained on 2 GPUs in parallel. Won ImageNet Large Scale Visual Recognition Challenge (ILSVRC) 2012 by a massive margin."
+        },
+        {
+          "type": "insight",
+          "heading": "Vision Transformer (ViT)",
+          "text": "ViT (2021): split image into 16x16 patches, linearly project each patch to a vector (patch embedding), add positional embeddings and a [CLS] token, process with standard Transformer encoder. At scale, ViT matches or beats ConvNets. The Transformer encoder: L x [Multi-Head Attention + LayerNorm + MLP + LayerNorm], with residual connections. MLP head on [CLS] token gives class prediction."
         }
       ]
     }
   ],
   "cs05": [
     {
-      "title": "Lecture 6 — Training CNNs",
-      "cat": "Overview",
-      "summary": "Activation functions, weight init, data augmentation, transfer learning, hyperparameter tuning.",
-      "context": "CS231n · Lecture 6",
+      "title": "CNN Components: The Full Picture",
+      "cat": "CS231n",
+      "summary": "A CNN is built from six types of layers: conv, pooling, fully-connected, normalization, dropout, and activation functions. Understanding each is essential for building effective networks.",
+      "context": "CS231n Lecture 6 · Stanford",
       "sections": [
         {
-          "type": "list",
-          "heading": "Kapsam",
-          "items": [
-            "Activation functions: ReLU, Leaky ReLU, ELU",
-            "Weight initialization: Xavier, He",
-            "Data preprocessing ve augmentation",
-            "Transfer learning",
-            "Hyperparameter tuning stratejisi"
+          "type": "table",
+          "heading": "Six CNN Components",
+          "rows": [
+            [
+              "Component",
+              "Function",
+              "Key Property"
+            ],
+            [
+              "Convolution Layer",
+              "Slide filters over input, compute dot products",
+              "Weight sharing, spatial equivariance"
+            ],
+            [
+              "Pooling Layer",
+              "Downsample spatial dimensions",
+              "Spatial invariance, reduces computation"
+            ],
+            [
+              "Fully-Connected Layer",
+              "Dense connections, produces class scores",
+              "High capacity but destroys spatial structure"
+            ],
+            [
+              "Normalization Layer",
+              "Normalize activations",
+              "Stabilizes training, reduces init sensitivity"
+            ],
+            [
+              "Dropout",
+              "Randomly zero neurons during training",
+              "Regularization, ensemble effect"
+            ],
+            [
+              "Activation Function",
+              "Non-linearity after each linear op",
+              "Enables learning non-linear patterns"
+            ]
           ]
+        },
+        {
+          "type": "text",
+          "heading": "How to Build CNNs (Lecture 6 Overview)",
+          "text": "Lecture 6 covers two broad topics: (1) How to build CNNs: layers, activation functions, CNN architectures, weight initialization. (2) How to train CNNs: data preprocessing, data augmentation, transfer learning, hyperparameter selection."
         }
       ]
     },
     {
-      "title": "Activation Functions Karşılaştırması",
-      "cat": "Training",
-      "summary": "Sigmoid/tanh vanishing gradient problemi yaratır. ReLU varsayılan tercih — hızlı ve etkili.",
-      "context": "CS231n · Lecture 6",
+      "title": "Normalization Layers",
+      "cat": "CS231n",
+      "summary": "Normalization layers standardize activations to improve training stability, speed, and robustness to weight initialization. LayerNorm, BatchNorm, InstanceNorm, and GroupNorm differ in which axes are normalized.",
+      "context": "CS231n Lecture 6 · Stanford",
       "sections": [
         {
+          "type": "formula",
+          "heading": "General Normalization Formula",
+          "text": "All normalization layers follow the same two-step pattern:\n\n1. Normalize: $\\hat{x}_{i,j} = \\frac{x_{i,j} - \\mu_j}{\\sqrt{\\sigma_j^2 + \\epsilon}}$\n\n2. Scale and shift with learned parameters:\n$$y = \\gamma \\frac{x - \\mu}{\\sigma} + \\beta$$\n\nwhere $\\gamma$ (scale) and $\\beta$ (shift) are learnable. This lets the network undo normalization if needed."
+        },
+        {
+          "type": "formula",
+          "heading": "LayerNorm (Ba et al. 2016)",
+          "text": "Input: $x$ of shape $N \\times D$ (batch x features)\n\nStatistics per sample: $\\mu, \\sigma$ of shape $N \\times 1$\n\nLearned parameters: $\\gamma, \\beta$ of shape $1 \\times D$\n\nOutput: $y = \\gamma(x - \\mu) / \\sigma + \\beta$\n\nNormalizes across all features of one sample. Same behavior at train and test time. Standard in Transformers."
+        },
+        {
           "type": "compare",
-          "heading": "Sigmoid/Tanh vs ReLU",
+          "heading": "Normalization Variants",
           "left": {
-            "title": "Sigmoid / Tanh",
+            "title": "Batch Norm / Instance Norm",
             "points": [
-              "Sigmoid: (0,1), Tanh: (-1,1)",
-              "Saturasyon: uçlarda türev ≈ 0",
-              "Vanishing gradient — derin ağlarda problem",
-              "Sigmoid: not zero-centered → zig-zag gradient"
+              "BatchNorm: normalize across batch dimension N per channel C",
+              "Different behavior at train vs test time",
+              "Batch size dependent — fails with small batches",
+              "Standard for CNNs (BatchNorm)"
             ]
           },
           "right": {
-            "title": "ReLU",
+            "title": "Layer Norm / Group Norm",
             "points": [
-              "f(x) = max(0, x)",
-              "Pozitif bölgede türev = 1 → vanishing yok",
-              "Hesaplama çok hızlı",
-              "Dead ReLU: negatif bölgede nöron ölüyor"
+              "LayerNorm: normalize all C features of one sample",
+              "Same behavior at train and test time",
+              "Batch size independent",
+              "Standard for Transformers (LayerNorm); detection uses GroupNorm"
             ]
           }
         },
         {
-          "type": "list",
-          "heading": "ReLU Varyantları",
-          "items": [
-            "Leaky ReLU: f(x) = max(0.01x, x) — dead neuron yok",
-            "ELU: negatif bölgede smooth, ortalama sıfıra yakın",
-            "GELU: transformer'larda yaygın, smooth",
-            "Varsayılan: ReLU — çoğu CNN için yeterli"
-          ]
+          "type": "insight",
+          "heading": "Normalization vs Weight Init",
+          "text": "Can normalization compensate for bad weight initialization? Empirically: LayerNorm significantly reduces the gap between good and bad init, but does not eliminate it entirely. Bad init + LayerNorm still lags behind good init + LayerNorm. Conclusion: use proper initialization AND normalization for best results."
         }
       ]
     },
     {
-      "title": "Transfer Learning",
-      "cat": "Training",
-      "summary": "ImageNet'te eğitilmiş ağ iyi feature öğrenmiş. Son katmanları değiştir, kendi verinle fine-tune et.",
-      "context": "CS231n · Lecture 6",
+      "title": "Dropout",
+      "cat": "CS231n",
+      "summary": "Dropout randomly zeros out neurons during each forward pass. It forces redundant representations, prevents co-adaptation, and implicitly trains an exponentially large ensemble.",
+      "context": "CS231n Lecture 6 · Stanford",
       "sections": [
         {
           "type": "text",
-          "heading": "Temel Fikir",
-          "text": "Büyük veri + uzun eğitimle öğrenilmiş feature'lar genel amaçlı. İlk katmanlar edges, orta katmanlar shapes, son katmanlar obje parçaları öğrenmiş. Başka bir görev için bu feature'lar zaten iyi başlangıç noktası."
+          "heading": "What is Dropout?",
+          "text": "During each training forward pass, randomly set some neurons to zero with probability (1-p) where p is the keep probability (p=0.5 is common). Different neurons are dropped each time. At test time, all neurons are active — activations must be scaled by p to match expected training values."
         },
         {
+          "type": "code",
+          "heading": "Dropout Implementation",
+          "text": "# p = 0.5 (probability of KEEPING a unit active)\n\n# Training: drop neurons randomly\ndef train_step(X):\n    H1 = np.maximum(0, np.dot(W1, X) + b1)\n    U1 = np.random.rand(*H1.shape) < p  # dropout mask\n    H1 *= U1                             # drop!\n    H2 = np.maximum(0, np.dot(W2, H1) + b2)\n    U2 = np.random.rand(*H2.shape) < p  # dropout mask\n    H2 *= U2                             # drop!\n    out = np.dot(W3, H2) + b3\n\n# Test: all neurons active, scale by p\ndef predict(X):\n    H1 = np.maximum(0, np.dot(W1, X) + b1) * p  # scale!\n    H2 = np.maximum(0, np.dot(W2, H1) + b2) * p  # scale!\n    out = np.dot(W3, H2) + b3\n    return out"
+        },
+        {
+          "type": "insight",
+          "heading": "Why Does Dropout Work?",
+          "text": "Interpretation 1: Forces redundant representations. No single neuron can rely on any other. Like a cat still being a cat even if some features (ear, fur, claws) are randomly hidden.\n\nInterpretation 2: Trains an ensemble of 2^N sub-networks simultaneously. An FC layer with 4096 units has 2^4096 ~ 10^1233 possible binary masks — more than atoms in the universe. Test time combines all of them via weight scaling."
+        },
+        {
+          "type": "note",
+          "heading": "Inverted Dropout (Modern Practice)",
+          "text": "Modern practice: scale by 1/p at training time instead of scaling at test time. Then test time requires no changes. This is the default in PyTorch nn.Dropout."
+        }
+      ]
+    },
+    {
+      "title": "Weight Initialization",
+      "cat": "CS231n",
+      "summary": "Weight initialization is critical for training deep networks. Too small: vanishing gradients. Too large: exploding gradients. Xavier/He initialization correctly scales variance.",
+      "context": "CS231n Lecture 6 · Stanford",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "The Problem",
+          "text": "All zeros: broken symmetry — all neurons compute identical outputs and gradients. All large: activations saturate (sigmoid/tanh), gradients vanish. All too small: activations collapse to zero, gradients vanish. Need to carefully scale initial weights based on layer size."
+        },
+        {
+          "type": "formula",
+          "heading": "Xavier / Glorot Initialization",
+          "text": "For a layer with fan_in inputs and fan_out outputs:\n\n$$W \\sim \\mathcal{N}\\left(0, \\frac{2}{\\text{fan\\_in} + \\text{fan\\_out}}\\right)$$\n\nDesigned for sigmoid/tanh. Ensures variance of activations is approximately preserved through layers. PyTorch: `nn.init.xavier_normal_`"
+        },
+        {
+          "type": "formula",
+          "heading": "He / Kaiming Initialization",
+          "text": "For ReLU activations (Kaiming He et al., 2015):\n\n$$W \\sim \\mathcal{N}\\left(0, \\frac{2}{\\text{fan\\_in}}\\right)$$\n\nThe factor of 2 accounts for ReLU zeroing out half the neurons on average. Default for ReLU networks. PyTorch: `nn.init.kaiming_normal_` (default for Conv/Linear layers)"
+        }
+      ]
+    },
+    {
+      "title": "Data Augmentation and Transfer Learning",
+      "cat": "CS231n",
+      "summary": "Data augmentation expands the training set with random transformations. Transfer learning fine-tunes a pre-trained model on a new task, enabling strong performance with small datasets.",
+      "context": "CS231n Lecture 6 · Stanford",
+      "sections": [
+        {
           "type": "list",
-          "heading": "Ne kadar fine-tune?",
+          "heading": "Data Augmentation Techniques",
           "items": [
-            "Az veri + benzer domain: sadece son FC katmanı değiştir",
-            "Orta veri + benzer domain: son birkaç katmanı fine-tune",
-            "Çok veri: tüm ağı fine-tune (düşük lr ile)",
-            "Farklı domain: daha fazla katman fine-tune gerekebilir"
+            "Random horizontal flips (50% probability)",
+            "Random crops (e.g., take 224x224 crop from 256x256 image)",
+            "Color jitter (randomly change brightness, contrast, saturation, hue)",
+            "Random rotations and scale changes",
+            "MixUp: blend two images with random coefficient lambda",
+            "CutMix: cut and paste patches between images, mix labels proportionally",
+            "AutoAugment: learned augmentation policy (RL-based)"
           ]
         },
         {
           "type": "insight",
-          "heading": "Neden işe yarıyor?",
-          "text": "İlk katmanlardaki özellikler (edges, textures) neredeyse tüm görsel görevler için evrensel. Son katmanlar göreve özgü — bunları değiştirmek yeterli. Az veriden başarılı model çıkarmanın en pratik yolu."
-        }
-      ]
-    },
-    {
-      "title": "Data Augmentation",
-      "cat": "Training",
-      "summary": "Aynı veriden yeni örnekler üretir. Model daha geniş dağılım görür, overfitting azalır.",
-      "context": "CS231n · Lecture 6",
-      "sections": [
-        {
-          "type": "code",
-          "heading": "Yaygın Augmentation",
-          "text": "transforms.Compose([\n    transforms.RandomHorizontalFlip(),      # yatay çevir\n    transforms.RandomCrop(32, padding=4),   # kırp\n    transforms.ColorJitter(brightness=0.2), # renk değiştir\n    transforms.RandomRotation(15),          # döndür\n    transforms.ToTensor(),\n    transforms.Normalize(mean, std)\n])"
+          "heading": "Why Augmentation Works",
+          "text": "Data augmentation creates artificial training examples by applying label-preserving transformations. A flipped image of a cat is still a cat. By seeing many variations, the network learns invariances: position invariance, scale invariance, color invariance. This dramatically reduces overfitting and acts as a form of regularization."
         },
         {
-          "type": "note",
-          "heading": "Label invariance",
-          "text": "Augmentation sadece label'ı değiştirmeyen dönüşümler olmalı. Kediyi döndürmek sorun değil — hâlâ kedi. Ama rakam sınıflandırmada 6'yı 180° döndürmek 9 yapar — dikkat."
+          "type": "list",
+          "heading": "Transfer Learning Strategy",
+          "items": [
+            "Pre-train on large dataset (e.g., ImageNet: 1.2M images, 1000 classes)",
+            "Early layers learn general features (edges, textures) that transfer across tasks",
+            "If small dataset + similar domain: freeze early layers, train only FC head",
+            "If medium dataset: fine-tune last few layers with small learning rate",
+            "If large dataset: fine-tune all layers with small learning rate",
+            "If very different domain: may need to fine-tune more layers"
+          ]
         }
       ]
     }
   ],
   "cs06": [
     {
-      "title": "Lecture 7 — Recurrent Neural Networks",
-      "cat": "Overview",
-      "summary": "Sıralı veri için gizli durum h_t. Vanishing gradient sorunu LSTM ve GRU ile çözülür.",
-      "context": "CS231n · Lecture 7",
+      "title": "Sequence Modeling and RNN Motivation",
+      "cat": "CS231n",
+      "summary": "Standard NNs assume fixed-size inputs and outputs. RNNs handle variable-length sequences by maintaining a hidden state that is updated at each time step.",
+      "context": "CS231n Lecture 7 · Stanford",
       "sections": [
         {
+          "type": "text",
+          "heading": "The Sequence Problem",
+          "text": "Standard 'vanilla' neural networks assume fixed-length inputs and outputs. But many problems involve sequences of variable length: text (sentences, paragraphs), audio, video, time series. RNNs solve this by maintaining an 'internal state' that accumulates information as the sequence is processed."
+        },
+        {
           "type": "list",
-          "heading": "Kapsam",
+          "heading": "RNN Input/Output Configurations",
           "items": [
-            "RNN mimarisi ve hidden state",
-            "Vanishing/exploding gradient",
-            "BPTT — Backpropagation Through Time",
-            "LSTM — forget/input/output gate",
-            "GRU — basitleştirilmiş LSTM"
+            "One-to-one: standard NN, image classification",
+            "One-to-many: image captioning — input is an image, output is a sequence of words",
+            "Many-to-one: action prediction — input is a sequence of video frames, output is a single action class",
+            "Many-to-many (encoder-decoder): machine translation — input sequence → output sequence (can be different length)",
+            "Many-to-many (synchronized): video frame classification — each input frame gets an output label"
           ]
+        },
+        {
+          "type": "insight",
+          "heading": "Key Idea: Hidden State",
+          "text": "An RNN has an 'internal state' h_t that is updated as each element of the sequence is processed. This state acts as memory — it carries information from previous time steps to future ones. The same weights W are used at every time step (weight sharing across time)."
         }
       ]
     },
     {
-      "title": "RNN — Temel Mimari",
-      "cat": "RNN",
-      "summary": "Her adımda yeni input + önceki hidden state → yeni hidden state. Aynı W tüm adımlarda paylaşılır.",
-      "context": "CS231n · Lecture 7",
+      "title": "Vanilla RNN",
+      "cat": "CS231n",
+      "summary": "The vanilla RNN updates its hidden state using current input and previous hidden state. The same weight matrices are reused at every step.",
+      "context": "CS231n Lecture 7 · Stanford",
       "sections": [
         {
           "type": "formula",
-          "heading": "Hidden State Güncelleme",
-          "text": "$$h_t = \\tanh(W_{hh} h_{t-1} + W_{xh} x_t + b)$$\n$$y_t = W_{hy} h_t$$\n\n$h_t$: t anındaki hidden state\n$x_t$: t anındaki input\n$W_{hh}$, $W_{xh}$: tüm adımlarda paylaşılan ağırlıklar"
+          "heading": "Hidden State Update",
+          "text": "$$h_t = \\tanh(W_{hh} h_{t-1} + W_{xh} x_t + b)$$\n$$y_t = W_{hy} h_t$$\n\nwhere:\n- $h_t \\in \\mathbb{R}^H$: hidden state at time $t$\n- $x_t \\in \\mathbb{R}^D$: input at time $t$\n- $W_{hh} \\in \\mathbb{R}^{H \\times H}$: hidden-to-hidden weights\n- $W_{xh} \\in \\mathbb{R}^{H \\times D}$: input-to-hidden weights\n- $b \\in \\mathbb{R}^H$: bias\n\nThe same $W_{hh}, W_{xh}, b$ are used at every time step."
         },
         {
-          "type": "list",
-          "heading": "RNN Varyantları (input/output yapısına göre)",
-          "items": [
-            "One-to-one: görüntü sınıflandırma (RNN değil)",
-            "One-to-many: image captioning (görüntü → cümle)",
-            "Many-to-one: sentiment analysis (cümle → duygu)",
-            "Many-to-many: machine translation (cümle → cümle)",
-            "Many-to-many senkron: video frame labeling"
-          ]
+          "type": "code",
+          "heading": "RNN Forward Pass",
+          "text": "# Simple RNN forward pass\nh = np.zeros(H)  # initial hidden state\n\nfor x_t in sequence:\n    # Update hidden state\n    h = np.tanh(W_hh @ h + W_xh @ x_t + b)\n    # Optional: produce output at each step\n    y = W_hy @ h"
         },
         {
           "type": "text",
-          "heading": "Vanishing Gradient Problemi",
-          "text": "BPTT: gradient T adım geriye yayılıyor. Her adımda W_hh matrisiyle çarpılıyor. W_hh'nin eigenvalue'ları < 1 ise gradient üstel azalıyor — uzak bağımlılıkları öğrenemez. > 1 ise exploding gradient. Bu RNN'nin temel problemi — LSTM çözüyor."
+          "heading": "Backpropagation Through Time (BPTT)",
+          "text": "Training RNNs requires backpropagating through the unrolled computation graph across all T time steps. Gradients must flow from the loss at time T all the way back to time 1 — through T copies of the same weight matrix W_hh. This creates the vanishing/exploding gradient problem."
+        },
+        {
+          "type": "note",
+          "heading": "Vanishing Gradient Problem",
+          "text": "At each time step, gradients are multiplied by W_hh (and the tanh derivative). If the eigenvalues of W_hh are < 1: gradients vanish exponentially with distance — the RNN cannot learn long-range dependencies. If > 1: gradients explode. Solution for exploding: gradient clipping. Solution for vanishing: LSTM."
         }
       ]
     },
     {
       "title": "LSTM — Long Short-Term Memory",
-      "cat": "RNN",
-      "summary": "Cell state c_t ile uzun vadeli bellek. Üç gate: forget, input, output. Gradient highway sağlar.",
-      "context": "CS231n · Lecture 7",
+      "cat": "CS231n",
+      "summary": "LSTM adds a separate cell state c_t with additive updates. Three gates (forget, input, output) control information flow. The cell state creates a gradient highway enabling learning of very long-range dependencies.",
+      "context": "CS231n Lecture 7 · Stanford",
       "sections": [
         {
           "type": "formula",
-          "heading": "LSTM Denklemleri",
-          "text": "$$f_t = \\sigma(W_f [h_{t-1}, x_t] + b_f) \\quad \\text{forget gate}$$\n$$i_t = \\sigma(W_i [h_{t-1}, x_t] + b_i) \\quad \\text{input gate}$$\n$$\\tilde{c}_t = \\tanh(W_c [h_{t-1}, x_t] + b_c) \\quad \\text{candidate}$$\n$$c_t = f_t \\odot c_{t-1} + i_t \\odot \\tilde{c}_t \\quad \\text{cell update}$$\n$$o_t = \\sigma(W_o [h_{t-1}, x_t] + b_o) \\quad \\text{output gate}$$\n$$h_t = o_t \\odot \\tanh(c_t)$$"
+          "heading": "LSTM Equations",
+          "text": "Given $[h_{t-1}, x_t]$ concatenated:\n\n$$f_t = \\sigma(W_f [h_{t-1}, x_t] + b_f) \\quad \\text{(forget gate)}$$\n$$i_t = \\sigma(W_i [h_{t-1}, x_t] + b_i) \\quad \\text{(input gate)}$$\n$$\\tilde{c}_t = \\tanh(W_c [h_{t-1}, x_t] + b_c) \\quad \\text{(candidate cell)}$$\n$$c_t = f_t \\odot c_{t-1} + i_t \\odot \\tilde{c}_t \\quad \\text{(cell state update)}$$\n$$o_t = \\sigma(W_o [h_{t-1}, x_t] + b_o) \\quad \\text{(output gate)}$$\n$$h_t = o_t \\odot \\tanh(c_t) \\quad \\text{(hidden state)}$$\n\nAll gates use sigmoid → output in (0,1)."
         },
         {
           "type": "list",
-          "heading": "Gate sezgisi",
+          "heading": "Gate Intuition",
           "items": [
-            "Forget gate: eski cell state'ten ne kadar unut (0=tamamen unut, 1=tamamen koru)",
-            "Input gate: yeni bilgiden ne kadar ekle",
-            "Output gate: cell state'ten ne kadar dışarı ver",
-            "Cell state c_t: sadece toplama ile güncelleniyor — gradient highway"
+            "Forget gate f_t: how much of old cell state c_{t-1} to keep (0=forget all, 1=keep all)",
+            "Input gate i_t: how much of new candidate to add to cell state",
+            "Candidate c-tilde_t: new information from current input and hidden state",
+            "Cell update: weighted sum of old cell + new candidate",
+            "Output gate o_t: how much of cell state to expose as hidden state h_t"
           ]
         },
         {
           "type": "insight",
-          "heading": "Neden vanishing gradient çözüldü?",
-          "text": "RNN'de gradient W_hh ile çarpılıyordu — uzun serilerde eriyordu. LSTM'de c_t sadece toplama ve element-wise çarpma (gate) ile güncelleniyor. Toplama gradient'ı olduğu gibi geçiriyor. Gate'ler 0-1 arasında ama W matrisi çarpımı yok — gradient çok daha uzağa gidebiliyor."
+          "heading": "Why LSTM Fixes Vanishing Gradients",
+          "text": "In vanilla RNN, gradients flow through tanh and matrix multiplication at every step — they vanish exponentially. In LSTM, the cell state c_t is updated additively: c_t = f * c_{t-1} + i * c-tilde. Gradients flow through addition (unchanged) and elementwise multiplication by gates (not matrix multiply). This 'gradient highway' through c allows gradients to propagate hundreds of steps without vanishing."
+        }
+      ]
+    },
+    {
+      "title": "GRU and Relation to Transformers",
+      "cat": "CS231n",
+      "summary": "GRU simplifies LSTM by merging cell and hidden state. Both RNNs and GRUs are largely superseded by Transformers for most sequence tasks, but still used in efficiency-critical settings.",
+      "context": "CS231n Lecture 7 · Stanford",
+      "sections": [
+        {
+          "type": "formula",
+          "heading": "GRU Equations",
+          "text": "$$z_t = \\sigma(W_z [h_{t-1}, x_t]) \\quad \\text{(update gate)}$$\n$$r_t = \\sigma(W_r [h_{t-1}, x_t]) \\quad \\text{(reset gate)}$$\n$$\\tilde{h}_t = \\tanh(W [r_t \\odot h_{t-1}, x_t]) \\quad \\text{(candidate)}$$\n$$h_t = (1 - z_t) \\odot h_{t-1} + z_t \\odot \\tilde{h}_t$$\n\nNo separate cell state. Update gate controls how much to blend old vs new hidden state."
+        },
+        {
+          "type": "compare",
+          "heading": "LSTM vs GRU vs Transformer",
+          "left": {
+            "title": "LSTM / GRU",
+            "points": [
+              "Sequential computation — cannot parallelize",
+              "O(n) to model dependencies at distance n",
+              "Hidden state is an information bottleneck",
+              "Efficient at inference — O(1) memory per step",
+              "Still used for streaming/real-time applications"
+            ]
+          },
+          "right": {
+            "title": "Transformer (Self-Attention)",
+            "points": [
+              "Fully parallel — great for GPU training",
+              "O(1) path length — direct connection between any two positions",
+              "O(n^2) memory for self-attention matrix",
+              "Better for long sequences when training data is large",
+              "Dominant for NLP, increasingly for vision"
+            ]
+          }
+        },
+        {
+          "type": "insight",
+          "heading": "Modern State-Space Models",
+          "text": "Mamba and other state-space models (2023-2024) attempt to combine the best of RNNs and Transformers: linear-time inference like RNNs, but with selective state spaces that can attend to relevant past information. These are an active research direction to replace Transformers for very long sequences."
         }
       ]
     }
   ],
   "cs07": [
     {
-      "title": "Lecture 8 — Attention and Transformers",
-      "cat": "Overview",
-      "summary": "Attention: her token diğer tüm tokenlara bakarak context oluşturur. Transformer: self-attention + FFN blokları, paralel hesaplama.",
-      "context": "CS231n · Lecture 8",
-      "sections": [
-        {
-          "type": "list",
-          "heading": "Kapsam",
-          "items": [
-            "Attention as a primitive — Q, K, V",
-            "Scaled dot-product attention",
-            "Self-attention",
-            "Multi-head attention",
-            "Transformer encoder-decoder",
-            "Positional encoding",
-            "Layer normalization"
-          ]
-        }
-      ]
-    },
-    {
-      "title": "Attention Mekanizması",
-      "cat": "Attention",
-      "summary": "Query, key, value üçlüsü. Query ile key'ler arasındaki benzerlik → value'ların ağırlıklı toplamı.",
-      "context": "CS231n · Lecture 8",
+      "title": "Attention Mechanism",
+      "cat": "CS231n",
+      "summary": "Attention computes a weighted sum of values, where weights are computed from similarity between queries and keys. It allows every position to directly attend to every other position.",
+      "context": "CS231n Lecture 8 · Stanford",
       "sections": [
         {
           "type": "text",
-          "heading": "Sezgi",
-          "text": "Attention'ı bir soft lookup olarak düşün. Query: ne arıyorum? Key: her elemanın indeksi. Value: her elemanın içeriği. Query ile key'leri karşılaştır → ağırlıklar. Bu ağırlıklarla value'ları topla → context vektörü."
+          "heading": "The Attention Intuition",
+          "text": "Think of attention as a soft lookup: Query = what am I looking for? Key = index for each element. Value = content of each element. Compare query with all keys to get similarity scores, convert to probabilities with softmax, then return a weighted sum of values. The result is a context vector that 'attends' to relevant information."
         },
         {
           "type": "formula",
           "heading": "Scaled Dot-Product Attention",
-          "text": "$$\\text{Attention}(Q, K, V) = \\text{softmax}\\left(\\frac{QK^T}{\\sqrt{d_k}}\\right) V$$\n\n$Q$: (N, d_k), $K$: (N, d_k), $V$: (N, d_v)\n$QK^T$: (N, N) — her token çiftinin benzerliği\n$\\sqrt{d_k}$: scaling — büyük d_k'da dot product büyür, softmax saturate olur"
+          "text": "$$\\text{Attention}(Q, K, V) = \\text{softmax}\\left(\\frac{QK^T}{\\sqrt{d_k}}\\right) V$$\n\nwhere:\n- $Q \\in \\mathbb{R}^{N \\times d_k}$: queries\n- $K \\in \\mathbb{R}^{N \\times d_k}$: keys\n- $V \\in \\mathbb{R}^{N \\times d_v}$: values\n- $QK^T \\in \\mathbb{R}^{N \\times N}$: pairwise similarity of all tokens\n- Scaling by $\\sqrt{d_k}$ prevents softmax saturation when $d_k$ is large"
         },
         {
           "type": "text",
           "heading": "Self-Attention",
-          "text": "Q, K, V'nin hepsi aynı sequence'dan geliyor. Her token diğer tüm tokenlara bakıyor — global context. RNN'de sadece önceki token vardı, self-attention'da tüm sequence aynı anda görünüyor.\n\nLinear projection: Q=XW_Q, K=XW_K, V=XW_V — X aynı input, farklı linear dönüşüm."
+          "text": "In self-attention, Q, K, V all come from the same sequence X. Learned linear projections: Q = XW_Q, K = XW_K, V = XW_V. Every token can directly attend to every other token — global context in O(1) steps, unlike RNN's O(n)."
         },
         {
           "type": "compare",
@@ -9522,299 +10042,1290 @@
           "left": {
             "title": "RNN",
             "points": [
-              "Sıralı hesaplama — paralelize edilemez",
-              "Uzak bağımlılıklar zayıf",
-              "O(n) adım uzak bağımlılık için",
-              "Hidden state bottleneck"
+              "Sequential computation — cannot parallelize",
+              "Distant dependencies must pass through many steps",
+              "Hidden state is an information bottleneck",
+              "O(n) path length for token at distance n"
             ]
           },
           "right": {
             "title": "Self-Attention",
             "points": [
-              "Paralel hesaplama",
-              "Her token direkt her tokena bakıyor",
-              "O(1) adımda uzak bağımlılık",
-              "O(n²) bellek — uzun sequence'da sorun"
+              "Fully parallel — great for GPU training",
+              "Every token directly attends to every other token",
+              "O(n^2) memory for attention matrix",
+              "O(1) path length between any two positions"
             ]
           }
         }
       ]
     },
     {
-      "title": "Transformer Mimarisi",
-      "cat": "Transformer",
-      "summary": "Multi-head attention + FFN + Layer Norm + residual. Encoder kaynak, decoder hedef için. Positional encoding sıra bilgisi katar.",
-      "context": "CS231n · Lecture 8",
+      "title": "Multi-Head Attention",
+      "cat": "CS231n",
+      "summary": "Multi-head attention runs attention in parallel across h subspaces (heads), then concatenates and projects. Each head can learn different relational patterns.",
+      "context": "CS231n Lecture 8 · Stanford",
+      "sections": [
+        {
+          "type": "formula",
+          "heading": "Multi-Head Attention Formula",
+          "text": "$$\\text{MultiHead}(Q, K, V) = \\text{Concat}(\\text{head}_1, ..., \\text{head}_h) W^O$$\n\n$$\\text{head}_i = \\text{Attention}(Q W_i^Q, K W_i^K, V W_i^V)$$\n\nwhere $W_i^Q \\in \\mathbb{R}^{d_{model} \\times d_k}$, $W_i^K \\in \\mathbb{R}^{d_{model} \\times d_k}$, $W_i^V \\in \\mathbb{R}^{d_{model} \\times d_v}$, $d_k = d_{model}/h$.\n\nTypically: $h=8$ heads, $d_{model}=512$, $d_k=64$."
+        },
+        {
+          "type": "insight",
+          "heading": "Why Multiple Heads?",
+          "text": "Each head can specialize in attending to different types of relationships: syntactic dependencies, coreference, long-range semantic similarity, local context, etc. Concatenating gives a richer representation than any single attention pattern."
+        },
+        {
+          "type": "code",
+          "heading": "Multi-Head Attention (pseudocode)",
+          "text": "# h attention heads run in parallel\n# Each head works in d_k = d_model / h dimensional subspace\n\nheads = []\nfor i in range(h):\n    Q_i = Q @ W_Q[i]   # (N, d_k)\n    K_i = K @ W_K[i]   # (N, d_k)\n    V_i = V @ W_V[i]   # (N, d_v)\n    head_i = softmax(Q_i @ K_i.T / sqrt(d_k)) @ V_i\n    heads.append(head_i)\n\noutput = concat(heads, dim=-1) @ W_O  # (N, d_model)"
+        }
+      ]
+    },
+    {
+      "title": "Transformer Architecture",
+      "cat": "CS231n",
+      "summary": "The Transformer stacks encoder and/or decoder blocks. Each block: multi-head attention + FFN, with residual connections and LayerNorm. Positional encodings inject order information.",
+      "context": "CS231n Lecture 8 · Stanford",
       "sections": [
         {
           "type": "code",
           "heading": "Transformer Encoder Block",
-          "text": "# Bir encoder bloğu:\nx = x + MultiHeadAttention(LayerNorm(x))   # self-attention + residual\nx = x + FFN(LayerNorm(x))                  # feed-forward + residual\n\n# FFN: Linear → ReLU/GELU → Linear\n# Genellikle 4x genişleme: d_model → 4*d_model → d_model\n# LayerNorm: Pre-norm (önce) veya Post-norm (sonra)"
+          "text": "# One transformer encoder block:\n# x: (N, d_model) — sequence of token embeddings\n\n# Self-attention sub-layer\nx = x + MultiHeadAttention(LayerNorm(x))  # Pre-Norm variant\n\n# Feed-forward sub-layer\nx = x + FFN(LayerNorm(x))\n\n# FFN: two linear layers with GELU:\n# FFN(x) = W2 * GELU(W1 * x + b1) + b2\n# Typical expansion: d_model → 4*d_model → d_model"
         },
         {
-          "type": "code",
-          "heading": "Multi-Head Attention",
-          "text": "# h adet attention head paralel çalışır\n# Her head farklı representation subspace'e bakıyor\n\nheads = [Attention(Q_i, K_i, V_i) for i in range(h)]\noutput = Concat(heads) @ W_O\n\n# d_k = d_model / h — her head küçük boyutta çalışır\n# Toplam parametre aynı, ama çoklu perspektif kazanılır"
-        },
-        {
-          "type": "text",
+          "type": "formula",
           "heading": "Positional Encoding",
-          "text": "Self-attention sıradan bağımsız — 'Paris is in France' ile 'France is in Paris' aynı. Pozisyon bilgisini eklemek için sinüs/kosinüs encoding veya learnable embedding ekleniyor:\n\nPE(pos, 2i) = sin(pos / 10000^(2i/d_model))\nPE(pos, 2i+1) = cos(pos / 10000^(2i/d_model))"
+          "text": "Self-attention is permutation-invariant — 'Paris is in France' = 'France is in Paris' without positional encoding. Add positional embeddings to token embeddings:\n\n$$PE(pos, 2i) = \\sin\\left(\\frac{pos}{10000^{2i/d_{model}}}\\right)$$\n$$PE(pos, 2i+1) = \\cos\\left(\\frac{pos}{10000^{2i/d_{model}}}\\right)$$\n\nOr use learned positional embeddings (GPT, BERT)."
+        },
+        {
+          "type": "table",
+          "heading": "Original Transformer (Vaswani et al. 2017) Hyperparameters",
+          "rows": [
+            [
+              "Parameter",
+              "Value"
+            ],
+            [
+              "Layers N",
+              "6 encoder + 6 decoder"
+            ],
+            [
+              "d_model",
+              "512"
+            ],
+            [
+              "Heads h",
+              "8"
+            ],
+            [
+              "d_k = d_v",
+              "64"
+            ],
+            [
+              "FFN inner dim",
+              "2048"
+            ],
+            [
+              "Optimizer",
+              "Adam with warmup schedule"
+            ],
+            [
+              "Training",
+              "~100K steps, 8 GPUs"
+            ]
+          ]
         },
         {
           "type": "insight",
-          "heading": "Neden Transformer bu kadar başarılı?",
-          "text": "Paralel hesaplama → GPU'ya uygun → büyük scale eğitim mümkün. Her token her tokena bakıyor → global context, uzun bağımlılıklar. Residual connections + LayerNorm → deep ağlar train edilebilir. Ölçek büyüdükçe performans artmaya devam ediyor (scaling law)."
+          "heading": "Why Transformer Succeeded",
+          "text": "Parallelization: all positions computed simultaneously — trains on GPUs much faster than sequential RNNs. Global receptive field: every token sees every other token in every layer. Strong scaling: performance continues improving with model size, data, and compute (scaling laws). Residual connections + LayerNorm: enables training very deep networks."
+        }
+      ]
+    },
+    {
+      "title": "Vision Transformer (ViT)",
+      "cat": "CS231n",
+      "summary": "ViT applies the standard Transformer encoder to sequences of image patches. 'An Image is Worth 16x16 Words' (Dosovitskiy et al. 2021). At large scale, ViT matches or surpasses CNNs.",
+      "context": "CS231n Lecture 8 · Stanford",
+      "sections": [
+        {
+          "type": "list",
+          "heading": "ViT Pipeline",
+          "items": [
+            "Split image into fixed-size patches (e.g., 16x16 pixels each)",
+            "Flatten each patch and project to d_model dimensions (linear projection of flattened patches)",
+            "Prepend a learnable [CLS] token",
+            "Add learnable positional embeddings",
+            "Process with standard Transformer Encoder (L blocks of MH-Attention + FFN)",
+            "Take [CLS] token output → MLP head → class probabilities"
+          ]
+        },
+        {
+          "type": "formula",
+          "heading": "Patch Embedding",
+          "text": "Image $I \\in \\mathbb{R}^{H \\times W \\times C}$, patch size $P \\times P$:\n\nNumber of patches: $N = \\frac{HW}{P^2}$ (e.g., 224x224, P=16 → 196 patches)\n\nFlatten each patch: $P^2 C$ values (e.g., 16*16*3 = 768)\n\nLinear projection to d_model: $E \\in \\mathbb{R}^{(P^2 C) \\times d_{model}}$\n\nInput to Transformer: sequence of 197 tokens (196 patches + 1 CLS)"
+        },
+        {
+          "type": "insight",
+          "heading": "ViT vs CNN Inductive Biases",
+          "text": "CNNs have strong inductive biases: translation equivariance (convolution is position-invariant), locality (each neuron sees a small region). ViT has almost no inductive biases — it must learn everything from data. This means ViT needs much more data to match CNNs, but at large scale (JFT-300M) it surpasses them. Modern vision models (DINOv2, SAM, MAE) use ViT as backbone."
         }
       ]
     }
   ],
   "cs08": [
     {
-      "title": "Lecture 9 — Detection, Segmentation, Visualization",
-      "cat": "Overview",
-      "summary": "Object detection: bbox + class. Segmentation: pixel-level. Visualization: ağın ne öğrendiğini anlama.",
-      "context": "CS231n · Lecture 9",
-      "sections": [
-        {
-          "type": "list",
-          "heading": "Kapsam",
-          "items": [
-            "Object detection: R-CNN ailesi, YOLO",
-            "Semantic segmentation: FCN, upsampling",
-            "Instance segmentation: Mask R-CNN",
-            "RNN vs CNN vs Attention karşılaştırma",
-            "Visualization: gradient-based, activation maps"
-          ]
-        }
-      ]
-    },
-    {
       "title": "Object Detection",
-      "cat": "Detection",
-      "summary": "Her nesne için bounding box + class. Region proposal + classification pipeline veya single-shot.",
-      "context": "CS231n · Lecture 9",
+      "cat": "CS231n",
+      "summary": "Object detection finds all instances of objects in an image, predicting both their class and location (bounding box). The R-CNN family and YOLO are the dominant paradigms.",
+      "context": "CS231n Lecture 9 · Stanford",
       "sections": [
         {
+          "type": "text",
+          "heading": "The Task",
+          "text": "Classification: single label for whole image. Detection: multiple objects per image, each with a class label and a bounding box (x, y, width, height). The challenge: variable number of outputs, objects at different scales and locations."
+        },
+        {
           "type": "list",
-          "heading": "R-CNN Ailesi",
+          "heading": "R-CNN Family",
           "items": [
-            "R-CNN: selective search → crop → CNN per region → yavaş",
-            "Fast R-CNN: önce CNN, sonra RoI pooling → paylaşılan feature",
-            "Faster R-CNN: Region Proposal Network (RPN) → end-to-end",
-            "RPN: anchor box'lar ile nesne var mı / nerede sorusu"
+            "R-CNN (2013): selective search gives ~2000 region proposals → crop and warp → run CNN on each crop → classify each region. Very slow: 47s per image at test time",
+            "Fast R-CNN (2015): run CNN on full image first → produce feature map → RoI Pooling extracts fixed-size features per region → fast! ~0.2s per image",
+            "Faster R-CNN (2016): replace selective search with Region Proposal Network (RPN) learned jointly with detector → end-to-end training, ~0.2s",
+            "RPN: slides over feature map, predicts objectness scores and box regressions for anchor boxes at each location"
           ]
         },
         {
           "type": "compare",
-          "heading": "Two-Stage vs Single-Stage",
+          "heading": "Two-Stage vs Single-Stage Detection",
           "left": {
             "title": "Two-Stage (Faster R-CNN)",
             "points": [
-              "1. Region proposal, 2. Classification",
-              "Daha yüksek accuracy",
-              "Daha yavaş",
-              "Küçük nesnelerde iyi"
+              "Step 1: propose regions (RPN)",
+              "Step 2: classify each region",
+              "Higher accuracy, especially for small objects",
+              "Slower: ~5 FPS"
             ]
           },
           "right": {
             "title": "Single-Stage (YOLO, SSD)",
             "points": [
-              "Grid cell başına direkt tahmin",
-              "Çok hızlı — real-time",
-              "Biraz daha düşük accuracy",
-              "Pratik uygulamalarda tercih"
+              "Directly predict all boxes and classes in one shot",
+              "Divide image into grid, predict per cell",
+              "Very fast: 30-100+ FPS real-time",
+              "Slightly lower accuracy for small objects"
             ]
           }
+        },
+        {
+          "type": "insight",
+          "heading": "YOLO: You Only Look Once",
+          "text": "Divide image into S×S grid. Each cell predicts B bounding boxes (with confidence) and C class probabilities. Predictions are all made simultaneously in one forward pass. Much faster than R-CNN family. YOLO v8/v10 (2023) achieves excellent accuracy-speed tradeoffs and is the industry standard for real-time detection."
         }
       ]
     },
     {
-      "title": "Semantic ve Instance Segmentation",
-      "cat": "Segmentation",
-      "summary": "Semantic: her pixel hangi sınıf. Instance: her nesne ayrı. Mask R-CNN ikisini birleştirir.",
-      "context": "CS231n · Lecture 9",
+      "title": "Semantic and Instance Segmentation",
+      "cat": "CS231n",
+      "summary": "Segmentation assigns labels at the pixel level. Semantic segmentation gives each pixel a class. Instance segmentation separately identifies each object instance.",
+      "context": "CS231n Lecture 9 · Stanford",
       "sections": [
         {
           "type": "compare",
           "heading": "Semantic vs Instance Segmentation",
           "left": {
-            "title": "Semantic",
+            "title": "Semantic Segmentation",
             "points": [
-              "Her pixel bir sınıf label'ı alır",
-              "İki kedi aynı label",
-              "FCN: downsampling → upsampling",
-              "U-Net: skip connections ile detay"
+              "Every pixel gets a class label",
+              "Two cats → same class label",
+              "Architecture: encoder-decoder (FCN, U-Net)",
+              "Downsampling then upsampling to recover spatial resolution"
             ]
           },
           "right": {
-            "title": "Instance",
+            "title": "Instance Segmentation",
             "points": [
-              "Her nesne ayrı mask",
-              "İki kedi farklı instance",
-              "Mask R-CNN: Faster R-CNN + mask head",
-              "Her RoI için binary mask üretir"
+              "Every object instance gets a separate mask",
+              "Two cats → two different instance masks",
+              "Architecture: Mask R-CNN (Faster R-CNN + mask head)",
+              "Each RoI produces a binary segmentation mask"
             ]
           }
         },
         {
           "type": "text",
-          "heading": "Upsampling / Decoder",
-          "text": "Encoder (conv+pool) spatial boyutu küçültür. Decoder tekrar büyütmek gerekiyor — pixel-level çıktı için.\nYöntemler: bilinear interpolation (öğrenilmiyor), transposed conv (öğreniliyor), unpooling.\nU-Net: encoder feature'larını skip connection ile decoder'a veriyor — ince detayları korur."
+          "heading": "Fully Convolutional Network (FCN)",
+          "text": "FCN replaces FC layers with 1x1 conv layers, making the network fully convolutional and input-size agnostic. Output: spatial map of class predictions. Upsampling via transposed convolutions (learnable upsampling) or bilinear interpolation. Skip connections from earlier layers add fine-grained detail."
+        },
+        {
+          "type": "text",
+          "heading": "U-Net",
+          "text": "U-Net (2015): symmetric encoder-decoder with skip connections at each scale. Encoder downsamples (max pool), decoder upsamples (transposed conv). Skip connections concatenate encoder features to decoder — recovers spatial detail lost during downsampling. Originally designed for medical image segmentation, now widely used."
+        },
+        {
+          "type": "insight",
+          "heading": "Mask R-CNN",
+          "text": "Mask R-CNN = Faster R-CNN + a parallel mask prediction branch. For each detected region, in addition to class label and bounding box, also predict a binary mask. Uses RoIAlign (improved RoI Pooling with bilinear interpolation) for better spatial alignment. Can do detection + instance segmentation in one forward pass."
         }
       ]
     },
     {
-      "title": "RNN vs CNN vs Self-Attention Karşılaştırması",
-      "cat": "Architecture",
-      "summary": "Sequence işlemede üç yaklaşım. Her birinin parallelizm, receptive field ve bellek tradeoff'ları farklı.",
-      "context": "CS231n · Lecture 9",
+      "title": "Architecture Comparison: RNN vs CNN vs Attention",
+      "cat": "CS231n",
+      "summary": "Three architectural paradigms for sequence and spatial processing. Each has different parallelism, receptive field, and memory tradeoffs.",
+      "context": "CS231n Lecture 9 · Stanford",
       "sections": [
         {
           "type": "table",
-          "heading": "Karşılaştırma",
+          "heading": "Comparison Table",
           "rows": [
             [
-              "",
-              "RNN",
+              "Property",
+              "RNN / LSTM",
               "CNN",
               "Self-Attention"
             ],
             [
-              "Parallelizm",
-              "Yok (sıralı)",
-              "Var",
-              "Var"
+              "Parallelism",
+              "Sequential only",
+              "Fully parallel",
+              "Fully parallel"
             ],
             [
-              "Uzak bağımlılık",
-              "Zayıf (O(n))",
-              "Sınırlı (receptive field)",
-              "Güçlü (O(1))"
+              "Long-range dependencies",
+              "Weak (gradient vanishing)",
+              "Limited by receptive field",
+              "Strong: O(1) path length"
             ],
             [
-              "Bellek",
+              "Memory cost",
               "O(n)",
               "O(n)",
-              "O(n²)"
+              "O(n^2) for attention matrix"
             ],
             [
-              "İnductive bias",
-              "Sıra",
-              "Locality",
-              "Yok"
+              "Inductive bias",
+              "Temporal order",
+              "Locality, translation equivariance",
+              "None (must learn from data)"
             ],
             [
-              "Kullanım",
-              "Artık az",
-              "Görüntü",
-              "NLP, Vision"
+              "Best for",
+              "Streaming, real-time",
+              "Images, local features",
+              "NLP, large-scale vision"
+            ],
+            [
+              "Status (2025)",
+              "Largely replaced",
+              "Still used for efficiency",
+              "Dominant in NLP, growing in vision"
             ]
           ]
+        },
+        {
+          "type": "insight",
+          "heading": "The Big Picture",
+          "text": "The evolution of deep learning architectures: 1998-2012: CNNs dominated vision. 2012-2017: Very deep CNNs (VGG, ResNet, DenseNet). 2017: Transformers for NLP ('Attention is All You Need'). 2020: GPT-3 showed Transformers scale. 2021: ViT brought Transformers to vision. 2022-2025: Foundation models (CLIP, SAM, GPT-4V) unify modalities. The inductive biases of CNNs are useful for small data; Transformers excel at large scale."
+        }
+      ]
+    },
+    {
+      "title": "Network Visualization and Interpretation",
+      "cat": "CS231n",
+      "summary": "Visualization techniques help understand what deep networks learn. Gradient-based methods, activation maximization, and t-SNE reveal learned representations.",
+      "context": "CS231n Lecture 9 · Stanford",
+      "sections": [
+        {
+          "type": "list",
+          "heading": "Visualization Techniques",
+          "items": [
+            "Nearest Neighbor in feature space: embed all images, find neighbors in learned feature space — reveals if network learned semantic similarity",
+            "Dimensionality reduction (t-SNE): visualize high-dimensional features in 2D; semantically similar images cluster together",
+            "Activation maximization: find input image that maximizes activation of a specific neuron — reveals what pattern the neuron detects",
+            "GradCAM: compute gradient of class score w.r.t. feature map activations, create class activation map highlighting important regions",
+            "Saliency maps: gradient of class score w.r.t. input pixels — shows which pixels most affect the prediction"
+          ]
+        },
+        {
+          "type": "insight",
+          "heading": "What Networks Learn",
+          "text": "Layer 1: edges, simple textures (similar to V1 in visual cortex). Layer 2: oriented gratings, blobs, simple shapes. Layer 3: corners, simple object parts. Layer 4: object parts (eyes, wheels, faces). Layer 5: complete objects. The hierarchical feature learning mirrors the hierarchical structure of the visual cortex — a remarkable finding that validates the CNN architecture."
         }
       ]
     }
   ],
   "cs09": [
     {
-      "title": "Lecture 10 — Video Understanding",
-      "cat": "Overview",
-      "summary": "2D CNN'i temporal boyuta genişlet. 3D conv, optical flow, two-stream network.",
+      "title": "Video as Data — Representation & Scale Problem",
+      "cat": "Video Understanding",
+      "summary": "Video = 4D tensor T×3×H×W. Temporal dimension eklenince veri boyutu patlıyor: SD=1.5GB/min, HD=10GB/min. Çözüm: kısa clip'lerde train et.",
+      "context": "CS231n · Lecture 10",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Video Representation",
+          "text": "Tek bir video T×3×H×W tensörüdür: T kare, her kare 3 kanallı (RGB). Örneğin 1 saniyelik 30fps HD video = 30×3×1920×1080 ≈ 178M değer. Bu yüzden video ML'in en zor veri tiplerinden biri: hem spatial (H×W) hem temporal (T) bilgi taşır."
+        },
+        {
+          "type": "list",
+          "heading": "Scale Problem",
+          "items": [
+            "SD video (~480p): ~1.5 GB/dakika",
+            "HD video (~1080p): ~10 GB/dakika",
+            "Sports-1M dataset: 1.1M YouTube video, 487 spor kategorisi",
+            "Çözüm: kısa clip'lerde train et — T=16 kare, H=W=112px",
+            "Test zamanı: birden fazla clip sample et, prediction'ları ortala"
+          ]
+        },
+        {
+          "type": "insight",
+          "heading": "Neden Video Zor?",
+          "text": "Image classification'da 2D spatial pattern yeterli. Video'da EK olarak temporal pattern gerekir: hareket yönü, hız, sıra. 'Dalış' eylemi sadece görünüşe bakarak değil, hareket akışına bakarak anlaşılır. Bu yüzden 2D CNN'leri doğrudan video'ya uygulamak yetersiz kalır."
+        }
+      ]
+    },
+    {
+      "title": "Temporal Fusion Strategies — Single-Frame, Early, Late, 3D",
+      "cat": "Video Understanding",
+      "summary": "Temporal bilgiyi nasıl işleyeceğiz? 4 strateji: Single-Frame (baseline), Late Fusion, Early Fusion, 3D CNN. Temel fark: temporal shift-invariance.",
+      "context": "CS231n · Lecture 10",
+      "sections": [
+        {
+          "type": "compare",
+          "heading": "Early vs Late Fusion",
+          "left": {
+            "title": "Early Fusion",
+            "points": [
+              "T frame'i birleştir: 3T×H×W input",
+              "İlk conv tüm temporal bilgiyi aynı anda işler",
+              "Temporal shift-invariance YOK",
+              "Filter tüm T'yi kapsıyor, kaydıramıyoruz",
+              "Sports-1M Top-5: 76.8%"
+            ]
+          },
+          "right": {
+            "title": "Late Fusion",
+            "points": [
+              "Her kareye ayrı 2D CNN uygula",
+              "Son katmanda pool/FC ile birleştir",
+              "Spatial features iyi, temporal zayıf",
+              "Hareket bilgisi ancak en sonda fuse ediliyor",
+              "Sports-1M Top-5: 78.7%"
+            ]
+          }
+        },
+        {
+          "type": "list",
+          "heading": "Single-Frame CNN (Güçlü Baseline)",
+          "items": [
+            "Her kareye bağımsız 2D CNN uygula",
+            "Test zamanı tüm karelerin tahminlerini ortala",
+            "Sports-1M Top-5 Accuracy: 77.7%",
+            "Şaşırtıcı derecede iyi — çünkü birçok eylem statik görünüşten anlaşılıyor",
+            "Temporal pattern bilgisini hiç kullanmıyor"
+          ]
+        },
+        {
+          "type": "text",
+          "heading": "3D CNN — Doğru Yaklaşım",
+          "text": "3D conv hem spatial hem temporal boyutta filtre uygular. Filter boyutu örneğin 3×3×3 (T×H×W) — bu filter zamansal eksende de kayar. Bu sayede TEMPORAL SHIFT-INVARIANCE sağlanır: aynı hareket videonun farklı zamanlarında gerçekleşse de algılanır. Early Fusion'da filter tüm T'yi kapsadığı için kayamaz; 3D CNN'de küçük T kernel'i (3) olduğu için kayar."
+        },
+        {
+          "type": "table",
+          "heading": "Sports-1M Top-5 Accuracy Karşılaştırma",
+          "rows": [
+            [
+              "Yöntem",
+              "Top-5 Accuracy"
+            ],
+            [
+              "Early Fusion",
+              "76.8%"
+            ],
+            [
+              "Single-Frame CNN",
+              "77.7%"
+            ],
+            [
+              "Late Fusion",
+              "78.7%"
+            ],
+            [
+              "3D CNN (slow fusion)",
+              "80.2%"
+            ],
+            [
+              "C3D",
+              "84.4%"
+            ]
+          ]
+        },
+        {
+          "type": "note",
+          "heading": "Temporal Shift-Invariance Neden Önemli?",
+          "text": "Early Fusion: 3T×H×W input → ilk conv kernel boyutu 3T×K_h×K_w. Bu kernel tüm temporal boyutu kaplıyor, temporal yönde kaydıramıyoruz. 3D CNN: 3×K_h×K_w kernel → temporal yönde stride=1 ile kayıyor. Bu sayede 'zaman içinde kaydırılmış' aynı hareketi tanıyabiliyor."
+        }
+      ]
+    },
+    {
+      "title": "C3D — The VGG of 3D CNNs",
+      "cat": "Video Understanding",
+      "summary": "C3D: VGG'nin 3D video versiyonu. Tüm 3×3×3 conv, 2×2×2 pooling. Sports-1M pretrain ile güçlü feature extractor. Problem: 39.5 GFLOP (VGG'nin 2.9 katı).",
+      "context": "CS231n · Lecture 10",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "C3D Architecture",
+          "text": "Tran et al. (ICCV 2015). Input: 3×16×112×112. Tüm conv katmanları 3×3×3, tüm pooling 2×2×2 (Pool1 hariç: 1×2×2 — temporal boyutu korumak için). Bu sayede 16 kare boyunca derinlemesine temporal feature öğreniyor. Architecture: Conv1(64) → Pool1(1×2×2) → Conv2(128) → Pool2 → Conv3a/3b(256) → Pool3 → Conv4a/4b(512) → Pool4 → Conv5a/5b(512) → Pool5(512×1×3×3) → FC6(4096) → FC7(4096) → FC8(C)"
+        },
+        {
+          "type": "compare",
+          "heading": "Computational Cost",
+          "left": {
+            "title": "C3D vs Klasik",
+            "points": [
+              "AlexNet: 0.7 GFLOP",
+              "VGG-16: 13.6 GFLOP",
+              "C3D: 39.5 GFLOP (2.9× VGG!)",
+              "3×3×3 conv çok pahalı",
+              "3D conv = 3× daha fazla işlem"
+            ]
+          },
+          "right": {
+            "title": "Güçlü Yanları",
+            "points": [
+              "Sports-1M'de pretrain",
+              "Feature extractor olarak kullanıldı",
+              "Pool1=1×2×2: temporal koruma",
+              "16 kare: ~0.5-1 saniyelik clip",
+              "Uniform 3×3×3: basit, tutarlı"
+            ]
+          }
+        },
+        {
+          "type": "note",
+          "heading": "Neden Pool1=1×2×2?",
+          "text": "Conv1'den sonra temporal boyutu hemen küçültmek doğru değil — henüz temporal feature öğrenilmedi. 1×2×2: sadece spatial downsampling, temporal 16'da kalıyor. Conv2'den sonra Pool2=2×2×2: artık temporal feature öğrenildi, temporal da küçültebiliriz."
+        }
+      ]
+    },
+    {
+      "title": "Optical Flow & Two-Stream Networks",
+      "cat": "Video Understanding",
+      "summary": "Hareket bilgisini optik akışla temsil et. İki stream: appearance (RGB) + motion (optical flow stack). UCF-101'de birleşik iki-akış: %88 accuracy.",
+      "context": "CS231n · Lecture 10",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Optical Flow Nedir?",
+          "text": "Optical flow, iki ardışık kare arasındaki piksel yer değiştirme alanıdır. F(x,y) = (dx, dy): pixel (x,y) bir sonraki karede (x+dx, y+dy) konumuna gidiyor. Formalizm: It+1(x+dx, y+dy) = It(x, y). Output: iki kanal — yatay akış dx ve dikey akış dy. Hareket eden bölgeler yüksek magnitude flow gösterir, sabit zemin ≈ 0."
+        },
+        {
+          "type": "text",
+          "heading": "Two-Stream Network Mimarisi",
+          "text": "Simonyan & Zisserman (NeurIPS 2014). İki paralel stream:\n1. Spatial stream: tek RGB kare (3×H×W) → appearance öğrenir\n2. Temporal stream: T kare arasındaki optical flow stack → [2×(T-1)]×H×W → motion öğrenir\n\nHer iki stream de aynı CNN mimarisini paylaşır (AlexNet benzeri: 7×7×96 conv stride 2, ...). Çıkışta class score fusion (ortalama veya SVM)."
+        },
+        {
+          "type": "table",
+          "heading": "UCF-101 Accuracy (Two-Stream Analizi)",
+          "rows": [
+            [
+              "Yöntem",
+              "UCF-101 Accuracy"
+            ],
+            [
+              "3D CNN (baseline)",
+              "65.4%"
+            ],
+            [
+              "Spatial stream only",
+              "73.0%"
+            ],
+            [
+              "Temporal stream only",
+              "83.7%"
+            ],
+            [
+              "Two-stream (fuse by average)",
+              "86.9%"
+            ],
+            [
+              "Two-stream (fuse by SVM)",
+              "88.0%"
+            ]
+          ]
+        },
+        {
+          "type": "insight",
+          "heading": "Önemli Bulgular",
+          "text": "Temporal stream tek başına (%83.7) spatial stream'den (%73) daha iyi! Hareket bilgisi eylem tanıma için appearance'tan daha önemli. Johansson'ın biyolojik hareket deneyi de bunu gösteriyor: vücuda takılmış sadece birkaç noktanın hareketiyle insan hareketini kolayca tanıyabiliyoruz — görüntü olmadan. İki stream birleşince (%88) sinerjik etki: farklı bilgi kaynakları tamamlayıcı."
+        }
+      ]
+    },
+    {
+      "title": "Long-Term Temporal Structure — CNN+LSTM & Recurrent CNN",
+      "cat": "Video Understanding",
+      "summary": "3D CNN ve Two-Stream sadece ~5 saniyelik yerel hareketi görüyor. Uzun vadeli yapı için: CNN per-clip feature extraction + LSTM temporal integration.",
+      "context": "CS231n · Lecture 10",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Problem: Local vs Global Temporal Structure",
+          "text": "CNN (2D veya 3D) sabit bir pencere içindeki lokal hareketi öğrenir. 'Birinci olay' ile 'ikinci olay' arasındaki ilişkiyi göremez. Çözüm: CNN'i feature extractor olarak kullan, uzun temporal yapıyı RNN ile öğren. CNN: her clip için feature vektörü üretir. LSTM: bu vektör dizisini işler, uzun vadeli bağımlılıkları öğrenir."
+        },
+        {
+          "type": "list",
+          "heading": "CNN+LSTM Pattern'leri",
+          "items": [
+            "Many-to-one: tek sınıf çıkışı videonun sonunda (action recognition)",
+            "Many-to-many: her kare için çıkış (dense video captioning, temporal segmentation)",
+            "Pratik not: bellek tasarrufu için CNN'e backprop etmeyip frozen feature extractor olarak kullanılır",
+            "Problem: RNN'ler uzun diziler için paralelleştirilemez → yavaş training",
+            "Kinetics-400'de CNN+LSTM: 63.3% (sadece per-frame CNN: 62.2% — marginal iyileşme)"
+          ]
+        },
+        {
+          "type": "text",
+          "heading": "Recurrent CNN (ConvRNN)",
+          "text": "Vanilla RNN: h_{t+1} = tanh(W_h·h_t + W_x·x_t) — matris çarpımı kullanıyor.\nRecurrent CNN: tüm matris çarpımlarını 2D conv ile değiştir!\nh_{t+1} = tanh(Conv(W_h, h_t) + Conv(W_x, x_t))\n\nFarklı katmanlar için farklı ağırlık, zaman boyunca paylaşılan ağırlık. Feature map C×H×W şeklinde kalır — scalar değil spatial yapı korunuyor. CNN: finite temporal extent (convolutional). RNN: infinite temporal extent (fully-connected). Recurrent CNN: infinite temporal extent ama convolutional — ikisinin avantajı."
+        },
+        {
+          "type": "compare",
+          "heading": "Temporal Kapsam Karşılaştırma",
+          "left": {
+            "title": "CNN",
+            "points": [
+              "Finite temporal extent",
+              "Convolutional (shift-invariant)",
+              "Parallelizable",
+              "Sadece yerel bağımlılık",
+              "3D CNN: ~16 kare"
+            ]
+          },
+          "right": {
+            "title": "Recurrent CNN",
+            "points": [
+              "Infinite temporal extent",
+              "Convolutional (spatial)",
+              "Sıralı (zaman ekseni)",
+              "Global bağımlılık",
+              "Spatial structure korunuyor"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "title": "Spatio-Temporal Self-Attention — Nonlocal Block",
+      "cat": "Video Understanding",
+      "summary": "3D CNN içine self-attention ekleme. Nonlocal Block: T×H×W'daki her konum her diğer konuma attend edebilir. Uzun mesafeli spatio-temporal bağımlılık.",
+      "context": "CS231n · Lecture 10",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Motivation",
+          "text": "3D CNN lokal komşulukta çalışır (3×3×3 kernel). Uzak zamandaki veya uzak uzaydaki ilgili bölgeler derinlikle cascade edilmeden bağlanamaz. Self-attention ile her konum, tüm diğer konumlara direkt attend edebilir — receptive field problemi yok."
+        },
+        {
+          "type": "text",
+          "heading": "Nonlocal Block Nasıl Çalışıyor?",
+          "text": "Wang et al. (CVPR 2018). Input: 3D CNN features, shape C×T×H×W.\n\n1. 1×1×1 conv ile Q, K, V üret — her biri C'×T×H×W\n2. Q ve K'yı (THW)×C' matrislerine reshape et\n3. Attention weights = softmax(Q·K^T / sqrt(C')) → shape (THW)×(THW)\n4. Weighted sum: attention × V → C'×T×H×W\n5. 1×1×1 conv ile C'→C map et\n6. Residual connection ile toplam: output = input + computed\n\nAttention matrix (THW)×(THW): her spatio-temporal konumdan diğerine attention. Tamamen fully-connected in spatio-temporal domain."
+        },
+        {
+          "type": "insight",
+          "heading": "Nonlocal Block vs Self-Attention",
+          "text": "Nonlocal Block esasen video'ya uyarlanmış self-attention. Fark: feature map C×T×H×W'dir, 1D dizi değil. 1×1×1 conv, standard self-attention'daki linear projection'a karşılık geliyor (matris çarpımı yerine her pozisyonda aynı linear transform). Mevcut 3D CNN'lere eklenti olarak plug-in edilebilir."
+        }
+      ]
+    },
+    {
+      "title": "I3D — Inflating 2D Networks to 3D",
+      "cat": "Video Understanding",
+      "summary": "ImageNet için optimize edilmiş 2D mimarileri 3D'ye 'şişir'. Her K_h×K_w katmanı K_t×K_h×K_w yapılır. 2D ağırlıkları başlangıç noktası olarak kullanılabilir.",
+      "context": "CS231n · Lecture 10",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Inflation Fikri",
+          "text": "Carreira & Zisserman (CVPR 2017). 2D CNN için onlarca yıl mimari araştırma yapılmış (AlexNet, VGG, Inception, ResNet...). Bunları sıfırdan 3D tasarlamak yerine var olan 2D mimariden faydalanalım.\n\nYöntem: Her K_h×K_w conv/pool katmanını K_t×K_h×K_w versiyonuyla değiştir. Kullanılan 3D Inception bloğu: 5×5×5, 3×3×3, 1×1×1 conv; 3×3×3 MaxPool."
+        },
+        {
+          "type": "text",
+          "heading": "Weight Inflation Trick",
+          "text": "2D ağırlıkları 3D ağı initialize etmek için kullanabiliyoruz. Trick: 2D kernel (C_in × K_h × K_w) → 3D kernel (C_in × K_t × K_h × K_w) yapmak için K_t kez kopyala ve K_t'ye böl.\n\nNeden işe yarıyor? Sabit video (her kare aynı) durumunda 3D conv'un 2D conv ile aynı sonucu vermesini sağlıyor: K_t kopya × 1/K_t = orijinal değer. Bu sayede ImageNet pretrain'i video'ya transfer edebiliyoruz!"
+        },
+        {
+          "type": "table",
+          "heading": "Kinetics-400 Top-1 Accuracy (I3D Paper)",
+          "rows": [
+            [
+              "Yöntem",
+              "Scratch",
+              "ImageNet Pretrain"
+            ],
+            [
+              "Per-frame CNN",
+              "57.9%",
+              "62.2%"
+            ],
+            [
+              "CNN + LSTM",
+              "53.9%",
+              "63.3%"
+            ],
+            [
+              "Two-stream CNN",
+              "62.8%",
+              "65.6%"
+            ],
+            [
+              "I3D (Inflated CNN)",
+              "68.4%",
+              "71.1%"
+            ],
+            [
+              "Two-stream Inflated I3D",
+              "71.6%",
+              "74.2%"
+            ]
+          ]
+        },
+        {
+          "type": "insight",
+          "heading": "Pretraining'in Etkisi",
+          "text": "ImageNet pretraining her yöntemde ~4-6% iyileştirme sağlıyor. Weight inflation sayesinde ImageNet'ten edinilen spatial feature'lar (edges, textures, objects) video modeline aktarılıyor. 3D conv yeni temporal kernel'ları öğrenirken 2D ağırlıklar iyi bir başlangıç noktası oluşturuyor."
+        }
+      ]
+    },
+    {
+      "title": "Vision Transformers for Video — ViViT, MViT, VideoMAE, SlowFast",
+      "cat": "Video Understanding",
+      "summary": "Transformer mimarileri video'ya uyarlandı. SlowFast, MViT, VideoMAE sırayla SOTA'yı ilerletiyor. VideoMAE V2-g: Kinetics-400'de %90 Top-1.",
       "context": "CS231n · Lecture 10",
       "sections": [
         {
           "type": "list",
-          "heading": "Kapsam",
+          "heading": "Video Transformer Yaklaşımları",
           "items": [
-            "Video: spatial + temporal boyut",
-            "3D convolution — zaman boyutunda filtre",
-            "Optical flow — hareket bilgisi",
-            "Two-stream network: RGB + optical flow",
-            "Video action recognition"
+            "ViViT (ICCV 2021): video frame'leri token'lara dönüştür, Transformer Encoder uygula. Factorized attention: önce spatial, sonra temporal attention (veya joint spatio-temporal).",
+            "MViT (ICCV 2021): pooling module ile token sayısını azalt. Pool_Q, Pool_K, Pool_V → compute-efficient multiscale vision transformer.",
+            "SlowFast (ICCV 2019): Slow pathway (az frame, yüksek çözünürlük) + Fast pathway (çok frame, düşük çözünürlük). Lateral connections. + Nonlocal blocks → 79.8%.",
+            "VideoMAE (NeurIPS 2022): video'nun %90'ını maskele. Tube masking: aynı konumlardaki tüm frame'leri maskele. Encoder sadece görünür token'ları işler → çok data-efficient.",
+            "VideoMAE V2 (CVPR 2023): dual masking, giant ViT → 90% Top-1 Kinetics-400."
+          ]
+        },
+        {
+          "type": "table",
+          "heading": "Kinetics-400 Progression (Top-1 Accuracy)",
+          "rows": [
+            [
+              "Model",
+              "Accuracy"
+            ],
+            [
+              "Per-frame CNN",
+              "62.2%"
+            ],
+            [
+              "CNN + LSTM",
+              "63.3%"
+            ],
+            [
+              "Two-Stream CNN",
+              "65.6%"
+            ],
+            [
+              "I3D",
+              "71.1%"
+            ],
+            [
+              "Inflated I3D (Two-stream)",
+              "74.2%"
+            ],
+            [
+              "SlowFast 16×8 + Nonlocal",
+              "79.8%"
+            ],
+            [
+              "MViTv2-L",
+              "86.1%"
+            ],
+            [
+              "VideoMAE V2-g",
+              "90.0%"
+            ]
+          ]
+        },
+        {
+          "type": "insight",
+          "heading": "SlowFast: Biyolojik İlham",
+          "text": "Primat görsel korteksinde iki pathway: P (parvocellular) → yavaş, detaylı, renk duyarlı; M (magnocellular) → hızlı, harekete duyarlı, düşük çözünürlük. SlowFast bunu taklit ediyor. Slow pathway: 4fps, yüksek kanal sayısı → spatial semantics. Fast pathway: 32fps, düşük kanal sayısı → temporal dynamics. İkisi lateral connections ile bilgi paylaşıyor."
+        }
+      ]
+    },
+    {
+      "title": "Temporal Action Localization & Spatio-Temporal Detection",
+      "cat": "Video Understanding",
+      "summary": "Sadece clip sınıflandırma değil: uzun video'da NEREDE ve NE ZAMAN hangi eylem yapılıyor? Temporal localization ve spatio-temporal detection.",
+      "context": "CS231n · Lecture 10",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Temporal Action Localization",
+          "text": "Problem: uzun, trimlenmeye gerek kalmamış video verildiğinde farklı eylemlerin gerçekleştiği zaman aralıklarını bul. Output: her eylem için (start_time, end_time, class_label). Faster R-CNN analogu: zaman ekseni üzerinde temporal proposal'lar üret, sonra classify et. Proposal network: hangi zaman aralıkları 'bir eylem içeriyor?' Classifier: bu aralıkta hangi eylem?"
+        },
+        {
+          "type": "text",
+          "heading": "Spatio-Temporal Detection (AVA Dataset)",
+          "text": "Daha zor problem: uzun untrimmed video'da kişileri UZAY ve ZAMAN'da lokalize et, yaptıkları eylemi classify et. AVA Dataset (Gu et al. CVPR 2018): her 1 saniyede her kişi için bounding box + eylem etiketi. Örnekler: 'clink glass → drink', 'open → close', 'grab → hug', 'look at phone → answer phone'. Object detection gibi ama temporal boyut da var."
+        },
+        {
+          "type": "list",
+          "heading": "Video Understanding Problem Hiyerarşisi",
+          "items": [
+            "Video Classification: kısa clip → tek sınıf (en basit)",
+            "Temporal Action Localization: uzun video → zaman aralıkları + sınıflar",
+            "Spatio-Temporal Detection: her frame'de her kişi + eylem (en zor)",
+            "Dense Video Captioning: her event için metin açıklama",
+            "Video Question Answering: video + soru → cevap"
           ]
         }
       ]
     },
     {
-      "title": "Video için CNN Yaklaşımları",
-      "cat": "Video",
-      "summary": "Frame-level 2D CNN, 3D CNN veya CNN + RNN. Her birinin hız/accuracy tradeoff'ları var.",
+      "title": "Audio-Visual Video Understanding",
+      "cat": "Video Understanding",
+      "summary": "Video ses içeriyor. Görsel + ses birlikte kullanılınca action recognition, audio source separation, speech recognition güçleniyor.",
       "context": "CS231n · Lecture 10",
       "sections": [
         {
+          "type": "text",
+          "heading": "McGurk Etkisi — Görselin Sesi Etkisi",
+          "text": "McGurk & McDonald (1976): kişi 'Ba Ba' sesini çıkarıyor ama 'Fa' dudak hareketiyle eşleştirilirse izleyici 'Da' veya 'Ga' duyuyor. Görsel konuşma bilgisi işitsel algıyı modüle ediyor. Sonuç: ses ve görüntü birbirinden bağımsız kanallar değil — beyin ikisini birleştiriyor. Bu motivasyonla audio-visual neural network'ler geliştirildi."
+        },
+        {
           "type": "list",
-          "heading": "Yaklaşımlar",
+          "heading": "Visually-Guided Audio Source Separation",
           "items": [
-            "Late fusion: her frame ayrı CNN → sonuçları topla. Basit ama temporal ilişki yok.",
-            "Early fusion: frame'leri channel'a stack et → 3D input. Temporal ilişki var ama zayıf.",
-            "3D Conv: kernel (T, H, W) — spatial ve temporal birlikte. Güçlü ama ağır.",
-            "CNN + LSTM: CNN feature çıkar, LSTM temporal sırayı öğrenir.",
-            "Two-stream: RGB stream + optical flow stream → birleştir."
+            "Problem: karışık ses sinyalini konuşmacıların görüntüsünü kullanarak ayır",
+            "VisualVoice (Gao et al. CVPR 2021): lip reading + audio separation",
+            "Birden fazla kişi konuşurken kimin sesi olduğunu görsel bilgiyle belirle",
+            "Müzik enstrümanları (ICCV 2019): 100K unlabeled multi-source video ile train → violin ve flüt seslerini ayır",
+            "Self-supervised: ses ayrımı doğruluğunu ölçmek için etiket gerekmez"
           ]
         },
         {
-          "type": "insight",
-          "heading": "Optical Flow neden ayrı?",
-          "text": "RGB: nesnenin görünümü. Optical flow: hareket bilgisi — her pikselin ne kadar/nereye hareket ettiği. Hareket renk bilgisinden ayrı bir sinyal — ikisini birlikte kullanmak action recognition'da güçlü. Two-stream network bunu exploite ediyor."
+          "type": "list",
+          "heading": "Audio-Visual Video Models",
+          "items": [
+            "Attention Bottlenecks (NeurIPS 2021): video patches + audio spectrogram patches → Multimodal Bottleneck Transformer",
+            "Audio-Visual MAE (ICCV 2023): video ve ses spektrogramını birlikte maskele ve reconstruct et",
+            "Efficient video: uzun video = clip'lere böl → her clip için classifier → aggregation",
+            "MoViNets: causal conv, streaming evaluation için tasarlanmış",
+            "X3D: expanding architecture — küçükten büyüğe expand et, en verimli noktayı bul",
+            "Listen to Look (CVPR 2020): ses önce işlenir, 'önemli mi?' sorusu sorulur, önemliyse pahalı görsel işleme yapılır"
+          ]
         }
       ]
     }
   ],
   "cs10": [
     {
-      "title": "Lecture 11 — Large-Scale Distributed Training",
+      "title": "Lecture 11 — Distributed Training",
       "cat": "Overview",
-      "summary": "Büyük modelleri birden fazla GPU'da eğitmek. Data parallelism, model parallelism, gradient aggregation.",
-      "context": "CS231n · Lecture 11",
+      "summary": "Modern derin öğrenme büyük GPU cluster'larında eğitim gerektirir. Data, tensor, pipeline, context parallelism stratejileri; FSDP, HSDP, activation checkpointing ve MFU metrikleri.",
+      "context": "CS231n · Lecture 11 · May 6, 2025",
       "sections": [
         {
           "type": "list",
           "heading": "Kapsam",
           "items": [
-            "GPU hesaplama temelleri",
-            "Data parallelism — veriyi böl, modeli kopyala",
-            "Model parallelism — modeli böl",
-            "Gradient aggregation: all-reduce",
-            "Batch size scaling ve learning rate",
-            "LLM eğitimi: Llama3, GPT-4 örnekleri"
+            "GPU donanım mimarisi (H100, Tensor Cores, bellek hiyerarşisi)",
+            "Meta Llama3-405B cluster hiyerarşisi (GPU → Server → Pod → Cluster)",
+            "4 parallelism stratejisi: DP, CP, PP, TP",
+            "Data Parallelism (DP) — gradient averaging + parallel backward",
+            "FSDP (Fully Sharded Data Parallelism) — ZeRO: broadcast-compute-delete",
+            "HSDP (Hybrid Sharded DP) — 2D GPU grid, locality",
+            "Activation Checkpointing — compute-memory tradeoff (√N optimal)",
+            "Context Parallelism — uzun sekans, Ring Attention",
+            "MFU (Model FLOPs Utilization) — verimlilik metriği, >30% iyi"
           ]
+        },
+        {
+          "type": "insight",
+          "heading": "Büyük Resim",
+          "text": "Llama3-405B: 1.875 PB bellek, 24,576 GPU, 24.3 EFLOP/s. Tek GPU'da imkânsız. Distributed training bir mühendislik problemi: DP, FSDP, HSDP, CP, PP, TP kombinasyonlarından oluşan çok sayıda 'knob' var. Optimal seçim için MFU (>30% good, >40% excellent) maximize edilir."
         }
       ]
     },
     {
-      "title": "Data Parallelism vs Model Parallelism",
-      "cat": "Distributed Training",
-      "summary": "Data parallel: her GPU tam modeli tutar, farklı batch. Model parallel: model GPU'lara bölünür.",
+      "title": "GPU Hardware — H100 Deep Dive",
+      "cat": "GPU Architecture",
+      "summary": "H100 GPU mimarisi: SM, Tensor Core, bellek bant genişliği. GPU hızı 2013'ten bu yana ~1000x arttı. A100→H100: 3.1× FLOPs ama sadece 2.1× bellek BW.",
       "context": "CS231n · Lecture 11",
       "sections": [
         {
+          "type": "table",
+          "heading": "H100 Temel Özellikler",
+          "rows": [
+            [
+              "Bileşen",
+              "Değer"
+            ],
+            [
+              "Streaming Multiprocessors (SM)",
+              "132"
+            ],
+            [
+              "HBM bellek",
+              "80 GB"
+            ],
+            [
+              "Bellek bant genişliği",
+              "3352 GB/sec"
+            ],
+            [
+              "L2 cache",
+              "50 MB"
+            ],
+            [
+              "SM başına L1",
+              "256 KB"
+            ],
+            [
+              "SM başına FP32 core",
+              "128 adet (256 FLOP/cycle)"
+            ],
+            [
+              "SM başına Tensor Core",
+              "4 adet (1024 veya 4096 FLOP/cycle)"
+            ],
+            [
+              "Peak throughput (BF16)",
+              "989.4 TFLOP/sec"
+            ]
+          ]
+        },
+        {
+          "type": "text",
+          "heading": "Tensor Core Avantajı",
+          "text": "Her Tensor Core: 1024 FLOPs (int8) veya 4096 FLOP/cycle (BF16/FP16 mixed precision). FP32 core'a göre 4–16× daha verimli. Matris çarpımı (GEMM) için tasarlanmış — Transformer'ların neden bu kadar hızlı olduğunun nedeni budur. Mixed precision: ağırlıklar FP16/BF16, loss FP32."
+        },
+        {
+          "type": "table",
+          "heading": "GPU Nesil Karşılaştırması (BF16 TFLOP/s)",
+          "rows": [
+            [
+              "GPU",
+              "TFLOP/s",
+              "Yıl"
+            ],
+            [
+              "K40",
+              "~1",
+              "2013"
+            ],
+            [
+              "P100",
+              "~21",
+              "2016"
+            ],
+            [
+              "V100",
+              "~125",
+              "2017"
+            ],
+            [
+              "A100",
+              "~312",
+              "2020"
+            ],
+            [
+              "H100",
+              "989",
+              "2022"
+            ],
+            [
+              "B200",
+              "~4500",
+              "2025"
+            ]
+          ]
+        },
+        {
+          "type": "table",
+          "heading": "Competing Accelerators",
+          "rows": [
+            [
+              "Donanım",
+              "TFLOP/s (BF16)",
+              "Bellek",
+              "Not"
+            ],
+            [
+              "Google TPU v5p",
+              "459",
+              "96 GB",
+              "8960 chip/pod"
+            ],
+            [
+              "AMD MI325X",
+              "1300",
+              "256 GB",
+              "Büyük bellek"
+            ],
+            [
+              "AWS Trainium2",
+              "667",
+              "96 GB",
+              "Cloud-native"
+            ]
+          ]
+        },
+        {
+          "type": "insight",
+          "heading": "Memory Bandwidth Bottleneck",
+          "text": "A100→H100: 3.1× FLOPs artışı ama sadece 2.1× bellek bant genişliği artışı. Bu asimetri nedeniyle yeni GPU'lar bazen *daha kötü* MFU'ya sahip — compute o kadar hızlı ki bellek BW bottleneck oluyor. Çözüm: büyük matmul (10000×10000+) H100'de ~80% HFU sağlar."
+        }
+      ]
+    },
+    {
+      "title": "Llama3-405B Cluster Hiyerarşisi",
+      "cat": "Cluster Architecture",
+      "summary": "GPU → Server → Rack → Pod → Cluster hiyerarşisi. Her seviyede dramatik bant genişliği düşüşü. Toplam: 24,576 GPU, 1.875 PB bellek, 24.3 EFLOP/s.",
+      "context": "CS231n · Lecture 11",
+      "sections": [
+        {
+          "type": "table",
+          "heading": "Cluster Hiyerarşisi",
+          "rows": [
+            [
+              "Seviye",
+              "Birim",
+              "Bant Genişliği",
+              "Not"
+            ],
+            [
+              "GPU",
+              "1 GPU",
+              "3352 GB/s (HBM)",
+              "80 GB bellek"
+            ],
+            [
+              "Server",
+              "8 GPU",
+              "900 GB/s NVLink",
+              "NVSwitch ile bağlı"
+            ],
+            [
+              "Rack",
+              "16 GPU",
+              "NVLink içi",
+              "2 server"
+            ],
+            [
+              "Pod",
+              "3072 GPU",
+              "50 GB/s",
+              "RoCE ethernet ağı"
+            ],
+            [
+              "Cluster",
+              "24,576 GPU",
+              "24.3 EFLOP/s total",
+              "1.875 PB toplam bellek"
+            ]
+          ]
+        },
+        {
+          "type": "insight",
+          "heading": "Bant Genişliği Uçurumu",
+          "text": "GPU içi (HBM): 3352 GB/s. Server içi (NVLink): 900 GB/s → 3.7× daha yavaş. Pod içi (RoCE): 50 GB/s → NVLink'ten 18× daha yavaş. Bu hiyerarşi HSDP gibi stratejilerin neden kritik olduğunu açıklar: iletişim-yoğun operasyonları hızlı bağlantı içinde tut."
+        }
+      ]
+    },
+    {
+      "title": "Data Parallelism (DP)",
+      "cat": "Parallelism",
+      "summary": "MN örnekli dataset, M GPU'ya bölünür. Her GPU N örnek işler, gradyanlar AllReduce ile ortalaması alınır. Backward ve senkronizasyon paralel çalışarak iletişim gizlenir.",
+      "context": "CS231n · Lecture 11",
+      "sections": [
+        {
+          "type": "list",
+          "heading": "DP Adım Adım",
+          "items": [
+            "1. Her GPU kendi model kopyasını + optimizer durumunu (momentum, variance) tutar",
+            "2. Her GPU MN örnekten N tanesini alır (farklı partition)",
+            "3. Her GPU forward pass çalıştırır → loss hesaplar",
+            "4. Her GPU backward pass çalıştırır → local gradyanlar",
+            "5. AllReduce: tüm GPU'lar gradyanların ortalamasını alır",
+            "6. Her GPU kendi ağırlıklarını günceller (aynı gradyanla, aynı sonuç)"
+          ]
+        },
+        {
+          "type": "insight",
+          "heading": "Paralel Backward + Sync",
+          "text": "Adım 4 (backward) ve 5 (gradient sync) paralel çalışabilir! Katman 1'in gradyanı hazır olunca AllReduce'a gönderilir; bu sırada katman 2'nin backward'ı devam eder. Bu pipelining ile iletişim overhead'i gizlenir — pratikte büyük fark yaratır."
+        },
+        {
+          "type": "text",
+          "heading": "DP Bellek Sınırı",
+          "text": "Her GPU model + optimizer tam kopyasını tutar. Her ağırlık için 4 sayı: param, grad, adam_m, adam_v. FP16 → 2 byte × 4 = 8 byte/param. 1B param → 8 GB. 10B param → 80 GB → tek H100'ü tamamen doldurur. Daha büyük modeller için FSDP gerekir."
+        }
+      ]
+    },
+    {
+      "title": "FSDP — Fully Sharded Data Parallelism",
+      "cat": "Parallelism",
+      "summary": "ZeRO (Rajbhandari et al. 2019). Her ağırlık Wi tek bir GPU'a aittir. Forward: broadcast → compute → delete. Backward: re-broadcast → backward → ReduceScatter → owner update.",
+      "context": "CS231n · Lecture 11",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "FSDP Motivasyonu",
+          "text": "DP'de her GPU tam model kopyasını tutar. 100B param = 800 GB → 10× H100 belleğini aşar. FSDP: her ağırlık Wi yalnızca bir GPU'a ait (gradient ve optimizer state da o GPU'da). Diğer GPU'lar yalnızca hesaplama sırasında geçici kopyayı tutar, hemen siler. 80 GPU ile 100B model → 10 GB/GPU."
+        },
+        {
+          "type": "list",
+          "heading": "FSDP Forward Pass",
+          "items": [
+            "1. W_i sahibi GPU → tüm GPU'lara broadcast (All-Gather)",
+            "2. Tüm GPU'lar layer i forward hesaplar (her biri kendi data partition'ıyla)",
+            "3. Tüm GPU'lar local W_i kopyasını siler (belleği serbest bırak)",
+            "4. Paralel: W_{i+1} prefetch edilir (sonraki adım için hazır)",
+            "→ Tekrar layer i+1 için aynı döngü"
+          ]
+        },
+        {
+          "type": "list",
+          "heading": "FSDP Backward Pass",
+          "items": [
+            "3b. W_i sahibi → yeniden broadcast (re-All-Gather)",
+            "4b. Tüm GPU'lar backward: local dL/dW_i hesaplar, W_i kopyasını siler",
+            "5b. ReduceScatter: her GPU local dL/dW_i'yi sahibine gönderir, local kopya silinir",
+            "6b. Sahip GPU optimizer step yapar (sadece kendi W_i'sini günceller)",
+            "Optimizasyon: sonraki katmanın send/receive ile paralel çalıştır"
+          ]
+        },
+        {
+          "type": "insight",
+          "heading": "Son Katman Optimizasyonu",
+          "text": "Forward pass'in son katmanı W_L için delete etme! Hemen backward başlayacak ve yeniden broadcast gerekecek. Bu gereksiz delete→broadcast döngüsünü önler. Küçük ama ölçekte önemli optimizasyon."
+        }
+      ]
+    },
+    {
+      "title": "HSDP — Hybrid Sharded Data Parallel",
+      "cat": "Parallelism",
+      "summary": "N = M×K GPU: K'lı M grup. Her grup FSDP, gruplar arası DP. 3× iletişim gerektiren FSDP = hızlı bağlantı (NVLink); 1× iletişim gerektiren DP = yavaş bağlantı (RoCE) kullanabilir.",
+      "context": "CS231n · Lecture 11",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "2D GPU Grid",
+          "text": "N = M × K GPU: M satır, K sütun. Her satır bir FSDP grubu (K GPU). Satırlar arası Data Parallelism (M grup). Örnek: 100B param model, 4 sayı × 2 byte = 800 GB. 80 GPU'ya FSDP ile dağıt → 10 GB/GPU. Aynı anda M gruptan gradient average alınır."
+        },
+        {
           "type": "compare",
-          "heading": "Data vs Model Parallelism",
+          "heading": "İletişim Miktarı — Neden Locality Önemli?",
           "left": {
-            "title": "Data Parallelism",
+            "title": "FSDP Grubu İçi (K GPU)",
             "points": [
-              "Her GPU: tam model kopyası",
-              "Her GPU farklı mini-batch alır",
-              "Gradient'lar all-reduce ile toplanır",
-              "Basit, yaygın kullanılan yöntem",
-              "Model tek GPU'ya sığmalı"
+              "3× iletişim: W (forward All-Gather) + W (backward All-Gather) + dL/dW (ReduceScatter)",
+              "Hızlı bağlantı zorunlu: NVLink (900 GB/s)",
+              "Aynı server veya pod içinde tut"
             ]
           },
           "right": {
-            "title": "Model Parallelism",
+            "title": "DP Gruplar Arası (M grup)",
             "points": [
-              "Model katmanları GPU'lara bölünür",
-              "GPT-4 gibi dev modeller için gerekli",
-              "Pipeline parallelism: katmanlar sırayla",
-              "Tensor parallelism: katman içi bölme",
-              "Koordinasyon karmaşık"
+              "1× iletişim: sadece dL/dW gradient sync (AllReduce)",
+              "Yavaş bağlantı yeterli: RoCE (50 GB/s)",
+              "Pod sınırını geçebilir"
             ]
           }
         },
         {
+          "type": "insight",
+          "heading": "Locality Prensibi",
+          "text": "FSDP 3× iletişim → server/pod içinde NVLink'te tut. DP 1× iletişim → pod sınırı geçebilir, RoCE yeterli. Bu asimetri cluster tasarımıyla uyumlu: NVLink 18× RoCE'dan hızlı ama sadece server içinde mevcut. HSDP bu gerçeği algoritmik olarak kullanır."
+        }
+      ]
+    },
+    {
+      "title": "Activation Checkpointing",
+      "cat": "Memory Optimization",
+      "summary": "Aktivasyon belleği sorununu çöz: backward sırasında aktivasyonları yeniden hesapla. √N checkpoint seçimi O(N√N) compute, O(√N) memory ile optimal tradeoff sağlar.",
+      "context": "CS231n · Lecture 11",
+      "sections": [
+        {
           "type": "text",
-          "heading": "Batch Size ve Learning Rate",
-          "text": "Batch size k kat artınca learning rate de k kat artır (linear scaling rule). Büyük batch: daha az gradient noise, daha kararlı güncelleme — ama generalization bazen düşer. Warmup: başta küçük lr, yavaş yavaş artır."
+          "heading": "Aktivasyon Bellek Problemi",
+          "text": "Llama3-405B: 126 katman, D=16384, seq=4096. Sadece FFN hidden aktivasyonları: 2 × 126 × (4×16384) × 4096 × 2 byte = 63 GB. Dikkat aktivasyonları, residual aktivasyonları bunun üstünde. Toplam aktivasyon belleği ağırlık belleğini çoğu zaman aşar."
+        },
+        {
+          "type": "text",
+          "heading": "Layer Modeli",
+          "text": "Her katman: Forward: A_{i+1} = F_i^→(A_i). Backward: G_i = F_i^←(A_i, G_{i+1}). Backward G_i hesaplamak için A_i gerekli. Standart: tüm A_i'leri sakla → O(N) compute, O(N) memory. Fikir: saklamak yerine backward sırasında yeniden hesapla."
+        },
+        {
+          "type": "table",
+          "heading": "Strateji Karşılaştırması",
+          "rows": [
+            [
+              "Strateji",
+              "Compute",
+              "Peak Memory",
+              "Açıklama"
+            ],
+            [
+              "Standard",
+              "O(N)",
+              "O(N)",
+              "Tüm aktivasyonlar saklanır"
+            ],
+            [
+              "Full Recomputation",
+              "O(N²)",
+              "O(1)",
+              "Her adım baştan hesapla — çok yavaş!"
+            ],
+            [
+              "C checkpoint",
+              "O(N²/C)",
+              "O(C)",
+              "Her C katmanda bir sakla"
+            ],
+            [
+              "√N checkpoint",
+              "O(N√N)",
+              "O(√N)",
+              "Optimal C = √N"
+            ]
+          ]
+        },
+        {
+          "type": "text",
+          "heading": "Neden √N Optimal?",
+          "text": "C checkpoint: peak memory = O(C). Bir segment yeniden hesaplamak için O(N/C) işlem. Toplam recompute: C × O(N/C) = O(N). Compute = O(N + N²/C). Memory = O(C). Bu minimize edilir: dC/compute = 0 → C = √N. Sonuç: O(N√N) compute, O(√N) memory."
+        },
+        {
+          "type": "insight",
+          "heading": "Pratikte",
+          "text": "~33% daha fazla compute karşılığında belleği dramatik azalt. Aynı GPU'ya çok daha büyük batch (veya model) sığar. Büyük model eğitiminin vazgeçilmezi. PyTorch: torch.utils.checkpoint.checkpoint(). HSDP ile birlikte kullanılınca Scaling Recipe'nin 4. adımı."
+        }
+      ]
+    },
+    {
+      "title": "Context, Pipeline ve Tensor Parallelism",
+      "cat": "Parallelism",
+      "summary": "CP: uzun sekansları split et (Ring Attention). PP: katmanları pipeline olarak GPU'lara dağıt (micro-batch). TP: ağırlık matrisini sütun/satır boyunca böl.",
+      "context": "CS231n · Lecture 11",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Context Parallelism (CP) — Sekans Bölme",
+          "text": "Transformer seq > 16K token için bellek patlar. Fikir: sekansı birden fazla GPU'ya dağıt. Normalization + residuals: ağırlık yok, trivially parallelizable. MLP: ağırlık var ama her GPU kendi token chunk'ını işler → DP gibi gradient sync. Attention: her token tüm KV'ye ihtiyaç duyar → Ring Attention."
+        },
+        {
+          "type": "text",
+          "heading": "Ring Attention (CP'de Self-Attention)",
+          "text": "Her GPU Q[local], K[local], V[local] tutar. Ring topolojisi: her GPU K ve V'yi sağındaki GPU'ya iletir. Tüm GPU'lar halka boyunca K, V chunk'larını alıp kendi Q'larıyla dikkat hesaplar. Online softmax trick ile birden fazla chunk üzerinden numerik olarak stabil hesaplama. Flash Attention ile kombine edilir."
+        },
+        {
+          "type": "compare",
+          "heading": "PP vs TP",
+          "left": {
+            "title": "Pipeline Parallelism (PP)",
+            "points": [
+              "Katmanları GPU'lara dağıt (GPU 1: 1-4, GPU 2: 5-8...)",
+              "Sıralı işlem → bubble sorunu: birisi beklerken diğeri hesaplar",
+              "Micro-batching ile bubble azaltılır",
+              "Az iletişim: sadece aktivasyon tensörleri geçer"
+            ]
+          },
+          "right": {
+            "title": "Tensor Parallelism (TP)",
+            "points": [
+              "Ağırlık matrisini sütun/satır boyunca böl",
+              "Her matmul'da AllReduce gerekir",
+              "Çok hızlı bağlantı zorunlu (NVLink, aynı server)",
+              "PP'ye göre daha fazla iletişim ama bubble yok"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "title": "MFU — Model FLOPs Utilization",
+      "cat": "Performance Metrics",
+      "summary": "MFU: GPU peak FLOPs'unun 'faydalı model compute'a giden fraksiyonu. >30% iyi, >40% mükemmel. Distributed setup seçiminin altın standardı.",
+      "context": "CS231n · Lecture 11",
+      "sections": [
+        {
+          "type": "list",
+          "heading": "MFU Hesaplama (5 Adım)",
+          "items": [
+            "1. FLOP_theoretical = forward + backward matmul FLOPs. Backward ≈ 2× forward. Nonlinearity, norm, residuals sayılmaz (FP32 core'da koşar).",
+            "2. FLOP/sec_theoretical = cihaz peak throughput (H100 BF16: 989 TFLOP/sec)",
+            "3. t_theoretical = FLOP_theoretical / FLOP/sec_theoretical",
+            "4. t_actual = tam iteration ölç: data loading + forward + backward + optimizer step",
+            "5. MFU = t_theoretical / t_actual"
+          ]
+        },
+        {
+          "type": "table",
+          "heading": "Gerçek Dünya MFU",
+          "rows": [
+            [
+              "Model",
+              "Donanım",
+              "MFU"
+            ],
+            [
+              "GPT-3 (175B)",
+              "V100",
+              "21.3%"
+            ],
+            [
+              "Gopher (280B)",
+              "4096× TPU v3",
+              "32.5%"
+            ],
+            [
+              "Megatron-Turing (530B)",
+              "2240× A100",
+              "30.2%"
+            ],
+            [
+              "PaLM (540B)",
+              "6144× TPU v4",
+              "46.2%"
+            ],
+            [
+              "Llama3-405B (8192 GPU)",
+              "H100",
+              "43%"
+            ],
+            [
+              "Llama3-405B (16384 GPU)",
+              "H100",
+              "38–41%"
+            ]
+          ]
+        },
+        {
+          "type": "text",
+          "heading": "HFU vs MFU Farkı",
+          "text": "HFU (Hardware FLOPs Utilization) = teorik matmul kapasitesinin kaçı gerçekleşiyor. Büyük matmul (N>10000) H100'de ~80% HFU. Problem: HFU activation checkpointing'i ve data loading, optimizer gibi 'helper' compute'u saymaz. MFU daha gerçekçi — tüm overhead'i hesaba katar."
+        },
+        {
+          "type": "insight",
+          "heading": "Scaling Anomalisi",
+          "text": "Daha fazla GPU → bazen daha düşük MFU. Llama3: 8192 GPU → 43%, 16384 GPU → 38%. Neden? Daha fazla GPU → daha fazla inter-node iletişim → bottleneck. Ayrıca A100→H100: 3.1× FLOPs ama 2.1× BW → compute idle bekliyor. MFU bu sorunları görünür kılar."
         }
       ]
     }
@@ -9823,67 +11334,592 @@
     {
       "title": "Lecture 12 — Self-Supervised Learning",
       "cat": "Overview",
-      "summary": "Label olmadan representation öğrenme. Pretext task, contrastive learning, masked modeling.",
-      "context": "CS231n · Lecture 12",
+      "summary": "Label olmadan representation öğrenme. Pretext task → encoder → downstream. Contrastive learning (SimCLR, MoCo), MAE, DINO ve CPC'nin gelişim hattı.",
+      "context": "CS231n · Lecture 12 · May 8, 2025",
       "sections": [
         {
           "type": "list",
           "heading": "Kapsam",
           "items": [
-            "Self-supervised learning neden gerekli",
-            "Pretext tasks: rotation, colorization, jigsaw",
-            "Contrastive learning: SimCLR, MoCo",
-            "Masked language modeling: BERT",
-            "Masked autoencoder (MAE) — görüntüde",
-            "DINO — self-distillation"
+            "SSL framework: pretext task → representation → downstream",
+            "Evaluation: linear probing (frozen) vs fine-tuning (full update)",
+            "Pretext tasks: rotation, patch location, jigsaw, inpainting, colorization",
+            "Video colorization ile attention emergence",
+            "MAE (Masked Autoencoders, He 2021) — %75 maskeleme, asymmetric encoder/decoder",
+            "Contrastive learning formülasyonu + InfoNCE loss + MI bound",
+            "SimCLR — büyük batch, projection head, data augmentation karışımı",
+            "MoCo + MoCo V2 — momentum encoder, FIFO queue, küçük batch",
+            "CPC — sequence-level contrastive (audio, video)",
+            "DINO — self-distillation, EMA teacher, negatif örnek yok"
           ]
+        },
+        {
+          "type": "insight",
+          "heading": "Neden SSL?",
+          "text": "Labeled data pahalı. İnternette milyarlarca etiketlenmemiş görüntü var. SSL: etiketsiz veriden semantik reprezentasyon öğren → az etiketli downstream task ile ince ayar yap. Modern SSL yöntemleri (MAE, DINO) bazı supervised baseline'ları geçiyor."
         }
       ]
     },
     {
-      "title": "Contrastive Learning",
+      "title": "SSL Framework ve Pretext Tasks",
       "cat": "Self-Supervised",
-      "summary": "Aynı görüntünün iki augmentation'ı birbirine yakın, farklı görüntüler uzak olsun. SimCLR temel yaklaşım.",
+      "summary": "Pretext task: label gerektirmeyen, veriyi anlayan bir görev tasarla. Encoder bu görevi çözerken genel representation öğrenir. Sonra encoder downstream'de kullanılır.",
       "context": "CS231n · Lecture 12",
       "sections": [
         {
           "type": "text",
-          "heading": "Temel Fikir",
-          "text": "Bir görüntüye iki farklı augmentation uygula (farklı crop, renk, flip). Bunları encoder'dan geçir. Aynı görüntüden gelen iki representasyonu birbirine yaklaştır (positive pair), farklı görüntülerden gelenleri uzaklaştır (negative pair)."
+          "heading": "SSL Pipeline",
+          "text": "1. Büyük etiketlenmemiş dataset + pretext task → encoder eğit. 2. Encoder dondur (veya fine-tune et). 3. Az etiketli downstream dataset + küçük head → final model. Değerlendirme: Linear probing (frozen encoder + linear) representation kalitesini ölçer. Fine-tuning (tüm ağırlıklar) maksimum performansı gösterir."
+        },
+        {
+          "type": "table",
+          "heading": "Pretext Task'lar",
+          "rows": [
+            [
+              "Task",
+              "Referans",
+              "Açıklama"
+            ],
+            [
+              "Rotation",
+              "Gidaris 2018",
+              "0°/90°/180°/270° — 4-class sınıflandırma"
+            ],
+            [
+              "Relative Patch Location",
+              "Doersch 2015",
+              "Merkeze göre 8 pozisyon: patch nerede?"
+            ],
+            [
+              "Jigsaw Puzzles",
+              "Noroozi & Favaro 2016",
+              "3×3 patch'ler → permütasyonu tahmin et (9!=362880)"
+            ],
+            [
+              "Inpainting/Context Encoder",
+              "Pathak 2016",
+              "Maskeli bölgeyi reconstruct et"
+            ],
+            [
+              "Colorization",
+              "Zhang et al.",
+              "L kanalından ab kanallarını tahmin (LAB uzayı)"
+            ],
+            [
+              "Split-Brain Autoencoder",
+              "Zhang 2017",
+              "Kanalları ikiye böl, her parçayı diğerinden tahmin et"
+            ]
+          ]
+        },
+        {
+          "type": "insight",
+          "heading": "Pretext Task Sınırlılığı",
+          "text": "Problem: öğrenilen representation pretext task'a özgü kalır. Rotation için eğitilen encoder obje kimliğinden çok orientation öğrenir. Her yeni downstream task için yeni pretext tasarımı gerekirdi — sıkıcı ve suboptimal. Çözüm: contrastive learning ve masked modeling gibi daha genel yaklaşımlar."
+        }
+      ]
+    },
+    {
+      "title": "Video Colorization ile Attention",
+      "cat": "Self-Supervised",
+      "summary": "Vondrick et al. 2018. Referans frame'den (renkli) gelecek frame'lerin (siyah-beyaz) rengini tahmin. Attention mekanizması eğitimsiz segmentasyon ve poz aktarımı öğrenir.",
+      "context": "CS231n · Lecture 12",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Video Colorization Fikri",
+          "text": "Referans frame (renkli) + target frames (grayscale) → target renklerini tahmin et. Renkli videolar ücretsiz label sağlar: grayscale yap, orijinal renkle karşılaştır. CNN: referans frame pikselleri f_i, target pikselleri f_j embedding'lerine dönüştürür."
+        },
+        {
+          "type": "formula",
+          "heading": "Attention ile Renk Kopyalama",
+          "text": "Attention: $A_{ij} = \\frac{\\exp(f_i^T f_j)}{\\sum_k \\exp(f_k^T f_j)}$\n\nTahmin edilen renk: $\\hat{y}_j = \\sum_i A_{ij} c_i$\n\nLoss: $\\min_\\theta \\sum_j L(\\hat{y}_j, c_j)$\n\nTarget pikseli j, referans frame'den en benzer pikseli referans alarak renk kopyalar."
+        },
+        {
+          "type": "insight",
+          "heading": "Emergent Property",
+          "text": "Sadece renk tahmini öğretiliyor ama attention'ın ne öğrendiğine bakılınca: referans frame'deki bir nesneye (örn. tenis topu) attention uygulanınca tam olarak aynı nesneyi target frame'de buluyor — segmentasyon maskesi üretiliyor! Poz keypoint'leri de aynı şekilde aktarılıyor. İnsan poz etiketleri olmadan pose tracking."
+        }
+      ]
+    },
+    {
+      "title": "MAE — Masked Autoencoders",
+      "cat": "Self-Supervised",
+      "summary": "He et al. 2021. Görüntünün %75'ini maskele, kalan %25 ile encoder çalıştır, hafif decoder maskeli pikselleri reconstruct eder. Asimetrik tasarım: büyük encoder, küçük decoder.",
+      "context": "CS231n · Lecture 12",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "MAE Mimarisi",
+          "text": "1. Görüntüyü patch'lere böl (16×16). 2. %75 rastgele maskele (yüksek oran = zorlayıcı = anlamlı görev). 3. Encoder: sadece %25 maskelenmemiş patch'ler → büyük ViT blokları. 4. Decoder: encoder çıktıları + shared mask token'ları (positional encoding ile) → küçük ViT blokları → linear projection → piksel değerleri. 5. Loss: MSE sadece maskeli patch'ler üzerinde."
+        },
+        {
+          "type": "compare",
+          "heading": "Asimetrik Tasarım",
+          "left": {
+            "title": "Encoder (Büyük)",
+            "points": [
+              "Sadece %25 unmasked patch alır",
+              "Büyük ViT blokları (full kapasiteli)",
+              "9× compute per token vs decoder",
+              "Downstream task'ta kullanılan kısım",
+              "Eğitim sonrası DECODER ATILIR"
+            ]
+          },
+          "right": {
+            "title": "Decoder (Küçük)",
+            "points": [
+              "Encoder çıktıları + mask token'lar",
+              "Hafif ViT blokları",
+              "Piksel-level reconstruct",
+              "Eğitim sonrası kullanılmaz",
+              "Encoder'ın işini daha kolay yapar"
+            ]
+          }
+        },
+        {
+          "type": "table",
+          "heading": "MAE Ablation: Maskeleme Oranı",
+          "rows": [
+            [
+              "Maskeleme",
+              "Fine-tuning",
+              "Linear Probing"
+            ],
+            [
+              "25%",
+              "~82%",
+              "~55%"
+            ],
+            [
+              "50%",
+              "~83%",
+              "~65%"
+            ],
+            [
+              "75% (optimal)",
+              "84.9%",
+              "73.5%"
+            ],
+            [
+              "90%",
+              "~83%",
+              "~68%"
+            ]
+          ]
+        },
+        {
+          "type": "table",
+          "heading": "SSL Yöntem Karşılaştırması (ViT-B ImageNet)",
+          "rows": [
+            [
+              "Yöntem",
+              "Fine-tuning",
+              "Linear Probe"
+            ],
+            [
+              "DINO",
+              "82.8%",
+              "-"
+            ],
+            [
+              "MoCo v3",
+              "83.2%",
+              "76.7%"
+            ],
+            [
+              "BEiT",
+              "83.2%",
+              "-"
+            ],
+            [
+              "MAE (ViT-B)",
+              "83.6%",
+              "73.5%"
+            ],
+            [
+              "MAE (ViT-H/448)",
+              "87.8%",
+              "-"
+            ]
+          ]
+        },
+        {
+          "type": "insight",
+          "heading": "Linear Probing vs Fine-Tuning",
+          "text": "MAE'nin linear probing skoru (73.5%) contrastive metodlardan (MoCo v3: 76.7%) düşük. Ama fine-tuning'de eşit veya daha iyi. Neden? MAE representation daha az 'linearly separable' ama daha zengin — fine-tuning ile tam potansiyel açığa çıkıyor. Contrastive: z invariant space olduğundan h daha ayırt edici."
+        }
+      ]
+    },
+    {
+      "title": "InfoNCE Loss ve Contrastive Framework",
+      "cat": "Self-Supervised",
+      "summary": "Contrastive learning genel formülasyonu. InfoNCE loss: N-way classification olarak positive'i bul. Mutual information lower bound: büyük N → tighter MI bound.",
+      "context": "CS231n · Lecture 12",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Genel Formülasyon",
+          "text": "x = referans, x+ = positive (aynı nesne, farklı augmentation), x- = negative (farklı nesne). Amaç: f(x) representation, x+'a yakın ve x-'lardan uzak. Score function s(·,·) ile benzerlik ölçülür."
+        },
+        {
+          "type": "formula",
+          "heading": "InfoNCE Loss (van den Oord et al. 2018)",
+          "text": "$$L = -\\mathbb{E}_X \\left[ \\log \\frac{\\exp(s(f(x), f(x^+)))}{\\exp(s(f(x), f(x^+))) + \\sum_{j=1}^{N-1} \\exp(s(f(x), f(x_j^-)))} \\right]$$\n\nN-way softmax: 1 positive + (N-1) negative arasından positive'i bul.\nCross-entropy ile eşdeğer: label = positive class."
+        },
+        {
+          "type": "formula",
+          "heading": "Mutual Information Bağlantısı",
+          "text": "$$MI[f(x), f(x^+)] - \\log(N) \\geq -L$$\n\nInfoNCE loss, mutual information'ın lower bound'u. Daha büyük N (daha fazla negative) → daha tight MI bound. Bu yüzden büyük batch size contrastive learning'de kritik."
+        },
+        {
+          "type": "insight",
+          "heading": "Neden Büyük N Önemli?",
+          "text": "MI bound: MI[f(x), f(x+)] - log(N) ≥ -L. Daha büyük N → log(N) azalır → bound daha tight → model f(x) ve f(x+) arasındaki bilgiyi daha iyi yakalamak zorunda. Pratik: SimCLR batch 8192 gerektirir. MoCo bunu queue ile çözer: büyük N ama küçük batch."
+        }
+      ]
+    },
+    {
+      "title": "SimCLR — Simple Contrastive Learning",
+      "cat": "Self-Supervised",
+      "summary": "Chen et al. 2020. Encoder f → representation h → projection g → contrastive space z. 2N örneklik mini-batch, 2N×2N affinity matrisi. Büyük batch (8192), güçlü augmentation, non-linear projection head.",
+      "context": "CS231n · Lecture 12",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Mimari",
+          "text": "Encoder f(·): görüntü → representation h (downstream'de kullanılan). Projection head g(·): h → z (contrastive loss için, eğitim sonrası atılır). Score: cosine similarity s_{i,j} = z_i^T z_j / (||z_i|| ||z_j||). Mini-batch z ∈ ℝ^{2N×D}: element 2k ve 2k+1 positive pair."
         },
         {
           "type": "list",
-          "heading": "SimCLR Adımları",
+          "heading": "Data Augmentation Karışımı (Her Görüntüye)",
           "items": [
-            "1. Görüntüye iki random augmentation → x_i, x_j",
-            "2. Encoder f(·): her ikisini feature'a dönüştür → h_i, h_j",
-            "3. Projection head g(·): küçük MLP → z_i, z_j",
-            "4. NT-Xent loss: positive pair benzer, negative pair uzak",
-            "5. Downstream task için encoder f(·) kullanılır, g atılır"
+            "Random crop + resize (en önemli!)",
+            "Random horizontal flip",
+            "Color distortion: color jitter + color drop (grayscale)",
+            "Random rotation",
+            "Cutout (random region blackout)",
+            "Gaussian noise / Gaussian blur",
+            "Sobel filtering"
+          ]
+        },
+        {
+          "type": "formula",
+          "heading": "SimCLR Loss",
+          "text": "Per-pair loss (i, j):\n$$\\ell(i,j) = -\\log \\frac{\\exp(s_{i,j}/\\tau)}{\\sum_{k=1}^{2N} \\mathbb{1}[k \\neq i] \\exp(s_{i,k}/\\tau)}$$\n\nToplam loss:\n$$L = \\frac{1}{2N} \\sum_{k=1}^{N} [\\ell(2k-1, 2k) + \\ell(2k, 2k-1)]$$\n\nHer örnekteki tüm non-positive örnekler negatif olarak kullanılır."
+        },
+        {
+          "type": "table",
+          "heading": "SimCLR Sonuçları (ImageNet Linear Probe)",
+          "rows": [
+            [
+              "Model",
+              "Parametre",
+              "Top-1 Accuracy"
+            ],
+            [
+              "SimCLR (1x ResNet)",
+              "~24M",
+              "~70%"
+            ],
+            [
+              "SimCLR (2x ResNet)",
+              "~94M",
+              "~74%"
+            ],
+            [
+              "SimCLR (4x ResNet)",
+              "~375M",
+              "~76%"
+            ],
+            [
+              "Semi-supervised 1% labels (4x)",
+              "-",
+              "85.8% top-5"
+            ],
+            [
+              "Semi-supervised 10% labels (4x)",
+              "-",
+              "92.6% top-5"
+            ],
+            [
+              "Supervised baseline (1%)",
+              "ResNet-50",
+              "48.4% top-5"
+            ]
           ]
         },
         {
           "type": "insight",
-          "heading": "Neden contrastive işe yarıyor?",
-          "text": "Model görüntünün 'özünü' öğrenmek zorunda — augmentation'a rağmen aynı görüntüyü tanımlayan özellik ne? Bu zorlama, label olmadan anlamlı representation öğretiyor. Yeterince büyük negative batch önemli — aksi halde model kolay çıkış yolu buluyor."
+          "heading": "Projection Head Neden Yardımcı?",
+          "text": "Contrastive z space transformation invariant olacak şekilde eğitiliyor (crop, color değişimlerine rağmen aynı z). Bu h'dan bilgi sıkıştırıyor. Projection head g sayesinde encoder h, daha fazla bilgiyi koruyabilir — g görevi 'üstleniyor'. Non-linear > linear > none (tüm projection output boyutlarında)."
         }
       ]
     },
     {
-      "title": "Masked Autoencoder (MAE)",
+      "title": "MoCo — Momentum Contrastive Learning",
       "cat": "Self-Supervised",
-      "summary": "Görüntünün %75'ini maskele, kalanından tamamla. ViT encoder yoğun patch'lere bakıyor, hafif decoder tamamlıyor.",
+      "summary": "He et al. 2020. Query encoder + momentum encoder. FIFO queue: çok sayıda negative örnek, batch size'dan bağımsız. θ_k ← mθ_k + (1-m)θ_q. MoCo v2: SimCLR fikirlerini dahil et.",
       "context": "CS231n · Lecture 12",
       "sections": [
         {
           "type": "text",
-          "heading": "Yaklaşım",
-          "text": "Görüntüyü patch'lere böl. Rastgele %75'ini maskele. Encoder sadece maskelenmemiş patch'lere bakıyor — çok verimli. Hafif decoder maskelenen patch'leri tahmin ediyor. Pretext task: piksel değerlerini reconstruct et."
+          "heading": "SimCLR'ın Problemi",
+          "text": "SimCLR büyük batch (8192) gerektiriyor çünkü her batch'te 2N-2 negative örnek var. Büyük batch = büyük bellek = TPU gerekiyor. 4096 batch → 93 GB bellek, 8× V100 (16G) ile imkânsız. MoCo çözümü: negative örnekleri batch'ten değil, ayrı bir queue'dan al."
+        },
+        {
+          "type": "text",
+          "heading": "MoCo Mimarisi",
+          "text": "f_q (query encoder): gradient akıyor, SGD ile güncellenir. f_k (momentum encoder): no_grad, gradyan akımaz. FIFO queue: K tane key (negative sample) tutar — batch size'dan bağımsız, K çok büyük olabilir. Her adımda: yeni batch'in key'leri queue'ya ekle, en eski key'leri çıkar."
+        },
+        {
+          "type": "formula",
+          "heading": "Momentum Update",
+          "text": "$$\\theta_k \\leftarrow m \\cdot \\theta_k + (1-m) \\cdot \\theta_q$$\n\nTypical m = 0.999: key encoder çok yavaş değişiyor.\nNeden? Queue'daki key'ler farklı adımlarda hesaplandı — tutarlı olmaları gerekiyor.\nEğer f_k hızlı değişse, queue'daki eski key'ler geçersiz kalır."
+        },
+        {
+          "type": "code",
+          "heading": "MoCo Pseudocode (PyTorch-like)",
+          "text": "# f_q: query encoder (with gradient)\n# f_k: momentum encoder (no_grad)\n# queue: K negative samples (CxK)\nf_k.params = f_q.params  # initialize\n\nfor x in loader:\n    x_q = aug(x)  # query view\n    x_k = aug(x)  # key view\n    \n    q = f_q(x_q)           # queries: NxC\n    k = f_k(x_k).detach()  # keys: NxC, no grad!\n    \n    l_pos = bmm(q, k.T)              # Nx1: positive logits\n    l_neg = mm(q, queue)             # NxK: negative logits\n    logits = cat([l_pos, l_neg], 1)  # Nx(1+K)\n    labels = zeros(N)                # positives at index 0\n    loss = CrossEntropyLoss(logits/t, labels)  # InfoNCE\n    \n    loss.backward()       # update f_q only\n    update(f_q)\n    f_k.params = m*f_k.params + (1-m)*f_q.params  # EMA\n    enqueue(queue, k); dequeue(queue)  # FIFO"
+        },
+        {
+          "type": "compare",
+          "heading": "MoCo v2 vs SimCLR",
+          "left": {
+            "title": "SimCLR (batch 8192)",
+            "points": [
+              "65-66% linear probe accuracy",
+              "93 GB memory per GPU",
+              "TPU gerektirir",
+              "Non-linear projection head"
+            ]
+          },
+          "right": {
+            "title": "MoCo v2 (batch 256)",
+            "points": [
+              "67.5% linear probe accuracy (!)",
+              "5.0 GB memory per GPU",
+              "8× V100 16G ile çalışır",
+              "MoCo + SimCLR's projection head + strong augmentation"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "title": "CPC — Contrastive Predictive Coding",
+      "cat": "Self-Supervised",
+      "summary": "van den Oord et al. 2018. Sequence-level contrastive learning: mevcut bağlamdan gelecek token'ları tahmin et. Görüntü, ses, video için. Ses'te: speaker classification %97.4 (supervised: %98.5!).",
+      "context": "CS231n · Lecture 12",
+      "sections": [
+        {
+          "type": "compare",
+          "heading": "Instance vs Sequence Contrastive",
+          "left": {
+            "title": "Instance-Level (SimCLR, MoCo)",
+            "points": [
+              "Positive: aynı görüntünün farklı augmentation'ı",
+              "Negative: farklı görüntüler",
+              "Spatial/positional düzen önemli değil",
+              "Görüntü representation için daha güçlü"
+            ]
+          },
+          "right": {
+            "title": "Sequence-Level (CPC)",
+            "points": [
+              "Positive: gelecekteki doğru token'lar",
+              "Negative: yanlış sıra / yanlış token'lar",
+              "Temporal/sequential düzen öğretilir",
+              "Ses, video, görüntü satırları için uygun"
+            ]
+          }
+        },
+        {
+          "type": "list",
+          "heading": "CPC Algoritması (3 Adım)",
+          "items": [
+            "1. Encode: z_t = g_enc(x_t) — her token'ı embedding'e çevir",
+            "2. Context: c_t = g_ar(z_1..z_t) — otoregresif model (GRU-RNN) ile bağlamı özetle",
+            "3. InfoNCE: z_{t+k}'yı negatiflerden ayırt et, score: s_k(z_{t+k}, c_t) = z_{t+k}^T W_k c_t (her k için ayrı W_k)"
+          ]
+        },
+        {
+          "type": "text",
+          "heading": "Görüntüde CPC",
+          "text": "Görüntüyü 64×64 px patch'lere böl (%50 overlap). Satırları yukarıdan aşağıya bir sekans olarak gör. Üst satırları bağlam olarak kullan → alt satırları tahmin et. g_enc: her patch'i z_t'ye dönüştür. g_ar: yukarıdaki satırları c_t'ye özet. Score: z_{t+k}^T W_k c_t."
+        },
+        {
+          "type": "table",
+          "heading": "CPC Ses Sonuçları (LibriSpeech)",
+          "rows": [
+            [
+              "Görev",
+              "Yöntem",
+              "Accuracy"
+            ],
+            [
+              "Phone classification",
+              "Random init",
+              "27.6%"
+            ],
+            [
+              "Phone classification",
+              "MFCC features",
+              "39.7%"
+            ],
+            [
+              "Phone classification",
+              "CPC",
+              "64.6%"
+            ],
+            [
+              "Phone classification",
+              "Supervised",
+              "74.6%"
+            ],
+            [
+              "Speaker classification",
+              "MFCC features",
+              "17.6%"
+            ],
+            [
+              "Speaker classification",
+              "CPC",
+              "97.4%"
+            ],
+            [
+              "Speaker classification",
+              "Supervised",
+              "98.5%"
+            ]
+          ]
         },
         {
           "type": "insight",
-          "heading": "Neden %75 yüksek maskeleme?",
-          "text": "Görüntüler çok redundant — komşu patch'ler benzer. Düşük maskeleme oranıyla model sadece interpolation öğrenir. %75 ile gerçekten 'anlama' gerekiyor — semantik özellik öğrenmek zorunda kalıyor."
+          "heading": "CPC'nin Sınırlılığı",
+          "text": "Görüntü representation için instance-level metotlar (SimCLR, MoCo) CPC'yi geride bırakır. CPC AlexNet ile 48.7% (jigsaw 38.1%'i geçiyor) — pretext task'lardan iyi ama contrastive'den zayıf. Ama ses ve video için CPC mükemmel: speaker identity 97.4% supervised benchmark'ın hemen altında."
+        }
+      ]
+    },
+    {
+      "title": "DINO — Self-Distillation with No Labels",
+      "cat": "Self-Supervised",
+      "summary": "Caron et al. 2021. Student-teacher self-distillation, negatif örnek yok. Teacher EMA ile güncellenir. Emergent: [CLS] attention maps → label olmadan segmentasyon kalitesinde dikkat haritaları.",
+      "context": "CS231n · Lecture 12",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "DINO Motivasyonu",
+          "text": "ViT'leri self-supervised eğitince [CLS] token'ın son katman self-attention'ı sınıf-spesifik bölgelere odaklanıyor — hiçbir label, hiçbir segment etiketi olmadan! Bu emergent property DINO'nun ana katkısı. Self-distillation: student kendi ağırlıklarından türetilen teacher'ı taklit etmeye çalışır."
+        },
+        {
+          "type": "text",
+          "heading": "Mimari",
+          "text": "Aynı görüntüden iki view x1, x2 alınır (farklı augmentations). Student g_s: her iki view'ı işler, backprop ile güncellenir. Teacher g_t: her iki view'ı işler, NO GRADIENT (sadece EMA ile güncellenir). Çıktı softmax boyutu K (büyük, prototypical sınıflar)."
+        },
+        {
+          "type": "formula",
+          "heading": "DINO Loss ve Teacher Update",
+          "text": "Loss:\n$$\\mathcal{L} = H(t_1, s_2)/2 + H(t_2, s_1)/2$$\n\n$$H(t, s) = -\\sum t \\cdot \\log(s)$$\n\nTeacher softmax: centering (mean çıkar) + sharpening (düşük temperature).\nStudent softmax: normal temperature.\n\nTeacher EMA update:\n$$\\theta_{\\text{teacher}} \\leftarrow \\tau \\cdot \\theta_{\\text{teacher}} + (1-\\tau) \\cdot \\theta_{\\text{student}}$$"
+        },
+        {
+          "type": "code",
+          "heading": "DINO Pseudocode",
+          "text": "# gs, gt: student, teacher networks\n# C: center (K-dim running mean)\n# l, m: network and center momentum\ngt.params = gs.params  # initialize\n\nfor x in loader:\n    x1, x2 = augment(x), augment(x)\n    \n    s1, s2 = gs(x1), gs(x2)  # student outputs (n × K)\n    t1, t2 = gt(x1), gt(x2)  # teacher outputs\n    \n    loss = H(t1, s2)/2 + H(t2, s1)/2\n    loss.backward()  # only updates gs\n    update(gs)  # SGD\n    \n    # EMA updates\n    gt.params = l*gt.params + (1-l)*gs.params\n    C = m*C + (1-m)*cat([t1, t2]).mean(dim=0)\n\ndef H(t, s):\n    t = t.detach()                    # no grad through teacher\n    s = softmax(s / tps, dim=1)       # student softmax\n    t = softmax((t - C) / tpt, dim=1) # center + sharpen\n    return -(t * log(s)).sum(1).mean()"
+        },
+        {
+          "type": "compare",
+          "heading": "DINO vs DINO v2",
+          "left": {
+            "title": "DINO (2021)",
+            "points": [
+              "ViT-B: 82.8% linear probe (fine-tuning ile)",
+              "[CLS] attention = class-specific masks",
+              "No negative samples needed",
+              "Collapse prevention: centering + EMA"
+            ]
+          },
+          "right": {
+            "title": "DINO v2",
+            "points": [
+              "Patch features PCA → structure-aware color maps",
+              "Aynı class'tan farklı objelerde aynı parçalar eşleşiyor",
+              "Pose/style değişimine rağmen part correspondence",
+              "SAM ve birçok foundation model'de kullanıldı"
+            ]
+          }
+        },
+        {
+          "type": "insight",
+          "heading": "Collapse Nasıl Önleniyor?",
+          "text": "Contrastive metodlar negative sample ile collapse'ı önler. DINO negatif kullanmıyor! Collapse önleme: (1) Centering: teacher çıktısından running mean çıkar → tek mode'a collapse'ı engeller. (2) Sharpening: teacher'da düşük temperature → peaked distribution → student'a net sinyal. Bu ikisi denge oluşturur: mean collapse vs uniform collapse."
+        }
+      ]
+    },
+    {
+      "title": "SSL Yöntemleri Karşılaştırması",
+      "cat": "Self-Supervised",
+      "summary": "SimCLR, MoCo, CPC, DINO, MAE — mekanizma, güçlü yönler, zayıf yönler. Hangi durumda hangisi?",
+      "context": "CS231n · Lecture 12",
+      "sections": [
+        {
+          "type": "table",
+          "heading": "Yöntem Karşılaştırması",
+          "rows": [
+            [
+              "Yöntem",
+              "Mekanizma",
+              "Güçlü",
+              "Zayıf"
+            ],
+            [
+              "SimCLR",
+              "Large-batch contrastive",
+              "Basit, etkili",
+              "Büyük batch + TPU gerekli"
+            ],
+            [
+              "MoCo v1",
+              "Queue + momentum encoder",
+              "Küçük batch OK",
+              "Performans SimCLR'dan düşük"
+            ],
+            [
+              "MoCo v2",
+              "MoCo + nonlinear head + aug",
+              "Hem hızlı hem iyi",
+              "Biraz karmaşık"
+            ],
+            [
+              "CPC",
+              "Sequence prediction",
+              "Audio/video için mükemmel",
+              "Görüntüde contrastive'den zayıf"
+            ],
+            [
+              "MAE",
+              "Masked reconstruction",
+              "Büyük model scale eder",
+              "Linear probe zayıf"
+            ],
+            [
+              "DINO",
+              "Self-distillation EMA",
+              "Emergent segmentation",
+              "Mimari karmaşık"
+            ]
+          ]
+        },
+        {
+          "type": "list",
+          "heading": "Key Takeaways",
+          "items": [
+            "Non-linear projection head (SimCLR) + momentum queue (MoCo) → MoCo v2 en iyi small-batch kontrastif",
+            "Büyük batch: MI lower bound daha tight → daha iyi representation — ama MoCo queue ile aynı efekti verir",
+            "MAE: fine-tuning'de en güçlü, linear probe'da zayıf — representation daha zengin ama daha az lineer",
+            "DINO: segmentation-like özellikler label olmadan emergent — SAM ve vision foundation modellerinde temel",
+            "CPC: modality-agnostic (audio, video, NLP) ama vision'da instance-level'a yetişemiyor"
+          ]
         }
       ]
     }
