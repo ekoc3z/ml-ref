@@ -8568,6 +8568,62 @@
       ]
     },
     {
+      "title": "ResNet — Stem: Neden kernel=7, stride=2, padding=3?",
+      "cat": "ResNet18",
+      "summary": "Stem'in ilk Conv2d'si kasıtlı büyük kernel ve stride ile tasarlanmış. kernel=7 geniş görüş alanı, stride=2 hızlı küçültme, padding=3 tam yarıya indirme için.",
+      "context": "ML Lab · Session 4",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Neden kernel=7?",
+          "text": "İlk katman ham piksellere bakıyor. 3×3 çok küçük — sadece 3 piksellik pattern görür. 7×7 ile ilk bakışta daha geniş bir alan görüyor, daha anlamlı low-level feature'lar (kenar, köşe, texture) çıkarıyor.\n\nSonraki katmanlarda zaten 3×3 yeterli — o noktada her piksel büyük bir alanı temsil ediyor, receptive field zaten büyümüş. Ama ilk katmanda henüz hiç birikim yok, geniş kernel gerekiyor."
+        },
+        {
+          "type": "text",
+          "heading": "Neden stride=2?",
+          "text": "224×224 çok büyük, her layer'da bu boyutla işlem yapmak çok pahalı. Stem'de hızlıca yarıya indir — 112×112'de devam et. Sonra MaxPool da bir kez daha stride=2 ile 56×56'ya indiriyor. Asıl ResNet blokları 56×56'dan başlıyor."
+        },
+        {
+          "type": "code",
+          "heading": "Neden padding=3? — kernel//2 kuralı",
+          "text": "# Genel kural: kernel=k, stride=2, padding=k//2 → tam yarıya iner\n# k=7 → padding = 7//2 = 3\n\nH_out = floor((224 + 2*3 - 7) / 2) + 1\n      = floor(223 / 2) + 1\n      = 111 + 1 = 112  ✓  (tam yarı)\n\n# padding=0 olsaydı:\nH_out = floor((224 - 7) / 2) + 1\n      = floor(217 / 2) + 1 = 109  ✗  (yarım sayı)\n\n# Aynı kural Conv2d(3x3) için:\n# k=3 → padding=1, stride=2 → tam yarıya iner\n# k=7 → padding=3, stride=2 → tam yarıya iner"
+        },
+        {
+          "type": "code",
+          "heading": "Stem Özeti",
+          "text": "self.stem = nn.Sequential(\n    nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False),\n    #                kernel=7: geniş görüş alanı (ilk katman)\n    #                stride=2: hızlı küçültme\n    #                padding=3: tam yarıya indir (k//2 kuralı)\n    #         224x224 → 112x112\n    nn.BatchNorm2d(64),\n    nn.ReLU(inplace=True),\n    nn.MaxPool2d(kernel_size=3, stride=2, padding=1)\n    #                kernel=3, stride=2, padding=1 → yine tam yarıya\n    #         112x112 → 56x56\n)\n# Stem çıkışı: 56x56 — asıl ResNet blokları buradan başlar"
+        }
+      ]
+    },
+    {
+      "title": "ResNet-18 — Tam Mimari ve Channel×2 / Size÷2 Prensibi",
+      "cat": "ResNet18",
+      "summary": "ResNet-18'de her layer geçişinde channel sayısı ikiye katlanırken spatial boyut yarıya iner. Bu CNN tasarımında genel bir prensip — azalan spatial bilgiyi artan derinlikle telafi etmek.",
+      "context": "ML Lab · Session 4",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "ResNet-18 Tam Mimari",
+          "text": "class resnet18(nn.Module):\n    def __init__(self):\n        super(resnet18, self).__init__()\n\n        # Stem: 224x224 → 56x56\n        self.stem = nn.Sequential(\n            nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False),\n            nn.BatchNorm2d(64),\n            nn.ReLU(inplace=True),\n            nn.MaxPool2d(kernel_size=3, stride=2, padding=1)\n        )\n\n        self.layer1 = nn.Sequential(BasicResnetBlock(64,  64,  stride=1),\n                                    BasicResnetBlock(64,  64,  stride=1))\n        self.layer2 = nn.Sequential(BasicResnetBlock(64,  128, stride=2),\n                                    BasicResnetBlock(128, 128, stride=1))\n        self.layer3 = nn.Sequential(BasicResnetBlock(128, 256, stride=2),\n                                    BasicResnetBlock(256, 256, stride=1))\n        self.layer4 = nn.Sequential(BasicResnetBlock(256, 512, stride=2),\n                                    BasicResnetBlock(512, 512, stride=1))\n\n        self.pool = nn.AdaptiveAvgPool2d((1, 1))\n        self.fc   = nn.Linear(512, 20)\n\n    def forward(self, x):\n        x = self.stem(x)\n        x = self.layer1(x)\n        x = self.layer2(x)\n        x = self.layer3(x)\n        x = self.layer4(x)\n        x = self.pool(x)\n        x = torch.flatten(x, 1)\n        return self.fc(x)"
+        },
+        {
+          "type": "code",
+          "heading": "Channel×2 / Size÷2 — Layer Geçişleri",
+          "text": "# Her layer geçişinde: channel 2x, spatial 2÷\n#                      channels  size      stride\nStem (Conv7+MaxPool):   64     56×56      stride=2+2\nlayer1 (stride=1):      64     56×56      değişmez\nlayer2 (stride=2):     128     28×28      64→128,  56→28\nlayer3 (stride=2):     256     14×14      128→256, 28→14\nlayer4 (stride=2):     512      7×7       256→512, 14→7\nAdaptiveAvgPool:        512      1×1\nLinear:                  20       —"
+        },
+        {
+          "type": "text",
+          "heading": "Neden channel×2 ve size÷2 aynı anda?",
+          "text": "Spatial boyut küçüldükçe her piksel daha büyük bir alanı temsil ediyor — ama tek başına daha az bilgi taşıyor. Channel sayısını artırarak o alanı daha fazla farklı feature ile tanımlamak gerekiyor.\n\nBilgi miktarı yaklaşık korunuyor:\n64 × 56 × 56 = 200,704\n128 × 28 × 28 = 100,352  ← aslında yarıya iniyor\n\nTam korunmuyor ama intuition bu. VGG'de de aynı prensip var — CNN tasarımında genel bir kural."
+        },
+        {
+          "type": "note",
+          "heading": "stride=1 olan blok ne yapıyor?",
+          "text": "Her layer'da 2 BasicBlock var. İlk blok stride=2 ile boyutu küçültüp channel'ı artırıyor (+ shortcut projection). İkinci blok stride=1 — boyut ve channel aynı kalıyor, sadece feature extraction yapıyor. Shortcut'ı boş Sequential, projection yok."
+        }
+      ]
+    },
+    {
       "title": "Lab 3 vs nn.Module — Tam Karşılaştırma",
       "cat": "PyTorch",
       "summary": "Lab 3'te her şeyi NumPy ile manuel yazdık. nn.Module aynı fikrin PyTorch implementasyonu — iskelet aynı, altyapıyı PyTorch hallediyor.",
@@ -8808,6 +8864,49 @@
               "Zorunlu — altyapıyı kurar"
             ]
           ]
+        }
+      ]
+    },
+    {
+      "title": "ResNet — Boyut Matematiği (stride, padding, kernel)",
+      "cat": "ResNet18",
+      "summary": "ResNet'te her Conv2d'nin stride ve padding değeri kasıtlı seçilmiş. padding=1 boyutu korur, stride=2 tam yarıya indirir, AdaptiveAvgPool boyuttan bağımsız çalışır.",
+      "context": "ML Lab · Session 4",
+      "sections": [
+        {
+          "type": "formula",
+          "heading": "Output Boyutu Formülü",
+          "text": "$$H_{out} = \\left\\lfloor \\frac{H_{in} + 2 \\cdot padding - kernel}{stride} \\right\\rfloor + 1$$"
+        },
+        {
+          "type": "code",
+          "heading": "Kural 1 — padding=1, kernel=3, stride=1 → boyut korunur",
+          "text": "H_out = floor((H + 2*1 - 3) / 1) + 1\n      = floor((H - 1) / 1) + 1\n      = H - 1 + 1\n      = H   ✓\n\n# BasicResnetBlock içindeki her iki Conv2d böyle:\nnn.Conv2d(in_ch, out_ch, kernel_size=3, stride=1, padding=1)\n# 56x56 girer → 56x56 çıkar\n# 28x28 girer → 28x28 çıkar  — boyut ne olursa korunur"
+        },
+        {
+          "type": "code",
+          "heading": "Kural 2 — padding=1, kernel=3, stride=2 → tam yarıya iner",
+          "text": "H_out = floor((H + 2*1 - 3) / 2) + 1\n      = floor((H - 1) / 2) + 1\n\n# H=56: floor(55/2) + 1 = 27 + 1 = 28  ✓\n# H=28: floor(27/2) + 1 = 13 + 1 = 14  ✓\n# H=14: floor(13/2) + 1 =  6 + 1 =  7  ✓\n\n# BasicResnetBlock'un ilk Conv2d'si stride=2 olduğunda:\nnn.Conv2d(in_ch, out_ch, kernel_size=3, stride=2, padding=1)\n# layer2, layer3, layer4'ün ilk bloğunda kullanılır"
+        },
+        {
+          "type": "code",
+          "heading": "Kural 3 — stem: kernel=7, stride=2, padding=3 → tam yarıya iner",
+          "text": "H_out = floor((H + 2*3 - 7) / 2) + 1\n      = floor((H - 1) / 2) + 1\n\n# H=224: floor(223/2) + 1 = 111 + 1 = 112  ✓\n\n# Genel kural: kernel=k, stride=2, padding=k//2 → tam yarıya iner\n# k=3 → padding=1, k=7 → padding=3"
+        },
+        {
+          "type": "code",
+          "heading": "ResNet-18 Tam Boyut Akışı",
+          "text": "Input:          (B,   3, 224, 224)\n\n# Stem: Conv(7x7, stride=2, pad=3) + MaxPool(3x3, stride=2, pad=1)\nConv7x7:        (B,  64, 112, 112)   ← 224/2\nMaxPool:        (B,  64,  56,  56)   ← 112/2\n\n# Layer 1: stride=1 → boyut korunur\nBasicBlock×2:   (B,  64,  56,  56)   ← değişmez\n\n# Layer 2: ilk blok stride=2 → yarıya iner\nBasicBlock×2:   (B, 128,  28,  28)   ← 56/2\n\n# Layer 3: ilk blok stride=2\nBasicBlock×2:   (B, 256,  14,  14)   ← 28/2\n\n# Layer 4: ilk blok stride=2\nBasicBlock×2:   (B, 512,   7,   7)   ← 14/2\n\nAdaptiveAvgPool:(B, 512,   1,   1)   ← ne olursa 1x1\nFlatten:        (B, 512)\nLinear:         (B,  20)"
+        },
+        {
+          "type": "code",
+          "heading": "Shortcut projection — neden 1x1 conv?",
+          "text": "# stride=2 olunca feature map yarıya indi:\n# out: (B, 128, 28, 28)\n# x:   (B,  64, 56, 56)  ← farklı shape, toplanamaz!\n\n# Çözüm: 1x1 conv, stride=2 ile x'i project et\nif stride != 1 or in_channels != out_channels:\n    self.downsample = nn.Sequential(\n        nn.Conv2d(in_ch, out_ch, kernel_size=1, stride=2, bias=False),\n        nn.BatchNorm2d(out_ch)\n    )\n# 1x1 conv: spatial boyutu stride=2 ile küçültür\n# channel sayısını out_ch'a çıkarır\n# padding gereksiz: kernel=1 → H_out = floor((H-1)/2)+1 = H/2\n\n# Artık toplanabilir:\nout += self.downsample(x)   # (B,128,28,28) + (B,128,28,28)  ✓"
+        },
+        {
+          "type": "note",
+          "heading": "AdaptiveAvgPool — neden VGG'de sorun var, ResNet'te yok?",
+          "text": "VGG'de flatten sonrası Linear(512*7*7, 1024) var — 7x7 sabit boyuta bağlı. Input 224x224 değilse patlıyor.\n\nResNet'te AdaptiveAvgPool2d((1,1)) her şeyi 1x1'e indiriyor — Linear(512, 20) hep 512 alır. Input boyutu ne olursa olsun çalışır."
         }
       ]
     },
