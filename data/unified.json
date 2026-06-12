@@ -8978,13 +8978,372 @@
     {
       "title": "Session 5 — Genel Çerçeve",
       "cat": "Overview",
-      "summary": "CNN ile segmentation. U-Net mimarisi, encoder-decoder, skip connections, pixel-wise classification.",
+      "summary": "VGG16'yı FCN'e dönüştürme, transposed conv ile upsampling, pixel-wise loss. Semantic segmentation end-to-end pipeline.",
       "context": "ML Lab · Session 5",
       "sections": [
         {
+          "type": "list",
+          "heading": "Kapsam",
+          "items": [
+            "1. Semantic segmentation — piksel başına classification",
+            "2. FCN — FC katmanları 1×1 Conv ile değiştir",
+            "3. VGG features → coarse 10×10 output",
+            "4. Transposed Convolution — 10×10 → 320×320 upsample",
+            "5. Upsampling weight init (bilinear interpolation)",
+            "6. Pixel-wise CrossEntropyLoss",
+            "7. Checkerboard artifact — kernel size önemi",
+            "8. FCN-8s — skip connections ile ince detay",
+            "9. U-Net — encoder-decoder + concat skip connections"
+          ]
+        },
+        {
           "type": "note",
-          "heading": "İçerik",
-          "text": "Bu section ilerleyen zamanlarda doldurulacak. Lab 5 içeriği: U-Net mimarisi, encoder (downsample), decoder (upsample), skip connections, ConvTranspose2d, segmentation loss (BCE, Dice)."
+          "heading": "Lab 4'ten farkı",
+          "text": "Lab 4: görüntü başına 1 label (multi-label classification). Lab 5: her piksel için 1 label (segmentation). Model artık fixed size değil — herhangi HxW input alabilir. Loss aynı (CrossEntropy) ama piksel başına uygulanıyor."
+        }
+      ]
+    },
+    {
+      "title": "Semantic Segmentation — Tanım ve Veri",
+      "cat": "Segmentation Temelleri",
+      "summary": "Her piksele class label atama. Ground truth mask'ler gerekli — supervised learning. PASCAL VOC 20 class + background.",
+      "context": "ML Lab · Session 5",
+      "sections": [
+        {
+          "type": "compare",
+          "heading": "Classification vs Detection vs Segmentation",
+          "left": {
+            "title": "Classification / Detection",
+            "points": [
+              "Görüntü başına 1 label (Classification)",
+              "Bounding box + label (Detection)",
+              "Spatial bilgi kaba veya yok",
+              "Output: (batch, num_classes)"
+            ]
+          },
+          "right": {
+            "title": "Segmentation",
+            "points": [
+              "Piksel başına 1 label",
+              "Spatial bilgi tamamen korunmalı",
+              "Output: (batch, num_classes, H, W)",
+              "Her piksel bağımsız classify edilir"
+            ]
+          }
+        },
+        {
+          "type": "code",
+          "heading": "VOCSegmentation Dataset",
+          "text": "from torchvision.datasets import VOCSegmentation\n\nvoc = VOCSegmentation(root=voc_path, download=False)\n\nimg, mask = voc[i]\n# img:  PIL Image  → (H, W, 3)  — normal fotoğraf\n# mask: PIL Image  → (H, W)     — her piksel = class ID\n\n# PASCAL VOC class ID'leri:\n# 0  = background\n# 1  = aeroplane, 2 = bicycle, ..., 20 = tv/monitor\n# 255 = ignore (sınır pikselleri, loss'tan çıkarılır)"
+        },
+        {
+          "type": "insight",
+          "heading": "Ground Truth Mask Zorunluluğu",
+          "text": "Eğitimde ground truth mask şart — supervised learning. Test/inference'ta sadece resim lazım, model mask tahmin eder. PASCAL VOC'un değeri bu etiketlerin zaten var olması: her fotoğraftaki her piksel elle sınıflandırılmış."
+        }
+      ]
+    },
+    {
+      "title": "FCN — VGG'yi Segmentasyon Modeline Dönüştürme",
+      "cat": "FCN Mimarisi",
+      "summary": "FC katmanlar spatial bilgiyi yok eder. 1×1 Conv ile değiştirince spatial boyut korunur, herhangi input size çalışır.",
+      "context": "ML Lab · Session 5",
+      "sections": [
+        {
+          "type": "compare",
+          "heading": "VGG Classifier vs FCN",
+          "left": {
+            "title": "VGG Classifier",
+            "points": [
+              "features → Flatten → FC(25088, 4096) → FC(4096, 1000)",
+              "Flatten spatial bilgiyi yok eder",
+              "Input 224×224 olmalı (25088 = 512×7×7)",
+              "Output: (batch, 1000) — tek vektör"
+            ]
+          },
+          "right": {
+            "title": "FCN (Fully Convolutional Network)",
+            "points": [
+              "features → Conv2d(512, 4096, 1×1) → Conv2d(4096, 21, 1×1)",
+              "Spatial HxW korunur",
+              "Herhangi input size çalışır",
+              "Output: (batch, 21, H', W') — 2D skor haritası"
+            ]
+          }
+        },
+        {
+          "type": "code",
+          "heading": "VGG Features Çıkarma",
+          "text": "vgg = torchvision.models.vgg16()\nvgg.load_state_dict(model_zoo.load_url('...vgg16-397923af.pth'))\n\n# features = 31 katman (Conv, ReLU, MaxPool)\nfeatures = list(vgg.features.children())\nself.features = nn.Sequential(*features)\n\n# VGG features içindeki MaxPool'lar (stride=2):\n# Layer  4: 320 → 160\n# Layer  9: 160 → 80\n# Layer 16:  80 → 40\n# Layer 23:  40 → 20\n# Layer 30:  20 → 10\n# Toplam: ÷32  →  320÷32 = 10×10 çıktı, 512 channel"
+        },
+        {
+          "type": "insight",
+          "heading": "Neden children() kullanıyoruz?",
+          "text": "`vgg.features.children()` Sequential içindeki layer'ları iterator olarak verir. `list()` ile diziye çevirip `nn.Sequential(*features)` ile yeniden paketliyoruz — aynı yapı, ama artık modelin içinde `self.features` olarak referans verebiliyoruz."
+        }
+      ]
+    },
+    {
+      "title": "Segmenter — 1×1 Conv İmplementasyonu",
+      "cat": "FCN Mimarisi",
+      "summary": "VGG'nin FC katmanlarını 1×1 Conv ile değiştir. Spatial boyut korunur, her pozisyon bağımsız classify edilir.",
+      "context": "ML Lab · Session 5",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Segmenter — Tam Kod (FCN-32s, upsample öncesi)",
+          "text": "class Segmenter(nn.Module):\n    def __init__(self, num_classes, pretrained=True):\n        super(Segmenter, self).__init__()\n        vgg = torchvision.models.vgg16()\n        if pretrained:\n            vgg.load_state_dict(model_zoo.load_url('...vgg16-397923af.pth'))\n        self.features = nn.Sequential(*list(vgg.features.children()))\n\n        self.segmenter = nn.Sequential(\n            nn.Conv2d(512, 4096, kernel_size=1),  # FC 25088→4096 yerine\n            nn.ReLU(inplace=True),\n            nn.Dropout2d(),\n            nn.Conv2d(4096, 4096, kernel_size=1),  # FC 4096→4096 yerine\n            nn.ReLU(inplace=True),\n            nn.Dropout2d(),\n            nn.Conv2d(4096, num_classes, kernel_size=1),  # skor katmanı\n        )\n\n    def forward(self, x):\n        x = self.features(x)    # (1,3,320,320) → (1,512,10,10)\n        x = self.segmenter(x)   # (1,512,10,10) → (1,21,10,10)\n        return x\n\n# Shape kontrolü:\n# model(torch.ones(1,3,320,320)).size() → [1, 21, 10, 10]"
+        },
+        {
+          "type": "text",
+          "heading": "Neden kernel=1?",
+          "text": "1×1 Conv = her piksel bağımsız classify ediliyor, komşulara bakılmıyor. Zaten features içinde büyük receptive field var — segmenter sadece 512 channel'ı 21 class score'a çeviriyor. Spatial boyutu değiştirmiyor."
+        },
+        {
+          "type": "insight",
+          "heading": "Hangi 3 bileşen değişiyor?",
+          "text": "Architecture: FC → 1×1 Conv + upsample eklenir. Loss: görüntü başına CE → piksel başına CE. Optimization: değişmez — SGD/Adam gradyanların nereden geldiğini bilmiyor."
+        }
+      ]
+    },
+    {
+      "title": "Transposed Convolution — Upsampling",
+      "cat": "Upsampling",
+      "summary": "Coarse 10×10 feature map'i 320×320'ye büyütme. Araya sıfır ekle + kenara padding + normal conv — learnable kernel ile.",
+      "context": "ML Lab · Session 5",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Problem",
+          "text": "features + segmenter sonrası çıktı (1, 21, 10, 10) — çok kaba. Ground truth mask (1, 21, 320, 320) boyutunda. Loss hesaplayabilmek için boyutlar eşleşmeli → 10×10'u 320×320'ye upsample etmek lazım."
+        },
+        {
+          "type": "code",
+          "heading": "Mekanizma — Adım Adım (kernel=2, stride=2 örneği)",
+          "text": "# Input: 2×2\n# a b\n# c d\n\n# Adım 1: araya (stride-1)=1 sıfır ekle\n# a 0 b\n# 0 0 0\n# c 0 d    → 3×3\n\n# Adım 2: kenara (kernel-1)=1 sıfır ekle\n# 0 0 0 0 0\n# 0 a 0 b 0\n# 0 0 0 0 0\n# 0 c 0 d 0\n# 0 0 0 0 0    → 5×5\n\n# Adım 3: normal conv (kernel=2, stride=1)\n# H_out = (5 - 2) + 1 = 4\n# → Output: 4×4 ✓\n\n# Formül: H_out = (H_in - 1) * stride + kernel_size\n#       = (2 - 1) * 2 + 2 = 4"
+        },
+        {
+          "type": "formula",
+          "heading": "Output Boyutu Formülü",
+          "text": "$$H_{out} = (H_{in} - 1) \\cdot \\text{stride} - 2 \\cdot \\text{padding} + \\text{kernel\\_size}$$\n\nLab 5 hedefi: 10 → 320, stride=32\n$$320 = (10-1) \\cdot 32 - 2p + k = 288 - 2p + k$$\n\nKernel=64, padding=16: $288 - 32 + 64 = 320$ ✓"
+        },
+        {
+          "type": "compare",
+          "heading": "Bilinear Upsample vs Transposed Conv",
+          "left": {
+            "title": "Bilinear Upsample",
+            "points": [
+              "Sabit interpolation — öğrenmez",
+              "Hızlı, parametre yok",
+              "Genel amaçlı büyütme"
+            ]
+          },
+          "right": {
+            "title": "Transposed Conv",
+            "points": [
+              "Learnable kernel — veri ile optimize edilir",
+              "Parametre var, daha esnek",
+              "Bilinear init ile hızlı başlatılabilir"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "title": "Segmenter + ConvTranspose2d — Tam İmplementasyon",
+      "cat": "Upsampling",
+      "summary": "Segmenter'a transposed conv ekle: 10×10 → 320×320. stride=32 (VGG'nin toplam downsampling faktörü). Bilinear init ile hızlı convergence.",
+      "context": "ML Lab · Session 5",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Segmenter — ConvTranspose2d ile Tam Kod",
+          "text": "class Segmenter(nn.Module):\n    def __init__(self, num_classes, pretrained=True):\n        super(Segmenter, self).__init__()\n        vgg = torchvision.models.vgg16()\n        if pretrained:\n            vgg.load_state_dict(model_zoo.load_url('...vgg16-397923af.pth'))\n        self.features = nn.Sequential(*list(vgg.features.children()))\n\n        self.segmenter = nn.Sequential(\n            nn.Conv2d(512, 4096, kernel_size=1),\n            nn.ReLU(inplace=True),\n            nn.Dropout2d(),\n            nn.Conv2d(4096, 4096, kernel_size=1),\n            nn.ReLU(inplace=True),\n            nn.Dropout2d(),\n            nn.Conv2d(4096, num_classes, kernel_size=1),\n        )\n\n        # Upsample: 10×10 → 320×320 (×32)\n        self.upsample = nn.ConvTranspose2d(\n            num_classes, num_classes,\n            kernel_size=64, stride=32, padding=16, bias=False\n        )\n        # Bilinear interpolation ile init → hızlı convergence\n        self.upsample.weight.data.copy_(\n            get_upsampling_weight(num_classes, num_classes, 64)\n        )\n\n    def forward(self, x):\n        x = self.features(x)    # (1,3,320,320) → (1,512,10,10)\n        x = self.segmenter(x)   # (1,512,10,10) → (1,21,10,10)\n        x = self.upsample(x)    # (1,21,10,10)  → (1,21,320,320)\n        return x"
+        },
+        {
+          "type": "text",
+          "heading": "Neden stride=32?",
+          "text": "VGG features 5 MaxPool ile ÷32 downsampling yapıyor. Transposed conv stride=32 ile tam tersini yapıyor — her input piksel aralarındaki boşluk korunarak 32× büyütülüyor."
+        },
+        {
+          "type": "text",
+          "heading": "Neden kernel=64, padding=16?",
+          "text": "Formülden: H_out = (10-1)×32 - 2×16 + 64 = 288 - 32 + 64 = 320. Kernel 64 seçilince 320'ye tam oturuyor. Kernel en az 2 komşu 10×10 hücreyi görmeli (checkerboard'u önlemek için) → stride=32 olduğundan kernel ≥ 64 şart."
+        }
+      ]
+    },
+    {
+      "title": "Checkerboard Artifact",
+      "cat": "Upsampling",
+      "summary": "Transposed conv kernel çok küçükse 10×10 grid pattern output'ta görünür. Kernel ≥ 2×stride olmalı — komşu hücreler örtüşsün.",
+      "context": "ML Lab · Session 5",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Neden Oluşur?",
+          "text": "stride=32, kernel=32 olsa: her output piksel sadece TEK bir 10×10 hücreden etkilenir. Hücreler arasında örtüşme yok → keskin geçişler, dama tahtası deseni. Büyütülmüş görüntüde orijinal 10×10 grid net görünür."
+        },
+        {
+          "type": "code",
+          "heading": "Yanlış vs Doğru",
+          "text": "# Yanlış: kernel < 2*stride → checkerboard\nnn.ConvTranspose2d(21, 21, kernel_size=32, stride=32, padding=0)\n# Her output piksel 1 hücreden etkilenir, komşular görmez\n\n# Doğru: kernel = 2*stride → tam örtüşme\nnn.ConvTranspose2d(21, 21, kernel_size=64, stride=32, padding=16)\n# Her output piksel en az 2 komşu 10×10 hücreyi görür → smooth geçiş"
+        },
+        {
+          "type": "insight",
+          "heading": "Kural",
+          "text": "kernel_size = 2 × stride ve padding = stride // 2 seçmek standart pratik. Bu değerlerle H_out = H_in × stride tam olarak çıkar ve komşu hücreler her zaman örtüşür."
+        }
+      ]
+    },
+    {
+      "title": "Pixel-wise Cross Entropy Loss",
+      "cat": "Loss Fonksiyonu",
+      "summary": "Segmentation loss = her piksel için classification loss toplamı. nn.CrossEntropyLoss otomatik halleder — sadece input shape farklı.",
+      "context": "ML Lab · Session 5",
+      "sections": [
+        {
+          "type": "formula",
+          "heading": "Classification vs Segmentation NLL Loss",
+          "text": "Classification:\n$$L = -\\sum_{n=1}^{M} y_n \\log(p_n)$$\n\nSegmentation (piksel başına):\n$$L = -\\frac{1}{H \\cdot W} \\sum_{h}^{H} \\sum_{w}^{W} \\sum_{n=1}^{M} y_n^{(h,w)} \\log(p_n^{(h,w)})$$\n\n$M$ = class sayısı, her piksel $(h,w)$ için ayrı CE loss"
+        },
+        {
+          "type": "code",
+          "heading": "PyTorch'ta Fark",
+          "text": "criterion = nn.CrossEntropyLoss(ignore_index=255)\n\n# Classification:\n# pred:   (batch, num_classes)       → (8, 21)\n# target: (batch,)                   → (8,)  — class ID\nloss = criterion(pred, target)\n\n# Segmentation:\n# pred:   (batch, num_classes, H, W) → (8, 21, 320, 320)\n# target: (batch, H, W)              → (8, 320, 320)  — piksel başına class ID\nloss = criterion(pred, target)\n# Aynı fonksiyon! Shape otomatik algılanır.\n\n# ignore_index=255: sınır pikselleri loss'tan çıkarılır"
+        },
+        {
+          "type": "note",
+          "heading": "train.py ne yapıyor?",
+          "text": "SGD optimizer, lr=1e-4, momentum=0.95. Her epoch sonunda val set'te: Loss, ACC (pixel accuracy), mACC (class başına accuracy ortalaması), mIoU (ana metrik), fwACC raporlanıyor."
+        }
+      ]
+    },
+    {
+      "title": "Upsampling Weight Init — Bilinear Interpolation",
+      "cat": "Upsampling",
+      "summary": "Transposed conv'u bilinear interpolation kernel ile init etmek random init'ten çok daha hızlı converge eder. get_upsampling_weight() bunu sağlar.",
+      "context": "ML Lab · Session 5",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Neden Gerekli?",
+          "text": "Random init ile transposed conv ilk başta anlamsız pattern üretiyor, convergence yavaş. Bilinear interpolation zaten iyi bir upsample yöntemi — bunu başlangıç noktası olarak kullanınca model daha hızlı anlamlı segmentation öğreniyor. Özellikle kısa training süresinde (lab: 3 epoch) kritik."
+        },
+        {
+          "type": "code",
+          "heading": "Kullanım",
+          "text": "from misc import get_upsampling_weight\n\n# ConvTranspose2d tanımladıktan sonra __init__ içinde:\nself.upsample.weight.data.copy_(\n    get_upsampling_weight(num_classes, num_classes, 64)\n)\n# .weight.data.copy_() — tensor'ı in-place değiştirir\n# .data üzerinden erişince gradient flow bozulmaz"
+        },
+        {
+          "type": "code",
+          "heading": "get_upsampling_weight Mantığı",
+          "text": "def get_upsampling_weight(in_ch, out_ch, kernel_size):\n    # Bilinear interpolation filter üret\n    factor = (kernel_size + 1) // 2\n    center = factor - 1 if kernel_size % 2 == 1 else factor - 0.5\n    og = np.arange(kernel_size)\n    filt = (1 - np.abs(og - center) / factor)  # [0..1..0] üçgen\n    weight = np.zeros((in_ch, out_ch, kernel_size, kernel_size))\n    # Diagonal: in_ch == out_ch (her class kendi kanalına)\n    weight[range(in_ch), range(out_ch), :, :] = filt[:, None] * filt[None, :]\n    return torch.FloatTensor(weight)"
+        }
+      ]
+    },
+    {
+      "title": "FCN-8s — Skip Connections ile İnce Detay",
+      "cat": "FCN Mimarisi",
+      "summary": "FCN-32s çok kaba. Pool3 ve pool4 feature map'lerini ekleyince spatial detay iyileşir — FCN-16s ve FCN-8s.",
+      "context": "ML Lab · Session 5",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "FCN-32s Problemi",
+          "text": "Sadece final 10×10 map'i 32× upsample edince sınırlar çok bulanık — ince detay yok. Her 10×10 hücre 32×32 piksellik büyük alanı temsil ediyor. Çözüm: daha erken katmanlardan (yüksek resolution) feature ekle."
+        },
+        {
+          "type": "compare",
+          "heading": "FCN Varyantları",
+          "left": {
+            "title": "FCN-32s",
+            "points": [
+              "Final (10×10) → ×32 upsample",
+              "En kaba, en basit",
+              "Sadece semantik bilgi (derin)"
+            ]
+          },
+          "right": {
+            "title": "FCN-16s / FCN-8s",
+            "points": [
+              "Pool4 (20×20) + final → ×16 upsample",
+              "Pool3 (40×40) + pool4 + final → ×8 upsample",
+              "Derin (semantik) + sığ (detay) birleşimi"
+            ]
+          }
+        },
+        {
+          "type": "code",
+          "heading": "FCN-8s Fikri",
+          "text": "# features içinde ara feature map'leri sakla:\n# pool3 → Layer 16 sonrası: 40×40, 256 channel\n# pool4 → Layer 23 sonrası: 20×20, 512 channel\n\n# Forward pass:\npool3 = self.features[:17](x)       # (1,256,40,40)\npool4 = self.features[17:24](pool3) # (1,512,20,20)\nfinal = self.features[24:](pool4)   # (1,512,10,10)\n\nscore_final = self.segmenter(final)         # 10×10\nscore_final_2x = upsample_2x(score_final)  # 20×20\nscore_pool4 = score_pool4_conv(pool4)       # 20×20\nfused_16 = score_final_2x + score_pool4    # sum\n\nfused_16_2x = upsample_2x(fused_16)       # 40×40\nscore_pool3 = score_pool3_conv(pool3)      # 40×40\nfused_8 = fused_16_2x + score_pool3       # sum\n\nout = upsample_8x(fused_8)                # 320×320"
+        },
+        {
+          "type": "note",
+          "heading": "Terminoloji (Lab 5 PDF'inden)",
+          "text": "Skip-connection = concatenation (U-Net tarzı, torch.cat). Shortcut = summation (ResNet tarzı, +). FCN-8s'deki füzyon shortcut (toplama), U-Net'teki füzyon skip-connection (concat)."
+        }
+      ]
+    },
+    {
+      "title": "U-Net Mimarisi",
+      "cat": "U-Net",
+      "summary": "Simetrik encoder-decoder + skip connections (concat). Encoder'ın her seviyesi decoder'daki karşılığına concat edilir — hem semantik hem spatial detay.",
+      "context": "ML Lab · Session 5",
+      "sections": [
+        {
+          "type": "compare",
+          "heading": "FCN vs U-Net",
+          "left": {
+            "title": "FCN",
+            "points": [
+              "Encoder güçlü (VGG pretrained)",
+              "Decoder minimal — tek transposed conv",
+              "Skip: summation (FCN-8s)",
+              "Genel segmentation"
+            ]
+          },
+          "right": {
+            "title": "U-Net",
+            "points": [
+              "Simetrik encoder-decoder (U şekli)",
+              "Decoder encoder kadar derin",
+              "Skip: concatenation (torch.cat)",
+              "Hassas boundary — biyomedikal amaçlı"
+            ]
+          }
+        },
+        {
+          "type": "code",
+          "heading": "U-Net Temel İskelet",
+          "text": "class U_Net(nn.Module):\n    def __init__(self, num_classes):\n        super(U_Net, self).__init__()\n        # Encoder\n        self.enc1 = nn.Sequential(Conv(3,64), Conv(64,64))\n        self.pool1 = nn.MaxPool2d(2)\n        self.enc2 = nn.Sequential(Conv(64,128), Conv(128,128))\n        self.pool2 = nn.MaxPool2d(2)\n        # bottleneck\n        self.bottleneck = nn.Sequential(Conv(128,256), Conv(256,256))\n        # Decoder\n        self.up2 = nn.ConvTranspose2d(256, 128, kernel_size=2, stride=2)\n        self.dec2 = nn.Sequential(Conv(256,128), Conv(128,128))\n        # 256 = 128 (upsample çıktısı) + 128 (enc2 skip)\n        self.up1 = nn.ConvTranspose2d(128, 64, kernel_size=2, stride=2)\n        self.dec1 = nn.Sequential(Conv(128,64), Conv(64,64))\n        # 128 = 64 (upsample çıktısı) + 64 (enc1 skip)\n        self.out = nn.Conv2d(64, num_classes, kernel_size=1)\n\n    def forward(self, x):\n        e1 = self.enc1(x)\n        e2 = self.enc2(self.pool1(e1))\n        b  = self.bottleneck(self.pool2(e2))\n        d2 = self.dec2(torch.cat([self.up2(b),  e2], dim=1))\n        d1 = self.dec1(torch.cat([self.up1(d2), e1], dim=1))\n        return self.out(d1)"
+        },
+        {
+          "type": "insight",
+          "heading": "Neden Concat (sum'dan farkı)?",
+          "text": "Sum: encoder feature'larını decoder feature'larıyla toplar — bilgi karışır. Concat: encoder feature'larını bütünüyle korur, decoder yanına ekler. Sonuç channel sayısı 2× olur (bu yüzden dec2'nin in_channels = upsample_ch + skip_ch). Decoder hem 'ne' (derin) hem 'nerede' (sığ) bilgisine tam erişir."
+        }
+      ]
+    },
+    {
+      "title": "Segmentation Metrikleri — IoU ve mIoU",
+      "cat": "Değerlendirme",
+      "summary": "Pixel accuracy yetersiz — class imbalance'a duyarsız. IoU (Intersection over Union) standart segmentation metriği. train.py her epoch mIoU raporluyor.",
+      "context": "ML Lab · Session 5",
+      "sections": [
+        {
+          "type": "formula",
+          "heading": "IoU (Intersection over Union)",
+          "text": "$$\\text{IoU}_c = \\frac{|\\text{Pred}_c \\cap \\text{GT}_c|}{|\\text{Pred}_c \\cup \\text{GT}_c|}$$\n\n$$\\text{mIoU} = \\frac{1}{C} \\sum_{c=1}^{C} \\text{IoU}_c$$\n\n$C$ = class sayısı. Her class için ayrı IoU hesaplanır, ortalama alınır."
+        },
+        {
+          "type": "code",
+          "heading": "train.py Çıktıları",
+          "text": "args = {\n    'epoch_num': 3,\n    'lr': 1e-4,\n    'weight_decay': 1e-4,\n    'momentum': 0.95,\n    'lr_patience': 100,   # fixed lr\n    'print_freq': 20,\n    'val_img_sample_rate': 0.1\n}\nimges = train.main(train_args=args, model=model)\n\n# Her epoch sonunda:\n# Loss   — CrossEntropy loss ortalaması\n# ACC    — pixel accuracy\n# mACC   — mean class accuracy\n# mIoU   — mean IoU (ana metrik)\n# fwACC  — frequency weighted accuracy"
+        },
+        {
+          "type": "insight",
+          "heading": "Neden Pixel Accuracy Yetersiz?",
+          "text": "PASCAL VOC'ta background pikseller çok fazla. Model her şeyi background dese bile %70+ pixel accuracy alır. mIoU her class'ı eşit ağırlıkta değerlendirdiği için class imbalance'a karşı dayanıklı — nadir class'ları düşük tahmin edince mIoU düşer."
         }
       ]
     }
