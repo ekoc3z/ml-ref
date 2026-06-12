@@ -8812,6 +8812,51 @@
       ]
     },
     {
+      "title": "Dropout — Inverted vs Standard",
+      "cat": "Regularization",
+      "summary": "Dropout training'de nöronları rastgele sıfırlar. PyTorch inverted dropout kullanır: training'de 1/(1-p) ile scale eder, test'te hiçbir şey yapmaz. model.eval() dropout'u tamamen kapatır.",
+      "context": "ML Lab · Session 4",
+      "sections": [
+        {
+          "type": "compare",
+          "heading": "Standard Dropout vs Inverted Dropout",
+          "left": {
+            "title": "Standard (Srivastava 2014)",
+            "points": [
+              "Training: p olasılıkla sıfırla, scale yok",
+              "Test: tüm aktivasyonları (1-p) ile çarp",
+              "Beklenti eşit: train E[x] = (1-p)x, test (1-p)x",
+              "Test zamanında ağa müdahale gerekiyor"
+            ]
+          },
+          "right": {
+            "title": "Inverted (PyTorch default)",
+            "points": [
+              "Training: p olasılıkla sıfırla, kalanları 1/(1-p) ile böl",
+              "Test: hiçbir şey yapma — ağ olduğu gibi",
+              "Beklenti eşit: train E[x] = (1-p)·x·1/(1-p) = x",
+              "model.eval() yeterli — daha pratik"
+            ]
+          }
+        },
+        {
+          "type": "code",
+          "heading": "PyTorch Kullanımı",
+          "text": "# p = drop probability (sıfırlanma ihtimali)\nnn.Dropout(p=0.5)\n\n# Training modda:\n# - Her nöron %50 ihtimalle sıfırlanır\n# - Hayatta kalanlar 1/0.5 = 2x ile scale edilir\n# - Beklenti değişmez\n\n# Eval modda:\n# - Dropout tamamen kapalı, tüm nöronlar aktif\n# - Scale da yok\n\n# model.train() vs model.eval() kritik:\nmodel.train()   # Dropout aktif, BN batch stats kullanır\nmodel.eval()    # Dropout kapalı, BN running stats kullanır"
+        },
+        {
+          "type": "code",
+          "heading": "Nerede Kullanılır?",
+          "text": "# Genellikle FC katmanlardan önce — CNN'de nadiren\nself.fc = nn.Sequential(\n    nn.Linear(512 * 7 * 7, 1024),\n    nn.ReLU(),\n    nn.Dropout(p=0.5),      # ← FC katmanları arasında\n    nn.Linear(1024, 1024),\n    nn.ReLU(),\n    nn.Dropout(p=0.5),\n    nn.Linear(1024, 20)\n)\n\n# VGG16 orijinalinde Dropout(0.5) var\n# ResNet'te genellikle yok — BatchNorm zaten regularize ediyor"
+        },
+        {
+          "type": "insight",
+          "heading": "Neden çalışıyor?",
+          "text": "Her forward pass'ta farklı nöron alt kümesi aktif — sanki farklı bir ağ eğitiyormuş gibi. Model tek bir nörona aşırı güvenemez, birden fazla yoldan aynı bilgiyi öğrenmek zorunda kalıyor. Test'te tüm nöronlar aktif → sanki bu alt ağların ensemble'ı gibi davranıyor. Overfitting azalır."
+        }
+      ]
+    },
+    {
       "title": "Device — MPS (Mac M4)",
       "cat": "PyTorch",
       "summary": "Lab sunucusunda CUDA var. Mac'te MPS kullan — Apple Silicon GPU. Orijinal kodda cuda→mps değiştir.",
