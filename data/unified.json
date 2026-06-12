@@ -11926,172 +11926,605 @@
   ],
   "cs12": [
     {
-      "title": "Lecture 13 — Generative Models (Part 1)",
-      "cat": "Overview",
-      "summary": "Veri dağılımını öğrenmek. Autoencoder, VAE — latent space öğrenme ve sampling.",
-      "context": "CS231n · Lecture 13",
-      "sections": [
-        {
-          "type": "list",
-          "heading": "Kapsam",
-          "items": [
-            "Discriminative vs generative modeller",
-            "Explicit vs implicit density",
-            "Autoencoder — reconstruction",
-            "VAE — latent space + sampling",
-            "KL divergence regularization"
-          ]
-        }
-      ]
-    },
-    {
-      "title": "Discriminative vs Generative",
+      "title": "Supervised vs Unsupervised Learning",
       "cat": "Generative Models",
-      "summary": "Discriminative: P(y|x). Generative: P(x) veya P(x|y). Generative yeni örnekler üretebilir.",
-      "context": "CS231n · Lecture 13",
+      "summary": "Supervised learning maps inputs to labels; unsupervised learning discovers hidden structure in raw data without labels. Generative models are the core of unsupervised learning — they model the data distribution p(x) itself.",
+      "context": "CS231n · Lecture 13 · May 15, 2025",
       "sections": [
         {
           "type": "compare",
-          "heading": "Discriminative vs Generative",
+          "heading": "Supervised vs Unsupervised",
           "left": {
-            "title": "Discriminative",
+            "title": "Supervised Learning",
             "points": [
-              "P(y|x) öğrenir — input → label",
-              "CNN sınıflandırma, detection",
-              "Label gerekli",
-              "Yeni örnek üretemez"
+              "Data: (x, y) — input + label",
+              "Goal: learn f: x → y",
+              "Examples: classification, detection, segmentation, captioning",
+              "Requires expensive labeled data"
             ]
           },
           "right": {
-            "title": "Generative",
+            "title": "Unsupervised Learning",
             "points": [
-              "P(x) öğrenir — veri dağılımı",
-              "Yeni örnek üretebilir",
-              "Label olmadan da çalışabilir",
-              "VAE, GAN, Diffusion"
+              "Data: x — just raw data, no labels",
+              "Goal: learn hidden structure in data",
+              "Examples: clustering, dimensionality reduction, density estimation",
+              "Exploits vast amounts of unlabeled data"
             ]
           }
         },
         {
           "type": "list",
-          "heading": "Density Türleri",
+          "heading": "Why Learn Generative Models?",
           "items": [
-            "Explicit tractable density: normalizing flows, autoregressive modeller — P(x) direkt hesaplanabilir",
-            "Explicit intractable density: VAE — ELBO ile approximate",
-            "Implicit density: GAN — density yok, sadece sampling"
+            "Model p(x) explicitly → assign likelihood to samples",
+            "Detect outliers: samples with low p(x) are anomalous",
+            "Feature learning without labels: train encoder on p(x), attach downstream classifier",
+            "Sample new data: synthesis, data augmentation",
+            "Model ambiguity: many valid outputs from one input (text-to-image, image-to-video)",
+            "Conditional generation: assign labels while rejecting outliers"
+          ]
+        },
+        {
+          "type": "insight",
+          "heading": "The Core Challenge",
+          "text": "For a supervised model, different labels for a single image compete for probability mass. For a generative model, ALL possible images in the world compete for probability mass under a normalized density ∫p(x)dx = 1. This is an astronomically harder constraint — the model must correctly rank every conceivable image."
+        }
+      ]
+    },
+    {
+      "title": "Discriminative vs Generative: The Density Competition",
+      "cat": "Generative Models",
+      "summary": "The fundamental distinction: discriminative models have labels compete per image; generative models have all possible images compete globally. This density normalization constraint makes generative modeling qualitatively harder.",
+      "context": "CS231n · Lecture 13 · May 15, 2025",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "What Each Model Learns",
+          "text": "Discriminative model: learns p(y|x). For each image x, the possible labels compete for probability. Normalization per image: Σ_y p(y|x) = 1. Easy — only a handful of labels compete.\n\nGenerative model: learns p(x). All possible images compete for probability mass. Normalization over all images: ∫p(x)dx = 1. Hard — the entire space of possible images must be ranked consistently.\n\nConditional generative model: learns p(x|y). For each class label y, all images compete. Harder than discriminative, but split into per-class competitions."
+        },
+        {
+          "type": "formula",
+          "heading": "Bayes' Rule Connection",
+          "text": "$$p(x|y) = \\frac{p(y|x)}{p(y)} \\cdot p(x)$$\n\nA conditional generative model can be derived from a discriminative model p(y|x) combined with an unconditional generative model p(x). This is the bridge between the two paradigms."
+        },
+        {
+          "type": "list",
+          "heading": "Three Model Types Summary",
+          "items": [
+            "Discriminative p(y|x): classify given image — labels compete per image",
+            "Generative p(x): model data distribution — all images compete globally",
+            "Conditional generative p(x|y): model distribution per class — all images compete within each class",
+            "Key insight: generating a realistic image is harder than classifying one — the generator must 'know' the entire distribution"
           ]
         }
       ]
     },
     {
-      "title": "Variational Autoencoder (VAE)",
+      "title": "Taxonomy of Generative Models (Goodfellow 2017)",
       "cat": "Generative Models",
-      "summary": "Encoder → latent distribution (μ, σ). Reparameterization trick ile sample. Decoder → reconstruct.",
-      "context": "CS231n · Lecture 13",
+      "summary": "Generative models split on two axes: explicit vs implicit density, and tractable vs approximate. This taxonomy organizes Autoregressive, VAE, GAN, and Diffusion models into a coherent framework.",
+      "context": "CS231n · Lecture 13 · May 15, 2025",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Taxonomy Tree",
+          "text": "Generative Models\n├── Explicit density (model can compute P(x))\n│   ├── Tractable density (really compute P(x))\n│   │   └── Autoregressive Models\n│   │       (chain rule + RNN / Transformer)\n│   └── Approximate density (approximate P(x))\n│       └── Variational Autoencoder (VAE)\n│           (ELBO lower bound, today)\n└── Implicit density (cannot compute P(x), but can sample)\n    ├── Direct (sample directly from P(x))\n    │   └── Generative Adversarial Network (GAN)\n    │       (adversarial training, next lecture)\n    └── Indirect (iterative procedure to approximate samples)\n        └── Diffusion Models\n            (rectified flow, DDPM, next lecture)"
+        },
+        {
+          "type": "list",
+          "heading": "Key Distinctions",
+          "items": [
+            "Explicit density: model assigns a likelihood score to any input x — can evaluate how 'probable' an image is",
+            "Implicit density: model cannot score images but can draw samples from the learned distribution",
+            "Tractable explicit: exact log-likelihood maximization possible — strong training signal",
+            "Approximate explicit: true likelihood intractable, optimize a lower bound (ELBO) instead",
+            "Reference: Ian Goodfellow, Tutorial on Generative Adversarial Networks, 2017"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Maximum Likelihood Estimation for Generative Models",
+      "cat": "Generative Models",
+      "summary": "The standard training objective for generative models is MLE: find parameters W* that maximize the probability assigned to training data. Log-trick converts product to sum for numerical stability.",
+      "context": "CS231n · Lecture 13 · May 15, 2025",
       "sections": [
         {
           "type": "text",
-          "heading": "Normal Autoencoder'dan Farkı",
-          "text": "Normal AE: encoder → tek nokta z. Sorun: latent space düzensiz, sampling yapılamaz.\nVAE: encoder → dağılım (μ, σ). Her input için bir Gaussian. Sampling: z = μ + σ·ε, ε~N(0,I). Decoder bu z'den reconstruct eder."
+          "heading": "Goal and Setup",
+          "text": "We want to write p(x) = f(x, W) for some parameterized function. Training data {x^(i)} is drawn from the true distribution p_data. We want our model p_θ to match p_data as closely as possible."
         },
         {
           "type": "formula",
-          "heading": "VAE Loss (ELBO)",
-          "text": "$$\\mathcal{L} = \\underbrace{\\mathbb{E}[\\log p(x|z)]}_{\\text{reconstruction}} - \\underbrace{KL(q(z|x) \\| p(z))}_{\\text{regularization}}$$\n\nReconstruction: decoder orijinali ne kadar iyi üretiyor\nKL term: posterior q(z|x)'i prior N(0,I)'ya yaklaştır — latent space düzenli kalsın"
+          "heading": "MLE Derivation",
+          "text": "$$W^* = \\arg\\max_W \\prod_i p(x^{(i)}) \\quad \\text{[maximize product of probabilities]}$$\n\n$$= \\arg\\max_W \\sum_i \\log p(x^{(i)}) \\quad \\text{[log trick: product → sum]}$$\n\n$$= \\arg\\max_W \\sum_i \\log f(x^{(i)}, W) \\quad \\text{[this is our loss function]}$$\n\nMaximize with stochastic gradient ascent (equivalently minimize the negative log-likelihood)."
         },
         {
           "type": "insight",
-          "heading": "Reparameterization Trick",
-          "text": "z ~ N(μ, σ²) direkt sample alınamaz — stochastic node'dan gradient geçmez. Trick: z = μ + σ·ε, ε ~ N(0,I). Randomness ε'a taşındı — μ ve σ'ya göre gradient hesaplanabilir. Bu trick olmadan VAE train edilemez."
+          "heading": "MLE = KL Divergence Minimization",
+          "text": "Maximizing Σ log p_θ(x^(i)) over training data is equivalent to minimizing the KL divergence D_KL(p_data || p_θ). This gives a probabilistic interpretation: MLE training makes the model distribution as close as possible to the true data distribution under KL divergence."
+        },
+        {
+          "type": "note",
+          "heading": "Why Log Trick Matters",
+          "text": "Probabilities are small numbers between 0 and 1. Multiplying thousands of them causes numerical underflow to exactly 0. The log converts products to sums and maps the range (0,1) to (-∞, 0), making computation numerically stable. Log is monotone, so argmax is preserved."
+        }
+      ]
+    },
+    {
+      "title": "Autoregressive Models: Chain Rule of Probability",
+      "cat": "Generative Models",
+      "summary": "Autoregressive models factorize p(x) as a product of conditionals using the chain rule. Each element is predicted given all previous ones — forming a tractable explicit density model.",
+      "context": "CS231n · Lecture 13 · May 15, 2025",
+      "sections": [
+        {
+          "type": "formula",
+          "heading": "Chain Rule Factorization",
+          "text": "Treat x as a sequence: $x = (x_1, x_2, \\ldots, x_T)$\n\n$$p(x) = p(x_1) \\cdot p(x_2 | x_1) \\cdot p(x_3 | x_1, x_2) \\cdots = \\prod_{t=1}^{T} p(x_t \\mid x_1, \\ldots, x_{t-1})$$\n\nEach conditional p(x_t | context) is modeled by a neural network. Product of conditionals = tractable density."
+        },
+        {
+          "type": "list",
+          "heading": "Implementations",
+          "items": [
+            "Language modeling with RNN: h_1 → h_2 → … → h_T, each h_t predicts p(x_t | previous tokens)",
+            "Masked Transformer (LLM): attend only to left context via causal mask — all positions predicted in parallel during training",
+            "Image autoregression (PixelCNN): treat image as sequence of 8-bit subpixel values in scanline order — predict each subpixel as 256-class classification",
+            "Reference: Van den Oord et al. 'Pixel Recurrent Neural Networks' ICML 2016; 'Conditional Image Generation with PixelCNN Decoders' NeurIPS 2016"
+          ]
+        },
+        {
+          "type": "text",
+          "heading": "Image Autoregression: Problem and Solution",
+          "text": "Problem: a 1024×1024 RGB image = 3 million subpixels. Autoregressive generation requires 3M sequential steps — extremely slow.\n\nSolution (jumping ahead to modern systems): don't model raw subpixels. Instead, compress image into discrete latent tokens via a VQ-VAE encoder, then model the sequence of latent tokens autoregressively. Tokens are much fewer (e.g. 64×64 = 4096 tokens instead of 3M subpixels). This is exactly what GPT-4o image generation and similar models do."
+        },
+        {
+          "type": "compare",
+          "heading": "RNN vs Transformer for Autoregression",
+          "left": {
+            "title": "RNN",
+            "points": [
+              "Sequential computation — each step depends on previous hidden state",
+              "O(T) sequential steps — slow to train",
+              "Good for short sequences",
+              "PixelRNN (2016)"
+            ]
+          },
+          "right": {
+            "title": "Masked Transformer",
+            "points": [
+              "Parallel computation during training — causal mask enforces order",
+              "O(T²) attention — but parallelizable",
+              "Scales to very long sequences (LLMs)",
+              "GPT, LLaMA, modern LLMs"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "title": "Autoencoders: Unsupervised Feature Learning",
+      "cat": "Generative Models",
+      "summary": "Non-variational autoencoders learn compact representations via reconstruction loss alone, requiring no labels. They fail as generative models because the latent space lacks structure — this motivates VAEs.",
+      "context": "CS231n · Lecture 13 · May 15, 2025",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Architecture",
+          "text": "Input x\n  → Encoder (MLP / CNN / Transformer)\n  → Latent code z     ← bottleneck forces compression\n  → Decoder (MLP / CNN / Transformer)\n  → Reconstruction x̂\n\nLoss: L = ||x̂ - x||²₂   (no labels needed!)\n\n\"Autoencoding\" = encoding yourself = unsupervised"
+        },
+        {
+          "type": "list",
+          "heading": "How the Learned Features Are Used",
+          "items": [
+            "After training: discard decoder, keep encoder",
+            "Attach small classifier to encoder output z",
+            "Train classifier on labeled subset with far fewer labeled examples",
+            "Works because z captures semantically meaningful structure forced by reconstruction",
+            "Precursor to modern self-supervised learning (SimCLR, DINO, MAE)"
+          ]
+        },
+        {
+          "type": "text",
+          "heading": "Why It Fails as a Generative Model",
+          "text": "After training, to generate new samples, we need to sample new latent codes z. But we have no model of what z values are valid — generating a new z is just as hard as generating a new x directly.\n\nThe latent space can be completely unstructured: nearby points in z may decode to very different images, and there are 'holes' in latent space that decode to garbage.\n\nSolution: force all z to come from a known, structured distribution → Variational Autoencoder."
+        }
+      ]
+    },
+    {
+      "title": "VAE: Setup, Latent Space, and Bayesian Formulation",
+      "cat": "Generative Models",
+      "summary": "VAEs put a probabilistic prior on the latent space, enabling both learning and sampling. The key insight is to train an encoder network q_φ(z|x) to approximate the intractable true posterior p_θ(z|x).",
+      "context": "CS231n · Lecture 13 · May 15, 2025 · Kingma and Welling, ICLR 2014",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Generative Story",
+          "text": "Training data {x^(i)} is assumed to be generated from unobserved latent variables z. Think: x is a face image; z encodes latent factors like age, pose, hair color, expression. We don't observe z — it's latent.\n\nAfter training, generate new faces:\n1. Sample z from simple prior: z ~ p_θ*(z)  [e.g. unit Gaussian]\n2. Sample from conditional: x ~ p_θ*(x | z)"
+        },
+        {
+          "type": "formula",
+          "heading": "Marginalizing Over Latent Variables",
+          "text": "Training by maximum likelihood. Since we don't observe z, we must marginalize:\n\n$$p_\\theta(x) = \\int p_\\theta(x, z)\\, dz = \\int p_\\theta(x|z)\\, p_\\theta(z)\\, dz$$\n\nProblem: integrating over all z is intractable — cannot compute this integral in closed form for neural network decoders.\n\nBayes' Rule approach: $$p_\\theta(x) = \\frac{p_\\theta(x|z)\\, p_\\theta(z)}{p_\\theta(z|x)}$$\n\nCan compute numerator: decoder gives p_θ(x|z), prior p_θ(z) is Gaussian.\nProblem: denominator p_θ(z|x) — the true posterior — is also intractable."
+        },
+        {
+          "type": "text",
+          "heading": "The Encoder Network Solution",
+          "text": "Solution: train a second network q_φ(z|x) ≈ p_θ(z|x) — the encoder — that learns to approximate the true posterior.\n\nEncoder network: input x, output distribution over z: q_φ(z|x) = N(μ_{z|x}, Σ_{z|x})\nDecoder network: input z, output distribution over x: p_θ(x|z) = N(μ_{x|z}, σ²)\n\nKey fact: maximizing log p_θ(x|z) ≡ minimizing L2 distance between x and decoded output μ_{x|z}. This is because log p_θ(x|z) = -1/(2σ²)||x - μ||² + const.\n\nIdea: jointly train both encoder (φ) and decoder (θ) together."
+        }
+      ]
+    },
+    {
+      "title": "VAE ELBO: Evidence Lower Bound Derivation",
+      "cat": "Generative Models",
+      "summary": "The ELBO (Evidence Lower BOund) is derived by introducing the encoder distribution q_φ(z|x), multiplying by 1, taking expectations, and dropping a non-negative KL term. It decomposes into reconstruction quality minus prior regularization.",
+      "context": "CS231n · Lecture 13 · May 15, 2025",
+      "sections": [
+        {
+          "type": "formula",
+          "heading": "Step-by-Step ELBO Derivation",
+          "text": "Start from Bayes' Rule:\n$$\\log p_\\theta(x) = \\log \\frac{p_\\theta(x|z)\\, p_\\theta(z)}{p_\\theta(z|x)}$$\n\nMultiply numerator and denominator by $q_\\phi(z|x)$:\n$$= \\log \\frac{p_\\theta(x|z)\\, p_\\theta(z)\\, q_\\phi(z|x)}{p_\\theta(z|x)\\, q_\\phi(z|x)}$$\n\nSplit with logarithm rules and wrap in expectation $E_{z \\sim q_\\phi(z|x)}$:\n$$= E_z[\\log p_\\theta(x|z)] - E_z\\left[\\log \\frac{q_\\phi(z|x)}{p(z)}\\right] + E_z\\left[\\log \\frac{q_\\phi(z|x)}{p_\\theta(z|x)}\\right]$$\n\nRecognize KL divergences:\n$$= E_{z \\sim q_\\phi(z|x)}[\\log p_\\theta(x|z)] - D_{KL}(q_\\phi(z|x),\\, p(z)) + D_{KL}(q_\\phi(z|x),\\, p_\\theta(z|x))$$"
+        },
+        {
+          "type": "formula",
+          "heading": "The ELBO Bound",
+          "text": "Term 3 is always ≥ 0 (KL divergence ≥ 0), so dropping it gives a lower bound:\n\n$$\\boxed{\\log p_\\theta(x) \\geq E_{z \\sim q_\\phi(z|x)}[\\log p_\\theta(x|z)] - D_{KL}(q_\\phi(z|x),\\, p(z))}$$\n\nThis is the VAE training objective — the ELBO (Evidence Lower BOund). Maximize this jointly over parameters θ (decoder) and φ (encoder)."
+        },
+        {
+          "type": "list",
+          "heading": "Three Terms Explained",
+          "items": [
+            "Term 1 — Data reconstruction: E_{z~q}[log p_θ(x|z)] — x encodes to z, decodes back to x; maximize reconstruction quality. Computable in closed form for Gaussians (≡ minimize L2 reconstruction error).",
+            "Term 2 — Prior regularization: -D_KL(q_φ(z|x), p(z)) — encoder output should match Gaussian prior N(0,I). Computable in closed form for Gaussians. Regularizes the latent space to be well-structured.",
+            "Term 3 — Posterior approximation: D_KL(q_φ(z|x), p_θ(z|x)) — how well the encoder approximates the true posterior. NOT computable (p_θ(z|x) is intractable). We drop this term → ELBO is a lower bound."
+          ]
+        }
+      ]
+    },
+    {
+      "title": "VAE Training: Reparameterization Trick and Two-Term Loss",
+      "cat": "Generative Models",
+      "summary": "VAE training involves encoding x to a distribution, sampling z via the reparameterization trick (ε ~ N(0,I), z = ε⊙σ + μ), decoding z, and balancing reconstruction loss against KL prior regularization.",
+      "context": "CS231n · Lecture 13 · May 15, 2025",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Training Procedure (5 Steps)",
+          "text": "Step 1: Run input x through encoder\n  → get q_φ(z|x) = N(μ_{z|x}, Σ_{z|x})\n  (encoder outputs two vectors: mean μ and covariance Σ)\n\nStep 2: Compute prior KL loss\n  L_KL = D_KL(q_φ(z|x), N(0,I))\n  → encoder output should be unit Gaussian\n  → closed form for Gaussians\n\nStep 3: Sample z via reparameterization trick\n  ε ~ N(0, I)\n  z = ε ⊙ Σ_{z|x} + μ_{z|x}\n  (randomness in ε, not z → gradient flows through μ and Σ)\n\nStep 4: Run z through decoder\n  → get μ_{x|z}  (decoder output = predicted mean of x)\n\nStep 5: Compute reconstruction loss\n  L_recon = ||x - μ_{x|z}||²₂\n  → maximizing log p_θ(x|z) ≡ minimizing L2 distance\n\nTotal: maximize L_recon_term - L_KL"
+        },
+        {
+          "type": "insight",
+          "heading": "Why Reparameterization is Necessary",
+          "text": "We need to backpropagate through the sampling step z ~ N(μ, σ²). But sampling is a stochastic operation — gradients cannot pass through a random node directly.\n\nFix: reparameterize as z = ε ⊙ σ + μ where ε ~ N(0,I). The randomness is now in ε (an external constant), not in z. The computation graph is: μ, σ → deterministic function → z. Gradients flow through μ and σ normally."
+        },
+        {
+          "type": "text",
+          "heading": "Loss Terms Fight Each Other",
+          "text": "Reconstruction loss wants: Σ_{z|x} = 0 (zero uncertainty) and μ_{z|x} unique per input x, so the decoder can deterministically reconstruct x. This pushes toward a non-variational autoencoder.\n\nPrior loss (KL) wants: Σ_{z|x} = I (unit variance) and μ_{z|x} = 0 (zero mean) for all inputs — all latent codes collapsed to the same Gaussian.\n\nBalance: the KL weight acts as a regularization hyperparameter. Small KL weight → better reconstruction, less structured latent space. Large KL weight → very structured latent space, worse reconstruction (blurry outputs)."
+        }
+      ]
+    },
+    {
+      "title": "VAE Sampling and Disentanglement",
+      "cat": "Generative Models",
+      "summary": "After training, VAE generates new data by sampling from the prior and decoding. The Gaussian diagonal prior causes latent dimensions to be independent — enabling interpretable 'disentangled' factors of variation.",
+      "context": "CS231n · Lecture 13 · May 15, 2025 · Kingma and Welling, ICLR 2014",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Generation / Sampling",
+          "text": "After training:\n\n1. Sample latent from prior:\n   z ~ N(0, I)   ← pure Gaussian noise, no encoder needed\n\n2. Run through decoder:\n   x = Decoder(z) = p_θ(x | z)\n   → get generated image\n\nKey: during sampling, the encoder is NOT used.\nThe encoder was only needed to make training tractable via ELBO."
+        },
+        {
+          "type": "text",
+          "heading": "Disentanglement of Latent Factors",
+          "text": "The diagonal Gaussian prior p(z) = N(0,I) has independent dimensions — no correlations between z_1, z_2, …, z_d. The KL term encourages the encoder to match this prior, pushing z dimensions toward independence.\n\nResult: individual dimensions of z tend to correspond to independent 'factors of variation' in the data. For digit images: varying z_1 might change the digit class (1,4,7,9…), varying z_2 might change the writing style, stroke width, orientation.\n\nThis 'disentangling factors of variation' is a key property of VAEs — the latent space has interpretable, independently controllable axes."
+        },
+        {
+          "type": "compare",
+          "heading": "VAE Pros and Cons",
+          "left": {
+            "title": "Advantages",
+            "points": [
+              "Principled probabilistic framework with tractable training",
+              "Structured latent space — can interpolate smoothly",
+              "Enables disentangled representation learning",
+              "Single encoder gives fast inference z given x",
+              "Foundation of Latent Diffusion Models (Stable Diffusion)"
+            ]
+          },
+          "right": {
+            "title": "Disadvantages",
+            "points": [
+              "ELBO is a lower bound — not optimizing true likelihood",
+              "Gaussian decoder → L2 reconstruction loss → blurry outputs",
+              "Generated images often less sharp than GANs",
+              "KL term compresses latent information",
+              "Fix: add adversarial discriminator (used in LDMs)"
+            ]
+          }
         }
       ]
     }
   ],
   "cs13": [
     {
-      "title": "Lecture 14 — Generative Models (Part 2)",
-      "cat": "Overview",
-      "summary": "GAN: adversarial training. Diffusion: iterative denoising. Her ikisi de yüksek kaliteli üretim sağlar.",
-      "context": "CS231n · Lecture 14",
+      "title": "GAN: Setup, Minimax Objective, and Gradient Fix",
+      "cat": "Generative Models",
+      "summary": "GANs pit a Generator against a Discriminator in a two-player minimax game. The vanilla objective suffers from vanishing gradients early in training — fixed by reversing the generator's loss sign.",
+      "context": "CS231n · Lecture 14 · May 20, 2025 · Goodfellow et al. NeurIPS 2014",
       "sections": [
         {
+          "type": "text",
+          "heading": "GAN Setup",
+          "text": "Data: x_i ~ p_data(x). Goal: learn a generator that samples from p_data without ever computing it explicitly.\n\nLatent z ~ p(z) — unit Gaussian noise.\nGenerator G: G(z) = x — maps noise to fake sample.\nGenerator distribution p_G — want p_G = p_data.\nDiscriminator D: D(x) = P(x is real). D(x)→1 means real; D(x)→0 means fake."
+        },
+        {
+          "type": "formula",
+          "heading": "Minimax Objective",
+          "text": "$$\\min_G \\max_D V(G,D) = \\mathbb{E}_{x \\sim p_{data}}[\\log D(x)] + \\mathbb{E}_{z \\sim p(z)}[\\log(1 - D(G(z)))]$$\n\nDiscriminator maximizes V: wants D(x)=1 on real data, D(G(z))=0 on fake data.\nGenerator minimizes V: wants D(G(z))=1 (fool discriminator).\n\nAlternating gradient updates: D updated k steps to maximize V, then G updated 1 step to minimize V. No single loss to monitor — no training curves!"
+        },
+        {
+          "type": "insight",
+          "heading": "Gradient Vanishing Problem and Fix",
+          "text": "Problem: Early in training, G is bad → D easily classifies fakes → D(G(z)) ≈ 0. The gradient of log(1 - D(G(z))) at D(G(z))≈0 is nearly flat — vanishing gradients, G doesn't learn.\n\nFix (non-saturating GAN): instead of minimizing log(1 - D(G(z))), train G to maximize log(D(G(z))). Same optimal solution, but strong gradients exactly when D is most confident fakes are fake — when G needs learning most.\n\nMaximize log D(G(z)) ≡ fake samples should fool D into thinking they're real."
+        }
+      ]
+    },
+    {
+      "title": "GAN Theory: Optimal Discriminator and Convergence Analysis",
+      "cat": "Generative Models",
+      "summary": "At any fixed G, the optimal discriminator D* is the density ratio p_data/(p_data + p_G). Plugging D* into the objective reveals the generator minimizes Jensen-Shannon divergence — but only with caveats.",
+      "context": "CS231n · Lecture 14 · May 20, 2025",
+      "sections": [
+        {
+          "type": "formula",
+          "heading": "Optimal Discriminator",
+          "text": "For fixed G, the optimal discriminator is:\n$$D^*_G(x) = \\frac{p_{data}(x)}{p_{data}(x) + p_G(x)}$$\n\nAt equilibrium: when p_G = p_data, then D*(x) = 1/2 everywhere — discriminator is maximally confused (cannot tell real from fake). This is the ideal state.\n\nSubstituting D* into the objective shows the generator's objective equals:\n$$\\min_G \\: 2 \\cdot D_{JS}(p_{data} \\| p_G) - \\log 4$$\n\nMinimized when p_G = p_data → Jensen-Shannon divergence = 0."
+        },
+        {
           "type": "list",
-          "heading": "Kapsam",
+          "heading": "Caveats About Convergence",
           "items": [
-            "GAN — generator vs discriminator",
-            "GAN eğitim sorunları: mode collapse, unstable",
-            "Diffusion models — forward/reverse process",
-            "DDPM — Denoising Diffusion Probabilistic Models",
-            "Conditional generation"
+            "Neural networks may not be expressive enough to represent the optimal D and G — theory assumes infinite capacity",
+            "No convergence guarantees for the alternating gradient procedure",
+            "In practice: training often unstable, mode collapse (G generates limited variety), oscillation between D and G",
+            "No loss curve to monitor — the objective V is not a reliable measure of sample quality"
+          ]
+        },
+        {
+          "type": "text",
+          "heading": "Latent Space Interpolation",
+          "text": "After training, the GAN latent space supports smooth interpolation:\n\nz_t = t·z_0 + (1-t)·z_1, for t ∈ [0,1]\nx_t = G(z_t)\n\nLinear interpolation in z-space produces semantically smooth transitions in image space. This shows the generator has learned a meaningful latent representation — not just memorized training images."
+        }
+      ]
+    },
+    {
+      "title": "GAN Architectures: DC-GAN and StyleGAN",
+      "cat": "Generative Models",
+      "summary": "DC-GAN was the first GAN to work on real image data using strided convolutions. StyleGAN separates style from content via a mapping network and AdaIN, enabling fine-grained control over generated images.",
+      "context": "CS231n · Lecture 14 · May 20, 2025",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "DC-GAN Generator Architecture (Radford et al. ICLR 2016)",
+          "text": "z (100-dim) → Project and reshape\n  → 4×4×512 feature map\n  → Stride-2 deconv → 8×8×256\n  → Stride-2 deconv → 16×16×128\n  → Stride-2 deconv → 32×32×64\n  → Stride-2 deconv → 64×64×3\n  → tanh activation → output image\n\nKey design choices:\n- No pooling layers — only strided convolutions and deconvolutions\n- BatchNorm in generator and discriminator (except first/last layers)\n- ReLU in generator, LeakyReLU in discriminator\n- First GAN to reliably produce non-toy images"
+        },
+        {
+          "type": "text",
+          "heading": "StyleGAN Architecture (Karras et al. CVPR 2019)",
+          "text": "Decouples 'style' from the generation process:\n\n1. Mapping network f: z ∈ Z → w ∈ W (8 fully-connected layers). Maps noise z to a 'style' space W that is less entangled.\n\n2. Synthesis network g: generates image by progressively applying styles. At each resolution level, AdaIN injects the style w.\n\nAdaIN (Adaptive Instance Normalization):\nAdaIN(x, w, b)_i = w_i · (x_i - μ(x_i)) / σ(x_i) + b_i\n(w_i = scale, b_i = shift, both from style mapping)\n\n3. Noise injection: stochastic noise B added at each layer controls fine details (hair strands, skin pores) independently of global style."
+        },
+        {
+          "type": "compare",
+          "heading": "GAN Era Summary (2016–2021)",
+          "left": {
+            "title": "Pros",
+            "points": [
+              "Simple adversarial formulation",
+              "Very high image quality (especially faces)",
+              "Fast single-step sampling",
+              "Smooth and meaningful latent space",
+              "Enabled photorealistic face synthesis"
+            ]
+          },
+          "right": {
+            "title": "Cons",
+            "points": [
+              "No loss curve — hard to monitor training",
+              "Unstable training — sensitive to hyperparameters",
+              "Mode collapse — limited diversity",
+              "Hard to scale to high resolution",
+              "Replaced by diffusion models ~2021+"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "title": "Diffusion Models: Intuition and Rectified Flow",
+      "cat": "Generative Models",
+      "summary": "Diffusion models train a neural network to gradually remove noise from corrupted data. Rectified Flow (Liu et al. 2022) is the modern formulation: interpolate linearly between data and noise, train a network to predict the direction from data to noise.",
+      "context": "CS231n · Lecture 14 · May 20, 2025 · Liu et al. 2022; Lipman et al. 2022",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Core Intuition",
+          "text": "Pick a noise distribution: z ~ p_noise (unit Gaussian).\nData x is corrupted at noise levels t ∈ [0,1]:\n  t=0: clean data x_0\n  t=1: pure noise z\n\nTrain a neural network f_θ(x_t, t) to remove a little noise at noise level t.\nInference: start from x_1 ~ p_noise, apply f_θ many times iteratively → noiseless x_0."
+        },
+        {
+          "type": "formula",
+          "heading": "Rectified Flow Training Objective",
+          "text": "Setup: x ~ p_data, z ~ p_noise, t ~ Uniform[0,1]\n\nForward process (linear interpolation):\n$$x_t = (1-t)\\,x + t\\,z$$\n\nGround truth velocity (direction from data to noise):\n$$v = z - x$$\n\nTrain network to predict velocity:\n$$L = \\|f_\\theta(x_t, t) - v\\|^2_2 = \\|f_\\theta(x_t, t) - (z-x)\\|^2_2$$"
+        },
+        {
+          "type": "code",
+          "heading": "Rectified Flow: Training and Sampling Code",
+          "text": "# Training\nfor x in dataset:\n    z = torch.randn_like(x)         # sample noise\n    t = random.uniform(0, 1)        # random timestep\n    xt = (1 - t) * x + t * z       # noisy sample\n    v = model(xt, t)                # predict velocity\n    loss = (z - x - v).square().sum()  # L2 vs ground truth velocity\n\n# Sampling (T=50 steps, ODE integration)\nsample = torch.randn(x_shape)      # start from pure noise\nfor t in torch.linspace(1, 0, num_steps):  # step from noise toward data\n    v = model(sample, t)\n    sample = sample - v / num_steps  # Euler step"
+        }
+      ]
+    },
+    {
+      "title": "Conditional Generation and Classifier-Free Guidance (CFG)",
+      "cat": "Generative Models",
+      "summary": "CFG controls conditioning strength by extrapolating beyond the conditional distribution. Training randomly drops the condition y, making one model serve as both conditional and unconditional. A guidance weight w amplifies conditioning quality at inference.",
+      "context": "CS231n · Lecture 14 · May 20, 2025 · Ho and Salimans arXiv 2022; Dhariwal and Nichol arXiv 2021",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Conditional Rectified Flow",
+          "text": "Training: add conditioning label y as input to model — model(xt, y, t).\nSampling: user provides y, model generates conditioned on y.\n\nBut we want more control: how much do we emphasize the conditioning y? Simply conditioning gives images that follow the class, but CFG makes this stronger."
+        },
+        {
+          "type": "formula",
+          "heading": "Classifier-Free Guidance Vectors",
+          "text": "At inference, compute two velocity vectors:\n$$v_\\emptyset = f_\\theta(x_t,\\, y_\\emptyset,\\, t) \\quad \\text{[unconditional: points toward } p(x)\\text{]}$$\n$$v^y = f_\\theta(x_t,\\, y,\\, t) \\quad \\text{[conditional: points toward } p(x|y)\\text{]}$$\n\nCFG velocity (w = guidance weight):\n$$v^{cfg} = (1+w)\\,v^y - w\\,v_\\emptyset$$\n\nThis extrapolates beyond p(x|y) — points MORE strongly toward conditional distribution. Higher w → stronger conditioning, higher quality, less diversity."
+        },
+        {
+          "type": "code",
+          "heading": "CFG Training and Sampling Code",
+          "text": "# Training: randomly drop conditioning\nfor (x, y) in dataset:\n    z = torch.randn_like(x)\n    t = torch.randn(()).sigmoid()    # logit-normal schedule\n    xt = (1 - t) * x + t * z\n    if random.random() < 0.5:       # 50% chance drop conditioning\n        y = y_null                   # same model handles both cases!\n    v = model(xt, y, t)\n    loss = (z - x - v).square().sum()\n\n# Sampling with CFG\ny = user_input()                    # user specifies class/text\nsample = torch.randn(x_shape)\nfor t in torch.linspace(1, 0, num_steps):\n    vy = model(sample, y, t)        # conditional velocity\n    v0 = model(sample, y_null, t)   # unconditional velocity\n    v = (1 + w) * vy - w * v0      # CFG combination\n    sample = sample - v / num_steps"
+        },
+        {
+          "type": "note",
+          "heading": "Why 'Classifier-Free'",
+          "text": "Earlier guidance methods (Dhariwal and Nichol 2021) used a separately trained discriminative classifier p(y|x) to compute guidance gradients ∂/∂x log p(y|x). This required maintaining a separate classifier at each noise level.\n\nCFG eliminates the separate classifier by training both conditional and unconditional modes in one model. One downside: doubles sampling cost — the model must run twice per step (once conditional, once unconditional)."
+        }
+      ]
+    },
+    {
+      "title": "Noise Schedules: Optimal Prediction Analysis",
+      "cat": "Generative Models",
+      "summary": "Uniform sampling over t gives equal weight to all noise levels, but middle noise levels (t≈0.5) are the hardest to predict. Logit-normal sampling concentrates training effort on the difficult middle region, improving model quality.",
+      "context": "CS231n · Lecture 14 · May 20, 2025 · Esser et al. arXiv 2024",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Why Not Uniform t?",
+          "text": "At any timestep t, there may be many pairs (x, z) that give the same x_t — the network must predict the average velocity across all such pairs.\n\nFull noise (t=1): optimal v* = mean of p_data. Easy, unambiguous.\nNo noise (t=0): optimal v* = mean of p_noise. Easy, unambiguous.\nMiddle noise (t≈0.5): most ambiguous — many x and z pairs map to the same x_t. Hardest to predict.\n\nWith uniform sampling, we give equal training weight to easy extreme levels and hard middle levels — suboptimal."
+        },
+        {
+          "type": "code",
+          "heading": "Logit-Normal Noise Schedule",
+          "text": "# Instead of: t = random.uniform(0, 1)\n# Use logit-normal sampling:\nt = torch.randn(()).sigmoid()   # sigmoid(N(0,1)) ≈ peaked at 0.5\n\n# Full training loop with noise schedule:\nfor (x, y) in dataset:\n    z = torch.randn_like(x)\n    t = torch.randn(()).sigmoid()  # ← logit-normal, peaks at middle\n    xt = (1 - t) * x + t * z\n    if random.random() < 0.5: y = y_null\n    v = model(xt, y, t)\n    loss = (z - x - v).square().sum()\n\n# For high-resolution data: shift toward higher t\n# (pixel correlations make low-noise prediction harder)"
+        },
+        {
+          "type": "list",
+          "heading": "Schedule Design Principles",
+          "items": [
+            "Logit-normal: t = sigmoid(N(m, s²)) — common choice for image generation (Esser et al. 2024 / Stable Diffusion 3, FLUX.1)",
+            "Shift to higher noise for high-resolution: 1024×1024 images have strong pixel correlations → low-t denoising is harder → need more training weight at higher noise",
+            "Common practice: use logit-normal with m=0, s=1 as default; tune m and s for specific resolutions",
+            "Problem with wrong schedule: model wastes capacity at easy timesteps, underfits hard middle timesteps"
           ]
         }
       ]
     },
     {
-      "title": "GAN — Generative Adversarial Network",
+      "title": "Latent Diffusion Models (LDMs): VAE + GAN + Diffusion",
       "cat": "Generative Models",
-      "summary": "Generator sahte üretir, Discriminator gerçek/sahte ayırt eder. İkisi birbirini iyileştirir — minimax oyunu.",
-      "context": "CS231n · Lecture 14",
+      "summary": "LDMs solve the pixel-space diffusion scalability problem by running the diffusion process in a compressed latent space. The encoder/decoder is a VAE (with GAN discriminator for sharpness), and diffusion acts on latents — not raw pixels.",
+      "context": "CS231n · Lecture 14 · May 20, 2025 · Rombach et al. CVPR 2022",
       "sections": [
         {
-          "type": "formula",
-          "heading": "GAN Objective",
-          "text": "$$\\min_G \\max_D \\mathbb{E}_{x \\sim p_{data}}[\\log D(x)] + \\mathbb{E}_{z \\sim p_z}[\\log(1 - D(G(z)))]$$\n\nD: gerçeği 1, sahtesi 0 yapmaya çalışıyor\nG: D'yi kandırmaya çalışıyor — D(G(z)) → 1"
+          "type": "code",
+          "heading": "LDM Architecture",
+          "text": "Problem: Rectified Flow on raw pixels doesn't work at high resolution\n(too many dimensions → model capacity wasted on pixel-level details)\n\nSolution: Latent Diffusion Models\n\nStage 1: Train VAE encoder+decoder\n  Image (H×W×3) → Encoder → Latent (H/D × W/D × C)\n  Common: D=8, C=16\n  Example: 256×256×3 → 32×32×16  (128× fewer dimensions)\n  Encoder/Decoder: CNNs with attention\n  Train with: VAE ELBO + small KL weight\n  Problem: decoder outputs blurry (L2 loss averages)\n  Fix: add GAN discriminator → Modern LDMs use VAE + GAN\n\nStage 2: Train diffusion model on latents\n  Noisy latent (H/D × W/D × C) → Diffusion UNet/Transformer\n  → Clean latent → Decoder → Image\n  (Encoder is FROZEN during diffusion training)"
         },
         {
           "type": "list",
-          "heading": "GAN Sorunları",
+          "heading": "LDM Inference Pipeline",
           "items": [
-            "Mode collapse: G tek tip örnek üretiyor, D'yi kandırmak için yeterli",
-            "Training instability: G ve D dengesi zor — biri çok güçlenirse diğeri öğrenemiyor",
-            "Evaluation zor: loss azalması kaliteyle doğrudan ilişkili değil",
-            "Çözüm: WGAN, spectral normalization, progressive growing"
+            "1. Sample random latent: z ~ N(0,I) with shape H/D × W/D × C",
+            "2. Iteratively apply diffusion model to remove noise (30-50 steps for rectified flow)",
+            "3. Run frozen decoder on clean latent → get full-resolution output image",
+            "Note: encoder is only used during TRAINING to compress training images to latents — not at inference"
           ]
         },
         {
           "type": "insight",
-          "heading": "GAN vs VAE",
-          "text": "VAE: bulanık ama çeşitli örnekler. Reconstruction loss piksel bazlı — ortalama alıyor. GAN: keskin ama mode collapse riski. Discriminator piksel yerine 'gerçekçilik' öğreniyor. Diffusion: ikisinden de iyi quality/diversity tradeoff — ama yavaş."
+          "heading": "Why This Works So Well",
+          "text": "Working in latent space instead of pixel space: (1) much smaller dimensionality → diffusion model is more tractable; (2) encoder removes low-level pixel noise and redundancy, latent captures high-level semantics; (3) decoder can fill in high-frequency details from latents (GAN discriminator helps sharpness).\n\nModern LDM pipelines combine all three: VAE (learns latent space), GAN (sharp decoder), Diffusion (generates latent codes).\n\nThis is the architecture behind Stable Diffusion, DALL-E 3, FLUX.1, Imagen 2, etc."
         }
       ]
     },
     {
-      "title": "Diffusion Models — DDPM",
+      "title": "Diffusion Transformer (DiT): Architecture and Conditioning",
       "cat": "Generative Models",
-      "summary": "Forward: gürültü ekle (T adım). Reverse: gürültyüyü tahmin ederek temizle. U-Net denoiser öğreniyor.",
-      "context": "CS231n · Lecture 14",
+      "summary": "DiT replaces the U-Net backbone with Transformer blocks, operating on patchified latents. The main design question is how to inject conditioning signals — via scale/shift (for timestep) or cross-attention/joint attention (for text).",
+      "context": "CS231n · Lecture 14 · May 20, 2025 · Peebles and Xie ICCV 2023",
       "sections": [
         {
-          "type": "text",
-          "heading": "Forward Process",
-          "text": "Gerçek görüntüye T adımda yavaş yavaş Gaussian noise ekle. T adım sonunda tamamen gürültü. Her adım:\nq(x_t | x_{t-1}) = N(x_t; √(1-β_t) x_{t-1}, β_t I)\n\nβ_t: noise schedule (küçük → büyük). Özellik: x_t'yi direkt x_0'dan hesaplayabilirsin — tüm adımları simüle etmek gerekmez."
+          "type": "code",
+          "heading": "DiT Overall Architecture",
+          "text": "Input: Noised Latent (32×32×4)   ← latent from LDM VAE\n  ↓  Patchify + Linear Embed      ← split into 2×2 patches → tokens\n  ↓  + positional embedding\n  ↓  Conditioning: Timestep t, Label y  ← via MLP → scale/shift vectors\n  ↓  N × DiT Block                ← standard Transformer blocks\n  ↓  LayerNorm\n  ↓  Linear + Reshape             ← back to spatial layout\nOutput: Predicted noise Σ (32×32×4)"
+        },
+        {
+          "type": "code",
+          "heading": "DiT Block: Conditioning Injection Methods",
+          "text": "Method 1 — Predict scale/shift (most common for timestep t):\n  Conditioning → MLP → (γ₁, β₁, α₁, γ₂, β₂, α₂)\n  x = LayerNorm(x)             ← normalize\n  x = γ₁ · x + β₁             ← scale and shift (AdaLN)\n  x = MultiHeadSelfAttention(x)\n  x = α₁ · x + residual       ← gated residual\n  x = LayerNorm(x)\n  x = γ₂ · x + β₂\n  x = PointwiseFeedforward(x)\n  x = α₂ · x + residual\n\nMethod 2 — Cross-Attention (common for text conditioning):\n  Q from image tokens, K,V from text tokens\n  → each image patch attends to all text tokens\n\nMethod 3 — Joint Attention (MM-DiT in Stable Diffusion 3, FLUX.1):\n  Concatenate image and text tokens on sequence dimension\n  → image and text attend to each other simultaneously"
+        },
+        {
+          "type": "note",
+          "heading": "DiT Scaling Properties",
+          "text": "DiT demonstrated that diffusion models follow the same scaling laws as language models (Peebles and Xie ICCV 2023): larger models (more parameters, more Transformer depth/width) produce better FID scores for the same compute budget. This motivated scaling to billions of parameters — FLUX.1 (12B), MovieGen (30B)."
+        }
+      ]
+    },
+    {
+      "title": "Text-to-Image and Text-to-Video Pipelines",
+      "cat": "Generative Models",
+      "summary": "Modern text-to-image systems combine a pretrained text encoder (T5/CLIP), latent diffusion with DiT backbone, and a VAE decoder. Text-to-video extends the same architecture by adding a temporal dimension to the latent space.",
+      "context": "CS231n · Lecture 14 · May 20, 2025",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Text-to-Image Pipeline",
+          "text": "Text Prompt\n  → Pretrained Text Encoder (T5, CLIP)\n  → Text Embeddings (D × L tokens)\n       ↓\n  Noisy Latents (h×w×c)  ──────────────────┐\n  Text Embeddings ──────→ Diffusion         │\n  Timestep t ───────────→ Transformer (DiT) │  (iterative)\n                          ↓                 │\n                     Clean Latents ─────────┘\n                          ↓\n                       Decoder (CNN+attn)\n                          ↓\n                    Output Image (H×W×3)\n\nExample — FLUX.1 [dev]:\n  Text Encoder: T5 + CLIP\n  VAE: 8×8 downsampling (256×256×3 → 32×32×16)\n  Diffusion: 12B parameter DiT, 2×2 patchify → 64×64 = 1024 image tokens\n  Output: 1024×1024×3"
+        },
+        {
+          "type": "code",
+          "heading": "Text-to-Video Pipeline",
+          "text": "Same architecture — add temporal dimension to latents:\n\n  Video latents: t×h×w×c  (instead of h×w×c for images)\n  DiT processes spatial AND temporal tokens jointly\n  Decoder: 3D CNN → output video T×H×W×3\n\nExample — Meta MovieGen:\n  Text Encoder: UL2 + ByT5 + MetaCLIP (3 encoders)\n  VAE: 8×8×8 spatial-temporal downsampling\n  Diffusion: 30B parameter DiT, 1×2×2 patchify → 76K tokens\n  Output: 257×1024×576×3 video"
+        },
+        {
+          "type": "list",
+          "heading": "Era of Video Diffusion Models (2024–2025)",
+          "items": [
+            "WALT (Google) 460M params — early video diffusion, January 2024",
+            "Sora (OpenAI) — first major breakthrough, March 2024, no technical details released",
+            "MovieGen (Meta) 30B — detailed technical report, November 2024",
+            "Cosmos (NVIDIA) 14B — open-source world foundation model, January 2025",
+            "Wan (Alibaba) 14B — open-source, March 2025",
+            "Key challenge: 76K+ tokens per video vs 1K tokens per image — 75× more compute"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Generalized Diffusion: VP, VE, Score Functions, and SDEs",
+      "cat": "Generative Models",
+      "summary": "Rectified Flow is a special case of a generalized diffusion framework parameterized by schedule functions a(t), b(t). Different choices give Variance-Preserving (VP-diffusion), Variance-Exploding (VE-diffusion), or Rectified Flow. All three perspectives — latent variable model, score function, and SDE — describe the same process.",
+      "context": "CS231n · Lecture 14 · May 20, 2025 · Song et al. ICLR 2021; Ho et al. NeurIPS 2020",
+      "sections": [
+        {
+          "type": "formula",
+          "heading": "Generalized Diffusion Framework",
+          "text": "General forward process: $x_t = a(t)\\,x + b(t)\\,z$\nGeneral target: $y_{gt} = c(t)\\,x + d(t)\\,z$\n\nSpecial cases:\n\nRectified Flow: $a(t)=1{-}t,\\; b(t)=t,\\; c(t)=-1,\\; d(t)=1$ → predict velocity v = z - x\n\nVariance-Preserving (VP): $a(t)=\\sqrt{\\sigma(t)},\\; b(t)=\\sqrt{1{-}\\sigma(t)}$ → if Var(x)=1 and Var(z)=1 then Var(x_t)=1 always (DDPM, DDIM)\n\nVariance-Exploding (VE): $a(t)=1,\\; b(t)=\\sigma(t)$ → σ(1) must be large enough to drown all signal; noise variance grows unboundedly\n\nPrediction targets: x-prediction [c=1,d=0], ε-prediction [c=0,d=1], v-prediction [c=b(t),d=-a(t)]"
+        },
+        {
+          "type": "list",
+          "heading": "Three Mathematical Perspectives on Diffusion",
+          "items": [
+            "Latent variable model (DDPM): forward process q(x_t|x_{t-1}) adds Gaussian noise; backward p_θ(x_{t-1}|x_t) is learned; optimize ELBO lower bound — exactly the same as VAE (Ho et al. NeurIPS 2020)",
+            "Score function (Song and Ermon NeurIPS 2019): score s(x) = ∂/∂x log p(x) is a vector field pointing toward high-density regions; diffusion learns s_θ(x_t, t) to approximate the score of p_data at each noise level",
+            "Stochastic differential equation (Song et al. ICLR 2021): dx = f(x,t)dt + g(t)dw describes continuous noising; diffusion learns to approximately reverse-solve this SDE (neural ODE/SDE solver)"
+          ]
         },
         {
           "type": "text",
-          "heading": "Reverse Process",
-          "text": "Gürültüden başla, her adımda gürültüyü tahmin edip çıkar. U-Net modeli ε_θ(x_t, t) öğreniyor — t adımındaki gürültüyü tahmin et.\n\nEğitim: rastgele t seç, o adımdaki gürültüyü ekle, modelin gürültüyü tahmin etmesini öğret. Loss: ||ε - ε_θ(x_t, t)||²"
-        },
-        {
-          "type": "compare",
-          "heading": "GAN vs Diffusion",
-          "left": {
-            "title": "GAN",
-            "points": [
-              "Tek adım üretim — hızlı",
-              "Training unstable",
-              "Mode collapse riski",
-              "2015-2020 dominant"
-            ]
-          },
-          "right": {
-            "title": "Diffusion",
-            "points": [
-              "T adım üretim — yavaş",
-              "Training stabil",
-              "Yüksek diversity",
-              "2020+ dominant (DALL-E, Stable Diffusion)"
-            ]
-          }
+          "heading": "Diffusion Distillation",
+          "text": "Problem: rectified flow requires ~30-50 denoising steps — each step runs the full (large) model. Generating one image takes seconds.\n\nDistillation: train a student model to reproduce the teacher's full multi-step output in fewer steps — sometimes as few as 1 step.\n\nMethods: Progressive Distillation (Salimans and Ho, ICLR 2022), Consistency Models (Song et al. ICML 2023), Adversarial Diffusion Distillation (Sauer et al. ECCV 2024).\n\nDistillation can also bake in CFG — the student learns to produce CFG-quality outputs without running two forward passes per step."
         }
       ]
     }
