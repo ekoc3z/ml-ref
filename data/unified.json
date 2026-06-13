@@ -9352,13 +9352,541 @@
     {
       "title": "Session 6 — Genel Çerçeve",
       "cat": "Overview",
-      "summary": "GAN: Generator ve Discriminator adversarial training. Generator sahte görüntü üretir, Discriminator gerçek/sahte ayırt eder.",
+      "summary": "GAN: Generator ve Discriminator iki ağın adversarial yarışması. Generator gürültüden gerçekçi görüntü üretir; Discriminator gerçek/sahte ayırt eder. Lab: Vanilla GAN ve DCGAN MNIST üzerinde.",
       "context": "ML Lab · Session 6",
       "sections": [
         {
+          "type": "list",
+          "heading": "Kapsam",
+          "items": [
+            "1. GAN temelleri — Generator, Discriminator, minimax oyun",
+            "2. GAN loss — orijinal (log(1-D)) vs iyileştirilmiş (log D trick)",
+            "3. Optimal Discriminator D* — teorik çıkarım",
+            "4. Training loop — G ve D'yi dönüşümlü güncelleme",
+            "5. Mode collapse problemi",
+            "6. DCGAN — Conv tabanlı mimari, BatchNorm, LeakyReLU",
+            "7. Wasserstein GAN — W mesafesi, weight clipping",
+            "8. CycleGAN — eşleşmemiş görüntü çevirisi, cycle consistency",
+            "9. pix2pix — şartlı (conditional) GAN, eşleşmiş çeviri",
+            "10. StyleGAN — mapping network, AdaIN, stil enjeksiyonu"
+          ]
+        },
+        {
           "type": "note",
-          "heading": "İçerik",
-          "text": "Bu section ilerleyen zamanlarda doldurulacak. Lab 6 içeriği: GAN mimarisi, Generator/Discriminator loss, adversarial training loop, mode collapse, training instability."
+          "heading": "Kaynaklar (Preparation)",
+          "text": "Zorunlu okuma: Goodfellow et al. (2014) 'Generative Adversarial Networks'; Radford et al. (2015) 'Unsupervised Representation Learning with Deep Convolutional GANs'. İleri okuma: WGAN (Arjovsky et al.), pix2pix (Isola et al.), CycleGAN (Zhu et al.), StyleGAN (Karras et al.)."
+        },
+        {
+          "type": "compare",
+          "heading": "Vanilla GAN vs DCGAN",
+          "left": {
+            "title": "Vanilla GAN",
+            "points": [
+              "Tamamen Linear (FC) katmanlar",
+              "Giriş görüntüsü flatten edilir (784 boyut)",
+              "latent_size=100, hidden_size=256",
+              "Daha kararsız eğitim",
+              "MNIST 28×28 üzerinde"
+            ]
+          },
+          "right": {
+            "title": "DCGAN",
+            "points": [
+              "ConvTranspose2d / Conv2d katmanlar",
+              "Spatial yapı korunur",
+              "BatchNorm + LeakyReLU",
+              "Daha stabil eğitim",
+              "MNIST 64×64 (resize edilmiş)"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "title": "GAN Temelleri — Generator ve Discriminator",
+      "cat": "GAN Mimarisi",
+      "summary": "GAN iki ağdan oluşur: Generator gürültüden (latent z) sahte veri üretir; Discriminator gerçek veriyi sahteden ayırt etmeye çalışır. İkisi birbirini iyileştiren bir yarış oynar.",
+      "context": "ML Lab · Session 6",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Sezgisel Analoji",
+          "text": "Generator = kalpazancı: sahte para basmayı öğreniyor. Discriminator = polis: sahte parayı gerçekten ayırt etmeyi öğreniyor. İkisi birbirini eğitiyor — kalpazan daha iyi sahte para basınca polis daha iyi ayırt etmeyi öğrenmeli, polis iyi olunca kalpazan daha gerçekçi üretmeli."
+        },
+        {
+          "type": "compare",
+          "heading": "Generator vs Discriminator",
+          "left": {
+            "title": "Generator G",
+            "points": [
+              "Giriş: z ~ N(0,I) latent vektör",
+              "Çıkış: G(z) — sahte görüntü",
+              "Amaç: D'yi kandırmak",
+              "Hiçbir zaman gerçek veriyi görmez",
+              "Tanh aktivasyon (çıkış [-1,1])"
+            ]
+          },
+          "right": {
+            "title": "Discriminator D",
+            "points": [
+              "Giriş: x (gerçek) veya G(z) (sahte)",
+              "Çıkış: D(x) ∈ [0,1] — gerçek olasılığı",
+              "Amaç: gerçeği 1, sahteyi 0 tahmin et",
+              "Hem gerçek hem sahte veriyi görür",
+              "Sigmoid aktivasyon (çıkış [0,1])"
+            ]
+          }
+        },
+        {
+          "type": "code",
+          "heading": "Vanilla GAN — PyTorch İmplementasyonu",
+          "text": "# Hiperparametreler\nlatent_size = 100\nhidden_size = 256\nimage_size  = 784   # 28×28 flatten\n\n# Discriminator: 784 → 256 → 256 → 1 (sigmoid)\ndiscriminator = nn.Sequential(\n    nn.Linear(image_size, hidden_size),\n    nn.ReLU(),\n    nn.Linear(hidden_size, hidden_size),\n    nn.ReLU(),\n    nn.Linear(hidden_size, 1),\n    nn.Sigmoid()\n)\n\n# Generator: 100 → 256 → 256 → 784 (tanh)\ngenerator = nn.Sequential(\n    nn.Linear(latent_size, hidden_size),\n    nn.ReLU(),\n    nn.Linear(hidden_size, hidden_size),\n    nn.ReLU(),\n    nn.Linear(hidden_size, image_size),\n    nn.Tanh()\n)\n\n# Generator çıkışı Tanh → [-1,1]\n# Veri de [-1,1] normalize edilmiş → eşleşiyor"
+        },
+        {
+          "type": "insight",
+          "heading": "Neden Tanh (Generator) ve Sigmoid (Discriminator)?",
+          "text": "Generator: veri [-1, 1]'de normalize edildiği için Tanh çıkışı bu aralığı üretiyor. Discriminator: ikili karar (gerçek/sahte) olduğundan Sigmoid ile [0,1] olasılık çıkarıyor. Discriminator'daki Sigmoid, BCELoss ile birlikte doğal log-likelihood ifadesini veriyor."
+        }
+      ]
+    },
+    {
+      "title": "GAN Loss — Minimax Hedefi",
+      "cat": "GAN Loss",
+      "summary": "GAN iki oyunculu minimax oyundur. D, gerçek görüntülere yüksek, sahtelere düşük olasılık vermeye çalışır. G, D'yi kandıracak görüntüler üretmeye çalışır.",
+      "context": "ML Lab · Session 6",
+      "sections": [
+        {
+          "type": "formula",
+          "heading": "Orijinal Minimax Hedefi (Goodfellow et al.)",
+          "text": "$$\\min_G \\max_D V(D,G) = \\mathbb{E}_{x \\sim p_{data}}[\\log D(x)] + \\mathbb{E}_{z \\sim p_z}[\\log(1 - D(G(z)))]$$\n\nDiscriminator $D$ bu değeri **maksimize** etmek ister:\n- Gerçek $x$ için $D(x) \\to 1$ → $\\log D(x)$ büyür\n- Sahte $G(z)$ için $D(G(z)) \\to 0$ → $\\log(1-D(G(z)))$ büyür\n\nGenerator $G$ bu değeri **minimize** etmek ister:\n- $D(G(z)) \\to 1$ olsun → $\\log(1-D(G(z)))$ küçülür"
+        },
+        {
+          "type": "formula",
+          "heading": "Log Trick — İyileştirilmiş G Loss",
+          "text": "Orijinal G hedefi: $\\min_G \\log(1 - D(G(z)))$\n\nProblem: eğitim başında $D(G(z)) \\approx 0$ olduğundan gradient neredeyse sıfır → G öğrenemiyor (saturasyon).\n\nÇözüm (non-saturating loss):\n$$\\max_G \\log(D(G(z))) \\quad \\equiv \\quad \\min_G -\\log(D(G(z)))$$\n\nAynı Nash dengesi, ama pratik gradyanlar çok daha güçlü. Lab'da: `g_loss = criterion(outputs, real_labels)` — D çıkışı gerçek label ile karşılaştırılıyor."
+        },
+        {
+          "type": "code",
+          "heading": "BCELoss ile GAN Loss",
+          "text": "criterion = nn.BCELoss()\n# BCELoss(p, y) = -y*log(p) - (1-y)*log(1-p)\n\n# --- Discriminator Loss ---\n# Gerçek görüntüler → label=1 hedefle\nd_loss_real = criterion(D(x_real), real_labels)   # -log(D(x))\n# Sahte görüntüler → label=0 hedefle\nd_loss_fake = criterion(D(G(z)), fake_labels)     # -log(1 - D(G(z)))\nd_loss = d_loss_real + d_loss_fake\n\n# --- Generator Loss (log trick) ---\n# Sahte görüntüler için label=1 hedefle → -log(D(G(z))) minimize\ng_loss = criterion(D(G(z)), real_labels)          # -log(D(G(z)))"
+        },
+        {
+          "type": "note",
+          "heading": "Neden real_labels Generator'da?",
+          "text": "G, sahte görüntüler için D'nin 1 (gerçek) demesini istiyor. BCELoss(D(G(z)), real_labels=1) = -log(D(G(z))). Yani G, D'yi kandırmak için bu kaybı minimize eder — bu da D(G(z))'yi 1'e yaklaştırır."
+        }
+      ]
+    },
+    {
+      "title": "GAN Training Loop — Dönüşümlü Güncelleme",
+      "cat": "GAN Eğitimi",
+      "summary": "Her mini-batch'te önce D güncellenir, sonra G güncellenir. İkisi ayrı optimizer kullanır. G ve D'nin gradyanları birbirine karışmaması için zero_grad dikkatli uygulanmalı.",
+      "context": "ML Lab · Session 6",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Tam Training Loop",
+          "text": "g_optimizer = torch.optim.Adam(generator.parameters(),     lr=0.0005)\nd_optimizer = torch.optim.Adam(discriminator.parameters(), lr=0.0005)\ncriterion   = nn.BCELoss()\n\nfor epoch in range(num_epochs):\n    for i, (images, _) in enumerate(data_loader):\n        images      = images.reshape(batch_size, -1).to(device)  # flatten\n        real_labels = torch.ones(batch_size,  1).to(device)\n        fake_labels = torch.zeros(batch_size, 1).to(device)\n\n        # ===== 1. Discriminator Adımı =====\n        d_loss_real = criterion(discriminator(images), real_labels)\n\n        z           = torch.randn(batch_size, latent_size).to(device)\n        fake_imgs   = generator(z)\n        d_loss_fake = criterion(discriminator(fake_imgs), fake_labels)\n\n        d_loss = d_loss_real + d_loss_fake\n        d_optimizer.zero_grad()\n        g_optimizer.zero_grad()\n        d_loss.backward()          # sadece D güncellenir (G detach edilmedi\n        d_optimizer.step()         #  ama g_optimizer.step() çağrılmıyor)\n\n        # ===== 2. Generator Adımı =====\n        z         = torch.randn(batch_size, latent_size).to(device)\n        fake_imgs = generator(z)\n        g_loss    = criterion(discriminator(fake_imgs), real_labels)\n\n        d_optimizer.zero_grad()\n        g_optimizer.zero_grad()\n        g_loss.backward()          # hem G hem D gradyanları var\n        g_optimizer.step()         # sadece G ağırlıkları güncellenir"
+        },
+        {
+          "type": "insight",
+          "heading": "Neden Ayrı z Örnekleniyor?",
+          "text": "D adımındaki fake_images.backward() sonrası bu graf silinir. G adımı için yeni z ~ N(0,I) örneklenerek yeni graf oluşturulur. Böylece G güncelleme adımında temiz gradyan akışı sağlanır. Alternatif: D adımında fake_images = generator(z).detach() kullanmak — ama lab bu yolu seçmiyor."
+        },
+        {
+          "type": "list",
+          "heading": "Training'de Dikkat Edilecekler",
+          "items": [
+            "G ve D ayrı optimizer — biri adım atarken diğeri adım atmıyor",
+            "zero_grad() her iki optimizer için de her adımda çağrılıyor",
+            "D adımı: d_optimizer.step() çağrılır, g_optimizer.step() çağrılmaz",
+            "G adımı: g_optimizer.step() çağrılır, d_optimizer.step() çağrılmaz",
+            "D(x) (real score) ~0.5 civarında dengede olmalı eğitim sonunda",
+            "G kaybı düşmüyor mu? → D çok güçlü, G gradient alamıyor"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Optimal Discriminator D* — Teorik Çıkarım",
+      "cat": "GAN Teorisi",
+      "summary": "Sabit G için optimal D* veri dağılımı ile generator dağılımının oranını verir. Bu D* dengesinde G, iki dağılım arasındaki Jensen-Shannon divergence'ı minimize eder.",
+      "context": "ML Lab · Session 6",
+      "sections": [
+        {
+          "type": "formula",
+          "heading": "Optimal D* (Sabit G İçin)",
+          "text": "Sabit $G$ için $V(D, G)$'yi $D$ üzerinde maksimize et:\n\n$$V(D,G) = \\int_x p_{data}(x) \\log D(x) + p_g(x) \\log(1-D(x)) \\, dx$$\n\nHer $x$ için integrand'ı $D(x)$'e göre türev alıp sıfırla:\n\n$$D^*(x) = \\frac{p_{data}(x)}{p_{data}(x) + p_g(x)}$$\n\n$p_{data} = p_g$ olduğunda $D^*(x) = \\frac{1}{2}$ — D gerçeği sahteden ayırt edemiyor."
+        },
+        {
+          "type": "formula",
+          "heading": "Global Optimum ve Jensen-Shannon Divergence",
+          "text": "$D^*$ yerine koyunca G hedefi:\n\n$$C(G) = -\\log 4 + 2 \\cdot \\text{JSD}(p_{data} \\| p_g)$$\n\nJSD $\\geq 0$ ve JSD = 0 ↔ $p_g = p_{data}$.\n\nGlobal minimum $C(G^*) = -\\log 4$ iken $p_g = p_{data}$.\n\nYani G'nin global optimumu: üretilen dağılımın gerçek dağılıma eşit olması."
+        },
+        {
+          "type": "insight",
+          "heading": "Pratik Önem",
+          "text": "D* analizi neden önemli: eğitimde D çok hızlı mükemmel olursa (D* yakınsaması) G gradient alamaz (log(1-D(G(z))) = log(1) = 0). Bu yüzden pratikte D G'den çok daha güçlü olmamalı — her epoch'ta D'yi k kez, G'yi 1 kez güncellemek veya log trick kullanmak bu problemi azaltır."
+        }
+      ]
+    },
+    {
+      "title": "Mode Collapse — GAN'ların Temel Problemi",
+      "cat": "GAN Sorunları",
+      "summary": "Mode collapse: Generator çeşitlilik yerine tek tip (veya çok az çeşit) çıktı üretmeyi öğreniyor. Veri dağılımının tüm modlarını kapsayamıyor.",
+      "context": "ML Lab · Session 6",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Nedir?",
+          "text": "Gerçek veri çok modlu bir dağılıma sahip (MNIST'te 10 rakam = 10 mod). Generator bir modu keşfedince D'yi o modla kandırabildiğini görür ve diğer modları ihmal eder. Zamanla belki sadece '1' veya '7' üretir — geri kalan rakamları hiç üretemez hale gelir."
+        },
+        {
+          "type": "compare",
+          "heading": "Mode Collapse Belirtileri vs Sağlıklı Eğitim",
+          "left": {
+            "title": "Mode Collapse",
+            "points": [
+              "Üretilen görüntüler birbirinin neredeyse aynısı",
+              "G loss çok düşük, D loss yüksek veya oscillating",
+              "D(G(z)) ≈ 1 hızla ulaşılıyor ama çeşitlilik yok",
+              "Farklı z'ler için benzer çıktılar"
+            ]
+          },
+          "right": {
+            "title": "Sağlıklı Eğitim",
+            "points": [
+              "D(x) ≈ 0.5, D(G(z)) ≈ 0.5 dengeye yakın",
+              "G loss ve D loss dengeli oscillate",
+              "Farklı z'ler çeşitli, tanınabilir rakamlar üretiyor",
+              "Epoch ilerledikçe görsel kalite artar"
+            ]
+          }
+        },
+        {
+          "type": "list",
+          "heading": "Mode Collapse'e Karşı Çözümler",
+          "items": [
+            "Minibatch discrimination — D, batch içindeki çeşitliliği değerlendiriyor",
+            "Unrolled GAN — G, D'nin birkaç adım sonraki tepkisini öngörüyor",
+            "Wasserstein GAN — daha kararlı gradient sinyali",
+            "Spectral normalization — D'nin Lipschitz koşulunu zorluyor",
+            "Daha küçük learning rate — ani atlama önleniyor",
+            "Feature matching — G'nin sadece D skorunu değil ara katman istatistiklerini de eşlemesi"
+          ]
+        },
+        {
+          "type": "note",
+          "heading": "Lab Gözlemi",
+          "text": "Vanilla GAN eğitiminde bazen D(x) ve D(G(z)) değerlerinin log'u takip edin. D(x) ≈ 1, D(G(z)) ≈ 0 olup kalmaya başlarsa mode collapse veya training collapse işareti. DCGAN genellikle daha stabil — conv yapısı gradyanları daha düzgün akıtıyor."
+        }
+      ]
+    },
+    {
+      "title": "DCGAN — Convolutional GAN Mimarisi",
+      "cat": "DCGAN",
+      "summary": "DCGAN (Radford et al. 2015): FC katmanlar yerine ConvTranspose2d/Conv2d kullanır. BatchNorm, LeakyReLU ve no-pooling prensipleriyle vanilla GAN'a göre çok daha stabil eğitim sağlar.",
+      "context": "ML Lab · Session 6",
+      "sections": [
+        {
+          "type": "list",
+          "heading": "DCGAN Tasarım Prensipleri",
+          "items": [
+            "Pooling yerine strided conv (D) ve ConvTranspose2d (G) — downsampling/upsampling öğreniliyor",
+            "BatchNorm — hem G hem D'de (G çıkış katmanı ve D giriş katmanı hariç)",
+            "FC katman yok — sadece conv (G'de son ConvTranspose çıkış veriyor)",
+            "Generator: ReLU aktivasyon, çıkışta Tanh",
+            "Discriminator: LeakyReLU (α=0.2) aktivasyon, çıkışta Sigmoid",
+            "Adam optimizer, lr=0.0002, β1=0.5"
+          ]
+        },
+        {
+          "type": "code",
+          "heading": "DCGAN Generator — 100 → 1×64×64",
+          "text": "feature_maps = 64\nlatent_size  = 100   # z: (batch, 100, 1, 1)\n\ng_c = nn.Sequential(\n    # 100×1×1 → 512×4×4\n    nn.ConvTranspose2d(latent_size, feature_maps*8, kernel_size=4, stride=1, padding=0, bias=False),\n    nn.BatchNorm2d(feature_maps*8),\n    nn.ReLU(),\n    # 512×4×4 → 256×8×8\n    nn.ConvTranspose2d(feature_maps*8, feature_maps*4, kernel_size=4, stride=2, padding=1, bias=False),\n    nn.BatchNorm2d(feature_maps*4),\n    nn.ReLU(),\n    # 256×8×8 → 128×16×16\n    nn.ConvTranspose2d(feature_maps*4, feature_maps*2, kernel_size=4, stride=2, padding=1, bias=False),\n    nn.BatchNorm2d(feature_maps*2),\n    nn.ReLU(),\n    # 128×16×16 → 64×32×32\n    nn.ConvTranspose2d(feature_maps*2, feature_maps,   kernel_size=4, stride=2, padding=1, bias=False),\n    nn.BatchNorm2d(feature_maps),\n    nn.ReLU(),\n    # 64×32×32 → 1×64×64\n    nn.ConvTranspose2d(feature_maps,   1,               kernel_size=4, stride=2, padding=1, bias=False),\n    nn.Tanh()\n)\n# z giriş boyutu: (batch, latent_size, 1, 1)  ← dikkat, vanilla'dan farklı\nz = torch.randn(batch_size, latent_size, 1, 1).to(device)"
+        },
+        {
+          "type": "code",
+          "heading": "DCGAN Discriminator — 1×64×64 → 1",
+          "text": "d_c = nn.Sequential(\n    # 1×64×64 → 64×32×32  (ilk katmanda BatchNorm yok)\n    nn.Conv2d(1, feature_maps,   kernel_size=4, stride=2, padding=1, bias=False),\n    nn.LeakyReLU(0.2),\n    # 64×32×32 → 128×16×16\n    nn.Conv2d(feature_maps,   feature_maps*2, kernel_size=4, stride=2, padding=1, bias=False),\n    nn.BatchNorm2d(feature_maps*2),\n    nn.LeakyReLU(0.2),\n    # 128×16×16 → 256×8×8\n    nn.Conv2d(feature_maps*2, feature_maps*4, kernel_size=4, stride=2, padding=1, bias=False),\n    nn.BatchNorm2d(feature_maps*4),\n    nn.LeakyReLU(0.2),\n    # 256×8×8 → 512×4×4\n    nn.Conv2d(feature_maps*4, feature_maps*8, kernel_size=4, stride=2, padding=1, bias=False),\n    nn.BatchNorm2d(feature_maps*8),\n    nn.LeakyReLU(0.2),\n    # 512×4×4 → 1×1×1\n    nn.Conv2d(feature_maps*8, 1,              kernel_size=4, stride=1, padding=0, bias=False),\n    nn.Sigmoid()\n)"
+        },
+        {
+          "type": "insight",
+          "heading": "Neden LeakyReLU (Discriminator)?",
+          "text": "ReLU negatif değerleri tamamen sıfırlar — ölü nöron problemi. LeakyReLU(0.2): negatif girişler için küçük bir eğim (0.2×) sağlar. D'nin daha zengin gradient akışı ile G hakkında daha bilgilendirici geri bildirim verebilmesini sağlar. Generator'da ReLU yeterli çünkü oradan geriye gradient akışı kritik değil."
+        }
+      ]
+    },
+    {
+      "title": "Wasserstein GAN — W Mesafesi ve Daha Stabil Eğitim",
+      "cat": "WGAN",
+      "summary": "WGAN (Arjovsky et al. 2017): JS-divergence yerine Wasserstein (Earth Mover's) mesafesi kullanır. Daha anlamlı gradient sinyali, mode collapse'e daha dayanıklı. Discriminator yerine 'Critic' denir.",
+      "context": "ML Lab · Session 6",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Neden JS-Divergence Problematik?",
+          "text": "Orijinal GAN JS-divergence minimize eder. Eğer $p_{data}$ ve $p_g$ örtüşmüyorsa (yüksek boyutlu uzayda çoğunlukla öyle) JSD = log(2) sabit olur — gradient sıfır. D mükemmel olduğunda G'ye hiç gradient gitmiyor. Bu training collapse ve mode collapse'in temel nedeni."
+        },
+        {
+          "type": "formula",
+          "heading": "Wasserstein Mesafesi (Earth Mover's Distance)",
+          "text": "$$W(p_{data}, p_g) = \\sup_{\\|f\\|_L \\leq 1} \\mathbb{E}_{x \\sim p_{data}}[f(x)] - \\mathbb{E}_{x \\sim p_g}[f(x)]$$\n\n$f$: 1-Lipschitz fonksiyon (Critic ağı). Sezgisel: gerçek dağılımı sahte dağılıma 'taşımak' için gereken minimum iş.\n\nAncak $\\|f\\|_L \\leq 1$ koşulunu zorlamak için **weight clipping**: her güncelleme sonrası Critic ağırlıkları $[-c, c]$ aralığına clip edilir (ör. $c=0.01$)."
+        },
+        {
+          "type": "compare",
+          "heading": "Vanilla GAN vs WGAN",
+          "left": {
+            "title": "Vanilla GAN",
+            "points": [
+              "Loss: JS-Divergence (indirekt)",
+              "Discriminator: Sigmoid çıkış (olasılık)",
+              "Loss sinyali doygunlukta sıfırlanabilir",
+              "D G'den çok güçlü olamaz",
+              "Training instability yüksek"
+            ]
+          },
+          "right": {
+            "title": "WGAN",
+            "points": [
+              "Loss: Wasserstein mesafesi",
+              "Critic: Sigmoid yok, ham skor",
+              "Her zaman anlamlı gradient sinyali",
+              "Critic G'yi geçebilir — sorun değil",
+              "Daha stabil, mode collapse az"
+            ]
+          }
+        },
+        {
+          "type": "code",
+          "heading": "WGAN Training Farkı",
+          "text": "# WGAN'da loss fonksiyonu değişiyor:\n# Critic loss (maximize W mesafesi):\nc_loss = -torch.mean(critic(real)) + torch.mean(critic(fake))\n\n# Generator loss (minimize W mesafesi):\ng_loss = -torch.mean(critic(fake_images))\n\n# Weight clipping (Lipschitz koşulu):\nfor p in critic.parameters():\n    p.data.clamp_(-0.01, 0.01)\n\n# Not: BCELoss kullanılmıyor, Sigmoid yok\n# Critic her batch'te n_critic=5 kez güncelleniyor\n# G ise her 5 adımda 1 kez güncelleniyor"
+        },
+        {
+          "type": "note",
+          "heading": "WGAN-GP (Geliştirilmiş Versiyon)",
+          "text": "Weight clipping yerine Gradient Penalty kullanılır: $\\lambda \\cdot (\\|\\nabla_x f(x)\\|_2 - 1)^2$ terimi loss'a eklenir. Daha kararlı Lipschitz koşul sağlaması, weight clipping'in kapasiteyi kırpması probleminden kurtulur. Bugün WGAN-GP standart WGAN alternatifi."
+        }
+      ]
+    },
+    {
+      "title": "CycleGAN — Eşleşmemiş Görüntü Çevirisi",
+      "cat": "Koşullu GAN",
+      "summary": "CycleGAN (Zhu et al. 2017): eşleşmiş görüntü çiftleri olmadan bir domain'den diğerine çeviri öğrenir. Cycle consistency loss: A→B→A' ≈ A. At↔Zebra, Yaz↔Kış gibi dönüşümler.",
+      "context": "ML Lab · Session 6",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Problem: Eşleşmemiş Veri",
+          "text": "pix2pix gibi modeller her görüntü için eşleşmiş çift ister (at fotoğrafı ↔ zebra fotoğrafı). Pratikte bu çok zor toplamak — aynı sahneyi hem yaz hem kış çekmek gibi. CycleGAN iki domain'in görüntü setlerini (eşleşmesiz) kullanarak çeviri öğrenir."
+        },
+        {
+          "type": "formula",
+          "heading": "Cycle Consistency Loss",
+          "text": "İki generator: $G: A \\to B$ ve $F: B \\to A$. İki discriminator: $D_A$, $D_B$.\n\n**Forward cycle**: $x \\to G(x) \\to F(G(x)) \\approx x$\n**Backward cycle**: $y \\to F(y) \\to G(F(y)) \\approx y$\n\n$$\\mathcal{L}_{cyc}(G, F) = \\mathbb{E}_x[\\|F(G(x)) - x\\|_1] + \\mathbb{E}_y[\\|G(F(y)) - y\\|_1]$$\n\nToplam loss:\n$$\\mathcal{L} = \\mathcal{L}_{GAN}(G, D_B) + \\mathcal{L}_{GAN}(F, D_A) + \\lambda \\mathcal{L}_{cyc}(G, F)$$\n\n$\\lambda$ cycle weight, genellikle $\\lambda = 10$."
+        },
+        {
+          "type": "compare",
+          "heading": "CycleGAN Bileşenleri",
+          "left": {
+            "title": "Generator (G ve F)",
+            "points": [
+              "ResNet tabanlı encoder-decoder",
+              "G: Domain A → Domain B",
+              "F: Domain B → Domain A",
+              "Cycle: F(G(x)) ≈ x ve G(F(y)) ≈ y"
+            ]
+          },
+          "right": {
+            "title": "Discriminator (D_A ve D_B)",
+            "points": [
+              "PatchGAN: görüntüyü parçalara bölerek değerlendirir",
+              "D_A: A domain'indeki görüntüleri test eder",
+              "D_B: B domain'indeki görüntüleri test eder",
+              "Her patch için gerçek/sahte kararı"
+            ]
+          }
+        },
+        {
+          "type": "insight",
+          "heading": "Neden Cycle Consistency?",
+          "text": "Adversarial loss tek başına yetersiz: G herhangi bir B domain görüntüsü üretebilir, içerik A ile ilgisiz olabilir. Cycle consistency 'içeriği koru' baskısı uygular — G(x) B'ye benzeyebilmeli, ama aynı zamanda F(G(x)) orijinal x'e geri dönebilmeli. Bu çelişki G'yi içeriği koruyan çeviriler yapmaya zorlar."
+        }
+      ]
+    },
+    {
+      "title": "pix2pix — Şartlı GAN ile Eşleşmiş Çeviri",
+      "cat": "Koşullu GAN",
+      "summary": "pix2pix (Isola et al. 2017): eşleşmiş görüntü çiftleriyle görüntü-görüntü çevirisi. Conditional GAN: G giriş görüntüsüne şartlı üretim yapar. Mimari: U-Net Generator + PatchGAN Discriminator.",
+      "context": "ML Lab · Session 6",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Conditional GAN Nedir?",
+          "text": "Vanilla GAN: z gürültüsünden koşulsuz üretim. Conditional GAN: hem z gürültüsü hem de x koşul görüntüsü verilir — G(z|x). Discriminator da hem üretilen görüntüyü hem koşul görüntüsünü görür: D(y|x). Bu sayede G 'rastgele güzel görüntü' yerine 'x'e uygun görüntü' üretmeyi öğrenir."
+        },
+        {
+          "type": "formula",
+          "heading": "pix2pix Loss Fonksiyonu",
+          "text": "$$\\mathcal{L}_{pix2pix} = \\mathcal{L}_{cGAN}(G, D) + \\lambda \\mathcal{L}_{L1}(G)$$\n\n$$\\mathcal{L}_{cGAN}(G,D) = \\mathbb{E}_{x,y}[\\log D(x,y)] + \\mathbb{E}_{x,z}[\\log(1-D(x,G(x,z)))]$$\n\n$$\\mathcal{L}_{L1}(G) = \\mathbb{E}_{x,y,z}[\\|y - G(x,z)\\|_1]$$\n\nL1 loss yüksek seviyeli yapıyı zorlar (blurry ama doğru). Adversarial loss keskinlik/detay ekler. $\\lambda = 100$ tipik."
+        },
+        {
+          "type": "compare",
+          "heading": "pix2pix vs CycleGAN",
+          "left": {
+            "title": "pix2pix",
+            "points": [
+              "Eşleşmiş çiftler gerekli (x, y)",
+              "Tek yönlü: x → y",
+              "L1 + adversarial loss",
+              "Daha keskin çıktılar",
+              "Hava haritası → fotoğraf, gündüz → gece"
+            ]
+          },
+          "right": {
+            "title": "CycleGAN",
+            "points": [
+              "Eşleşmemiş domain setleri yeterli",
+              "Çift yönlü: A ↔ B",
+              "Adversarial + cycle consistency",
+              "Daha az denetimli ama esnek",
+              "At ↔ Zebra, Elma ↔ Portakal"
+            ]
+          }
+        },
+        {
+          "type": "note",
+          "heading": "PatchGAN Discriminator",
+          "text": "Tam görüntü yerine NxN patch'ler üzerinde gerçek/sahte kararı verir. Her patch bağımsız değerlendirilir, tüm sonuçlar ortalanır. Avantaj: daha az parametre, yüksek frekanslı detay (texture) öğrenmede daha iyi, büyük görüntülere genellenebilir. pix2pix ve CycleGAN her ikisi de PatchGAN kullanır."
+        }
+      ]
+    },
+    {
+      "title": "StyleGAN — Mapping Network ve AdaIN",
+      "cat": "StyleGAN",
+      "summary": "StyleGAN (Karras et al. 2019): stil ve içeriği ayrıştırır. Latent z önce W uzayına haritalanır, ardından AdaIN ile her katmana stil enjekte edilir. Kaba özellikler (poz) ile ince özellikler (saç rengi) ayrı katmanlarda kontrol edilir.",
+      "context": "ML Lab · Session 6",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Motivasyon: Z Uzayının Problemi",
+          "text": "Vanilla GAN'da z doğrudan generator'a girer. Z uzayı Gaussian — entangled (karışık): z'nin bir boyutunu değiştirince birden fazla özellik değişir. Örneğin 'saç rengi' vektörü aynı zamanda yaşı da etkiler. StyleGAN bu karmaşıklığı çözmek için z'yi daha yapısal bir W uzayına haritalıyor."
+        },
+        {
+          "type": "compare",
+          "heading": "StyleGAN Bileşenleri",
+          "left": {
+            "title": "Mapping Network f: Z → W",
+            "points": [
+              "8 katlı MLP: z (512) → w (512)",
+              "W uzayı daha az entangled",
+              "Farklı özellikler daha ayrılabilir",
+              "Aynı w farklı çözünürlüklere enjekte edilir"
+            ]
+          },
+          "right": {
+            "title": "Synthesis Network (AdaIN)",
+            "points": [
+              "Sabit 4×4 learned constant'tan başlar",
+              "Her katmanda AdaIN ile stil enjekte edilir",
+              "Gürültü (ince detay) ayrıca eklenir",
+              "Kaba katmanlar: poz, yüz şekli",
+              "İnce katmanlar: renk, kırışıklık"
+            ]
+          }
+        },
+        {
+          "type": "formula",
+          "heading": "Adaptive Instance Normalization (AdaIN)",
+          "text": "W uzayından stil vektörü $w$ iki afin dönüşüme sokular: $y_s = A_s w$, $y_b = A_b w$.\n\n$$\\text{AdaIN}(x_i, y) = y_{s,i} \\cdot \\frac{x_i - \\mu(x_i)}{\\sigma(x_i)} + y_{b,i}$$\n\n$x_i$: $i$-inci feature map. $\\mu, \\sigma$: feature map ortalama ve std. $y_{s,i}$, $y_{b,i}$: W'dan türetilen ölçek ve kayma parametreleri.\n\nNormalize et + yeniden ölçekle. Her katmanda farklı stil bilgisi enjekte edilir."
+        },
+        {
+          "type": "insight",
+          "heading": "Style Mixing",
+          "text": "İki farklı w vektörü kullanarak bir üretimde iki kimliğin stilini birleştirmek mümkün: kaba katmanlar için w1 (poz, yüz yapısı), ince katmanlar için w2 (renk, doku). Bu 'style mixing' regularization hem model kapasitesini artırıyor hem de stili ayrı ayrı kontrol etme imkânı veriyor."
+        }
+      ]
+    },
+    {
+      "title": "DCGAN vs Vanilla GAN — Pratik Karşılaştırma",
+      "cat": "DCGAN",
+      "summary": "Lab'da hem vanilla hem DCGAN eğitildi. DCGAN daha stabil yakınsıyor. Temel fark: spatial yapının korunması, BatchNorm ve conv mimarisi.",
+      "context": "ML Lab · Session 6",
+      "sections": [
+        {
+          "type": "compare",
+          "heading": "Mimari Karşılaştırması (Lab)",
+          "left": {
+            "title": "Vanilla GAN (28×28)",
+            "points": [
+              "G: Linear(100→256→256→784) + Tanh",
+              "D: Linear(784→256→256→1) + Sigmoid",
+              "Flatten + reshape gerekiyor",
+              "Spatial bilgi yok — tüm piksel bağlantılı",
+              "Eğitim kararsız, salınım fazla"
+            ]
+          },
+          "right": {
+            "title": "DCGAN (64×64)",
+            "points": [
+              "G: 5× ConvTranspose2d + BatchNorm + ReLU + Tanh",
+              "D: 5× Conv2d + BatchNorm + LeakyReLU + Sigmoid",
+              "Spatial yapı korunuyor",
+              "Daha az parametre, daha güçlü özellik öğrenme",
+              "Daha stabil, görsel kalite yüksek"
+            ]
+          }
+        },
+        {
+          "type": "code",
+          "heading": "DCGAN — Transform ve DataLoader",
+          "text": "# MNIST 28×28 → 64×64 resize\ntransform_c = transforms.Compose([\n    transforms.Resize((64, 64)),\n    transforms.ToTensor(),\n    transforms.Normalize((0.5,), (0.5,))\n])\n\ndataset = torchvision.datasets.MNIST(\n    root=dset_path, train=True,\n    transform=transform_c, download=False\n)\ndata_loader = torch.utils.data.DataLoader(\n    dataset=dataset, batch_size=128,\n    shuffle=True, drop_last=True\n)\n\n# DCGAN'da z boyutu farklı:\nz = torch.randn(batch_size, latent_size, 1, 1).to(device)\n# → (128, 100, 1, 1)  — vanilla: (128, 100)"
+        },
+        {
+          "type": "code",
+          "heading": "DCGAN Training Loop — Reshape Dikkat",
+          "text": "# Vanilla GAN'dan fark: reshape yok, Conv output düzleştirme var\n\n# D çıkışı (batch, 1, 1, 1) — reshape gerekiyor:\noutputs = d_c(images)                         # (128, 1, 1, 1)\noutputs = torch.reshape(outputs, (outputs.shape[0], 1))  # (128, 1)\nd_loss_real = criterion(outputs, real_labels) # (128, 1) vs (128, 1) ✓\n\n# G optimizer farklı lr:\ng_c_optimizer = torch.optim.Adam(g_c.parameters(), lr=0.0005)\nd_c_optimizer = torch.optim.Adam(d_c.parameters(), lr=0.00015)\n# D için daha düşük lr → D G'yi çok geçmesin"
+        },
+        {
+          "type": "insight",
+          "heading": "Neden D için Daha Düşük LR?",
+          "text": "D çok hızlı mükemmel olursa G gradient alamaz (D* problemi). D_lr=0.00015 < G_lr=0.0005 ile D'nin G'yi geçmesi yavaşlatılıyor. Bu basit ama etkili bir denge — D her zaman biraz 'geride' kalıyor, G sürekli anlamlı gradient alıyor."
+        }
+      ]
+    },
+    {
+      "title": "Lab 6 — Implementation Görevleri Özeti",
+      "cat": "Lab Görevleri",
+      "summary": "Session 6'daki tüm implementasyon adımları. Veri yükleme, Vanilla GAN kurulumu, DCGAN kurulumu ve training loop — her aşama için gereken kod ve dikkat noktaları.",
+      "context": "ML Lab · Session 6",
+      "sections": [
+        {
+          "type": "list",
+          "heading": "Görev Listesi",
+          "items": [
+            "1. Transform: ToTensor + Normalize(0.5, 0.5) → MNIST yükleme",
+            "2. DataLoader: batch=128, shuffle=True, drop_last=True",
+            "3. Discriminator: Linear(784→256→256→1) + ReLU + Sigmoid",
+            "4. Generator: Linear(100→256→256→784) + ReLU + Tanh",
+            "5. Model'leri device'a gönder (.to(device))",
+            "6. Adam optimizer: lr=0.0005, her iki ağ için",
+            "7. Vanilla GAN training loop: D adımı → G adımı (alternating)",
+            "8. DCGAN Generator: 5 ConvTranspose2d katman, 1×1→64×64",
+            "9. DCGAN Discriminator: 5 Conv2d katman, 64×64→1×1×1",
+            "10. 64×64 resize transform + yeni DataLoader",
+            "11. DCGAN training loop: reshape çıkış, farklı lr'ler",
+            "Bonus: Farklı torchvision dataset ile DCGAN eğit"
+          ]
+        },
+        {
+          "type": "code",
+          "heading": "Veri Ön İşleme — Tam Kod",
+          "text": "from torchvision import transforms\nfrom torchvision.datasets import MNIST\n\n# Vanilla GAN için (28×28)\ntransform = transforms.Compose([\n    transforms.ToTensor(),\n    transforms.Normalize((0.5,), (0.5,))\n])\n\n# DCGAN için (64×64)\ntransform_c = transforms.Compose([\n    transforms.Resize((64, 64)),\n    transforms.ToTensor(),\n    transforms.Normalize((0.5,), (0.5,))\n])\n\n# Normalize(0.5, 0.5): piksel [0,1] → [-1,1]\n# Tanh çıkışı da [-1,1] → aynı aralık, loss hesabı doğru"
+        },
+        {
+          "type": "note",
+          "heading": "Tartışma Soruları (Lab Sonu)",
+          "text": "1. GAN eğitimindeki potansiyel problemler neler? (mode collapse, gradient vanishing, oscillation)\n2. DCGAN vanilla GAN'a göre nasıl ve neden daha iyi? (conv spatial bilgi, BatchNorm stabil gradient, LeakyReLU daha zengin D gradyanı)\n3. Farklı dataset ile DCGAN: hangi transform gerekiyor? Kaç channel? Renk için 1→3 channel değişikliği."
         }
       ]
     }
