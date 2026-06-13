@@ -9474,6 +9474,35 @@
           "type": "note",
           "heading": "Neden real_labels Generator'da?",
           "text": "G, sahte görüntüler için D'nin 1 (gerçek) demesini istiyor. BCELoss(D(G(z)), real_labels=1) = -log(D(G(z))). Yani G, D'yi kandırmak için bu kaybı minimize eder — bu da D(G(z))'yi 1'e yaklaştırır."
+        },
+        {
+          "type": "compare",
+          "heading": "BCE: Lab 4 (Multi-label) vs GAN",
+          "left": {
+            "title": "Lab 4 — Multi-label Classification",
+            "points": [
+              "Output: (batch, 20) — her class için ayrı prob",
+              "Target: (batch, 20) — binary vektör",
+              "BCE 20 pozisyon için ayrı ayrı hesaplar, toplar",
+              "20 bağımsız binary soru: 'bu class var mı?'",
+              "Örnek: [0.9, 0.1, 0.8, ...] vs [1, 0, 1, ...]"
+            ]
+          },
+          "right": {
+            "title": "GAN — Discriminator",
+            "points": [
+              "Output: (batch, 1) — tek sayı, real mi fake mi",
+              "Target: (batch, 1) — 1.0 (real) veya 0.0 (fake)",
+              "BCE tek pozisyon için hesaplar",
+              "1 soru: 'bu görüntü gerçek mi?'",
+              "Örnek: [0.8] vs [1.0] → -log(0.8)"
+            ]
+          }
+        },
+        {
+          "type": "code",
+          "heading": "BCE Formülü — İkisinde Aynı, Boyut Farklı",
+          "text": "# BCELoss formülü: -[y*log(p) + (1-y)*log(1-p)]\n\n# Lab 4 — 20 pozisyon:\n# output: [0.9, 0.1, 0.8, 0.05, ...]\n# target: [1,   0,   1,   0,   ...]\n# BCE: -[1*log(0.9) + 0*log(0.1) + 1*log(0.8) + ...] → 20 terim\n\n# GAN Discriminator — 1 pozisyon:\n# output: [0.8]    target: [1.0]  (real görüntü)\n# BCE: -[1*log(0.8)] = 0.22 → tek terim\n\n# output: [0.3]    target: [0.0]  (fake görüntü)\n# BCE: -[0*log(0.3) + 1*log(0.7)] = 0.36 → tek terim\n\n# Fark: kaç kez uygulandığı\n# Lab 4: 20 kez (20 class)\n# GAN:    1 kez (real/fake)"
         }
       ]
     },
@@ -9491,7 +9520,7 @@
         {
           "type": "insight",
           "heading": "Neden Ayrı z Örnekleniyor?",
-          "text": "D adımındaki fake_images.backward() sonrası bu graf silinir. G adımı için yeni z ~ N(0,I) örneklenerek yeni graf oluşturulur. Böylece G güncelleme adımında temiz gradyan akışı sağlanır. Alternatif: D adımında fake_images = generator(z).detach() kullanmak — ama lab bu yolu seçmiyor."
+          "text": "D adımında `d_loss.backward()` çağrılınca PyTorch hesaplama grafını siler (retain_graph=False varsayılan). Bu yüzden D adımında kullanılan fake_imgs üzerindeki grad_fn zinciri artık yok. G adımı için yeni z ~ N(0,I) örneklenerek yeni fake_imgs ve yeni graf oluşturulur. Böylece G güncelleme adımında temiz gradyan akışı sağlanır. Alternatif: D adımında fake_images = generator(z).detach() kullanmak — ama lab bu yolu seçmiyor."
         },
         {
           "type": "list",
@@ -9895,38 +9924,615 @@
     {
       "title": "Session 7 — Genel Çerçeve",
       "cat": "Overview",
-      "summary": "Diffusion Models: DDPM. Forward process (noise ekle), reverse process (noise çıkar). U-Net denoiser.",
+      "summary": "Diffusion Models sıfırdan implement edildi: toy corruption process, BasicUNet, iterative sampling. Sonra DDPM paper'ı implement edildi: noise schedule, Algorithm 1 (forward), Algorithm 2 (reverse). HuggingFace diffusers ile karşılaştırma.",
       "context": "ML Lab · Session 7",
       "sections": [
         {
+          "type": "list",
+          "heading": "Kapsam (8 Task)",
+          "items": [
+            "Task 1: corrupt() — veriyi gürültüyle karıştır (toy forward process)",
+            "Task 2: loss_fn — MSELoss, model clean x tahmin eder",
+            "Task 3: BasicUNet giriş/çıkışı — noisy_x girer, temiz x tahmini çıkar",
+            "Task 4: Sampling açıkla — iteratif denoising, n adımda saf gürültüden görüntü",
+            "Task 5: ddpm_schedules — a–h değişkenlerini doğru isimle yeniden adlandır",
+            "Task 6: DDPM forward — Algorithm 1, x_t = sqrtab*x0 + sqrtmab*eps",
+            "Task 7: DDPM sampling — Algorithm 2, iteratif reverse process",
+            "DDPM vs Toy karşılaştırması: diffusers UNet2DModel kullanımı"
+          ]
+        },
+        {
+          "type": "compare",
+          "heading": "Toy Diffusion vs DDPM",
+          "left": {
+            "title": "Toy (basit)",
+            "points": [
+              "corrupt(): lineer interpolasyon x + noise",
+              "Model hedefi: temiz x'i tahmin et",
+              "Timestep yok — amount scalar",
+              "BasicUNet: MaxPool + nn.Upsample",
+              "Skip: += (toplayarak birleştir)",
+              "~309K parametre"
+            ]
+          },
+          "right": {
+            "title": "DDPM (paper)",
+            "points": [
+              "q(x_t|x_0): matematiksel noise schedule",
+              "Model hedefi: epsilon'u (gürültüyü) tahmin et",
+              "Timestep t → embedding → UNet'e beslenir",
+              "UNet2DModel: GroupNorm, Dropout, learnable up/down",
+              "Attention blokları (düşük çözünürlükte)",
+              "~1.7M parametre"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "title": "Task 1 — Corruption Process",
+      "cat": "Forward Process",
+      "summary": "corrupt(x, amount): veriyi gürültüyle karıştır. amount=0 → saf veri, amount=1 → saf gürültü. Lineer interpolasyon ile çıkış [0,1] aralığında kalır.",
+      "context": "ML Lab · Session 7",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Sezgi",
+          "text": "Elimizde temiz veri x ve rastgele gürültü noise var. amount parametresi ikisini karıştırıyor: amount=0 iken tamamen veri, amount=1 iken tamamen gürültü. Ortada ise ikisinin karışımı. Bu lineer interpolasyon hem çıkışı [0,1]'de tutuyor hem de amount ile kontrol edilebilir bir bozulma sağlıyor."
+        },
+        {
+          "type": "code",
+          "heading": "Implementasyon (Task 1 Çözümü)",
+          "text": "def corrupt(x, amount):\n    \"\"\"Corrupt x by mixing with noise according to amount.\"\"\"\n    noise = torch.rand_like(x)               # [0,1] uniform gürültü, x ile aynı şekil\n    amount = amount.view(-1, 1, 1, 1)        # (batch,) → (batch,1,1,1) broadcasting için\n    return x * (1 - amount) + noise * amount # lineer interpolasyon\n\n# amount=0: output = x          (temiz)\n# amount=0.5: output = 0.5x + 0.5*noise  (karışık)\n# amount=1: output = noise       (saf gürültü)"
+        },
+        {
           "type": "note",
-          "heading": "İçerik",
-          "text": "Bu section ilerleyen zamanlarda doldurulacak. Lab 7 içeriği: DDPM forward/reverse process, noise schedule (beta), U-Net denoiser, timestep embedding, sampling loop. CS231n assignment3/DDPM.ipynb da iyi referans."
+          "heading": "amount.view(-1,1,1,1) Neden?",
+          "text": "amount shape'i (batch_size,) — her sample için bir scalar. x shape'i (batch, C, H, W). Broadcasting için amount'u (batch,1,1,1) yapıyoruz: her sample kendi amount değeriyle çarpılıyor, kanal/spatial boyutlar otomatik yayılıyor."
+        },
+        {
+          "type": "note",
+          "heading": "DDPM ile Fark",
+          "text": "DDPM'de bozulma uniform değil — matematiksel noise schedule (beta_t) ile tanımlı, her timestep farklı miktarda gürültü ekler. Toy corruption bunun basitleştirilmiş versiyonu: amount yerine DDPM'de sqrtab_t ve sqrtmab_t kullanılıyor."
+        }
+      ]
+    },
+    {
+      "title": "Task 2 & 3 — Training Loop",
+      "cat": "Eğitim",
+      "summary": "Model noisy görüntüden temiz görüntüyü tahmin eder. Loss: MSE(pred, clean_x). Input: bozulmuş görüntü. Output: temiz görüntü tahmini.",
+      "context": "ML Lab · Session 7",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Training Loop",
+          "text": "loss_fn = nn.MSELoss()  # Task 2: temiz x'e ne kadar yakın?\n\nfor epoch in range(n_epochs):\n    for x, y in train_dataloader:\n        x = x.to(device)                              # (128,1,28,28) temiz görüntüler\n\n        # Bozulma\n        noise_amount = torch.rand(x.shape[0]).to(device)  # (128,) her sample farklı amount\n        noisy_x = corrupt(x, noise_amount)            # (128,1,28,28) bozulmuş\n\n        # Forward\n        pred = net(noisy_x)                           # (128,1,28,28) tahmin\n\n        # Loss\n        loss = loss_fn(pred, x)                       # temiz x vs tahmin\n\n        # Backprop\n        opt.zero_grad()\n        loss.backward()\n        opt.step()"
+        },
+        {
+          "type": "list",
+          "heading": "Task 3 Cevabı — Input ve Output",
+          "items": [
+            "Input: noisy_x — random amount ile bozulmuş görüntü (0..1 aralığı korunuyor)",
+            "Output: pred — modelin tahmin ettiği temiz x0",
+            "Her batch'te farklı noise_amount → model tüm gürültü seviyelerini öğrenir",
+            "y (label) hiç kullanılmıyor — unsupervised/self-supervised"
+          ]
+        },
+        {
+          "type": "note",
+          "heading": "DDPM ile Fark",
+          "text": "DDPM'de model temiz x'i değil gürültü epsilon'u tahmin eder. Bunun nedeni: farklı timestep'lerde implicit loss weighting — epsilon tahmini düşük gürültü seviyelerine daha fazla ağırlık veriyor. Araştırma devam ediyor: velocity v tahmini, loss weighting gibi alternatifler var."
+        }
+      ]
+    },
+    {
+      "title": "BasicUNet — Minimal UNet Implementasyonu",
+      "cat": "Mimari",
+      "summary": "3 encoder katman (5×5 Conv + SiLU + MaxPool) + 3 decoder katman (5×5 Conv + SiLU + Upsample), skip connection'lar += ile. ~309K parametre. Timestep conditioning yok.",
+      "context": "ML Lab · Session 7",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "BasicUNet Kodu",
+          "text": "class BasicUNet(nn.Module):\n    def __init__(self, in_channels=1, out_channels=1):\n        super().__init__()\n        self.down_layers = nn.ModuleList([\n            nn.Conv2d(in_channels, 32, kernel_size=5, padding=2),  # 1→32\n            nn.Conv2d(32, 64, kernel_size=5, padding=2),           # 32→64\n            nn.Conv2d(64, 64, kernel_size=5, padding=2),           # 64→64 (bottleneck)\n        ])\n        self.up_layers = nn.ModuleList([\n            nn.Conv2d(64, 64, kernel_size=5, padding=2),           # 64→64\n            nn.Conv2d(64, 32, kernel_size=5, padding=2),           # 64→32\n            nn.Conv2d(32, out_channels, kernel_size=5, padding=2), # 32→1\n        ])\n        self.act = nn.SiLU()\n        self.downscale = nn.MaxPool2d(2)   # H,W → H/2,W/2\n        self.upscale = nn.Upsample(scale_factor=2)  # H,W → 2H,2W\n\n    def forward(self, x):\n        h = []  # skip connection buffer\n        for i, l in enumerate(self.down_layers):\n            x = self.act(l(x))\n            if i < 2:           # ilk 2 down layer'dan sonra pool + skip sakla\n                h.append(x)\n                x = self.downscale(x)\n\n        for i, l in enumerate(self.up_layers):\n            if i > 0:           # 2. ve 3. up layer öncesi upsample + skip ekle\n                x = self.upscale(x)\n                x += h.pop()   # skip connection: toplama (concat değil!)\n            x = self.act(l(x))\n        return x"
+        },
+        {
+          "type": "list",
+          "heading": "Boyut Akışı (28×28 MNIST)",
+          "items": [
+            "Giriş: (B,1,28,28)",
+            "down[0] → act: (B,32,28,28) → pool → (B,32,14,14), h[0] kaydedildi",
+            "down[1] → act: (B,64,14,14) → pool → (B,64,7,7), h[1] kaydedildi",
+            "down[2] → act: (B,64,7,7) — bottleneck, pool yok",
+            "up[0] → act: (B,64,7,7) — upscale yok",
+            "upscale → (B,64,14,14) + h[1] → up[1] → act: (B,32,14,14)",
+            "upscale → (B,32,28,28) + h[0] → up[2] → act: (B,1,28,28)",
+            "Çıkış: (B,1,28,28) — girişle aynı boyut"
+          ]
+        },
+        {
+          "type": "compare",
+          "heading": "Skip Connection: += vs torch.cat",
+          "left": {
+            "title": "BasicUNet: +=",
+            "points": [
+              "x += h.pop() — elementwise toplama",
+              "Kanal sayısı değişmez (64+64 → 64)",
+              "Daha hafif, parametre artışı yok",
+              "Bilgi toplanıyor ama karıştırılıyor"
+            ]
+          },
+          "right": {
+            "title": "U-Net (Lab5): torch.cat",
+            "points": [
+              "torch.cat([up, skip], dim=1) — kanal birleştirme",
+              "Kanal sayısı iki katına çıkar (512+512=1024)",
+              "Sonraki Conv katmanı bu 1024'ü işler",
+              "Bilgi ayrı tutulur, model seçer"
+            ]
+          }
+        },
+        {
+          "type": "note",
+          "heading": "SiLU Aktivasyon",
+          "text": "SiLU (Sigmoid Linear Unit) = x * sigmoid(x). ReLU'ya göre daha yumuşak geçiş, negatif değerlere küçük gradyan geçirir (dying ReLU problemi daha az). Diffusion model implementasyonlarında yaygın."
+        }
+      ]
+    },
+    {
+      "title": "Task 4 — Sampling (Toy)",
+      "cat": "Sampling",
+      "summary": "Saf gürültüden başla, modelin tahminini kullanarak iteratif olarak temizleştir. Her adımda mevcut x ile tahmin arasında mix_factor kadar adım at.",
+      "context": "ML Lab · Session 7",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Sampling Kodu",
+          "text": "n_steps = 5\nx = torch.rand(8, 1, 28, 28).to(device)  # saf gürültüden başla\n\nfor i in range(n_steps):\n    with torch.no_grad():\n        pred = net(x)               # modelin temiz x tahmini\n\n    mix_factor = 1 / (n_steps - i) # 1/5, 1/4, 1/3, 1/2, 1/1\n    x = x * (1 - mix_factor) + pred * mix_factor  # x'i pred'e doğru kaydır"
+        },
+        {
+          "type": "list",
+          "heading": "Task 4 Cevabı — Nasıl Çalışıyor?",
+          "items": [
+            "Başlangıç: x = saf gürültü torch.rand(...)",
+            "Her adımda model x'i görür, temiz görüntü tahmini üretir",
+            "mix_factor = 1/(n_steps-i): adım ilerledikçe daha agresif hareket",
+            "i=0: x %80 gürültü + %20 tahmin (mix=1/5)",
+            "i=4: x = %0 gürültü + %100 tahmin (mix=1/1)",
+            "5 adımda saf gürültü → tanınabilir rakam"
+          ]
+        },
+        {
+          "type": "note",
+          "heading": "Neden 1 Adımda Değil?",
+          "text": "Model tek adımda saf gürültüden iyi görüntü üretemez — çok yüksek gürültü seviyesinde model bocalıyor. Küçük adımlarla gidince model daha iyi tahmin yapıyor: önce genel yapıyı (rakam mı, arkaplan mı) belirliyor, sonra detayları ince ayarlıyor. n_steps=40 ile n_steps=5'e göre çok daha net sonuç."
+        },
+        {
+          "type": "note",
+          "heading": "DDPM Sampling ile Fark",
+          "text": "Toy: deterministik, lineer mix_factor. DDPM (Algorithm 2): noise schedule'a göre matematiksel adım boyutu, her adımda z ~ N(0,I) eklenir (stokastik). DDIM ise deterministik, daha az adımda iyi sonuç. Araştırma sorusu: adım sayısı, schedule, stokastisite miktarı."
+        }
+      ]
+    },
+    {
+      "title": "Task 5 — DDPM Noise Schedule",
+      "cat": "DDPM",
+      "summary": "beta_t (1e-4 → 0.02) lineer schedule. alpha_t = 1-beta_t. alphabar_t = kümülatif çarpım. sqrtab ve sqrtmab forward process'te x_t hesaplamak için kullanılır.",
+      "context": "ML Lab · Session 7",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "ddpm_schedules — Task 5 Çözümü",
+          "text": "def ddpm_schedules(beta1: float, beta2: float, T: int):\n    # beta_t: beta1'den beta2'ye lineer artış\n    beta_t      = (beta2 - beta1) * torch.arange(0, T+1, dtype=torch.float32) / T + beta1\n    sqrt_beta_t = torch.sqrt(beta_t)             # σ_t = √β_t\n\n    alpha_t     = 1 - beta_t                     # α_t = 1 - β_t\n    log_alpha_t = torch.log(alpha_t)\n    alphabar_t  = torch.cumsum(log_alpha_t, dim=0).exp()  # ᾱ_t = Π α_i (log space için)\n\n    sqrtab           = torch.sqrt(alphabar_t)    # √ᾱ_t\n    oneover_sqrta    = 1 / torch.sqrt(alpha_t)   # 1/√α_t\n    sqrtmab          = torch.sqrt(1 - alphabar_t)  # √(1-ᾱ_t)\n    mab_over_sqrtmab = (1 - alpha_t) / sqrtmab   # (1-α_t)/√(1-ᾱ_t)\n\n    return {\n        'alpha_t': alpha_t,\n        'oneover_sqrta': oneover_sqrta,\n        'sqrt_beta_t': sqrt_beta_t,\n        'alphabar_t': alphabar_t,\n        'sqrtab': sqrtab,\n        'sqrtmab': sqrtmab,\n        'mab_over_sqrtmab': mab_over_sqrtmab,\n    }"
+        },
+        {
+          "type": "table",
+          "heading": "Schedule Değişkenleri",
+          "rows": [
+            [
+              "Değişken",
+              "Formül",
+              "Kullanım"
+            ],
+            [
+              "beta_t",
+              "lineer: β₁→β₂",
+              "her adımda eklenen gürültü miktarı"
+            ],
+            [
+              "alpha_t",
+              "1 - β_t",
+              "korunan sinyal miktarı"
+            ],
+            [
+              "alphabar_t",
+              "∏ αᵢ (kümülatif)",
+              "t adım sonra kalan sinyal"
+            ],
+            [
+              "sqrtab",
+              "√ᾱ_t",
+              "x_t'de x₀'ın katsayısı"
+            ],
+            [
+              "sqrtmab",
+              "√(1-ᾱ_t)",
+              "x_t'de ε'un katsayısı"
+            ],
+            [
+              "oneover_sqrta",
+              "1/√α_t",
+              "Algorithm 2'de reverse adım"
+            ],
+            [
+              "mab_over_sqrtmab",
+              "(1-α_t)/√(1-ᾱ_t)",
+              "Algorithm 2'de ε katsayısı"
+            ]
+          ]
+        },
+        {
+          "type": "formula",
+          "heading": "Forward Process Denklemi",
+          "text": "$$q(x_t | x_0) = \\mathcal{N}(x_t; \\sqrt{\\bar{\\alpha}_t}\\, x_0,\\; (1-\\bar{\\alpha}_t)\\mathbf{I})$$\n\nYani: $x_t = \\sqrt{\\bar{\\alpha}_t}\\, x_0 + \\sqrt{1-\\bar{\\alpha}_t}\\, \\varepsilon$ ile doğrudan örneklenebilir."
+        }
+      ]
+    },
+    {
+      "title": "Task 6 & 7 — DDPM Algoritmalar",
+      "cat": "DDPM",
+      "summary": "Algorithm 1: training — rastgele t seç, gürültü ekle, model gürültüyü tahmin etsin. Algorithm 2: sampling — saf gürültüden başla, T adımda iteratif olarak geri git.",
+      "context": "ML Lab · Session 7",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Task 6 — Algorithm 1 (Forward / Training)",
+          "text": "def forward(self, x: torch.Tensor) -> torch.Tensor:\n    # Rastgele timestep seç\n    _ts = torch.randint(1, self.n_T + 1, (x.shape[0],)).to(x.device)  # t ~ Uniform[1,T]\n\n    # Gerçek gürültü örnekle\n    eps = torch.randn_like(x)  # ε ~ N(0,I)\n\n    # x_t hesapla: x0'ı t adım ileri götür (Eq. 14)\n    x_t = (self.sqrtab[_ts, None, None, None] * x\n           + self.sqrtmab[_ts, None, None, None] * eps)\n    # [_ts, None, None, None]: (batch,) → (batch,1,1,1) broadcasting\n\n    # Model x_t'yi görüyor, ε'u tahmin ediyor\n    pred_eps = self.eps_model(x_t, _ts / self.n_T).sample\n    return self.criterion(eps, pred_eps)  # MSE(gerçek_gürültü, tahmin_gürültü)"
+        },
+        {
+          "type": "code",
+          "heading": "Task 7 — Algorithm 2 (Reverse / Sampling)",
+          "text": "def ddpm_sample(self, n_sample, size, device):\n    x_i = torch.randn(n_sample, *size).to(device)  # x_T ~ N(0,I)\n\n    for i in range(self.n_T, 0, -1):  # T, T-1, ..., 1\n        # Stokastik gürültü (son adım hariç)\n        z = torch.randn_like(x_i) if i > 1 else 0\n\n        # Model t=i'de gürültüyü tahmin et\n        ts = (torch.ones(n_sample) * i / self.n_T).to(device)\n        pred_eps = self.eps_model(x_i, ts).sample\n\n        # Bir adım geri git (Algorithm 2, line 4)\n        x_i = (self.oneover_sqrta[i] *\n               (x_i - self.mab_over_sqrtmab[i] * pred_eps)\n               + self.sqrt_beta_t[i] * z)\n    return x_i"
+        },
+        {
+          "type": "formula",
+          "heading": "Reverse Adım Formülü",
+          "text": "$$x_{t-1} = \\frac{1}{\\sqrt{\\alpha_t}}\\left(x_t - \\frac{1-\\alpha_t}{\\sqrt{1-\\bar{\\alpha}_t}}\\,\\hat{\\varepsilon}_\\theta(x_t, t)\\right) + \\sqrt{\\beta_t}\\, z$$\n\n$z \\sim \\mathcal{N}(0,I)$ eğer $t > 1$, yoksa $z = 0$."
+        },
+        {
+          "type": "note",
+          "heading": "Neden Son Adımda z=0?",
+          "text": "t=1'den t=0'a son geçişte ek gürültü eklenmez — zaten son adımda gürültü eklemek çıkışı bozar. t>1 için stokastik gürültü z eklenerek sampling sürecine çeşitlilik katılıyor: aynı başlangıçtan farklı görüntüler üretilebilir."
+        }
+      ]
+    },
+    {
+      "title": "Toy vs DDPM — Training Objective Farkı",
+      "cat": "DDPM",
+      "summary": "Toy: model temiz x0'ı tahmin eder. DDPM: model gürültü epsilon'u tahmin eder. Epsilon tahmini düşük gürültü seviyelerine daha fazla ağırlık veriyor — pratik avantajı var.",
+      "context": "ML Lab · Session 7",
+      "sections": [
+        {
+          "type": "compare",
+          "heading": "x0 Tahmini vs Epsilon Tahmini",
+          "left": {
+            "title": "Toy: x0 tahmin et",
+            "points": [
+              "loss = MSE(pred, clean_x)",
+              "Model: noisy_x → temiz x",
+              "Yüksek gürültüde görüntü belirsiz",
+              "Tüm timestep'ler eşit ağırlıklı",
+              "Simpler to understand"
+            ]
+          },
+          "right": {
+            "title": "DDPM: epsilon tahmin et",
+            "points": [
+              "loss = MSE(pred_eps, true_eps)",
+              "Model: (x_t, t) → gürültü epsilon",
+              "Düşük gürültüye implicit olarak daha fazla ağırlık",
+              "Matematiksel olarak equivalent ama implicit weighting farklı",
+              "DDPM/DDIM/LDM'de standart"
+            ]
+          }
+        },
+        {
+          "type": "code",
+          "heading": "diffusers Training Objective Kodu",
+          "text": "# DDPM epsilon tahmini (diffusers tarzı):\nnoise = torch.randn_like(xb)                           # ε ~ N(0,I)\ntimesteps = torch.randint(0, noise_scheduler.num_train_timesteps,\n                          (xb.shape[0],)).long()\nnoisy_x = noise_scheduler.add_noise(xb, noise, timesteps)\nmodel_prediction = model(noisy_x, timesteps).sample    # epsilon tahmini\nloss = F.mse_loss(model_prediction, noise)             # gerçek epsilon'a vs"
+        },
+        {
+          "type": "note",
+          "heading": "Timestep Conditioning",
+          "text": "UNet2DModel hem noisy_x hem de timestep t alıyor. t → sinüzoidal embedding → UNet'in her bloğuna feed ediliyor. Böylece model 'şu anda ne kadar gürültü var?' sorusunu biliyor ve daha iyi denoising yapıyor. BasicUNet'te bu yok — her gürültü seviyesini körlemesine öğreniyor."
+        },
+        {
+          "type": "list",
+          "heading": "Araştırma Alternatifleri (Training Objective)",
+          "items": [
+            "epsilon tahmini: DDPM standardı, düşük gürültüye daha fazla ağırlık",
+            "x0 tahmini: toy versiyon, matematiksel olarak eşdeğer ama farklı weighting",
+            "velocity v tahmini: v = √ᾱ_t * ε - √(1-ᾱ_t) * x0 — Progressive Distillation paper",
+            "Loss weighting: Perception Prioritized, Elucidating Design Space paper'ları"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "HuggingFace diffusers — DDPMScheduler & UNet2DModel",
+      "cat": "Kütüphane",
+      "summary": "diffusers kütüphanesi DDPM scheduler ve gelişmiş UNet2DModel sağlıyor. ~1.7M parametre, GroupNorm, Dropout, Attention, learnable up/downsampling, timestep conditioning.",
+      "context": "ML Lab · Session 7",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "UNet2DModel Konfigürasyonu",
+          "text": "model = UNet2DModel(\n    sample_size=28,             # görüntü çözünürlüğü\n    in_channels=1,              # gri tonlamalı MNIST\n    out_channels=1,\n    layers_per_block=2,         # her blokta ResNet katman sayısı\n    block_out_channels=(32, 64, 64),  # encoder boyunca kanal sayıları\n    down_block_types=(\n        'DownBlock2D',\n        'AttnDownBlock2D',       # düşük çözünürlükte attention\n        'AttnDownBlock2D',\n    ),\n    up_block_types=(\n        'AttnUpBlock2D',\n        'AttnUpBlock2D',\n        'UpBlock2D',\n    ),\n)"
+        },
+        {
+          "type": "list",
+          "heading": "BasicUNet'e Göre İyileştirmeler",
+          "items": [
+            "GroupNorm: her bloğun girişinde normalizasyon → daha stabil eğitim",
+            "Dropout: overfitting'e karşı",
+            "Multiple ResNet layers per block: layers_per_block=2",
+            "Attention blocks: düşük çözünürlüklü feature map'lerde global bağımlılık",
+            "Learnable upsampling/downsampling: MaxPool/Upsample yerine Conv tabanlı",
+            "Timestep conditioning: her bloğa t embedding besleniyor"
+          ]
+        },
+        {
+          "type": "code",
+          "heading": "DDPMScheduler Kullanımı",
+          "text": "noise_scheduler = DDPMScheduler(num_train_timesteps=1000)\n\n# Noise ekle\nnoisy_x = noise_scheduler.add_noise(x, noise, timesteps)\n\n# sqrt_alpha_prod ve sqrt_one_minus_alpha_prod görselleştir\n# t=0: sqrt_alpha ~1 (sinyalin tamamı), t=1000: sqrt_alpha ~0 (saf gürültü)\nplt.plot(noise_scheduler.alphas_cumprod.cpu() ** 0.5, label='√ᾱ_t')\nplt.plot((1 - noise_scheduler.alphas_cumprod.cpu()) ** 0.5, label='√(1-ᾱ_t)')"
+        },
+        {
+          "type": "note",
+          "heading": "Sampling Stratejileri",
+          "text": "DDPM: her adımda stokastik gürültü z eklenir, ~1000 adım gerekir. DDIM: deterministik, 50-100 adımda iyi sonuç. Yüksek dereceli ODE çözücüler: model birkaç kez değerlendirilir, daha doğru adım. diffusers kütüphanesinde DDIMScheduler, DPMSolverScheduler vb. hazır."
         }
       ]
     }
   ],
   "lab08": [
     {
-      "title": "Session 8 — Genel Çerçeve",
+      "title": "Session 9 (Lab 8) — Genel Çerçeve",
       "cat": "Overview",
-      "summary": "Anomaly Detection. Unsupervised yaklaşım — normal veriyle eğitim, anormal olanı reconstruction error veya score ile tespit.",
-      "context": "ML Lab · Session 8",
+      "summary": "Zero-shot anomaly segmentation: SCLIPAD algoritması. CLIP görüntü encoder'ı patch token'lar üretir, text encoder normal/anormal prompt embedding'leri üretir. Cosine similarity → pixel-level anomaly heatmap. MVTec AD dataset üzerinde industrial defect detection.",
+      "context": "ML Lab · Session 9 (Lab 8)",
       "sections": [
         {
           "type": "list",
-          "heading": "Kapsam",
+          "heading": "Kapsam (6 Task)",
           "items": [
-            "Anomaly detection nedir — normal vs anormal tanımı",
-            "Reconstruction-based: autoencoder normal veriyle eğitilir, anormal yüksek reconstruction error verir",
-            "Score-based: normallik skoru, threshold belirleme",
-            "Evaluation: AUROC, precision-recall, threshold seçimi"
+            "Task 0-1: MVTec AD dataloader — PyTorch Lightning DataModule, 'wood' kategorisi",
+            "Task 2: Test görüntüsü + binary mask görselleştirme",
+            "Task 3: CLIP model yükleme — ViT-B-16, visual encoder + text encoder",
+            "Task 4: Modified image encoder — son ViT bloğunda qq/kk attention (qk yerine)",
+            "Task 5: Text classifier — normal/anormal prompt embedding'leri, template averaging",
+            "Task 6: Anomaly heatmap — patch tokens × text embeddings cosine similarity"
+          ]
+        },
+        {
+          "type": "text",
+          "heading": "Genel Yaklaşım — SCLIPAD",
+          "text": "CLIP'in zero-shot sınıflandırma gücünü anomaly segmentation'a uyarlıyor. Eğitim verisi gerekmez — sadece 'normal ahşap' ve 'hasarlı ahşap' gibi metin açıklamaları yeterli. Görüntüdeki her patch için 'normal mi anormal mi?' sorusu, CLIP'in image-text alignment kapasitesiyle yanıtlanıyor."
+        },
+        {
+          "type": "list",
+          "heading": "Pipeline",
+          "items": [
+            "1. Görüntü → Modified ViT (CLIP) → patch token embedding'leri [(H/16 × W/16) adet]",
+            "2. Normal + Anormal text prompt'ları → CLIP text encoder → 2 embedding",
+            "3. Her patch token × text embedding → cosine similarity",
+            "4. Softmax → her patch için anormal olasılığı",
+            "5. Patch grid → spatial heatmap → ground truth mask ile karşılaştır"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "MVTec AD Dataset — Task 0 & 1",
+      "cat": "Veri",
+      "summary": "MVTec AD: 15 endüstriyel kategori, gerçek dünya defect detection benchmark'ı. Normal görüntülerle train, anormal görüntülerle test. Her test örneğinde binary mask ile defect konumu işaretli.",
+      "context": "ML Lab · Session 9 (Lab 8)",
+      "sections": [
+        {
+          "type": "list",
+          "heading": "Dataset Özellikleri",
+          "items": [
+            "15 kategori: Bottle, Cable, Capsule, Carpet, Grid, Hazelnut, Leather, Metal Nut, Pill, Screw, Tile, Toothbrush, Transistor, Wood, Zipper",
+            "Object kategoriler: 3D rigid objects (bottle, cable, ...)",
+            "Texture kategoriler: surface materials (carpet, grid, leather, ...)",
+            "Train: sadece normal görüntüler — anomaly detection için unsupervised",
+            "Test: normal + anormal görüntüler + pixel-level binary mask",
+            "Bu labda: sadece 'wood' kategorisi kullanılıyor"
+          ]
+        },
+        {
+          "type": "code",
+          "heading": "Dataloader Kullanımı (Task 1)",
+          "text": "from dataloader import MVTecDataModule\n\n# PyTorch Lightning DataModule\ndatamodule = MVTecDataModule(\n    data_path='path/to/mvtec',\n    category='wood',\n    batch_size=1\n)\ndatamodule.setup()\n\n# test.dataset'ten bir örnek al\ndata = datamodule.test_dataloader().dataset\n# data[i] → (img, label, mask)\n# label: 0=normal, 1=anormal\n# mask:  binary, defect piksel konumları\n\n# img shape: (C, H, W), normalize edilmiş\n# mask shape: (H, W), 0/1"
+        },
+        {
+          "type": "note",
+          "heading": "PyTorch Lightning DataModule",
+          "text": "DataModule: train/val/test split'leri ve dataloader mantığını tek sınıfta toplar. setup() çağrılınca dataset hazırlanır. train_dataloader(), val_dataloader(), test_dataloader() metodları verir. Normal torch.utils.data.Dataset'ten daha organize — multi-GPU, distributed training için de kullanışlı."
+        }
+      ]
+    },
+    {
+      "title": "CLIP Yükleme — Task 3",
+      "cat": "CLIP",
+      "summary": "open_clip kütüphanesi ile ViT-B-16 backbone, laion400m_e32 pretrained weights. model.visual → image encoder (ViT), model.encode_text → text encoder. Tokenizer ayrıca yükleniyor.",
+      "context": "ML Lab · Session 9 (Lab 8)",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "CLIP Yükleme Kodu",
+          "text": "import open_clip\n\n# utils.py'deki fonksiyon\noutput = get_clip_encoders(\n    backbone='ViT-B-16',\n    pretrained='laion400m_e32'\n)\nmodel      = output['clip_model']      # tam CLIP modeli\npreprocess = output['preprocess']      # image preprocessing\ntokenizer  = output['tokenizer']       # metin tokenizer\nlogit_scale = output['logit_scale']    # öğrenilmiş sıcaklık parametresi\n\n# Ayrıştır\nvit = model.visual   # ViT image encoder\n\n# model.encode_text(tokens) → text embedding\n# vit(image)               → image embedding (cls token)\n# Bu labda vit iç katmanlarına el atıyoruz → patch token'lar"
+        },
+        {
+          "type": "compare",
+          "heading": "Image Encoder vs Text Encoder",
+          "left": {
+            "title": "Visual Encoder (ViT-B-16)",
+            "points": [
+              "Giriş: (B, 3, H, W) görüntü",
+              "16×16 patch'lere böl → patch token'lar",
+              "Transformer blokları (12 blok)",
+              "CLS token → global image embedding",
+              "Bu labda patch token'lar da lazım"
+            ]
+          },
+          "right": {
+            "title": "Text Encoder",
+            "points": [
+              "Giriş: tokenize edilmiş metin",
+              "Transformer (text) blokları",
+              "Çıkış: text embedding vektörü",
+              "model.encode_text(tokens) ile çağrılır",
+              "Image ve text aynı uzayda → cosine sim"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "title": "Modified Image Encoder — Task 4 (qq/kk Attention)",
+      "cat": "CLIP",
+      "summary": "Standart attention: q @ k.T (query-key). Modified attention: son ViT bloğunda q @ q.T (qq) ve k @ k.T (kk) ayrı ayrı hesaplanır, birleştirilir. Patch-level feature kalitesini artırmak için.",
+      "context": "ML Lab · Session 9 (Lab 8)",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Neden Modified Attention?",
+          "text": "Standart CLIP self-attention'da her patch kendi sorgusuyla (q) diğer patch'lerin key'leriyle (k) etkileşime giriyor. qq/kk attention'da ise query'ler kendi aralarında, key'ler kendi aralarında attention yapıyor. Bu, patch token'ların daha ayrışmış (discriminative) özellikler öğrenmesini sağlıyor — anomaly heatmap için daha net spatial signal."
+        },
+        {
+          "type": "code",
+          "heading": "csa_attn — qq/kk Implementasyonu",
+          "text": "def csa_attn(resblock, x):\n    attn = resblock.attn\n    num_heads = attn.num_heads\n    _, B, E = x.size()           # (L, B, E) — Length, Batch, Embed\n    head_dim = E // num_heads\n    scale = head_dim ** -0.5\n\n    # QKV projeksiyon\n    qkv = F.linear(x, attn.in_proj_weight, attn.in_proj_bias)\n    q, k, v = qkv.chunk(3, dim=-1)  # [L, B, E]\n\n    # Multi-head reshape: [B * num_heads, L, head_dim]\n    q = q.contiguous().view(-1, B * num_heads, head_dim).transpose(0, 1)\n    k = k.contiguous().view(-1, B * num_heads, head_dim).transpose(0, 1)\n    v = v.contiguous().view(-1, B * num_heads, head_dim).transpose(0, 1)\n\n    # qq attention: q @ q.T\n    qq_weights = (q @ q.transpose(-2, -1)) * scale\n    qq_weights = qq_weights.softmax(dim=-1)\n\n    # kk attention: k @ k.T\n    kk_weights = (k @ k.transpose(-2, -1)) * scale\n    kk_weights = kk_weights.softmax(dim=-1)\n\n    # Birleştir\n    attn_weights = (qq_weights + kk_weights) / 2\n\n    attn_output = attn_weights @ v\n    attn_output = attn_output.transpose(0, 1).contiguous().view(-1, B, E)\n    attn_output = attn.out_proj(attn_output)\n    return attn_output"
+        },
+        {
+          "type": "code",
+          "heading": "Encoder Loop — Son Blokta Modified Attention",
+          "text": "resblocks = vit.transformer.resblocks\nfor block_idx, block in enumerate(resblocks):\n    if block_idx >= layer_num:   # layer_num=11 → sadece son blok (12. blok)\n        # Standart ResBlock yapısı: LayerNorm → Attn → Residual → LayerNorm → MLP → Residual\n        x_norm = block.ln_1(x)\n        attn_out = csa_attn(block, x_norm)  # modified qq/kk attention\n        x = x + attn_out                   # residual\n        x = x + block.mlp(block.ln_2(x))  # MLP bloğu normal devam\n    else:\n        x = block(x)                       # standart ViT bloğu\n\n# Çıkış: {'cls': CLS token, 'tokens': patch token'lar}\n# tokens shape: (B, num_patches, embed_dim)"
+        },
+        {
+          "type": "note",
+          "heading": "Neden Sadece Son Blok?",
+          "text": "İlk bloklarda düşük seviye özellikler (kenar, doku) öğreniliyor — standart attention burada işe yarıyor. Son blokta yüksek seviye semantik özellikler var. qq/kk modification burada daha ayrışmış patch representation sağlıyor. Tüm bloklarda yapılsaydı eğitim stabilitesi bozulurdu."
+        }
+      ]
+    },
+    {
+      "title": "Text Classifier — Task 5",
+      "cat": "CLIP",
+      "summary": "Normal ve anormal için ayrı text embedding'leri üretiliyor. Her state prompt'u (7 normal, 4 anormal) 22 template ile çarpışarak genişletiliyor. Tüm kombinasyonların ortalaması alınıyor.",
+      "context": "ML Lab · Session 9 (Lab 8)",
+      "sections": [
+        {
+          "type": "list",
+          "heading": "Prompt Yapısı",
+          "items": [
+            "STATE_LEVEL_NORMAL_PROMPTS: 7 lambda — 'wood', 'flawless wood', 'perfect wood', ...",
+            "STATE_LEVEL_ABNORMAL_PROMPTS: 4 lambda — 'damaged wood', 'wood with flaw', ...",
+            "TEMPLATE_LEVEL_PROMPTS: 22 lambda — 'a photo of the {c}', 'a close-up of a {c}', ...",
+            "Kombinasyon: template(state(category)) — çift iç içe döngü",
+            "Normal: 22 × 7 = 154 cümle → average embedding",
+            "Anormal: 22 × 4 = 88 cümle → average embedding"
+          ]
+        },
+        {
+          "type": "code",
+          "heading": "build_text_classifier Implementasyonu",
+          "text": "def _process_template(state_level_templates):\n    text = []\n    for template in TEMPLATE_LEVEL_PROMPTS:       # 22 template\n        for state_template in state_level_templates:  # 7 normal veya 4 anormal\n            # Task 5 çözümü — lambda'ları iç içe uygula:\n            text.append(template(state_template(category)))\n            # Örnek: template = 'a photo of the {c}'\n            #        state    = 'flawless {c}'\n            # →  'a photo of the flawless wood'\n\n    texts = tokenizer(text).to(device)\n    class_embeddings = text_encoder(texts)          # (N, embed_dim)\n    mean_embedding = torch.mean(class_embeddings, dim=0, keepdim=True)  # (1, embed_dim)\n    return F.normalize(mean_embedding, dim=-1)      # L2 normalize\n\nnormal_emb   = _process_template(STATE_LEVEL_NORMAL_PROMPTS)    # (1, 512)\nabnormal_emb = _process_template(STATE_LEVEL_ABNORMAL_PROMPTS)  # (1, 512)\ntext = torch.cat([normal_emb, abnormal_emb], dim=0)             # (2, 512)"
+        },
+        {
+          "type": "note",
+          "heading": "Neden Template Averaging?",
+          "text": "Tek bir prompt ('wood') yerine çok sayıda farklı bağlamda (yakın çekim, bulanık, karanlık, ...) aynı kavramı tanımlayan cümleler kullanmak, daha robust bir embedding üretiyor. Bu WinCLIP paper'ından gelen teknik — prompt engineering yerine prompt ensembling."
+        }
+      ]
+    },
+    {
+      "title": "Anomaly Heatmap — Task 6",
+      "cat": "Anomaly Detection",
+      "summary": "Patch token'lar × text embedding'ler → cosine similarity → softmax → her patch için anormal olasılığı. Spatial heatmap olarak görselleştirme.",
+      "context": "ML Lab · Session 9 (Lab 8)",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "heatmap_generation Kodu",
+          "text": "def heatmap_generation(img_patches, text_features, logit_scale=4.7):\n    # img_patches:   (B, num_patches, embed_dim) — normalize edilmiş\n    # text_features: (2, embed_dim)              — [normal, abnormal]\n\n    # Cosine similarity: her patch × her text embedding\n    logit_patches = img_patches @ text_features.T   # (B, num_patches, 2)\n\n    # Temperature scaling + softmax → olasılık\n    logit_patches = (logit_scale * logit_patches).softmax(dim=-1)  # (B, num_patches, 2)\n\n    # Spatial düzene çevirmek için transpose\n    logit_patches = logit_patches.transpose(1, -1)  # (B, 2, num_patches)\n\n    # Sadece anormal kanalı döndür (index 1)\n    return logit_patches[:, 1:, ...]   # (B, 1, num_patches)"
+        },
+        {
+          "type": "list",
+          "heading": "Boyut Akışı",
+          "items": [
+            "ViT-B-16: 224×224 görüntü → 14×14 = 196 patch",
+            "img_patches: (B, 196, 512)",
+            "text_features: (2, 512) — [normal_emb, abnormal_emb]",
+            "img_patches @ text_features.T: (B, 196, 2) — her patch için 2 skor",
+            "softmax(dim=-1): skor toplamı 1 — normal + anormal olasılıkları",
+            "logit_patches[:, 1:, ...]: (B, 1, 196) — sadece anormal prob",
+            "Reshape → (B, 1, 14, 14) → ground truth mask ile karşılaştır"
           ]
         },
         {
           "type": "note",
-          "heading": "İçerik",
-          "text": "Detaylı kartlar ilerleyen zamanlarda eklenecek."
+          "heading": "logit_scale = 4.7 Neden?",
+          "text": "CLIP'te logit_scale (temperature) öğrenilmiş bir parametre — cosine similarity değerleri genelde küçük (0.1–0.3 arası). Temperature ile çarparak softmax'ın daha keskin karar vermesi sağlanıyor. 4.7 bu lab için sabit — CLIP'in orijinal öğrenilmiş değeri kullanılmıyor, ablasyon çalışmasıyla bulunan değer."
+        },
+        {
+          "type": "note",
+          "heading": "Sonuç Kalitesi ve İyileştirme Önerileri",
+          "text": "Zero-shot olduğu için mükemmel sonuç beklenmiyor. İyileştirme yolları: (1) Daha iyi text prompt'lar — kategori-spesifik defect açıklamaları; (2) Few-shot: birkaç anormal örnek gösterip fine-tune; (3) Post-processing: Gaussian blur ile heatmap yumuşatma; (4) Farklı logit_scale değerleri; (5) WinCLIP: sliding window ile çok ölçekli analiz."
+        }
+      ]
+    },
+    {
+      "title": "Zero-shot Anomaly Detection — Genel Bakış",
+      "cat": "Anomaly Detection",
+      "summary": "Klasik anomaly detection (autoencoder reconstruction error) vs CLIP-based zero-shot. CLIP yaklaşımı eğitim verisi gerektirmiyor — metin açıklaması yeterli. MVTec kategorileri arasında transfer edilebilir.",
+      "context": "ML Lab · Session 9 (Lab 8)",
+      "sections": [
+        {
+          "type": "compare",
+          "heading": "Klasik vs CLIP-based Anomaly Detection",
+          "left": {
+            "title": "Klasik (Reconstruction)",
+            "points": [
+              "Autoencoder sadece normal veriyle eğitilir",
+              "Anormal → yüksek reconstruction error",
+              "Her kategori için ayrı model eğitmek gerekir",
+              "Eğitim verisi şart",
+              "Pixel-level hata haritası doğrudan çıkar"
+            ]
+          },
+          "right": {
+            "title": "CLIP-based (Zero-shot)",
+            "points": [
+              "CLIP pretrained — eğitim gerekmez",
+              "Text ile yönlendirilen detection",
+              "Tek model tüm kategorilerde çalışır",
+              "Eğitim verisi gereksiz (zero-shot)",
+              "Patch-text cosine similarity heatmap"
+            ]
+          }
+        },
+        {
+          "type": "list",
+          "heading": "SCLIPAD Algoritması Özeti",
+          "items": [
+            "1. CLIP ViT-B-16 yükle (laion400m_e32 pretrained)",
+            "2. Son attention bloğunu qq/kk ile modifiye et",
+            "3. Test görüntüsü → modified ViT → patch token'lar (196 × 512)",
+            "4. 'normal wood' / 'damaged wood' template prompts → text embedding (2 × 512)",
+            "5. Cosine similarity × logit_scale → softmax → anormal prob (196,)",
+            "6. 14×14 heatmap → ground truth mask ile karşılaştır"
+          ]
         }
       ]
     }
