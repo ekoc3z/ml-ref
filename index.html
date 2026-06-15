@@ -744,11 +744,6 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
     <span class="nav-label">Anomaly Detection</span>
     <span class="nav-count" id="cnt-lab08">0</span>
   </button>
-  <button class="nav-btn" data-sec="labsp" onclick="switchSection('labsp');closeSidebar()">
-    <span class="nav-icon">🤖</span><span class="nav-num">Özel -</span>
-    <span class="nav-label">EN-DE Transformer</span>
-    <span class="nav-count" id="cnt-labsp">0</span>
-  </button>
 
   <div class="sidebar-foot">
     <button id="btn-import">&#128194; JSON Yükle</button>
@@ -1364,15 +1359,6 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
     </div>
   </div>
 
-  <div id="hdr-labsp" class="section-header">
-    <div class="hdr-title">Özel · EN-DE Transformer</div>
-    <div class="hdr-sub">Self-attention, multi-head attention, positional encoding, encoder-decoder — Almanca-İngilizce çeviri self project</div>
-    <div class="controls">
-      <select id="flt-labsp"><option value="">All categories</option></select>
-      <input type="search" id="q-labsp" placeholder="Search...">
-      <span class="pill" id="pill-labsp">0 cards</span>
-    </div>
-  </div>
 
 </header>
 
@@ -1403,7 +1389,7 @@ const CHAPTERS = ['ch01','ch02','ch03','ch04','ch05','ch06','ch07','ch08','ch09'
                    'py01','py02','py03','py04','py05','py06','py07',
                    'vs01','vs02','vs03',
                    'cs01','cs02','cs03','cs04','cs05','cs06','cs07','cs08','cs09','cs10','cs11','cs12','cs13','cs14','cs15','cs16',
-                   'lab01','lab02','lab03','lab04','lab05','lab06','lab07','lab08','labsp'];
+                   'lab01','lab02','lab03','lab04','lab05','lab06','lab07','lab08'];
 let DATA = {};
 CHAPTERS.forEach(c => DATA[c] = []);
 let OVERVIEWS = {};
@@ -1424,7 +1410,7 @@ const CH_CTX = {
   lab01:'lab01',lab02:'lab02',lab03:'lab03',lab04:'lab04',lab05:'lab05',
   cs01:'cs01',cs02:'cs02',cs03:'cs03',cs04:'cs04',cs05:'cs05',cs06:'cs06',cs07:'cs07',cs08:'cs08',
   cs09:'cs09',cs10:'cs10',cs11:'cs11',cs12:'cs12',cs13:'cs13',cs14:'cs14',cs15:'cs15',cs16:'cs16',
-  lab06:'lab06',lab07:'lab07',lab08:'lab08',labsp:'labsp'
+  lab06:'lab06',lab07:'lab07',lab08:'lab08'
 };
 
 /* ==================== HELPERS ==================== */

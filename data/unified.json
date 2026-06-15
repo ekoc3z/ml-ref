@@ -5278,6 +5278,56 @@
           "text": "Running diffusion in pixel space on a 512×512 image is expensive — $T=1000$ U-Net passes on a large image. Stable Diffusion (Rombach et al. 2022) uses Latent Diffusion Models (LDM): a VQ-VAE first encodes the image to a compact latent representation (8× spatially smaller: 512×512 → 64×64), and the diffusion process runs in this latent space. The U-Net runs on 64×64 latents, dramatically reducing compute. Text conditioning uses CLIP's text encoder — the text embedding is injected into the U-Net via cross-attention at each resolution. At generation time: diffuse in latent space, then decode with the VAE decoder."
         }
       ]
+    },
+    {
+      "title": "VAE vs DDPM — Loss, Görüntü Kalitesi ve Training",
+      "cat": "Generative",
+      "summary": "VAE ve DDPM aynı temel pattern'i paylaşır: sample çek, o sample üzerinden loss maximize et. Farklar encoder tasarımında, loss yapısında ve görüntü kalitesinde.",
+      "context": "Lecture 11 · CS231n Lecture 13 — VAE vs DDPM karşılaştırması",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Ortak Mantık",
+          "text": "İkisi de aynı pattern: sample çek, o sample üzerinden loss maximize et.\n\nVAE:   x → encoder (öğrenilmiş) → z örnekle  → decoder → x reconstruct → MSE\nDDPM:  x → noise ekle (sabit)   → ε örnekle → U-Net  → ε tahmin et   → MSE"
+        },
+        {
+          "type": "text",
+          "heading": "Loss Farkı",
+          "text": "VAE'de iki ayrı term:\nELBO = E_z[log p_θ(x|z)] - KL(q_φ(z|x), p(z))\n\nDDPM'de teorik ELBO var ama forward process sabit olduğu için KL'ler analitik çözülüp tek MSE'ye iniyor:\nL = E[||ε - ε_θ(x_t, t)||²]\n\nKL terimi ayrı optimize edilmiyor — her şey tek loss'ta birleşiyor."
+        },
+        {
+          "type": "code",
+          "heading": "Training: t Nasıl Seçiliyor, Neye Göre Backprop?",
+          "text": "Her training step'te:\n\n1. x₀ al (dataset'ten)\n2. t ~ Uniform(1, T) örnekle   ← rastgele, sıralı değil\n3. ε ~ N(0,I) örnekle          ← bu senin label'ın, sen ürettin\n4. x_t = √(ᾱ_t)·x₀ + √(1-ᾱ_t)·ε   ← direkt atlıyorsun, 1'den t'ye teker teker gitmiyor\n5. ε_θ(x_t, t) çalıştır\n6. loss = ||ε - ε_θ||²  → backprop\n\nt rastgele seçiliyor çünkü network her noise seviyesini öğrenmeli.\nBackprop sadece bu tek adımın içinde — x_t sabit input,\ngradient U-Net ağırlıklarına gidiyor. x_{t-1} training'de yok.\n\nGeneration'da sıralı: T → T-1 → ... → 0, her adım ayrı forward pass."
+        },
+        {
+          "type": "insight",
+          "heading": "Neden DDPM Daha Keskin Üretiyor?",
+          "text": "VAE'de decoder 'bu z'den x ne olmalı?' sorusunu tek adımda cevaplıyor. Belirsizlik varsa ortalamasını üretiyor → bulanık.\n\nDDPM'de iki sebep:\n1. Averaging dağılmış — 1000 adıma yayıldığı için her adımdaki etki çok küçük\n2. Averaging'in konusu daha dar — 'bu x_t'ye hangi ε eklendi?' sorusu unique bir cevaba yakın. 'Hangi x üreteyim?' belirsizliği yok, sadece 'noise ne kadar?' sorusu var"
+        },
+        {
+          "type": "compare",
+          "heading": "Encoder Farkı",
+          "left": {
+            "title": "VAE",
+            "points": [
+              "Encoder öğrenilmiş (φ)",
+              "z dağılımını öğreniyor: q_φ(z|x) = N(μ, σ²)",
+              "KL terimi ayrı optimize ediliyor",
+              "z ~ encoder output'tan örnekleniyor"
+            ]
+          },
+          "right": {
+            "title": "DDPM",
+            "points": [
+              "Encoder sabit, parametre yok",
+              "x_t = √(ᾱ_t)·x₀ + √(1-ᾱ_t)·ε formülü",
+              "KL'ler analitik çözülmüş, tek MSE kalıyor",
+              "Label sentetik — ε'yı kendin üretiyorsun"
+            ]
+          }
+        }
+      ]
     }
   ],
   "ida12": [
@@ -9446,6 +9496,11 @@
           "type": "insight",
           "heading": "Neden Tanh (Generator) ve Sigmoid (Discriminator)?",
           "text": "Generator: veri [-1, 1]'de normalize edildiği için Tanh çıkışı bu aralığı üretiyor. Discriminator: ikili karar (gerçek/sahte) olduğundan Sigmoid ile [0,1] olasılık çıkarıyor. Discriminator'daki Sigmoid, BCELoss ile birlikte doğal log-likelihood ifadesini veriyor."
+        },
+        {
+          "type": "insight",
+          "heading": "Neden Normalize [-1,1] ve Tanh — Gerçek Sebep",
+          "text": "Discriminator'a iki input giriyor: gerçek görüntü ve Generator'ın ürettiği sahte görüntü. Bilgisayar bunları sayısal vektör olarak görüyor. Eğer gerçek veri [0,1] aralığında, sahte veri [-1,1] aralığında olsaydı Discriminator hiçbir şey öğrenmeden sadece sayısal aralığa bakarak ikisini trivially ayırt ederdi. Bu yüzden gerçek veri de [-1,1]'e normalize ediliyor (mean=0.5, std=0.5 ile), Generator da Tanh ile [-1,1] üretiyor. İki input aynı dağılımda olunca Discriminator gerçek farkı — içerik ve yapıyı — öğrenmek zorunda kalıyor."
         }
       ]
     },
@@ -13788,6 +13843,49 @@
           "type": "text",
           "heading": "The Encoder Network Solution",
           "text": "Solution: train a second network q_φ(z|x) ≈ p_θ(z|x) — the encoder — that learns to approximate the true posterior.\n\nEncoder network: input x, output distribution over z: q_φ(z|x) = N(μ_{z|x}, Σ_{z|x})\nDecoder network: input z, output distribution over x: p_θ(x|z) = N(μ_{x|z}, σ²)\n\nKey fact: maximizing log p_θ(x|z) ≡ minimizing L2 distance between x and decoded output μ_{x|z}. This is because log p_θ(x|z) = -1/(2σ²)||x - μ||² + const.\n\nIdea: jointly train both encoder (φ) and decoder (θ) together."
+        },
+        {
+          "type": "insight",
+          "heading": "Neden ∫ p_θ(x|z)·p(z) dz Hesaplanamaz?",
+          "text": "Herhangi bir network'e input verirken ne vereceğin belli değil — kedi de koyabilirsin traktör de, sınır yok, takip edilemiyor. z de decoder için tam böyle: hangi x'ten geldiği belli değil, sonsuz olası x → sonsuz olası z. Hepsini toplamak gerekiyor integral için ama sınır yok → intractable."
+        },
+        {
+          "type": "insight",
+          "heading": "p_θ(z|x) vs q_φ(z|x): İki Farklı Mantık",
+          "text": "p_θ(z|x) — denklemin içinde olması gereken matematiksel parça. Bayes'ten log p_θ(x)'i açınca paydada bu çıkıyor, hesaplamak gerekiyor — ama integral gerektirdiği için hesaplanamıyor.\n\nq_φ(z|x) — 'madem denklemden türetemiyorum, dışarıdan ayrı bir network koyayım, o yaklaşsın' kararı. Denklemden türetilmiyor, dışarıdan ekleniyor. Sadece bir forward pass: x giriyor, μ ve σ çıkıyor — integral yok."
+        }
+      ]
+    },
+    {
+      "title": "VAE Decoder: Predicted Mean, L2 ve z İntegral Sorunu",
+      "cat": "Generative Models",
+      "summary": "Decoder bir Gaussian'ın ortalamasını (predicted mean) üretir — direkt x değil. Her x için ayrı z ve μ hesaplanır, L2 loss tüm pixeller üzerinden tek scalar'a indirilir. Integral alınamaz çünkü z tıpkı bir network'e girebilecek sonsuz olası input gibidir.",
+      "context": "CS231n · Lecture 13 · May 15, 2025",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Predicted Mean Nedir?",
+          "text": "Decoder direkt x üretmiyor — bir Gaussian dağılımın parametresini üretiyor:\n\nz → decoder → μ_{x|z}   (predicted mean, x ile aynı boyut: H×W×C)\n\n\"z'yi gördüm, x'in en olası değeri μ_{x|z}\" diyor. Pratikte 'decoder'ın ürettiği görüntü' diye düşünülür."
+        },
+        {
+          "type": "code",
+          "heading": "L2 Nasıl Hesaplanıyor?",
+          "text": "x ve μ aynı boyut (örn. 784 pixel):\n\nx    = [0.9,  0.1,  0.8,  ...]   (gerçek)\nμ    = [0.85, 0.15, 0.75, ...]   (decoder çıktısı)\n\nloss = (0.9−0.85)² + (0.1−0.15)² + ...  → 1 scalar\n\nHer pixel farkının karesi toplanır → tek loss → backprop."
+        },
+        {
+          "type": "code",
+          "heading": "Tüm Dataset İçin",
+          "text": "x₁ → encoder → z₁ → decoder → μ₁ ≈ x₁\nx₂ → encoder → z₂ → decoder → μ₂ ≈ x₂\nx₃ → encoder → z₃ → decoder → μ₃ ≈ x₃\n\nHer x için ayrı z, ayrı μ, ayrı loss. Encoder da aynı anda öğrendiği için z'ler değişiyor → joint training."
+        },
+        {
+          "type": "text",
+          "heading": "Decoder Aslında Normal Bir Ağ",
+          "text": "Decoder standart bir Conv/MLP — sadece input raw x yerine latent z geliyor. Fark: z'ler sabit değil, encoder da öğreniyor.\n\nEncoder iyi z üretsin ki decoder iyi reconstruct etsin; decoder iyi reconstruct etsin ki encoder iyi z üretmek zorunda kalsın."
+        },
+        {
+          "type": "insight",
+          "heading": "Neden ∫ p_θ(x|z)·p(z) dz Hesaplanamaz?",
+          "text": "Herhangi bir network'e input verirken ne vereceğin belli değil — kedi de koyabilirsin traktör de, sınır yok, takip edilemiyor. z de decoder için tam böyle: hangi x'ten geldiği belli değil, sonsuz olası x → sonsuz olası z. Hepsini toplamak gerekiyor integral için ama sınır yok → intractable.\n\nBu sebeple p_θ(z|x) de hesaplanamıyor — aynı sebep. O yüzden encoder q_φ(z|x) ile 'bu x'e bakınca z büyük ihtimalle buralarda olmalı' diye approximate ediliyor."
         }
       ]
     },
@@ -13838,6 +13936,49 @@
           "type": "text",
           "heading": "Loss Terms Fight Each Other",
           "text": "Reconstruction loss wants: Σ_{z|x} = 0 (zero uncertainty) and μ_{z|x} unique per input x, so the decoder can deterministically reconstruct x. This pushes toward a non-variational autoencoder.\n\nPrior loss (KL) wants: Σ_{z|x} = I (unit variance) and μ_{z|x} = 0 (zero mean) for all inputs — all latent codes collapsed to the same Gaussian.\n\nBalance: the KL weight acts as a regularization hyperparameter. Small KL weight → better reconstruction, less structured latent space. Large KL weight → very structured latent space, worse reconstruction (blurry outputs)."
+        }
+      ]
+    },
+    {
+      "title": "VAE — Tam Tablo",
+      "cat": "Generative Models",
+      "summary": "VAE'nin tüm mantığı: neden sıkıştırma lazım, AE'nin sıkıntısı, probabilistic çözüm, intractability, loss terimleri ve eğitim sonrası generation.",
+      "context": "CS231n · Lecture 13 · May 15, 2025",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Amaç",
+          "text": "Image generate etmek. Supervised learning'deki gibi label input → label output değil; model image output üretiyor. Label yok, tamamen unsupervised."
+        },
+        {
+          "type": "text",
+          "heading": "Neden Sıkıştırma Lazım?",
+          "text": "Image generate etmek için önce bir latent space lazım. z geniş olsa model identity öğrenir — sıkıştırma olmadan anlam çıkmaz. Bottleneck zorlaması modeli gerçek yapıyı öğrenmeye itiyor."
+        },
+        {
+          "type": "text",
+          "heading": "Autoencoder — Temel Fikir",
+          "text": "AE tam bunu yapıyor: encoder dar bir latent z'ye sıkıştırıyor, decoder z'den orijinal image'ı geri açıyor. L2 reconstruction loss ile eğitiliyor, label gerekmez.\n\nSıkıntısı: z'nin hiçbir yapısı yok. Encoder her x'i istediği z'ye map ediyor, kısıt yok. Latent space'te delikler var, aralar garbage üretiyor. Yeni z örneklemek istersen hangi z'lerin geçerli olduğunu bilmiyorsun — generation imkansız."
+        },
+        {
+          "type": "text",
+          "heading": "VAE — Probabilistic Çözüm",
+          "text": "Madem z'nin yapısı yok, onu da bir dağılımdan geliyormuş gibi modelleyelim. Gaussian prior: p(z) = N(0,I). Artık z'nin nerede olması gerektiği belli.\n\nMatematiksel olarak image üretmek için p_θ(x) lazım:\n\np_θ(x) = ∫ p_θ(x|z) · p(z) dz\n\nz sürekli, herhangi bir değer alabilir — tıpkı bir network'e sonsuz olası input gibi. Hepsinin üzerinden integral almak imkansız → intractable.\n\nBayes ile açınca paydada p_θ(z|x) çıkıyor — o da aynı sebepten hesaplanamıyor. Çözüm: 'madem denklemden türetemiyorum, dışarıdan ayrı bir network koyayım' → encoder q_φ(z|x) ≈ p_θ(z|x)."
+        },
+        {
+          "type": "text",
+          "heading": "Neural Network Probability Üretemez",
+          "text": "Probability değerleri doğrudan öğretilemez. O yüzden her iki network da dağılımların parametrelerini öğreniyor:\n\nEncoder → z için μ ve σ üretiyor\nDecoder → x için μ üretiyor (predicted mean)\n\nBackprop bu parametreler üzerinden akıyor."
+        },
+        {
+          "type": "formula",
+          "heading": "Loss Açılınca — ELBO",
+          "text": "$$\\text{loss} = E_z[\\log p_\\theta(x|z)] - D_{KL}(q_\\phi(z|x),\\, p(z))$$\n\nDecoder Gaussian varsaydığı için $\\log p_\\theta(x|z)$ açılınca MSE çıkıyor — Gaussian assumption ile MSE aynı şey, biri diğerinden türüyor, tesadüf değil.\n\nKL terimi encoder'ı N(0,I)'ye zorluyor. Ama reconstruction terimi de μ'lerin birbirinden farklı kalmasını zorluyor — ikisi zıt yönde çekiyor, denge structured bir latent space üretiyor."
+        },
+        {
+          "type": "code",
+          "heading": "Eğitim Sonrası",
+          "text": "Encoder atılmıyor — bir görüntüyü encode etmek istersen hâlâ kullanırsın.\nAma generation'da encoder'a gerek yok:\n\nz ~ N(0,I)  →  decoder  →  yeni görüntü\n\nKL sayesinde tüm z'ler N(0,I) civarına çekildi, latent space\ndolu ve structured. Oradan örneklenen her z anlamlı bir görüntüye\nkarşılık geliyor. Asıl öğrenme encoder ve decoder'ın\nkatmanlarındaki weightlerde — z sadece 'bu weightleri hangi\nyönde kullan' diye yönlendiriyor."
         }
       ]
     },
