@@ -10592,6 +10592,229 @@
       ]
     }
   ],
+  "labtc": [
+    {
+      "title": "Stanford A3 · Transformer Captioning — Genel Çerçeve",
+      "cat": "Overview",
+      "summary": "COCO dataset üzerinde image captioning ve Vision Transformer (ViT) sınıflandırması. transformer_layers.py ve classifiers/transformer.py içine MultiHeadAttention, PositionalEncoding, TransformerDecoderLayer, CaptioningTransformer, PatchEmbedding, TransformerEncoderLayer implement ediliyor.",
+      "context": "Stanford CS231n · Assignment 3 · Transformer_Captioning.ipynb",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Görev",
+          "text": "İki ayrı task var:\n1. Image Captioning: CNN ile çıkarılan görüntü feature'ı encoder memory olarak Transformer decoder'a veriliyor, decoder her adımda bir sonraki kelimeyi üretiyor.\n2. ViT (Vision Transformer): Görüntü patch'lere bölünüyor, her patch embedding'e çevriliyor, Transformer encoder ile işleniyor, sınıflandırma yapılıyor."
+        },
+        {
+          "type": "list",
+          "heading": "İmplement Edilecekler (transformer_layers.py)",
+          "items": [
+            "PositionalEncoding — sinusoidal PE, __init__ + forward",
+            "MultiHeadAttention — scaled dot-product, h head paralel",
+            "TransformerDecoderLayer.forward() — cross-attn + FFN blokları (self-attn zaten verilmiş)",
+            "PatchEmbedding.forward() — görüntüyü patch'lere böl, project et",
+            "TransformerEncoderLayer.forward() — self-attn + FFN (decoder'a benzer ama cross-attn yok)"
+          ]
+        },
+        {
+          "type": "list",
+          "heading": "İmplement Edilecekler (classifiers/transformer.py)",
+          "items": [
+            "CaptioningTransformer.forward() — caption embed + PE, image feature project, causal mask, decoder"
+          ]
+        },
+        {
+          "type": "text",
+          "heading": "Dosyalar",
+          "text": "cs231n/transformer_layers.py — tüm layer implementasyonları\ncs231n/classifiers/transformer.py — CaptioningTransformer ve VisionTransformer\ncs231n/captioning_solver_transformer.py — eğitim döngüsü (değiştirilmiyor)\ncs231n/coco_utils.py — COCO dataset yükleme"
+        }
+      ]
+    },
+    {
+      "title": "MultiHeadAttention — Implementasyon",
+      "cat": "Attention",
+      "summary": "h head paralel scaled dot-product attention. (N,S,E) → h head'e böl → (N,h,S,E/h) → QKᵀ/√(E/h) → softmax → dropout → V ile çarp → concat → project.",
+      "context": "Stanford CS231n · A3 · transformer_layers.py",
+      "sections": [
+        {
+          "type": "formula",
+          "heading": "Multi-Head Attention Formülü",
+          "text": "Y_i = dropout(softmax(\\frac{(XQ_i)(XK_i)^\\top}{\\sqrt{d/h}}))(XV_i)\n\nY = [Y_1;\\ldots;Y_h] \\cdot A\n\nburada d = embed_dim, h = num_heads, d/h = head_dim"
+        },
+        {
+          "type": "code",
+          "heading": "Implementasyon Adımları",
+          "text": "def forward(self, query, key, value, attn_mask=None):\n    N, S, E = query.shape\n    N, T, E = value.shape\n    H = self.n_head\n    D = self.head_dim  # E // H\n\n    # 1. Linear projection\n    Q = self.query(query)  # (N, S, E)\n    K = self.key(key)      # (N, T, E)\n    V = self.value(value)  # (N, T, E)\n\n    # 2. Split into heads: (N, seq, E) → (N, H, seq, D)\n    Q = Q.view(N, S, H, D).transpose(1, 2)  # (N, H, S, D)\n    K = K.view(N, T, H, D).transpose(1, 2)  # (N, H, T, D)\n    V = V.view(N, T, H, D).transpose(1, 2)  # (N, H, T, D)\n\n    # 3. Scaled dot-product scores: (N, H, S, T)\n    scores = torch.matmul(Q, K.transpose(-2, -1)) / math.sqrt(D)\n\n    # 4. Apply causal mask\n    if attn_mask is not None:\n        scores = scores.masked_fill(attn_mask == 0, float('-inf'))\n\n    # 5. Softmax + dropout\n    attn = F.softmax(scores, dim=-1)\n    attn = self.attn_drop(attn)\n\n    # 6. Weighted sum over values: (N, H, S, D)\n    out = torch.matmul(attn, V)\n\n    # 7. Merge heads: (N, S, E)\n    out = out.transpose(1, 2).contiguous().view(N, S, E)\n\n    # 8. Output projection\n    output = self.proj(out)\n    return output"
+        },
+        {
+          "type": "insight",
+          "heading": "Neden √(d/h)?",
+          "text": "d büyüdükçe QKᵀ dot product'ları da büyüyor → softmax near-one-hot → gradient vanishes. √(head_dim) ile scale edince attention dağılımı düzgün kalır."
+        },
+        {
+          "type": "note",
+          "heading": "attn_mask Şekli",
+          "text": "mask shape: (S, T) — mask[i,j] == 0 ise token i, token j'yi göremez. Causal masking için torch.tril() kullanılır (gelecek token'lar 0 olur)."
+        }
+      ]
+    },
+    {
+      "title": "PositionalEncoding — Implementasyon",
+      "cat": "Encoding",
+      "summary": "Sıra bilgisi enjekte eden fixed sinusoidal encoding. PE[pos, 2i] = sin(pos/10000^(2i/d)), PE[pos, 2i+1] = cos(pos/10000^(2i/d)). Learnable parametre yok.",
+      "context": "Stanford CS231n · A3 · transformer_layers.py",
+      "sections": [
+        {
+          "type": "formula",
+          "heading": "Sinusoidal PE Formülü",
+          "text": "PE(pos, 2i) = \\sin\\left(\\frac{pos}{10000^{2i/d}}\\right)\n\nPE(pos, 2i+1) = \\cos\\left(\\frac{pos}{10000^{2i/d}}\\right)"
+        },
+        {
+          "type": "code",
+          "heading": "Implementasyon",
+          "text": "# __init__'te pe array'i oluştur\npe = torch.zeros(1, max_len, embed_dim)  # (1, L, D)\nposition = torch.arange(0, max_len).unsqueeze(1)  # (L, 1)\ndiv_term = torch.exp(\n    torch.arange(0, embed_dim, 2) * (-math.log(10000.0) / embed_dim)\n)  # (D/2,)\n\npe[0, :, 0::2] = torch.sin(position * div_term)  # even indices\npe[0, :, 1::2] = torch.cos(position * div_term)  # odd indices\nself.register_buffer('pe', pe)\n\n# forward()\ndef forward(self, x):\n    N, S, D = x.shape\n    output = x + self.pe[:, :S, :]  # broadcast over batch\n    output = self.dropout(output)\n    return output"
+        },
+        {
+          "type": "insight",
+          "heading": "Neden exp+log?",
+          "text": "div_term = exp(arange * (-log(10000)/d)) = 10000^(-2i/d). Log-space hesaplama numerik stabilitesi için — büyük exponent değerlerinde underflow/overflow'u önler."
+        }
+      ]
+    },
+    {
+      "title": "TransformerDecoderLayer — Cross-Attention + FFN Blokları",
+      "cat": "Architecture",
+      "summary": "Self-attention (verilmiş) + cross-attention + FFN. Her blok: shortcut → sub-layer → dropout → residual add → LayerNorm. Cross-attention'da query decoder'dan, key/value encoder memory'den gelir.",
+      "context": "Stanford CS231n · A3 · transformer_layers.py",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Implementasyon (TODO kısmı)",
+          "text": "# Cross-attention block\nshortcut = tgt\ntgt = self.cross_attn(query=tgt, key=memory, value=memory)  # tgt attends to encoder\ntgt = self.dropout_cross(tgt)\ntgt = tgt + shortcut\ntgt = self.norm_cross(tgt)\n\n# FFN block\nshortcut = tgt\ntgt = self.ffn(tgt)\ntgt = self.dropout_ffn(tgt)\ntgt = tgt + shortcut\ntgt = self.norm_ffn(tgt)"
+        },
+        {
+          "type": "compare",
+          "heading": "Self-Attention vs Cross-Attention",
+          "left": {
+            "title": "Self-Attention",
+            "points": [
+              "query = key = value = tgt (caption tokens)",
+              "Causal mask ile gelecek token'lar gizlenir",
+              "Decoder token'ların birbirleriyle ilişkisini öğrenir"
+            ]
+          },
+          "right": {
+            "title": "Cross-Attention",
+            "points": [
+              "query = tgt (caption), key = value = memory (image)",
+              "Mask yok — tüm image feature'larına bakabilir",
+              "Her caption token'ın hangi image bölgesine baktığını öğrenir"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "title": "CaptioningTransformer.forward() — Image Captioning Pipeline",
+      "cat": "Architecture",
+      "summary": "CNN image feature (N,D) + caption token'ları (N,T) alır, her timestep için vocab üzerinde score dağılımı (N,T,V) döner. Eğitimde tüm caption verilir, causal mask ile gelecek gizlenir.",
+      "context": "Stanford CS231n · A3 · classifiers/transformer.py",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Implementasyon",
+          "text": "def forward(self, features, captions):\n    N, T = captions.shape\n\n    # 1. Caption embedding + positional encoding\n    cap_emb = self.embedding(captions)         # (N, T, W)\n    cap_emb = self.positional_encoding(cap_emb) # (N, T, W)\n\n    # 2. Image feature projection: (N, D) → (N, 1, W)\n    img_emb = self.visual_projection(features).unsqueeze(1)  # (N, 1, W)\n\n    # 3. Causal mask — pozisyon j, j'den büyük pozisyonlara bakamaz\n    tgt_mask = torch.tril(torch.ones(T, T, device=captions.device))  # (T, T)\n\n    # 4. Transformer decoder\n    # memory = image embedding, tgt = caption embedding\n    out = self.transformer(cap_emb, img_emb, tgt_mask=tgt_mask)  # (N, T, W)\n\n    # 5. Linear projection to vocab scores\n    scores = self.output(out)  # (N, T, V)\n    return scores"
+        },
+        {
+          "type": "text",
+          "heading": "Inference (sample)",
+          "text": "Eğitimde tüm caption bir anda verilir (teacher forcing). Test'te greedy decoding: <START> ile başla, her adımda son token'ın logit'inden argmax al, bunu token listesine ekle, <END> gelene kadar tekrarla."
+        },
+        {
+          "type": "insight",
+          "heading": "image feature neden (N,1,W)?",
+          "text": "Cross-attention'da memory sequence boyutu 1 — decoder her adımda tek bir image embedding'e attend ediyor. Daha güçlü modeller (spatial attention) image'ı patch'lere bölerek daha uzun memory sequence'ı kullanır."
+        }
+      ]
+    },
+    {
+      "title": "Vision Transformer (ViT) — PatchEmbedding + TransformerEncoderLayer",
+      "cat": "ViT",
+      "summary": "Görüntüyü 16×16 patch'lere böl, her patch'i linear projection ile embed et, Transformer encoder'dan geçir, average pool ile sınıflandır. CNN inductive bias yok — tüm ilişkiler self-attention ile öğrenilir.",
+      "context": "Stanford CS231n · A3 · transformer_layers.py",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "PatchEmbedding.forward()",
+          "text": "def forward(self, x):\n    N, C, H, W = x.shape\n    P = self.patch_size\n    # Divide into patches: (N, C, H, W) → (N, num_patches, patch_dim)\n    # H/P patches per row, W/P patches per col\n    x = x.reshape(N, C, H // P, P, W // P, P)\n    x = x.permute(0, 2, 4, 1, 3, 5)  # (N, H/P, W/P, C, P, P)\n    x = x.reshape(N, self.num_patches, self.patch_dim)  # (N, num_patches, C*P*P)\n    out = self.proj(x)  # (N, num_patches, embed_dim)\n    return out"
+        },
+        {
+          "type": "code",
+          "heading": "TransformerEncoderLayer.forward()",
+          "text": "def forward(self, src, src_mask=None):\n    # Self-attention block\n    shortcut = src\n    src = self.self_attn(query=src, key=src, value=src, attn_mask=src_mask)\n    src = self.dropout_self(src)\n    src = src + shortcut\n    src = self.norm_self(src)\n\n    # FFN block\n    shortcut = src\n    src = self.ffn(src)\n    src = self.dropout_ffn(src)\n    src = src + shortcut\n    src = self.norm_ffn(src)\n    return src"
+        },
+        {
+          "type": "compare",
+          "heading": "Encoder vs Decoder Layer",
+          "left": {
+            "title": "EncoderLayer",
+            "points": [
+              "Self-attention (Q=K=V=src)",
+              "FFN",
+              "Cross-attention YOK",
+              "Mask opsiyonel (ViT'te genellikle yok)"
+            ]
+          },
+          "right": {
+            "title": "DecoderLayer",
+            "points": [
+              "Causal self-attention (tgt→tgt)",
+              "Cross-attention (tgt→memory)",
+              "FFN",
+              "Causal mask zorunlu"
+            ]
+          }
+        },
+        {
+          "type": "insight",
+          "heading": "ViT Neden Büyük Veri İster?",
+          "text": "CNN locality ve translation equivariance inductive bias'ı built-in taşır — yakın pikseller ilişkili, filtre her yerde aynı. ViT bunları hiç varsaymaz, sıfırdan öğrenmesi lazım. Bu yüzden küçük datasette CNN'den geride kalır; büyük datasette (ImageNet-21k, JFT-300M) geçer."
+        }
+      ]
+    },
+    {
+      "title": "Inline Sorular — Tasarım Kararları",
+      "cat": "Theory",
+      "summary": "Neden birden fazla head? Neden √(d/h) ile scale? ViT neden küçük veriyle zayıf? Self-attention computational cost nasıl ölçeklenir?",
+      "context": "Stanford CS231n · A3 · Transformer_Captioning.ipynb",
+      "sections": [
+        {
+          "type": "list",
+          "heading": "IQ1 — Multi-head ve scale neden?",
+          "items": [
+            "Multiple heads: Her head farklı ilişki türünü öğrenir (sözdizimsel, semantik, yerel, uzak). Tek head tüm kapasiteyi tek bir attention pattern'a harcamak zorunda kalır.",
+            "√(d/h) scale: Dot product değerleri d büyüdükçe varyansı artar. Scale etmeden softmax near-one-hot olur → gradient vanishes. √(head_dim) ile scale edince varyans ~1 kalır."
+          ]
+        },
+        {
+          "type": "list",
+          "heading": "IQ2 — ViT neden küçük veriyle zayıf?",
+          "items": [
+            "CNN'nin locality (yakın piksel = ilişkili) ve translation equivariance (filtre her yerde aynı) inductive bias'ı yoktur",
+            "Tüm spatial ilişkiler veriden öğrenilmeli — büyük veri gerektirir",
+            "Çözüm: pretrain on large dataset + fine-tune, veya hybrid (CNN backbone + ViT), veya data augmentation"
+          ]
+        },
+        {
+          "type": "list",
+          "heading": "IQ3 — Self-attention computational cost",
+          "items": [
+            "(i) Hidden dimension 2x → QKᵀ için (N,S,D)×(N,D,S) = O(S²D), 2x pahalı",
+            "(ii) Image H,W 2x → patch sayısı 4x (S = (H×W)/P²) → O(S²) = O(16x) pahalı. Self-attention image size'a karesel ölçeklenir — büyük görseller için Swin'in local window attention'ı bu yüzden önemli"
+          ]
+        }
+      ]
+    }
+  ],
   "cs01": [
     {
       "title": "Image Classification: The Problem",
