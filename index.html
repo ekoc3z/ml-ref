@@ -134,6 +134,16 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 
 /* WIKI ARTICLE LAYOUT */
 #card-grid{padding:0;display:block}
+#view-toggle-bar{padding:10px 20px;display:flex;gap:8px;border-bottom:1px solid var(--border);background:var(--bg)}
+#view-toggle-bar.hidden{display:none}
+.view-btn{padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-size:12px;font-weight:600;transition:all .15s}
+.view-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.view-btn:hover:not(.active){background:var(--nav-hover-bg);color:var(--text)}
+#card-grid.grid-mode{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;padding:18px}
+.compact-card{background:var(--popup-bg);border:1px solid var(--border);border-radius:8px;padding:16px;border-left:3px solid var(--cc,var(--border));cursor:pointer;transition:transform .1s,box-shadow .1s}
+.compact-card:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.25)}
+.compact-card-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:8px;line-height:1.4}
+.compact-card-summary{font-size:12px;color:var(--muted);line-height:1.6;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .cat-heading{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:var(--cc,var(--muted));padding:20px 28px 10px;border-bottom:2px solid var(--border);border-left:4px solid var(--cc,var(--border));background:var(--bg);margin-bottom:0}
 .wiki-article{border-bottom:1px solid var(--border);padding:22px 28px;border-left:3px solid var(--cc,var(--border));transition:background .1s}
 .wiki-article:last-child{border-bottom:none}
@@ -1372,6 +1382,10 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 <div id="summary-page" style="display:none"></div>
 <div id="ida-summary-page" style="display:none"></div>
 <div id="vs-summary-page" style="display:none"></div>
+<div id="view-toggle-bar">
+  <button id="btn-wiki" class="view-btn active" onclick="setViewMode('wiki')">📖 Wiki</button>
+  <button id="btn-grid" class="view-btn" onclick="setViewMode('grid')">🃏 Cards</button>
+</div>
 <div id="card-grid"></div>
 <div id="tx-tree-view" style="display:none"><div id="tx-container"></div></div>
 <div class="footer-text">Kart = detay popup &bull; <kbd>/</kbd> arama &bull; <kbd>ESC</kbd> kapat</div>
@@ -1398,6 +1412,7 @@ let IDA_SUMMARY = null;
 let VS_SUMMARY = null;
 let SEC = 'ch01';
 let F = {};
+let VIEW_MODE = 'wiki';
 CHAPTERS.forEach(c => F[c] = {cat:'', q:''});
 
 const CH_CTX = {
@@ -1468,7 +1483,9 @@ function switchSection(sec){
   $('summary-page').style.display = isSummary ? 'block' : 'none';
   $('ida-summary-page').style.display = isIdaSummary ? 'block' : 'none';
   $('vs-summary-page').style.display = isVsSummary ? 'block' : 'none';
-  $('card-grid').style.display   = (isSummary || isIdaSummary || isVsSummary || isTxTree) ? 'none' : '';
+  const hideMain = isSummary || isIdaSummary || isVsSummary || isTxTree;
+  $('card-grid').style.display   = hideMain ? 'none' : '';
+  $('view-toggle-bar').classList.toggle('hidden', hideMain);
   $('tx-tree-view').style.display = isTxTree ? '' : 'none';
   if(isTxTree){ $('overview-panel').style.display='none'; renderTransformerTree(); }
   const cc = $('ch12-card-controls');
@@ -1565,9 +1582,18 @@ function catClass(cat, sec){
   return cat.replace(/[^a-zA-Z0-9]/g,'-') + ' ' + CH_CTX[sec];
 }
 
+function setViewMode(mode){
+  VIEW_MODE = mode;
+  $('btn-wiki').classList.toggle('active', mode === 'wiki');
+  $('btn-grid').classList.toggle('active', mode === 'grid');
+  renderCards(SEC);
+}
+
 function renderCards(sec){
   const grid = $('card-grid');
   grid.innerHTML = '';
+  grid.classList.remove('grid-mode');
+  if(VIEW_MODE === 'grid'){ renderGridCards(sec); return; }
   const f = F[sec];
   const q = f.q.toLowerCase();
   const showHeadings = !f.cat && !q;
@@ -1656,6 +1682,41 @@ function renderCards(sec){
       throwOnError:false
     });
   }
+}
+
+/* ==================== GRID CARD VIEW ==================== */
+function renderGridCards(sec){
+  const grid = $('card-grid');
+  grid.classList.add('grid-mode');
+  const f = F[sec];
+  const q = f.q.toLowerCase();
+  const items = DATA[sec].filter(item => {
+    if(f.cat && item.cat !== f.cat) return false;
+    if(q && !searchText(item).includes(q)) return false;
+    return true;
+  });
+  items.forEach(item => {
+    const cc = catClass(item.cat, sec);
+    const card = document.createElement('div');
+    card.className = 'compact-card card-cat-' + cc;
+    card.onclick = () => showPopup(item, cc);
+    const titleEl = document.createElement('div');
+    titleEl.className = 'compact-card-title';
+    titleEl.textContent = item.title;
+    const tagEl = document.createElement('span');
+    tagEl.className = 'card-tag card-cat-' + cc;
+    tagEl.style.cssText = 'font-size:10px;margin-bottom:8px;display:inline-block';
+    tagEl.textContent = item.cat;
+    const lead = item.summary || item.desc || '';
+    const summaryEl = document.createElement('div');
+    summaryEl.className = 'compact-card-summary';
+    summaryEl.textContent = lead;
+    card.appendChild(titleEl);
+    card.appendChild(tagEl);
+    if(lead) card.appendChild(summaryEl);
+    grid.appendChild(card);
+  });
+  $('pill-'+sec).textContent = items.length + ' cards';
 }
 
 /* ==================== RENDER SECTIONS ==================== */
