@@ -14174,6 +14174,44 @@
       ]
     },
     {
+      "title": "VAE — Neden Böyle Çalışır? Anlama Zinciri",
+      "cat": "Generative Models",
+      "summary": "VAE'nin mantığını sıfırdan kurmak: conditional generative model hedefinden başlayıp neden encoder'a ihtiyaç duyulduğuna kadar adım adım.",
+      "context": "CS231n · Lecture 13 · May 15, 2025",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "1. Asıl hedef: conditional generative model",
+          "text": "Mesela köpek resmi üretmek istiyorsun. Conditional generative model mantığıyla input olarak \"köpek\" yazınca outputta köpek resmi çıkmasını bekliyoruz. VAE'nin mantığı da buna benzer, ama koşul dışarıdan verilen bir text label değil — onun yerine gizli bir vektör z.\n\nZ, resmin latent representation'ı. Köpek resimleri z uzayında bir bölgede kümeleniyor, kedi resimleri başka bir bölgede. Bunu sen söylemiyorsun, model kendisi organize ediyor."
+        },
+        {
+          "type": "text",
+          "heading": "2. Asıl istediğimiz MLE objesi",
+          "text": "MLE mantığı: elimizde hazırda olan, dağılımını bilmediğimiz bir input datasının dağılımını sağlayan parametreleri bulmak — veriyi en probable kılan parametreler. Yani bir nevi bilinmeyen dağılımı approximate ediyoruz. Burada da amaç, p_θ(x|z) ile z'den x'e olan dağılımı öğrenerek image generation'ı mümkün kılmak; MLE mantığıyla θ parametrelerini öğrenmek — θ parametreleri de decoder ağırlıkları.\n\nZ'leri bilseydik direkt bunu yapardık:\n\nθ* = argmax Σ_i  log p_θ(x^(i) | z^(i))\n\nHer resmin hangi z'den geldiğini biliyoruz → decoder'ı direkt eğit."
+        },
+        {
+          "type": "text",
+          "heading": "3. Problem: z gizli",
+          "text": "Z'leri bilmiyoruz. O yüzden z üzerinden marginalize ediyoruz:\n\np_θ(x) = ∫ p_θ(x|z) · p(z) dz\n\nVe MLE hedefi buna dönüşüyor:\n\nθ* = argmax Σ_i  log p_θ(x^(i))"
+        },
+        {
+          "type": "text",
+          "heading": "4. Problem: integral hesaplanamaz",
+          "text": "Z sürekli ve yüksek boyutlu → integral tractable değil.\n\nBayes ile posterior p(z|x) hesaplamaya çalışsak → paydada yine aynı integral çıkıyor → yine hesaplanamaz."
+        },
+        {
+          "type": "text",
+          "heading": "5. Çözüm: encoder ile approximate et",
+          "text": "Encoder q_φ(z|x) posterior'ı taklit ediyor. \"Bu resme uygun z nerede?\" sorusunu öğreniyor.\n\nArtık hesaplanabilir bir alt sınır var → ELBO. Bunu maximize ediyoruz, doğrudan log p_θ(x) yerine."
+        },
+        {
+          "type": "code",
+          "heading": "6. Eğitim vs üretim",
+          "text": "Eğitimde encoder şart — decoder'a \"hangi z'ye bak\" diyor:\n\n  x → encoder → z → decoder → x̂\n\nÜretimde encoder yok:\n\n  z ~ N(0,I)  →  decoder  →  x\n\nEncoder sadece eğitimi mümkün kılmak için vardı."
+        }
+      ]
+    },
+    {
       "title": "VAE Sampling and Disentanglement",
       "cat": "Generative Models",
       "summary": "After training, VAE generates new data by sampling from the prior and decoding. The Gaussian diagonal prior causes latent dimensions to be independent — enabling interpretable 'disentangled' factors of variation.",
