@@ -5328,6 +5328,80 @@
           }
         }
       ]
+    },
+    {
+      "title": "DDPM — VAE Paraleli ile Tam Matematiksel Akış",
+      "cat": "Generative",
+      "summary": "DDPM'in matematik yapısı VAE ile karşılaştırmalı: latent variable setup, intractable marginal, ELBO, forward/reverse process ve neden encoder network gerekmediği.",
+      "context": "Lecture 11 · 18.01.2024 — Diffusion Models",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "1. Latent variable setup",
+          "text": "VAE'de tek bir gizli z vardı. DDPM'de latent değişkenler x_1, x_2, ..., x_T\n— yani orijinal görüntünün T adımda gürültülenmiş halleri.\n\nx_0 → x_1 → x_2 → ... → x_T ~ N(0,I)\n(gerçek)                        (saf gürültü)"
+        },
+        {
+          "type": "text",
+          "heading": "2. Asıl hedef: MLE",
+          "text": "VAE'de olduğu gibi, elimizdeki training verisi x_0'ı en probable kılan θ'yı bul:\n\nθ* = argmax log p_θ(x_0)"
+        },
+        {
+          "type": "text",
+          "heading": "3. Problem: marginal intractable",
+          "text": "p_θ(x_0) = ∫ p_θ(x_{0:T}) dx_{1:T}\n\nT boyutlu integral — tüm olası gürültü yolları üzerinden toplamak gerekiyor → intractable. VAE'deki z integraliyle tamamen aynı sorun."
+        },
+        {
+          "type": "text",
+          "heading": "4. Forward process — encoder'ın karşılığı",
+          "text": "VAE'de encoder q_φ(z|x) öğreniliyordu. DDPM'de forward process sabit bir noise schedule:\n\nq(x_t | x_{t-1}) = N(sqrt(1-β_t) · x_{t-1},  β_t · I)\n\nHer adımda biraz gürültü ekleniyor. T adım sonunda x_T ≈ N(0,I). Kapalı form sayesinde herhangi bir t anına tek adımda atlanabiliyor:\n\nx_t = sqrt(ᾱ_t) · x_0  +  sqrt(1-ᾱ_t) · ε,    ε ~ N(0,I)\nᾱ_t = (1-β_1)(1-β_2)...(1-β_t)\n\nEncoder forward pass gibi ama parametresiz — φ yok, öğrenilmiyor."
+        },
+        {
+          "type": "text",
+          "heading": "5. Reverse process — decoder'ın karşılığı",
+          "text": "Model geriye gitmeyi öğreniyor — gürültüden görüntüye:\n\np_θ(x_{t-1} | x_t) = N(μ_θ(x_t, t),  Σ_θ)\n\nVAE'de decoder p_θ(x|z) tek adımda üretiyordu; burada T adımda aşamalı."
+        },
+        {
+          "type": "code",
+          "heading": "6. ELBO — aynı Jensen trick",
+          "text": "VAE'de q_φ(z|x) çarpıp böldük. Burada q(x_{1:T}|x_0) ile aynı trick:\n\nlog p_θ(x_0) ≥ E_q[ log p_θ(x_{0:T}) / q(x_{1:T}|x_0) ] = ELBO\n\nAçılınca:\n\nELBO = E_q[log p_θ(x_0|x_1)]                                 ← L_0: reconstruction\n     - KL(q(x_T|x_0) || p(x_T))                              ← L_T: prior matching\n     - Σ KL(q(x_{t-1}|x_t,x_0) || p_θ(x_{t-1}|x_t))        ← L_{t-1}: denoising\n\nVAE ELBO ile karşılaştır:\n\nELBO_VAE = E_z[log p_θ(x|z)]  -  KL(q_φ(z|x) || p(z))\n            reconstruction         prior matching\n\nYapı aynı — DDPM'de araya T tane denoising KL terimi giriyor."
+        },
+        {
+          "type": "text",
+          "heading": "7. Neden encoder network gerekmiyor",
+          "text": "VAE'de q_φ(z|x)'i öğrenmek zorundaydık çünkü p_θ(z|x) intractable'dı.\n\nDDPM'de denoising terimi şunu gerektiriyor:\n\nq(x_{t-1}|x_t, x_0) = q(x_t|x_{t-1}) · q(x_{t-1}|x_0) / q(x_t|x_0)\n\nBayes açılınca pay ve paydadaki her terim Gaussian — çarpım ve bölme de Gaussian → kapalı form, tractable. Posterior hesaplamak için ayrı network gerekmez."
+        },
+        {
+          "type": "code",
+          "heading": "8. Pratikte ne öğreniyor",
+          "text": "Her t anında:\n\nx_t = sqrt(ᾱ_t) · x_0  +  sqrt(1-ᾱ_t) · ε,    ε ~ N(0,I)\n\nModel şunu öğreniyor: x_t'yi gördüm, içindeki gürültü ε neydi?\n\nLoss = E_{t,ε} [ || ε - ε_θ(x_t, t) ||² ]\n\nL_{t-1} KL terimleri bu MSE'ye sadeleşiyor."
+        },
+        {
+          "type": "compare",
+          "heading": "VAE vs DDPM — Özet",
+          "left": {
+            "title": "VAE",
+            "points": [
+              "Latent: tek z",
+              "Prior: N(0,I)",
+              "Forward: encoder, öğreniliyor (φ)",
+              "Reverse: decoder, tek adım",
+              "Posterior: intractable → approximate",
+              "Loss: reconstruction + KL"
+            ]
+          },
+          "right": {
+            "title": "DDPM",
+            "points": [
+              "Latent: x_1...x_T",
+              "Prior: N(0,I)",
+              "Forward: noise schedule, sabit (parametresiz)",
+              "Reverse: denoiser, T adım",
+              "Posterior: tractable, kapalı form",
+              "Loss: noise prediction MSE"
+            ]
+          }
+        }
+      ]
     }
   ],
   "ida12": [
@@ -14248,6 +14322,80 @@
               "Generated images often less sharp than GANs",
               "KL term compresses latent information",
               "Fix: add adversarial discriminator (used in LDMs)"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "title": "DDPM — VAE Paraleli ile Tam Matematiksel Akış",
+      "cat": "Generative Models",
+      "summary": "DDPM'in matematik yapısı VAE ile karşılaştırmalı: latent variable setup, intractable marginal, ELBO, forward/reverse process ve neden encoder network gerekmediği.",
+      "context": "CS231n · Lecture 13 · May 15, 2025",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "1. Latent variable setup",
+          "text": "VAE'de tek bir gizli z vardı. DDPM'de latent değişkenler x_1, x_2, ..., x_T\n— yani orijinal görüntünün T adımda gürültülenmiş halleri.\n\nx_0 → x_1 → x_2 → ... → x_T ~ N(0,I)\n(gerçek)                        (saf gürültü)"
+        },
+        {
+          "type": "text",
+          "heading": "2. Asıl hedef: MLE",
+          "text": "VAE'de olduğu gibi, elimizdeki training verisi x_0'ı en probable kılan θ'yı bul:\n\nθ* = argmax log p_θ(x_0)"
+        },
+        {
+          "type": "text",
+          "heading": "3. Problem: marginal intractable",
+          "text": "p_θ(x_0) = ∫ p_θ(x_{0:T}) dx_{1:T}\n\nT boyutlu integral — tüm olası gürültü yolları üzerinden toplamak gerekiyor → intractable. VAE'deki z integraliyle tamamen aynı sorun."
+        },
+        {
+          "type": "text",
+          "heading": "4. Forward process — encoder'ın karşılığı",
+          "text": "VAE'de encoder q_φ(z|x) öğreniliyordu. DDPM'de forward process sabit bir noise schedule:\n\nq(x_t | x_{t-1}) = N(sqrt(1-β_t) · x_{t-1},  β_t · I)\n\nHer adımda biraz gürültü ekleniyor. T adım sonunda x_T ≈ N(0,I). Kapalı form sayesinde herhangi bir t anına tek adımda atlanabiliyor:\n\nx_t = sqrt(ᾱ_t) · x_0  +  sqrt(1-ᾱ_t) · ε,    ε ~ N(0,I)\nᾱ_t = (1-β_1)(1-β_2)...(1-β_t)\n\nEncoder forward pass gibi ama parametresiz — φ yok, öğrenilmiyor."
+        },
+        {
+          "type": "text",
+          "heading": "5. Reverse process — decoder'ın karşılığı",
+          "text": "Model geriye gitmeyi öğreniyor — gürültüden görüntüye:\n\np_θ(x_{t-1} | x_t) = N(μ_θ(x_t, t),  Σ_θ)\n\nVAE'de decoder p_θ(x|z) tek adımda üretiyordu; burada T adımda aşamalı."
+        },
+        {
+          "type": "code",
+          "heading": "6. ELBO — aynı Jensen trick",
+          "text": "VAE'de q_φ(z|x) çarpıp böldük. Burada q(x_{1:T}|x_0) ile aynı trick:\n\nlog p_θ(x_0) ≥ E_q[ log p_θ(x_{0:T}) / q(x_{1:T}|x_0) ] = ELBO\n\nAçılınca:\n\nELBO = E_q[log p_θ(x_0|x_1)]                                 ← L_0: reconstruction\n     - KL(q(x_T|x_0) || p(x_T))                              ← L_T: prior matching\n     - Σ KL(q(x_{t-1}|x_t,x_0) || p_θ(x_{t-1}|x_t))        ← L_{t-1}: denoising\n\nVAE ELBO ile karşılaştır:\n\nELBO_VAE = E_z[log p_θ(x|z)]  -  KL(q_φ(z|x) || p(z))\n            reconstruction         prior matching\n\nYapı aynı — DDPM'de araya T tane denoising KL terimi giriyor."
+        },
+        {
+          "type": "text",
+          "heading": "7. Neden encoder network gerekmiyor",
+          "text": "VAE'de q_φ(z|x)'i öğrenmek zorundaydık çünkü p_θ(z|x) intractable'dı.\n\nDDPM'de denoising terimi şunu gerektiriyor:\n\nq(x_{t-1}|x_t, x_0) = q(x_t|x_{t-1}) · q(x_{t-1}|x_0) / q(x_t|x_0)\n\nBayes açılınca pay ve paydadaki her terim Gaussian — çarpım ve bölme de Gaussian → kapalı form, tractable. Posterior hesaplamak için ayrı network gerekmez."
+        },
+        {
+          "type": "code",
+          "heading": "8. Pratikte ne öğreniyor",
+          "text": "Her t anında:\n\nx_t = sqrt(ᾱ_t) · x_0  +  sqrt(1-ᾱ_t) · ε,    ε ~ N(0,I)\n\nModel şunu öğreniyor: x_t'yi gördüm, içindeki gürültü ε neydi?\n\nLoss = E_{t,ε} [ || ε - ε_θ(x_t, t) ||² ]\n\nL_{t-1} KL terimleri bu MSE'ye sadeleşiyor."
+        },
+        {
+          "type": "compare",
+          "heading": "VAE vs DDPM — Özet",
+          "left": {
+            "title": "VAE",
+            "points": [
+              "Latent: tek z",
+              "Prior: N(0,I)",
+              "Forward: encoder, öğreniliyor (φ)",
+              "Reverse: decoder, tek adım",
+              "Posterior: intractable → approximate",
+              "Loss: reconstruction + KL"
+            ]
+          },
+          "right": {
+            "title": "DDPM",
+            "points": [
+              "Latent: x_1...x_T",
+              "Prior: N(0,I)",
+              "Forward: noise schedule, sabit (parametresiz)",
+              "Reverse: denoiser, T adım",
+              "Posterior: tractable, kapalı form",
+              "Loss: noise prediction MSE"
             ]
           }
         }
