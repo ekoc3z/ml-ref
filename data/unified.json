@@ -5402,6 +5402,112 @@
           }
         }
       ]
+    },
+    {
+      "title": "VAE vs DDPM — ELBO Derivation Tam Karşılaştırması",
+      "cat": "Generative",
+      "summary": "VAE ve DDPM ELBO türetiminin adım adım karşılaştırması: ortak Bayes hareketi, 3 terim, dropped term, prior KL farkı ve final loss. Benzerlik ve farklar intuition ile.",
+      "context": "Lecture 11 · 18.01.2024 — Diffusion Models",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "0. Ortak başlangıç: MLE hedefi",
+          "text": "Her iki modelin de aynı hedefi var: training verisi x'i en probable kılan θ'yı bul.\n\nVAE:   θ* = argmax log p_θ(x)\nDDPM:  θ* = argmax log p_θ(x_0)\n\nAma latent space farklı tanımlanıyor:\n\nVAE:  z ~ N(0,I) → decoder → x  (tek adım)\nDDPM: x_0 → x_1 → ... → x_T ~ N(0,I) → ... → x_0  (T adım)"
+        },
+        {
+          "type": "code",
+          "heading": "1. Problem: marginal intractable",
+          "text": "VAE:\np_θ(x)   = ∫ p_θ(x|z) · p(z) dz          ← z üzerinden, intractable\n\nDDPM:\np_θ(x_0) = ∫ p_θ(x_{0:T}) dx_{1:T}       ← T boyutlu, intractable\n\nDirekt MLE yapılamıyor → her ikisi de lower bound türetiyor."
+        },
+        {
+          "type": "code",
+          "heading": "2. Bayes adımı — payı ikiye ayır",
+          "text": "VAE:\np_θ(x,z) = p_θ(x|z) · p(z)        ← chain rule\n\n→ log p_θ(x) = log [ p_θ(x|z)·p(z) / p_θ(z|x) ]\n                     ─────────────────\n                     likelihood × prior\n\nDDPM:\np_θ(x_{0:T}) = p_θ(x_{1:T}|x_0) · p_θ(x_0)  ← chain rule: P(A,B)=P(B|A)·P(A)\n\n→ log p_θ(x_0) = log [ p_θ(x_{0:T}) / p_θ(x_{1:T}|x_0) ]\n                       ──────────────────────────────────\n                       full joint / true reverse"
+        },
+        {
+          "type": "code",
+          "heading": "3. q sokmak — multiply top and bottom",
+          "text": "VAE:\nq_φ(z|x) sokul     ← encoder, öğreniliyor (φ parametreli)\n\nDDPM:\nq(x_{1:T}|x_0) sokul  ← forward process, sabit (β schedule, parametresiz)"
+        },
+        {
+          "type": "code",
+          "heading": "4. Log rearrange → 3 terim",
+          "text": "VAE:\n= log p_θ(x|z)  -  log q_φ(z|x)/p(z)  +  log q_φ(z|x)/p_θ(z|x)\n  ────────────     ─────────────────────   ──────────────────────\n  Term 1           Term 2                  Term 3\n\nDDPM:\n= log p_θ(x_0|x_1)  -  log q(x_{1:T}|x_0)/p_θ(x_{1:T})  +  log q(x_{1:T}|x_0)/p_θ(x_{1:T}|x_0)\n  ─────────────────     ──────────────────────────────────     ──────────────────────────────────────\n  Term 1                Term 2                                  Term 3"
+        },
+        {
+          "type": "code",
+          "heading": "5-6. Expectation + KL olarak yaz",
+          "text": "VAE:\nlog p_θ(x) = E_z[log p_θ(x|z)]  -  D_KL(q_φ(z|x) || p(z))  +  D_KL(q_φ(z|x) || p_θ(z|x))\n             ─────────────────     ──────────────────────────     ──────────────────────────\n             reconstruction        prior KL                       posterior KL\n             hesaplanabilir        hesaplanabilir                 HESAPLANAMAZ\n\nDDPM:\nlog p_θ(x_0) = E_q[log p_θ(x_0|x_1)]  -  D_KL(q(x_{1:T}|x_0) || p_θ(x_{1:T}))  +  D_KL(q(x_{1:T}|x_0) || p_θ(x_{1:T}|x_0))\n               ─────────────────────     ──────────────────────────────────────────    ─────────────────────────────────────────\n               reconstruction            prior KL                                       posterior KL\n               hesaplanabilir            hesaplanabilir (açılır)                        HESAPLANAMAZ\n\nDropped term her ikisinde de aynı yapı, aynı yön:\nVAE:   D_KL( q_φ(z|x)       ||  p_θ(z|x)       )  ← ikisi de x→z\nDDPM:  D_KL( q(x_{1:T}|x_0) ||  p_θ(x_{1:T}|x_0) ) ← ikisi de x_0→x_{1:T}"
+        },
+        {
+          "type": "code",
+          "heading": "7. Drop et → ELBO",
+          "text": "KL ≥ 0 → drop → lower bound:\n\nVAE:\nlog p_θ(x) ≥ E_z[log p_θ(x|z)]  -  D_KL(q_φ(z|x) || p(z))\n              reconstruction        prior KL\n\nDDPM:\nlog p_θ(x_0) ≥ E_q[log p_θ(x_0|x_1)]  -  D_KL(q(x_{1:T}|x_0) || p_θ(x_{1:T}))\n               reconstruction             prior KL (daha açılacak)"
+        },
+        {
+          "type": "code",
+          "heading": "8. DDPM Term 2'yi aç → L_T + L_{t-1}",
+          "text": "VAE'de Term 2 tek KL — bitti.\nDDPM'de T adım var, Term 2 açılıyor (Bayes ile forward yön flip edilince):\n\nD_KL(q(x_{1:T}|x_0) || p_θ(x_{1:T}))\n= D_KL(q(x_T|x_0) || p(x_T))                               ← L_T: prior matching\n+ Σ D_KL(q(x_{t-1}|x_t,x_0) || p_θ(x_{t-1}|x_t))         ← L_{t-1}: denoising\n\nTam DDPM ELBO:\nELBO = E_q[log p_θ(x_0|x_1)]                               ← L_0: reconstruction\n     - D_KL(q(x_T|x_0) || p(x_T))                          ← L_T\n     - Σ D_KL(q(x_{t-1}|x_t,x_0) || p_θ(x_{t-1}|x_t))    ← L_{t-1}"
+        },
+        {
+          "type": "text",
+          "heading": "9. L_T ignore — VAE'den kritik fark",
+          "text": "VAE Term 2: D_KL(q_φ(z|x) || p(z))\nφ VAR — encoder öğreniyor, bu KL onu regularize ediyor → optimize edilir, şart.\n\nDDPM L_T: D_KL(q(x_T|x_0) || p(x_T))\nφ YOK — forward process sabit, p(x_T)=N(0,I) sabit.\nT adım yeterince büyükse x_T zaten N(0,I)'ye yaklaşıyor, bu garanti.\n→ sabit kalır, ignore edilir.\n\nVAE'de prior KL encoder'ı latent space'e zorlar — öğrenmenin bir parçası.\nDDPM'de prior matching forward process tarafından otomatik sağlanıyor — öğrenilecek bir şey yok."
+        },
+        {
+          "type": "text",
+          "heading": "10. L_{t-1} → MSE",
+          "text": "q(x_{t-1}|x_t,x_0) ve p_θ(x_{t-1}|x_t) ikisi de Gaussian.\nGaussian KL kapalı formda açılınca mean farkının karesi çıkıyor:\n\nL_{t-1} → ||ε - ε_θ(x_t, t)||²\n\nKL matematiksel olarak hâlâ orada, Gaussian varsayımı altında MSE'ye dönüşüyor.\nVAE'deki gibi ayrı bir regularization terimi değil — doğrudan loss içine gömülüyor."
+        },
+        {
+          "type": "compare",
+          "heading": "Final loss",
+          "left": {
+            "title": "VAE",
+            "points": [
+              "reconstruction: E[log p_θ(x|z)]",
+              "prior KL: D_KL(q_φ(z|x) || p(z))",
+              "encoder φ her iki terimde aktif",
+              "KL ayrı regularization terimi olarak kalır"
+            ]
+          },
+          "right": {
+            "title": "DDPM",
+            "points": [
+              "loss = ||ε - ε_θ(x_t, t)||²",
+              "L_T ignore (parametresiz)",
+              "L_{t-1} Gaussian → MSE'ye sadeleşti",
+              "KL loss içine gömüldü, görünmez"
+            ]
+          }
+        },
+        {
+          "type": "compare",
+          "heading": "Özet: tüm farklar",
+          "left": {
+            "title": "VAE",
+            "points": [
+              "Latent: tek z",
+              "Forward: encoder q_φ — öğreniliyor",
+              "Prior KL: φ var → optimize edilir",
+              "Dropped: KL(q_φ||p_θ(z|x)) — explicit",
+              "Bound: Bayes + drop",
+              "Loss: reconstruction + KL"
+            ]
+          },
+          "right": {
+            "title": "DDPM",
+            "points": [
+              "Latent: x_1...x_T",
+              "Forward: noise schedule q — sabit",
+              "Prior KL: φ yok → ignore",
+              "Dropped: KL(q||p_θ(x_{1:T}|x_0)) — implicit (Jensen)",
+              "Bound: Jensen",
+              "Loss: noise MSE"
+            ]
+          }
+        }
+      ]
     }
   ],
   "ida12": [
@@ -14396,6 +14502,112 @@
               "Reverse: denoiser, T adım",
               "Posterior: tractable, kapalı form",
               "Loss: noise prediction MSE"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "title": "VAE vs DDPM — ELBO Derivation Tam Karşılaştırması",
+      "cat": "Generative Models",
+      "summary": "VAE ve DDPM ELBO türetiminin adım adım karşılaştırması: ortak Bayes hareketi, 3 terim, dropped term, prior KL farkı ve final loss. Benzerlik ve farklar intuition ile.",
+      "context": "CS231n · Lecture 13 · May 15, 2025",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "0. Ortak başlangıç: MLE hedefi",
+          "text": "Her iki modelin de aynı hedefi var: training verisi x'i en probable kılan θ'yı bul.\n\nVAE:   θ* = argmax log p_θ(x)\nDDPM:  θ* = argmax log p_θ(x_0)\n\nAma latent space farklı tanımlanıyor:\n\nVAE:  z ~ N(0,I) → decoder → x  (tek adım)\nDDPM: x_0 → x_1 → ... → x_T ~ N(0,I) → ... → x_0  (T adım)"
+        },
+        {
+          "type": "code",
+          "heading": "1. Problem: marginal intractable",
+          "text": "VAE:\np_θ(x)   = ∫ p_θ(x|z) · p(z) dz          ← z üzerinden, intractable\n\nDDPM:\np_θ(x_0) = ∫ p_θ(x_{0:T}) dx_{1:T}       ← T boyutlu, intractable\n\nDirekt MLE yapılamıyor → her ikisi de lower bound türetiyor."
+        },
+        {
+          "type": "code",
+          "heading": "2. Bayes adımı — payı ikiye ayır",
+          "text": "VAE:\np_θ(x,z) = p_θ(x|z) · p(z)        ← chain rule\n\n→ log p_θ(x) = log [ p_θ(x|z)·p(z) / p_θ(z|x) ]\n                     ─────────────────\n                     likelihood × prior\n\nDDPM:\np_θ(x_{0:T}) = p_θ(x_{1:T}|x_0) · p_θ(x_0)  ← chain rule: P(A,B)=P(B|A)·P(A)\n\n→ log p_θ(x_0) = log [ p_θ(x_{0:T}) / p_θ(x_{1:T}|x_0) ]\n                       ──────────────────────────────────\n                       full joint / true reverse"
+        },
+        {
+          "type": "code",
+          "heading": "3. q sokmak — multiply top and bottom",
+          "text": "VAE:\nq_φ(z|x) sokul     ← encoder, öğreniliyor (φ parametreli)\n\nDDPM:\nq(x_{1:T}|x_0) sokul  ← forward process, sabit (β schedule, parametresiz)"
+        },
+        {
+          "type": "code",
+          "heading": "4. Log rearrange → 3 terim",
+          "text": "VAE:\n= log p_θ(x|z)  -  log q_φ(z|x)/p(z)  +  log q_φ(z|x)/p_θ(z|x)\n  ────────────     ─────────────────────   ──────────────────────\n  Term 1           Term 2                  Term 3\n\nDDPM:\n= log p_θ(x_0|x_1)  -  log q(x_{1:T}|x_0)/p_θ(x_{1:T})  +  log q(x_{1:T}|x_0)/p_θ(x_{1:T}|x_0)\n  ─────────────────     ──────────────────────────────────     ──────────────────────────────────────\n  Term 1                Term 2                                  Term 3"
+        },
+        {
+          "type": "code",
+          "heading": "5-6. Expectation + KL olarak yaz",
+          "text": "VAE:\nlog p_θ(x) = E_z[log p_θ(x|z)]  -  D_KL(q_φ(z|x) || p(z))  +  D_KL(q_φ(z|x) || p_θ(z|x))\n             ─────────────────     ──────────────────────────     ──────────────────────────\n             reconstruction        prior KL                       posterior KL\n             hesaplanabilir        hesaplanabilir                 HESAPLANAMAZ\n\nDDPM:\nlog p_θ(x_0) = E_q[log p_θ(x_0|x_1)]  -  D_KL(q(x_{1:T}|x_0) || p_θ(x_{1:T}))  +  D_KL(q(x_{1:T}|x_0) || p_θ(x_{1:T}|x_0))\n               ─────────────────────     ──────────────────────────────────────────    ─────────────────────────────────────────\n               reconstruction            prior KL                                       posterior KL\n               hesaplanabilir            hesaplanabilir (açılır)                        HESAPLANAMAZ\n\nDropped term her ikisinde de aynı yapı, aynı yön:\nVAE:   D_KL( q_φ(z|x)       ||  p_θ(z|x)       )  ← ikisi de x→z\nDDPM:  D_KL( q(x_{1:T}|x_0) ||  p_θ(x_{1:T}|x_0) ) ← ikisi de x_0→x_{1:T}"
+        },
+        {
+          "type": "code",
+          "heading": "7. Drop et → ELBO",
+          "text": "KL ≥ 0 → drop → lower bound:\n\nVAE:\nlog p_θ(x) ≥ E_z[log p_θ(x|z)]  -  D_KL(q_φ(z|x) || p(z))\n              reconstruction        prior KL\n\nDDPM:\nlog p_θ(x_0) ≥ E_q[log p_θ(x_0|x_1)]  -  D_KL(q(x_{1:T}|x_0) || p_θ(x_{1:T}))\n               reconstruction             prior KL (daha açılacak)"
+        },
+        {
+          "type": "code",
+          "heading": "8. DDPM Term 2'yi aç → L_T + L_{t-1}",
+          "text": "VAE'de Term 2 tek KL — bitti.\nDDPM'de T adım var, Term 2 açılıyor (Bayes ile forward yön flip edilince):\n\nD_KL(q(x_{1:T}|x_0) || p_θ(x_{1:T}))\n= D_KL(q(x_T|x_0) || p(x_T))                               ← L_T: prior matching\n+ Σ D_KL(q(x_{t-1}|x_t,x_0) || p_θ(x_{t-1}|x_t))         ← L_{t-1}: denoising\n\nTam DDPM ELBO:\nELBO = E_q[log p_θ(x_0|x_1)]   ← L_0: reconstruction\n     - D_KL(q(x_T|x_0) || p(x_T))               ← L_T\n     - Σ D_KL(q(x_{t-1}|x_t,x_0) || p_θ(x_{t-1}|x_t))  ← L_{t-1}"
+        },
+        {
+          "type": "text",
+          "heading": "9. L_T ignore — VAE'den kritik fark",
+          "text": "VAE Term 2: D_KL(q_φ(z|x) || p(z))\nφ VAR — encoder öğreniyor, bu KL onu regularize ediyor → optimize edilir, şart.\n\nDDPM L_T: D_KL(q(x_T|x_0) || p(x_T))\nφ YOK — forward process sabit, p(x_T)=N(0,I) sabit.\nT adım yeterince büyükse x_T zaten N(0,I)'ye yaklaşıyor, bu garanti.\n→ sabit kalır, ignore edilir.\n\nVAE'de prior KL encoder'ı latent space'e zorlar — öğrenmenin bir parçası.\nDDPM'de prior matching forward process tarafından otomatik sağlanıyor — öğrenilecek bir şey yok."
+        },
+        {
+          "type": "text",
+          "heading": "10. L_{t-1} → MSE",
+          "text": "q(x_{t-1}|x_t,x_0) ve p_θ(x_{t-1}|x_t) ikisi de Gaussian.\nGaussian KL kapalı formda açılınca mean farkının karesi çıkıyor:\n\nL_{t-1} → ||ε - ε_θ(x_t, t)||²\n\nKL matematiksel olarak hâlâ orada, Gaussian varsayımı altında MSE'ye dönüşüyor.\nVAE'deki gibi ayrı bir regularization terimi değil — doğrudan loss içine gömülüyor."
+        },
+        {
+          "type": "compare",
+          "heading": "Final loss",
+          "left": {
+            "title": "VAE",
+            "points": [
+              "reconstruction: E[log p_θ(x|z)]",
+              "prior KL: D_KL(q_φ(z|x) || p(z))",
+              "encoder φ her iki terimde aktif",
+              "KL ayrı regularization terimi olarak kalır"
+            ]
+          },
+          "right": {
+            "title": "DDPM",
+            "points": [
+              "loss = ||ε - ε_θ(x_t, t)||²",
+              "L_T ignore (parametresiz)",
+              "L_{t-1} Gaussian → MSE'ye sadeleşti",
+              "KL loss içine gömüldü, görünmez"
+            ]
+          }
+        },
+        {
+          "type": "compare",
+          "heading": "Özet: tüm farklar",
+          "left": {
+            "title": "VAE",
+            "points": [
+              "Latent: tek z",
+              "Forward: encoder q_φ — öğreniliyor",
+              "Prior KL: φ var → optimize edilir",
+              "Dropped: KL(q_φ||p_θ(z|x)) — explicit",
+              "Bound: Bayes + drop",
+              "Loss: reconstruction + KL"
+            ]
+          },
+          "right": {
+            "title": "DDPM",
+            "points": [
+              "Latent: x_1...x_T",
+              "Forward: noise schedule q — sabit",
+              "Prior KL: φ yok → ignore",
+              "Dropped: KL(q||p_θ(x_{1:T}|x_0)) — implicit (Jensen)",
+              "Bound: Jensen",
+              "Loss: noise MSE"
             ]
           }
         }
