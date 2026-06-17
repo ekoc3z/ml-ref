@@ -5508,6 +5508,70 @@
           }
         }
       ]
+    },
+    {
+      "title": "DDPM — Training & Inference: Tam Parametreler ve Dimensionlar",
+      "cat": "Generative",
+      "summary": "DDPM training ve inference adımları tüm variable'ların shape'leriyle. Precomputed schedule, U-Net input/output, loss, sampling algoritması.",
+      "context": "Lecture 11 · 18.01.2024 — Diffusion Models",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Precomputed — shape (T,), scalar per timestep",
+          "text": "β_t  : 0.0001 → 0.02  (linear schedule)\nα_t  = 1 - β_t\nᾱ_t  = α_1 · α_2 · ... · α_t   (cumulative product)\nσ_t  = sqrt(β_t · (1-ᾱ_{t-1}) / (1-ᾱ_t))"
+        },
+        {
+          "type": "code",
+          "heading": "Training",
+          "text": "1. x_0 ~ dataset              (B, C, H, W)   gerçek image\n\n2. t ~ Uniform(1, T)          (B,)            her image için random adım\n\n3. ε ~ N(0, I)                (B, C, H, W)   ground truth noise\n\n4. x_t = sqrt(ᾱ_t)·x_0       (B, C, H, W)   noisy image\n       + sqrt(1-ᾱ_t)·ε                       (closed-form, tek adım)\n\n5. ε_θ = U-Net(x_t, t)        (B, C, H, W)   predicted noise\n         input:  x_t  (B, C, H, W)\n                 t    (B,) → sinusoidal embedding → her residual block'a eklenir\n         output: ε_θ  (B, C, H, W)\n\n6. Loss = ||ε - ε_θ||²        scalar"
+        },
+        {
+          "type": "code",
+          "heading": "Inference (Sampling)",
+          "text": "1. x_T ~ N(0, I)              (B, C, H, W)   saf noise\n\n2. for t = T, T-1, ..., 1:\n\n   ε_θ = U-Net(x_t, t)        (B, C, H, W)   predicted noise\n\n   μ_θ = (1/sqrt(α_t))        (B, C, H, W)   x_{t-1} mean\n       · (x_t - β_t/sqrt(1-ᾱ_t) · ε_θ)\n\n   z ~ N(0,I)  if t > 1       (B, C, H, W)   sampling noise\n   z = 0       if t = 1\n\n   x_{t-1} = μ_θ + σ_t · z   (B, C, H, W)\n\n3. return x_0                  (B, C, H, W)   üretilen image"
+        },
+        {
+          "type": "table",
+          "heading": "Tüm Variable'lar",
+          "rows": [
+            [
+              "Variable",
+              "Shape",
+              "Açıklama"
+            ],
+            [
+              "x_0, x_t, ε, ε_θ",
+              "(B, C, H, W)",
+              "image boyutunda"
+            ],
+            [
+              "μ_θ, z",
+              "(B, C, H, W)",
+              "image boyutunda"
+            ],
+            [
+              "β_t, α_t, ᾱ_t, σ_t",
+              "scalar",
+              "her t için bir değer"
+            ],
+            [
+              "t",
+              "(B,)",
+              "batch'te her image için ayrı"
+            ]
+          ]
+        },
+        {
+          "type": "insight",
+          "heading": "σ_t neden o formül?",
+          "text": "σ_t = sqrt(β̃_t) — Bayes'ten türetilen posterior variance. q(x_{t-1}|x_t, x_0) ∝ q(x_t|x_{t-1}) · q(x_{t-1}|x_0) iki Gaussian PDF çarpımı → precision'lar toplanır → β̃_t = β_t·(1-ᾱ_{t-1})/(1-ᾱ_t) çıkar. Keyfi seçim değil, matematikten gelen zorunluluk. z eklenmesi stochasticity için değil, Gaussian'dan sample almanın ta kendisi: x = μ + σ·z."
+        },
+        {
+          "type": "note",
+          "heading": "Loss basitleştirmesi",
+          "text": "Teorik ELBO loss'ta β_t²/(2α_t(1-ᾱ_t)||Σ_θ||²) weighting term'i var. Ho et al. (2020) bunu kaldırınca sonuçlar daha iyi çıktı — weighting küçük t'leri fazla ağırlandırıyordu. L_simple = E[||ε - ε_θ(x_t, t)||²] kullanılıyor."
+        }
+      ]
     }
   ],
   "ida12": [
@@ -10525,6 +10589,70 @@
           "type": "note",
           "heading": "Sampling Stratejileri",
           "text": "DDPM: her adımda stokastik gürültü z eklenir, ~1000 adım gerekir. DDIM: deterministik, 50-100 adımda iyi sonuç. Yüksek dereceli ODE çözücüler: model birkaç kez değerlendirilir, daha doğru adım. diffusers kütüphanesinde DDIMScheduler, DPMSolverScheduler vb. hazır."
+        }
+      ]
+    },
+    {
+      "title": "DDPM — Training & Inference: Tam Parametreler ve Dimensionlar",
+      "cat": "Diffusion",
+      "summary": "DDPM training ve inference adımları tüm variable'ların shape'leriyle. Precomputed schedule, U-Net input/output, loss, sampling algoritması.",
+      "context": "ML Lab · Session 7 — DDPM Implementation",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Precomputed — shape (T,), scalar per timestep",
+          "text": "β_t  : 0.0001 → 0.02  (linear schedule)\nα_t  = 1 - β_t\nᾱ_t  = α_1 · α_2 · ... · α_t   (cumulative product)\nσ_t  = sqrt(β_t · (1-ᾱ_{t-1}) / (1-ᾱ_t))"
+        },
+        {
+          "type": "code",
+          "heading": "Training",
+          "text": "1. x_0 ~ dataset              (B, C, H, W)   gerçek image\n\n2. t ~ Uniform(1, T)          (B,)            her image için random adım\n\n3. ε ~ N(0, I)                (B, C, H, W)   ground truth noise\n\n4. x_t = sqrt(ᾱ_t)·x_0       (B, C, H, W)   noisy image\n       + sqrt(1-ᾱ_t)·ε                       (closed-form, tek adım)\n\n5. ε_θ = U-Net(x_t, t)        (B, C, H, W)   predicted noise\n         input:  x_t  (B, C, H, W)\n                 t    (B,) → sinusoidal embedding → her residual block'a eklenir\n         output: ε_θ  (B, C, H, W)\n\n6. Loss = ||ε - ε_θ||²        scalar"
+        },
+        {
+          "type": "code",
+          "heading": "Inference (Sampling)",
+          "text": "1. x_T ~ N(0, I)              (B, C, H, W)   saf noise\n\n2. for t = T, T-1, ..., 1:\n\n   ε_θ = U-Net(x_t, t)        (B, C, H, W)   predicted noise\n\n   μ_θ = (1/sqrt(α_t))        (B, C, H, W)   x_{t-1} mean\n       · (x_t - β_t/sqrt(1-ᾱ_t) · ε_θ)\n\n   z ~ N(0,I)  if t > 1       (B, C, H, W)   sampling noise\n   z = 0       if t = 1\n\n   x_{t-1} = μ_θ + σ_t · z   (B, C, H, W)\n\n3. return x_0                  (B, C, H, W)   üretilen image"
+        },
+        {
+          "type": "table",
+          "heading": "Tüm Variable'lar",
+          "rows": [
+            [
+              "Variable",
+              "Shape",
+              "Açıklama"
+            ],
+            [
+              "x_0, x_t, ε, ε_θ",
+              "(B, C, H, W)",
+              "image boyutunda"
+            ],
+            [
+              "μ_θ, z",
+              "(B, C, H, W)",
+              "image boyutunda"
+            ],
+            [
+              "β_t, α_t, ᾱ_t, σ_t",
+              "scalar",
+              "her t için bir değer"
+            ],
+            [
+              "t",
+              "(B,)",
+              "batch'te her image için ayrı"
+            ]
+          ]
+        },
+        {
+          "type": "insight",
+          "heading": "σ_t neden o formül?",
+          "text": "σ_t = sqrt(β̃_t) — Bayes'ten türetilen posterior variance. q(x_{t-1}|x_t, x_0) ∝ q(x_t|x_{t-1}) · q(x_{t-1}|x_0) iki Gaussian PDF çarpımı → precision'lar toplanır → β̃_t = β_t·(1-ᾱ_{t-1})/(1-ᾱ_t) çıkar. Keyfi seçim değil, matematikten gelen zorunluluk. z eklenmesi stochasticity için değil, Gaussian'dan sample almanın ta kendisi: x = μ + σ·z."
+        },
+        {
+          "type": "note",
+          "heading": "Loss basitleştirmesi",
+          "text": "Teorik ELBO loss'ta β_t²/(2α_t(1-ᾱ_t)||Σ_θ||²) weighting term'i var. Ho et al. (2020) bunu kaldırınca sonuçlar daha iyi çıktı — weighting küçük t'leri fazla ağırlandırıyordu. L_simple = E[||ε - ε_θ(x_t, t)||²] kullanılıyor."
         }
       ]
     }
