@@ -5510,6 +5510,34 @@
       ]
     },
     {
+      "title": "DDPM — Matematiksel Özet: Forward, Reverse, ε Prediction ve L_simple",
+      "cat": "Generative",
+      "summary": "DDPM'in tüm matematiksel yapısı: forward process, Bayes ile türetilen reverse posterior, x_0'dan bağımsız ε reparametrizasyonu ve neden L_simple + ε en iyi çalıştığı (Table 2 ablation).",
+      "context": "Lecture 11 · DDPM Paper (Ho et al. 2020) — Unified Derivation",
+      "sections": [
+        {
+          "type": "formula",
+          "heading": "Forward Process",
+          "text": "Parametrik noise schedule (β_t, t=1..T) ile her adımda Gaussian noise ekleniyor:\n$$q(x_t | x_{t-1}) = \\mathcal{N}(\\sqrt{1-\\beta_t}\\,x_{t-1},\\; \\beta_t \\mathbf{I})$$\n\nClosed-form reparametrization — herhangi t'ye direkt atlama (ᾱ_t = ∏α_s, α_t=1-β_t):\n$$q(x_t | x_0) = \\mathcal{N}(\\sqrt{\\bar{\\alpha}_t}\\,x_0,\\; (1-\\bar{\\alpha}_t)\\mathbf{I})$$\n$$x_t = \\sqrt{\\bar{\\alpha}_t}\\,x_0 + \\sqrt{1-\\bar{\\alpha}_t}\\,\\varepsilon, \\quad \\varepsilon \\sim \\mathcal{N}(0,\\mathbf{I})$$"
+        },
+        {
+          "type": "text",
+          "heading": "Reverse Process — Ground Truth (x_0'a Koşullu)",
+          "text": "Bayes ile q(x_{t-1}|x_t, x_0) türetilebiliyor — ama x_0'a koşullu:\n\nq(x_{t-1}|x_t, x_0) = N(μ̃_t, β̃_t·I)\n\nμ̃_t ve β̃_t, forward parametrelerinden (α_t, ᾱ_t, β_t) analitik olarak türetiliyor. x_0 bilinince bu dağılım tamamen biliniyor."
+        },
+        {
+          "type": "code",
+          "heading": "Reparametrization → ε Prediction",
+          "text": "μ̃_t x_0 cinsinden:\n\n  μ̃_t = (√ᾱ_{t-1}·β_t)/(1-ᾱ_t)·x_0  +  (√α_t·(1-ᾱ_{t-1}))/(1-ᾱ_t)·x_t\n\nAma p_θ(x_{t-1}|x_t) inference'da x_0'ı bilmiyor —\namacımız x_0'dan bağımsız approximation.\n\nx_0'ı ε cinsinden yaz:\n\n  x_0 = (x_t - √(1-ᾱ_t)·ε) / √ᾱ_t\n\nYerine koyunca μ̃_t yalnızca x_t ve ε'ya bağlı hale geliyor:\n\n  μ̃_t = (1/√α_t) · (x_t - β_t/√(1-ᾱ_t) · ε)\n\nNetwork μ_θ yerine ε_θ predict ediyor.\nVariance sabit seçilince KL sadece mean farkına indirgenip:\n\n  L_simple = E[||ε - ε_θ(x_t, t)||²]"
+        },
+        {
+          "type": "code",
+          "heading": "Neden ε + L_simple En İyi? (DDPM Table 2)",
+          "text": "Full ELBO'da her parameterizasyon için timestep katsayısı var:\n\n  SNR(t) = ᾱ_t / (1-ᾱ_t)\n\n  x_0 prediction: λ_x0 = (1/2)(SNR(t-1) - SNR(t))\n  ε prediction:   λ_ε  = (1-α_t)² / (2σ_q²(t)·α_t·(1-ᾱ_t))\n  μ prediction:   λ_μ  = 1/(2σ_t²) · (türetilmiş μ̃_t farkı)\n\nt büyüdükçe SNR azalıyor → katsayılar küçülüyor.\n\nFull ELBO vs L_simple (CIFAR10, Table 2):\n\n                    Full ELBO      L_simple\n  x_0 prediction:  kötü*          —\n  μ prediction:    FID 13.22      unstable\n  ε prediction:    FID 13.51      FID 3.17  ← en iyi\n\n* \"predicting x_0 led to worse sample quality\" (DDPM paper)\n\nFull ELBO'da μ ≈ ε — aynı KL, parameterizasyon fark etmiyor.\nL_simple ile katsayı drop edilince μ unstable oluyor.\nε + L_simple'ın reweighting'i küçük t'yi down-weight ediyor\n→ network büyük t'deki zor görevlere odaklanıyor → daha iyi sample quality.\n\n\"it is just another parameterization of p_θ(x_{t-1}|x_t)\"\n— ε teorik üstünlük değil, L_simple ile kombinasyonu iyi çalışıyor."
+        }
+      ]
+    },
+    {
       "title": "DDPM — Training & Inference: Tam Parametreler ve Dimensionlar",
       "cat": "Generative",
       "summary": "DDPM training ve inference adımları tüm variable'ların shape'leriyle. Precomputed schedule, U-Net input/output, loss, sampling algoritması.",
@@ -10589,6 +10617,34 @@
           "type": "note",
           "heading": "Sampling Stratejileri",
           "text": "DDPM: her adımda stokastik gürültü z eklenir, ~1000 adım gerekir. DDIM: deterministik, 50-100 adımda iyi sonuç. Yüksek dereceli ODE çözücüler: model birkaç kez değerlendirilir, daha doğru adım. diffusers kütüphanesinde DDIMScheduler, DPMSolverScheduler vb. hazır."
+        }
+      ]
+    },
+    {
+      "title": "DDPM — Matematiksel Özet: Forward, Reverse, ε Prediction ve L_simple",
+      "cat": "Diffusion",
+      "summary": "DDPM'in tüm matematiksel yapısı: forward process, Bayes ile türetilen reverse posterior, x_0'dan bağımsız ε reparametrizasyonu ve neden L_simple + ε en iyi çalıştığı (Table 2 ablation).",
+      "context": "ML Lab · Session 7 — DDPM Paper (Ho et al. 2020) Unified Derivation",
+      "sections": [
+        {
+          "type": "formula",
+          "heading": "Forward Process",
+          "text": "Parametrik noise schedule (β_t, t=1..T) ile her adımda Gaussian noise ekleniyor:\n$$q(x_t | x_{t-1}) = \\mathcal{N}(\\sqrt{1-\\beta_t}\\,x_{t-1},\\; \\beta_t \\mathbf{I})$$\n\nClosed-form reparametrization — herhangi t'ye direkt atlama (ᾱ_t = ∏α_s, α_t=1-β_t):\n$$q(x_t | x_0) = \\mathcal{N}(\\sqrt{\\bar{\\alpha}_t}\\,x_0,\\; (1-\\bar{\\alpha}_t)\\mathbf{I})$$\n$$x_t = \\sqrt{\\bar{\\alpha}_t}\\,x_0 + \\sqrt{1-\\bar{\\alpha}_t}\\,\\varepsilon, \\quad \\varepsilon \\sim \\mathcal{N}(0,\\mathbf{I})$$"
+        },
+        {
+          "type": "text",
+          "heading": "Reverse Process — Ground Truth (x_0'a Koşullu)",
+          "text": "Bayes ile q(x_{t-1}|x_t, x_0) türetilebiliyor — ama x_0'a koşullu:\n\nq(x_{t-1}|x_t, x_0) = N(μ̃_t, β̃_t·I)\n\nμ̃_t ve β̃_t, forward parametrelerinden (α_t, ᾱ_t, β_t) analitik olarak türetiliyor. x_0 bilinince bu dağılım tamamen biliniyor."
+        },
+        {
+          "type": "code",
+          "heading": "Reparametrization → ε Prediction",
+          "text": "μ̃_t x_0 cinsinden:\n\n  μ̃_t = (√ᾱ_{t-1}·β_t)/(1-ᾱ_t)·x_0  +  (√α_t·(1-ᾱ_{t-1}))/(1-ᾱ_t)·x_t\n\nAma p_θ(x_{t-1}|x_t) inference'da x_0'ı bilmiyor —\namacımız x_0'dan bağımsız approximation.\n\nx_0'ı ε cinsinden yaz:\n\n  x_0 = (x_t - √(1-ᾱ_t)·ε) / √ᾱ_t\n\nYerine koyunca μ̃_t yalnızca x_t ve ε'ya bağlı hale geliyor:\n\n  μ̃_t = (1/√α_t) · (x_t - β_t/√(1-ᾱ_t) · ε)\n\nNetwork μ_θ yerine ε_θ predict ediyor.\nVariance sabit seçilince KL sadece mean farkına indirgenip:\n\n  L_simple = E[||ε - ε_θ(x_t, t)||²]"
+        },
+        {
+          "type": "code",
+          "heading": "Neden ε + L_simple En İyi? (DDPM Table 2)",
+          "text": "Full ELBO'da her parameterizasyon için timestep katsayısı var:\n\n  SNR(t) = ᾱ_t / (1-ᾱ_t)\n\n  x_0 prediction: λ_x0 = (1/2)(SNR(t-1) - SNR(t))\n  ε prediction:   λ_ε  = (1-α_t)² / (2σ_q²(t)·α_t·(1-ᾱ_t))\n  μ prediction:   λ_μ  = 1/(2σ_t²) · (türetilmiş μ̃_t farkı)\n\nt büyüdükçe SNR azalıyor → katsayılar küçülüyor.\n\nFull ELBO vs L_simple (CIFAR10, Table 2):\n\n                    Full ELBO      L_simple\n  x_0 prediction:  kötü*          —\n  μ prediction:    FID 13.22      unstable\n  ε prediction:    FID 13.51      FID 3.17  ← en iyi\n\n* \"predicting x_0 led to worse sample quality\" (DDPM paper)\n\nFull ELBO'da μ ≈ ε — aynı KL, parameterizasyon fark etmiyor.\nL_simple ile katsayı drop edilince μ unstable oluyor.\nε + L_simple'ın reweighting'i küçük t'yi down-weight ediyor\n→ network büyük t'deki zor görevlere odaklanıyor → daha iyi sample quality.\n\n\"it is just another parameterization of p_θ(x_{t-1}|x_t)\"\n— ε teorik üstünlük değil, L_simple ile kombinasyonu iyi çalışıyor."
         }
       ]
     },
