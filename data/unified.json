@@ -5866,646 +5866,196 @@
   ],
   "vs01": [
     {
-      "title": "Neden Vektör Uzayı Dili? — SP'nin Matematiksel Temeli",
-      "cat": "Motivation",
-      "summary": "EE499'un ana iddiası: sinyal işlemedeki her problem doğru dil kurulunca tek bir çerçeveye sığar. Sinyaller = vektörler, sistemler = operatörler. Bu dil kurulunca FIR filtreleme, CT, deblurring, optimal yaklaşım hepsi aynı matematikle çözülür.",
-      "context": "EE499 · Chapter 1.1 — Introduction to Vector-Space Methods in SP",
-      "sections": [
-        {
-          "type": "code",
-          "heading": "Bu dersin iddiası ne? Neden böyle soyut bir dile ihtiyaç var?",
-          "text": "Sinyal işleme derslerinde genellikle her konuyu ayrı bir araç olarak öğrenirsin: Fourier dönüşümü, filtre tasarımı, örnekleme teoremi, gürültü giderme... Bunların hepsi sanki farklı aletlermiş gibi görünür. Ama bu dersin iddiası şu: aslında hepsi aynı matematiksel yapıdan geliyor.\n\nO yapı şu: vektör uzayı dili.\n\nBu dilde üç temel sözleşme var:\n1. Sinyal x[n] veya x(t) → bir vektör olarak düşünülür\n2. Sistem (filtre, türev alma, konvolüsyon) → bir operatör olarak modellenir\n3. Lineer sistem → bir matris olarak temsil edilir\n\nBu üç sözleşmeyle birlikte, çok farklı görünen problemlerin hepsi 'y = A(x) formunda bir lineer denklem çöz' haline gelir:\n\n- FIR filtreleme: y = H·x (H konvolüsyon matrisi)\n- CT rekonstrüksiyon: projektörlerden görüntü bul → A·f = g\n- Deblurring: bulanık görüntüden orijinali bul → B·x ≈ y\n- Optimal LPF yaklaşımı: gerçekleştirilebilir bir filtre ile ideal LPF'e en yakın ne olur?\n\nHepsinin ortak yapısı: 'verilen y, bul x, öyle ki y = A·x'. Bu, ters problem. Ve bu derste bu problemi sistematik olarak çözeceğiz."
-        },
-        {
-          "type": "code",
-          "heading": "Bu dil olmadan ne eksik olurdu? Neden soyutlama gerekiyor?",
-          "text": "Soyutlama olmadan her problem için ayrı ayrı çözüm geliştirmek zorunda kalırsın. Mesela:\n\nSomut durum 1: FIR filtre tasarımı. x[n] sinyal, h[n] filtre. y[n] = Σ h[k]x[n-k]. Bunu bileşen bileşen hesaplarsın. İyi, ama başka bir probleme geçince bu bilgi aktarılmaz.\n\nSomut durum 2: Görüntü deblurring. Kamera nesneleri bulanık çekmiş. Orijinal görüntüyü bul. Bu çok farklı görünüyor, ama matematiksel yapı aynı: bir lineer sistem var (bulanıklaştırma operatörü) ve onun inversini bulmaya çalışıyorsun.\n\nSoyutlama şunu sağlar: FIR filtreleme için geliştirdiğin ters problem teorisi, CT rekonstrüksiyonuna, deblurring'e, örneklemeden sinyal rekonstrüksiyonuna hepsine aynı şekilde uygulanır. Matematiği bir kez öğrenirsin, her yerde kullanırsın.\n\nDersin sonunda göreceksin ki:\n- Projeksiyon teoremi = gürültü giderme, sinyal rekonstrüksiyon ve LPF'in hepsini açıklar\n- Least Squares çözümü = 'tam çözüm yoksa en iyi yaklaşımı bul' der\n- Minimum norm çözümü = 'sonsuz çözüm varsa en seyreği seç' der\n- Ve DFT, CTFS, örnekleme hepsi sadece 'baz değişimi' diye anlaşılır"
-        },
-        {
-          "type": "list",
-          "heading": "Bu derste cevap aranacak büyük sorular",
-          "items": [
-            "A(x) = y denkleminin çözümü var mı? (Existence — range space ile bağlantılı)",
-            "Varsa tekil mi? (Uniqueness — null space ile bağlantılı)",
-            "Çözüm yoksa en iyi yaklaşım ne? (Least Squares problemi)",
-            "Sonsuz çözüm varsa hangisini seçelim? (Minimum norm)",
-            "İki sinyal arasındaki açıyı, mesafeyi nasıl ölçürüz? (Norm ve iç çarpım)",
-            "Bir sinyali bir alt uzaya yansıtmanın analitik formülü ne? (Projeksiyon matrisi)"
-          ]
-        }
-      ]
-    },
-    {
-      "title": "Vektör Uzayı: Tanım ve Aksiyomlar",
+      "title": "Vektör Uzayı, Alt Uzay ve Span",
       "cat": "Foundations",
-      "summary": "Vektör uzayı soyut bir yapı: küme + skalar cisim + toplama + skalar çarpma. 7 aksiyom. Önemli olan gerçek sayılara ya da n-boyutlu uzaylara bağlı kalmak zorunda olmadığın — polinomlar, matrisler, fonksiyonlar hepsi vektör olabilir.",
-      "context": "EE499 · Chapter 1.2 — Definition of Vector Spaces",
+      "summary": "EE499'un çerçevesi: sinyal = vektör, sistem = operatör, her SP problemi 'Ax=b çöz' formuna giriyor. Vektör uzayı: toplama ve skalar çarpma altında kapalı herhangi bir küme. Alt uzay: kapalı alt küme, sıfırı içermek zorunda. Span: verilen vektörlerden lineer kombinasyonla ulaşılan her şey.",
+      "context": "EE499 · Chapter 1.1–1.3",
       "sections": [
         {
           "type": "code",
-          "heading": "Vektör uzayı tanımı — sezgiden aksiyomlara",
-          "text": "Vektör uzayı denilince ilk aklına ℝ² veya ℝ³ gelebilir: x-y-z eksenlerinde noktalar. Ama bu dersin 'vektör' kavramı çok daha geniş. Temel fikir şu: vektör, 'toplanabilen ve skalarla çarpılabilen şey'.\n\nResmi tanım şöyle kurulur:\nBir vektör uzayı (V, F, +, ·) dört bileşenden oluşur:\n\n1. V: vektörlerin kümesi — içindeki elemanlara 'vektör' deriz\n2. F: skalar cisim — F = ℝ (gerçel sayılar) veya F = ℂ (karmaşık sayılar)\n3. +: vektör toplama işlemi — V×V → V (iki vektör topla, bir vektör çıkar)\n4. ·: skalar çarpma — F×V → V (bir sayı ile vektör çarp, yine vektör çıkar)\n\nEn kritik koşul KAPALILIK:\n- x, y ∈ V ise x + y ∈ V olmak zorunda\n- x ∈ V ve α ∈ F ise α·x ∈ V olmak zorunda\n\nYani kümenin dışına çıkamassın. Bu basit görünüyor ama hangi kümelerin 'vektör uzayı olduğunu' ve hangilerinin olmadığını belirleyen tam da bu.\n\nÖrnek: 'Tersi mevcut matrisler' toplama altında kapalı mı?\nA terslenebilir, B terslenebilir → A+B terslenebilir mi? Hayır, olmak zorunda değil.\nKarşı örnek: A = I, B = -I → A+B = 0, terslenebilir değil.\nDolayısıyla 'terslenebilir matrisler' vektör uzayı DEĞIL."
-        },
-        {
-          "type": "list",
-          "heading": "7 aksiyom (pratikte hafızada tutulması gerekenler)",
-          "items": [
-            "Değişme: x + y = y + x (toplama sırasız)",
-            "Birleşme (toplama): (x+y)+z = x+(y+z)",
-            "Sıfır eleman: ∃ 0 ∈ V, x + 0 = x her x için",
-            "Ters eleman: her x için ∃ (-x) ∈ V, x + (-x) = 0",
-            "Skalar birleşme: α(βx) = (αβ)x",
-            "Dağılma 1: α(x+y) = αx + αy",
-            "Dağılma 2: (α+β)x = αx + βx",
-            "Çarpma kimliği: 1·x = x"
-          ]
+          "heading": "Vektör uzayı nedir?",
+          "text": "Vektör uzayı soyut bir yapı: 'toplanabilen ve skalarla çarpılabilen şeyler.' Gözünde ℝ² veya ℝ³ canlanabilir ama bu çok daha geniş bir kavram.\n\nResmi tanım: (V, F, +, ·) dört bileşen:\n  V: vektörlerin kümesi\n  F: skalar cisim (ℝ veya ℂ)\n  +: V×V → V  (toplama)\n  ·: F×V → V  (skalar çarpma)\n\nEn kritik koşul KAPALILIK:\n  x, y ∈ V ise x+y ∈ V\n  x ∈ V, α ∈ F ise αx ∈ V\n\nÖrnekler:\n  ℝⁿ         : n-boyutlu gerçel vektörler\n  ℂᴺ         : N-boyutlu karmaşık vektörler\n  L₂[a,b]    : sonlu enerjili fonksiyonlar (∫|x(t)|²dt < ∞)\n  ℓ₂(ℤ)      : sonlu enerjili diziler (Σ|x[k]|² < ∞)\n  Pⁿ(ℝ)      : en fazla n. dereceden polinomlar\n\nEE499 çerçevesi:\n  Sinyal x[n] veya x(t) → vektör\n  Filtre, türev, konvolüsyon → lineer operatör\n  FIR filtreleme, CT rekonstrüksiyon, deblurring hepsi: 'y = Ax bul'\n  Bir kez öğrenince her yerde uygulanıyor."
         },
         {
           "type": "code",
-          "heading": "Bu aksiyomlar ne için? Neden bu kadar çok?",
-          "text": "Bu 7 aksiyom, aslında 'toplama ve skalar çarpmanın her zamanki anlamında davranmasını' güvence altına alıyor. Gerçek sayılarla yaptığın her algebrik işlemi vektörlerle de yapabilmeni sağlıyor.\n\nPratikte bu aksiyomları ezberlemek yerine şunu unutma:\n- Sıfır vektör her zaman var ve her vektör uzayında 0 ∈ V\n- Herhangi bir vektörün additif tersi var\n- Toplama ve skalar çarpma 'beklediğin gibi' davranır\n\nBir kümenin vektör uzayı olup olmadığını test etmek için:\n1. Kapalılığı kontrol et (toplama ve skalar çarpma altında)\n2. Sıfır vektörünün kümede olup olmadığını kontrol et\n3. Eğer bunlar sağlanıyorsa, geri kalan aksiyomlar genellikle otomatik gelir"
+          "heading": "Alt uzay nedir?",
+          "text": "S ⊆ V alt uzaydır eğer aynı işlemler altında S'nin kendisi de vektör uzayıysa.\n\nKontrol için minimum iki koşul:\n  1. x, y ∈ S  ⟹  x+y ∈ S\n  2. x ∈ S, α ∈ F  ⟹  αx ∈ S\n\nBu iki koşul sıfır vektörünün S'de olmasını otomatik garantiler:\n  α=0 al → 0·x = 0 ∈ S\n\nHızlı test: sıfır vektörü S'de değilse → S alt uzay olamaz.\n\nÖrnekler:\n  ℝ³'te orijinden geçen düzlemler: alt uzay ✓\n  ℝ³'te orijinden geçmeyen düzlemler: alt uzay ✗\n  Causal diziler {x : x[k]=0 k<0}: ℓ₂'nin alt uzayı ✓\n  Bantlı DFT bileşenleri: ℂᴺ'nin alt uzayı ✓\n\nKesişim alt uzay, birleşim değil:\n  S ∩ T → iki kısıtı aynı anda sağla → daha kısıtlı → alt uzay ✓\n  S ∪ T → ℝ²'de x-ekseni ∪ y-ekseni:\n           [1,0] + [0,1] = [1,1] hiçbirinde yok → alt uzay ✗"
+        },
+        {
+          "type": "code",
+          "heading": "Span nedir?",
+          "text": "Elimde birkaç vektör var: {v₁, v₂, ..., vₖ}.\nBunların span'ı = bu vektörlerden lineer kombinasyonla ulaşabildiğim her şey:\n\n  span{v₁,...,vₖ} = { α₁v₁ + α₂v₂ + ... + αₖvₖ : α₁,...,αₖ ∈ F }\n\nHer zaman alt uzay (α=0 alınca sıfır elde ediliyor).\n\nÖrnekler:\n  ℝ²'de span{[1,0]}        = x-ekseni (tüm ℝ² değil!)\n  ℝ²'de span{[1,0],[0,1]}  = tüm ℝ²\n  ℝ²'de span{[1,0],[2,0]}  = yine sadece x-ekseni (bağımlı, ikinci gereksiz)\n\nKritik soru: bu vektörler tüm V'yi kaplıyor mu?\n  Kaplıyorsa: her x ∈ V bu kombinasyonla yazılabilir\n  Kaplamıyorsa: bazı x'lere ulaşılamıyor\n\nBu soru doğrudan baz tanımına bağlanıyor."
         }
       ]
     },
     {
-      "title": "Vektör Uzayı Örnekleri",
+      "title": "Lineer Bağımsızlık ve Baz — Tam Tanım",
       "cat": "Foundations",
-      "summary": "ℝⁿ ve ℂⁿ klasik örnekler, ama vektör uzayı polinomları, matrisleri, fonksiyonları ve hatta sonsuz uzunluklu dizileri kapsar. Her biri farklı bir 'vektör' anlayışı ama hepsi aynı aksiyomları sağlar.",
-      "context": "EE499 · Chapter 1.2 — Examples of Vector Spaces",
+      "summary": "Baz: lineer bağımsız + span etmek. Biri eksikse temsil ya belirsizleşir ya da eksik kalır. İkisi birlikte tekil temsil garantiler. ℝⁿ için tam n adet n-boyutlu lineer bağımsız vektör lazım. Boyut iyi tanımlı: herhangi iki baz aynı sayıda eleman içerir.",
+      "context": "EE499 · Chapter 1.4",
       "sections": [
         {
           "type": "code",
-          "heading": "Örnekler neden bu kadar çeşitli?",
-          "text": "Vektör uzayı kavramının gücü tam da burada: çok farklı matematiksel nesneleri aynı çerçeve içinde düşünmeni sağlıyor. SP'de çalıştığın şeyler şunlar:\n\nℝⁿ ve ℂⁿ: klasik n-boyutlu vektörler. Zaten biliyorsun. FIR filtre katsayıları buraya girer, örneklenmiş sinyaller buraya girer.\n\nPⁿ(ℝ) — en fazla n. dereceden polinomlar: \np(t) = a₀ + a₁t + ... + aₙtⁿ\nİki polinom topla → polinom, sayla çarp → polinom. Kapalı. Aksiyomlar sağlanır.\nBoyutu n+1 (sabit terim dahil).\n\nℂᴺˣᴺ — N×N karmaşık matrisler:\nMatrisleri vektör gibi düşün. Matrix toplama ve skalar çarpma tanımlı. Vektör uzayı.\n\nC[a,b] — [a,b]'de sürekli fonksiyonlar:\nx(t) ve y(t) sürekli → x(t)+y(t) de sürekli. αx(t) de sürekli. Vektör uzayı.\nBurada 'vektörler' artık fonksiyonlar — sonsuz boyutlu uzay!\n\nL₂[a,b] — sonlu enerjili fonksiyonlar:\n∫_a^b |x(t)|² dt < ∞ koşulunu sağlayan fonksiyonlar.\nBu SP'nin en önemli uzayı — gerçek fiziksel sinyaller burada yaşar.\n\nℓ_p(ℤ) — sonsuz uzunluklu diziler:\nΣ_{k=-∞}^{∞} |x[k]|^p < ∞ koşulu ile. p=2 en önemlisi: ℓ₂ = sonlu enerjili DT sinyaller."
-        },
-        {
-          "type": "table",
-          "heading": "SP'de kullanılan vektör uzayları",
-          "rows": [
-            [
-              "Uzay",
-              "Elemanlar",
-              "SP Bağlantısı"
-            ],
-            [
-              "ℝⁿ",
-              "Gerçel n-vektörler",
-              "Sonlu uzunluklu sinyaller, filtre katsayıları"
-            ],
-            [
-              "ℂᴺ",
-              "Karmaşık N-vektörler",
-              "DFT katsayıları, karmaşık sinyal örnekleri"
-            ],
-            [
-              "Pⁿ(ℝ)",
-              "Derece ≤ n polinomlar",
-              "Polinom yaklaşım, Legendre temeli"
-            ],
-            [
-              "C[a,b]",
-              "Sürekli fonksiyonlar",
-              "CT sinyaller (ideal model)"
-            ],
-            [
-              "L₂[a,b]",
-              "Sonlu enerjili fons.",
-              "Gerçekçi CT sinyal modeli, Fourier"
-            ],
-            [
-              "ℓ₂(ℤ)",
-              "∑|x[k]|² < ∞ diziler",
-              "Gerçekçi DT sinyal modeli, DTFS"
-            ],
-            [
-              "ℂᴺˣᴺ",
-              "N×N matrisler",
-              "Lineer sistem matrisleri, DFT matrisi"
-            ]
-          ]
+          "heading": "Lineer bağımsızlık nedir?",
+          "text": "{v₁,...,vₙ} lineer bağımsız demek:\n  α₁v₁ + α₂v₂ + ... + αₙvₙ = 0  ⟹  α₁=α₂=...=αₙ=0\n\nYani sıfır vektörünü üretmenin tek yolu hepsini sıfır almak.\nHiçbir vektör diğerlerinin kombinasyonu değil — hiçbiri gereksiz.\n\nBağımlı örnek: v₁=[1,0], v₂=[0,1], v₃=[1,1]\n  1·v₁ + 1·v₂ + (-1)·v₃ = [1,0] + [0,1] - [1,1] = [0,0]\n  Hepsini sıfır almadan sıfır üretebildik → bağımlı.\n  v₃ 'gereksiz': v₃ = v₁ + v₂ zaten.\n\nNeden önemli? Bağımsızlık tekil temsil garantisi verir:\n  Aynı x'in iki temsili olsaydı: Σαₖvₖ = x = Σβₖvₖ\n  Çıkar: Σ(αₖ-βₖ)vₖ = 0\n  Bağımsızlıktan: αₖ=βₖ her k için → temsil tekil ✓"
         },
         {
           "type": "code",
-          "heading": "L_p uzaylarında neden dikkatli olmak gerekir?",
-          "text": "L_p uzayı düz fonksiyonlar kümesi değil. Mesela L_p[a,b]'de ||·||_p normunu tanımlamak istersen:\n\n||x||_p = (∫|x(t)|^p dt)^(1/p)\n\nAma bir sorun var: y(t) = {1 eğer t=1, 0 otherwise} gibi bir fonksiyon düşün.\nBu y, sıfır fonksiyonu değil (y ≠ 0 olarak tanımlanmış), ama ||y||_p = 0.\nBu norm aksiyomunu ihlal ediyor: ||y||=0 ama y≠0.\n\nÇözüm: L_p'de 'neredeyse her yerde sıfır olan' (yani sadece sıfır ölçümlü bir kümede sıfırdan farklı olan) fonksiyonları 'sıfır' sayarız. Buna denklik ilişkisi denir: x ~ y eğer x(t) = y(t) neredeyse her yerde. Bu denklik sınıfları üzerinde L_p bir vektör uzayı ve ||·||_p geçerli bir norm."
+          "heading": "Baz nedir? Neden iki koşul birlikte lazım?",
+          "text": "{v₁,...,vₙ} V'nin bazı ⟺\n  Koşul 1: span{v₁,...,vₙ} = V   (tüm V'yi kaplar)\n  Koşul 2: lineer bağımsız         (hiçbiri gereksiz)\n\nNeden ikisi birlikte lazım?\n\nSADECE span etse, bağımsız olmasa:\n  ℝ²'de {[1,0], [0,1], [1,1]} span ediyor ama bağımlı.\n  x=[1,1] için iki farklı temsil var:\n    1·[1,0] + 1·[0,1] + 0·[1,1]\n    0·[1,0] + 0·[0,1] + 1·[1,1]\n  Koordinatlar belirsizleşti — baz işe yaramaz.\n\nSADECE bağımsız olsa, span etmese:\n  ℝ³'te {[1,0,0], [0,1,0]} bağımsız ama span etmiyor.\n  [0,0,1]'i bu vektörlerle yazamazsın — baz işe yaramaz.\n\nİKİSİ BİRLİKTE:\n  Her x ∈ V için tam olarak bir {α₁,...,αₙ} var:\n    x = α₁v₁ + α₂v₂ + ... + αₙvₙ\n  Bu αₖ'lara 'x'in bu bazdaki koordinatları' denir.\n  Koordinatlar hem mevcut hem tekil."
+        },
+        {
+          "type": "code",
+          "heading": "ℝⁿ için baz — tam olarak n adet n-boyutlu",
+          "text": "ℝⁿ'nin bazı için gereken şartlar:\n  - Tam n adet vektör (ne az ne çok)\n  - Her vektör n boyutlu (n sayıdan oluşuyor)\n  - Lineer bağımsız\n\nNeden tam n adet?\n  n'den az: span ℝⁿ'yi kaplamaz, bazı yönler erişilemez\n  n'den fazla olamaz: ℝⁿ'de en fazla n adet bağımsız vektör var\n                     n+1. vektör mutlaka diğerlerinin kombinasyonu\n\nNeden n boyutlu?\n  ℝⁿ'de yaşayan vektörler n sayıdan oluşur.\n  n-1 boyutlu vektörler ℝⁿ⁻¹'de yaşar, ℝⁿ'de değil.\n\nPratik sonuç:\n  n adet + n boyutlu + lineer bağımsız → otomatik span ediyor → baz.\n  Spanning'i ayrıca kontrol etmene gerek kalmıyor.\n\nBoyut iyi tanımlı:\n  Herhangi iki baz aynı sayıda eleman içerir — her zaman, hangi bazan seçersen seç.\n  Bu sayıya dim(V) denir. ℝⁿ için dim=n."
         }
       ]
     },
     {
-      "title": "Alt Uzay ve Alt Uzay İşlemleri",
-      "cat": "Foundations",
-      "summary": "Alt uzay: aynı işlemler altında kapalı alt küme — orijini içermek zorunda. Kesişim alt uzay ✓, birleşim değil ✗. Span her zaman alt uzay. Direkt sum S⊕T: tekil ayrışım garantisi.",
-      "context": "EE499 · Chapter 1.3 — Subspaces",
-      "sections": [
-        {
-          "type": "code",
-          "heading": "Alt uzay nedir ve neden önemli?",
-          "text": "S ⊆ V bir alt uzaydır eğer aynı toplama ve skalar çarpma işlemleri altında S'nin kendisi de bir vektör uzayı ise.\n\nBunu kontrol etmek için gereken minimum koşul:\n1. Toplama kapalılığı: x, y ∈ S ⟹ x+y ∈ S\n2. Skalar çarpma kapalılığı: x ∈ S, α ∈ F ⟹ αx ∈ S\n\nBu iki koşul, sıfır vektörünün S'de bulunmasını garantiler:\n  α = 0 al → 0·x = 0 ∈ S\n\nDolayısıyla quick test: Sıfır vektörü S'de değilse → S alt uzay olamaz.\n\nNeden alt uzaylar bu derste önemli?\n- Bantlı sinyaller alt uzay oluşturur (belirli frekansları olan sinyaller)\n- DFT-limited sinyaller alt uzay oluşturur\n- Bir lineer sistemin çözümleri alt uzay olabilir\n- Projeksiyon teoremi için hedef hep bir alt uzay\n\nSomut örnek: DFT-limited sinyaller.\nV = ℂᴺ (N-uzunluklu diziler)\nS = {x ∈ V : X[k] = 0 için k = K+1,...,N-K-1} (sadece düşük frekanslı)\nBu S bir alt uzay mı? Evet — iki düşük frekanslı sinyal topla → yine düşük frekanslı."
-        },
-        {
-          "type": "compare",
-          "heading": "Kesişim alt uzay, birleşim değil — neden?",
-          "left": {
-            "title": "S ∩ T → Alt Uzay ✓ (ispat)",
-            "points": [
-              "x, y ∈ S∩T → x,y hem S'de hem T'de",
-              "S alt uzay → αx+βy ∈ S",
-              "T alt uzay → αx+βy ∈ T",
-              "Sonuç: αx+βy ∈ S∩T ✓",
-              "Sezgi: iki kısıtı aynı anda sağla → daha kısıtlı"
-            ]
-          },
-          "right": {
-            "title": "S ∪ T → Alt Uzay Değil ✗ (karşı örnek)",
-            "points": [
-              "ℝ²'de S = x-ekseni, T = y-ekseni",
-              "[1,0] ∈ S ve [0,1] ∈ T",
-              "Ama [1,0]+[0,1] = [1,1] ne S ne T'de!",
-              "Sezgi: iki farklı 'yönde' vektörleri toplarsan orta yönde çıkarsın"
-            ]
-          }
-        },
-        {
-          "type": "code",
-          "heading": "Span, cebirsel toplam ve direkt toplam — aralarındaki fark",
-          "text": "span{x₁,...,xₙ} = {Σ αₖ xₖ : αₖ ∈ F} — bu vektörlerin TÜM lineer kombinasyonları.\nHer zaman alt uzay (sıfır dahil, α=0 ile).\nSezgi: span, bu vektörlerden üretebileceğin her şey.\n\nCebirsel toplam S + T = {s + t : s ∈ S, t ∈ T}.\nS ve T alt uzay → S+T de alt uzay.\nAma S∩T = {0} olmak zorunda değil.\n\nDirekt toplam S ⊕ T: S+T ayrıca S∩T = {0} şartıyla.\nEn önemli özellik: TEKİL AYRIŞIM.\nS ⊕ T'deki her x için tam olarak bir s∈S ve t∈T vardır öyle ki x = s + t.\n\nDirekt sum neden kritik?\n- Baz teorisinin temeli: bir baz, uzayı 1-boyutlu alt uzayların direkt toplamı olarak yazar\n- Projeksiyon teorisinde: V = S ⊕ S⊥ — her vektörün tekil S ve S⊥ bileşeni var\n- Sinyali 'istenilen + gürültü' olarak tekil ayrıştırabilmek bundan geliyor"
-        }
-      ]
-    },
-    {
-      "title": "Lineer Bağımsızlık ve Hamel Bazı",
-      "cat": "Foundations",
-      "summary": "Lineer bağımsız vektörler tekil temsil garantiler — katsayılar belirsizleşmez. Hamel bazı = lineer bağımsız + span. Boyut = baz eleman sayısı. Ortogonallik bağımsızlığı impliye eder.",
-      "context": "EE499 · Chapter 1.4 — Linear Independence and Basis",
-      "sections": [
-        {
-          "type": "code",
-          "heading": "Lineer bağımsızlık neden bu kadar önemli? Tekil temsil ne demek?",
-          "text": "Bir vektörü 'bir bazda yaz' dediğimizde, o bazın vektörleri cinsinden bir temsil elde ederiz. Bu temsilin işe yaraması için TEKİL olması lazım — yani o vektörü temsil eden katsayılar benzersiz olmalı.\n\nLineer bağımsızlık tam da bunu garantiler.\n\nResmi tanım:\nx₁, x₂, ..., xₙ lineer bağımsız ↔\n  α₁x₁ + α₂x₂ + ... + αₙxₙ = 0 ⟹ α₁ = α₂ = ... = αₙ = 0\n(Yani sıfır kombinasyonu yalnızca hepsini sıfır alınca elde edilir.)\n\nNeden tekil temsil sağlar?\nDiyelim ki Σ αₖxₖ = z ve Σ βₖxₖ = z (aynı z'nin iki temsili).\nÇıkar: Σ (αₖ - βₖ)xₖ = 0\nLineer bağımsızlıktan: αₖ - βₖ = 0, yani αₖ = βₖ her k için.\n→ Temsil tekil!\n\nBağımlı vektörlerle ne olur?\n1(t-1) - 1(t) + 1(1) = 0 — yani (t-1), t ve 1 birlikte bağımlı.\nBu demek oluyor ki: eğer bunları baz olarak kullanırsan, aynı polinomu temsil etmek için farklı katsayılar bulabilirsin. Katsayılar belirsizleşir."
-        },
-        {
-          "type": "code",
-          "heading": "Hamel bazı ve boyut kavramı",
-          "text": "Hamel bazı: {x₁,...,xₙ} ⊂ V Hamel bazıdır eğer:\n  1. Lineer bağımsız\n  2. V'yi span ediyor: her v ∈ V, bu bazın lineer kombinasyonu\n\nBu iki koşul birlikte şunu garanti eder: V'deki her vektörün bu bazda TEKİL bir temsili var.\n\nboyut = dim(V) = baz vektörlerinin sayısı\n\nÖnemli teorem: V'nin herhangi iki bazı aynı sayıda eleman içerir. Dolayısıyla boyut iyi tanımlı.\n\nSezgi: baz, uzayı 'açıklamak için gereken minimum vektör kümesi'.\n\nPolinom örneği:\nP²(ℝ) için baz 1: {1, t, t²}\nP²(ℝ) için baz 2: {1, t-1, (t-1)²}\nHer ikisi de baz — boyut = 3.\n\np(t) = (1/2) + 2t + 3t²\n→ Baz 1'deki koordinatlar: [1/2, 2, 3]\n→ Baz 2'deki koordinatlar: hesaplanabilir, farklı sayılar ama aynı polinom\n\nNot: Ortogonallik ⟹ Lineer bağımsızlık\nEğer vektörler birbirine dik (iç çarpımları sıfır) ise otomatik lineer bağımsız. Ama tersi şart değil — lineer bağımsız vektörler dik olmak zorunda değil."
-        },
-        {
-          "type": "table",
-          "heading": "Önemli baz ve boyut örnekleri",
-          "rows": [
-            [
-              "Uzay",
-              "Bir örnek baz",
-              "Boyut"
-            ],
-            [
-              "ℝⁿ",
-              "Standart baz {e₁,...,eₙ}",
-              "n"
-            ],
-            [
-              "Pⁿ(ℝ)",
-              "{1, t, t², ..., tⁿ}",
-              "n+1"
-            ],
-            [
-              "Sym. 2×2 matris",
-              "{ [[1,0],[0,0]], [[0,0],[0,1]], [[0,1],[1,0]] }",
-              "3"
-            ],
-            [
-              "ODE: x''+3x'+2x=0",
-              "{e⁻ᵗ, e⁻²ᵗ}",
-              "2"
-            ],
-            [
-              "Periyodik DT: N nokta",
-              "{δ[n], δ[n-1], ..., δ[n-N+1]}",
-              "N"
-            ],
-            [
-              "Bantlı CT sinyaller",
-              "{sinc(t/T-k) : k ∈ ℤ}",
-              "∞ (sonsuz boyutlu)"
-            ]
-          ]
-        }
-      ]
-    },
-    {
-      "title": "DFT ve Sinc Bazı — SP'deki Somut Baz Örnekleri",
+      "title": "Baz Değişimi ve Koordinat Vektörü — Qᵀx Kanıtı",
       "cat": "Signal Processing",
-      "summary": "DFT bazı N-uzunluklu diziler için karmaşık sinüzoidler. Sinc bazı bantlı sinyaller için örnekleme teoremine dayalı sonsuz boyutlu baz. CTFS = ortonormal bazda temsil.",
-      "context": "EE499 · Chapter 1.4.1 — Bases for Subspaces",
+      "summary": "Koordinat: bir vektörü bazın elemanları cinsinden yazdığında önüne gelen katsayılar. Ortonormal bazda koordinat = iç çarpım (βₖ = vₖᵀx) — iç çarpım hilesiyle kanıtlanır. Qᵀx bunu tüm baz için aynı anda yapıyor. DFT tam bir baz değişimidir.",
+      "context": "EE499 · Chapter 1.4.2",
       "sections": [
         {
           "type": "code",
-          "heading": "DFT bazı nedir ve neden standart bazdan farklı?",
-          "text": "N-uzunluklu diziler uzayı ℂᴺ için iki doğal baz vardır:\n\nStandart baz (e-baz):\n{e₀, e₁, ..., e_{N-1}}, eₖ[n] = δ[n-k]\nYani eₖ: sadece k. konumda 1, diğerlerinde 0.\nx'i bu bazda yazmak = x'in zaman domenindeki örneklerini sıralamak.\nx = x[0]·e₀ + x[1]·e₁ + ... + x[N-1]·e_{N-1}\nKatsayılar: x[0], x[1], ..., x[N-1] — doğrudan örnekler\n\nDFT bazı (v-baz):\n{v₀, v₁, ..., v_{N-1}}, vₖ[n] = e^{j(2π/N)kn} için n=0,...,N-1\nYani vₖ: k. harmonik frekanstaki karmaşık sinüzoid.\nx'i bu bazda yazmak = x'in frekans domenindeki katsayılarını bulmak.\nx = (1/N)X[0]·v₀ + (1/N)X[1]·v₁ + ... (IDFT formülü)\nKatsayılar: (1/N)X[k] — normalize frekans içeriği\n\nAynı x vektörü, iki bazda iki farklı koordinat vektörüne sahip.\nZaman domeninde çalışmak = e-baz koordinatlarında çalışmak.\nFrekans domeninde çalışmak = v-baz koordinatlarında çalışmak."
+          "heading": "Koordinat ne demek?",
+          "text": "Bir bazımız var: {v₁, v₂, ..., vₙ}. Baz olduğundan her x yazılabilir:\n  x = β₁v₁ + β₂v₂ + ... + βₙvₙ\n\nBu β₁, β₂, ..., βₙ sayıları x'in bu bazdaki KOORDİNATLARI.\nKoordinat vektörü = [β₁, β₂, ..., βₙ]ᵀ\n\nÖnemli: koordinat vektörü, x'in kendisi değil.\n  x: ℝⁿ'de gerçek bir vektör (n sayı)\n  Koordinat vektörü: o vektörü o bazda tarif eden katsayılar (n sayı)\n\nAynı x, farklı bazlarda farklı koordinat vektörüne sahip:\n  Standart baz {e₁,e₂}: x=[3,5] → koordinatlar [3,5]\n  Başka baz {v₁,v₂}: x = 2v₁ + 7v₂ → koordinatlar [2,7]\n  Aynı nokta, farklı adres sistemi.\n\nBilgi kaybı yok: koordinatları + baz vektörlerini bilirsen x tamamen belirlenir."
         },
         {
           "type": "code",
-          "heading": "Örnekleme teoremi ve sinc bazı bağlantısı",
-          "text": "[-B/2, B/2] Hz bantlı sonlu enerjili CT sinyaller bir alt uzay oluşturur.\nT = 1/B (Nyquist periyodu) ile örnekleme yap — aliasing yok.\n\nÖrnekleme teoremi şunu söylüyor:\n  x(t) = Σ_{n=-∞}^{∞} x(nT) · sinc((t-nT)/T)\n\nBunu baz diliyle oku:\n- Baz vektörleri: {vₙ(t) = sinc((t-nT)/T) : n ∈ ℤ}\n- Temsil katsayıları: {x(nT)} — yani sinyal örnekleri\n- Her bantlı sinyal, bu bazın lineer kombinasyonu\n- Temsil tekil — sampling theorem bu tekliği garanti eder\n\nBu baz neden özel?\n1. Sonsuz boyutlu (n tüm tamsayıları dolaşıyor)\n2. Ortonormal: <sinc(t/T-m), sinc(t/T-n)> = T·δ[m-n]\n   (iç çarpımla doğrulanabilir — Parseval ile)\n3. Katsayılar = örnekler → analog sinyali sayısal örneklerden tam geri kazanabilirsin\n\nÖnemli: Bu neden sinyal işlemede devrimdi? Sonsuz boyutlu bir fonksiyonu sonlu (ya da sayılabilir) örnekle tamamen temsil edebiliyorsun — bilgi kaybı yok."
+          "heading": "Ortonormal bazda koordinat nasıl bulunur? — iç çarpım kanıtı",
+          "text": "Elimizde: x = β₁v₁ + β₂v₂ + ... + βₙvₙ\nVe baz ortonormal: vᵢᵀvⱼ = δᵢⱼ\n  (i≠j için 0, i=j için 1)\n\nβₗ'yi bulmak için her iki taraftan vₗᵀ ile çarp:\n\n  vₗᵀx = vₗᵀ(β₁v₁ + β₂v₂ + ... + βₙvₙ)\n\nSağ tarafı aç:\n  = β₁(vₗᵀv₁) + β₂(vₗᵀv₂) + ... + βₗ(vₗᵀvₗ) + ... + βₙ(vₗᵀvₙ)\n\nOrtonormallikten — vₗᵀvₖ = 0 (k≠l için), vₗᵀvₗ = 1:\n  = β₁·0 + β₂·0 + ... + βₗ·1 + ... + βₙ·0\n  = βₗ\n\nSonuç: βₗ = vₗᵀx\n\nHer koordinat sadece bir iç çarpım. Başka hiçbir hesap gerekmez.\nOrtonormallik olmadan lineer sistem çözmek gerekirdi."
         },
         {
           "type": "code",
-          "heading": "CTFS ve ortonormal baz — katsayı formülünün gizemi çözülüyor",
-          "text": "Periyot T'lik CT sinyaller için Fourier serisi:\n  x(t) = Σ_{k=-∞}^{∞} aₖ · e^{jk(2π/T)t}\n\nKatsayılar: aₖ = (1/T) ∫₀ᵀ x(t) e^{-jk(2π/T)t} dt\n\nBu formül nereden geliyor? Ortonormal bazdan!\n\nAdım 1: Baz vektörlerini normalize et:\n  φₖ(t) = (1/√T) e^{jk(2π/T)t}\n  ||φₖ||² = ∫₀ᵀ |φₖ(t)|² dt = (1/T)·T = 1 ✓\n\nAdım 2: Ortogonalliği doğrula:\n  <φₖ, φₗ> = ∫₀ᵀ φₖ(t)φₗ*(t) dt = ∫₀ᵀ (1/T) e^{j(k-l)(2π/T)t} dt\n  k≠l için integral sıfır (tam periyot üzerinde sinüzoid) ✓\n\nOrtonormal baz oldu! Şimdi katsayı basit iç çarpım:\n  βₖ = <x, φₖ> = ∫₀ᵀ x(t) φₖ*(t) dt = (1/√T) ∫₀ᵀ x(t) e^{-jk(2π/T)t} dt\n\nAσlında aₖ = βₖ/√T = (1/T) ∫₀ᵀ x(t) e^{-jk(2π/T)t} dt — CTFS formülü!\n\nYani CTFS katsayıları aslında ortonormal bazda temsil katsayıları. Integral formülü el yordamıyla ezberlenecek bir şey değil — iç çarpımın doğal sonucu."
+          "heading": "Qᵀx = koordinat vektörü — matris formuna geçiş",
+          "text": "Her l için aynı formül: βₗ = vₗᵀx\n\nHepsini bir araya yaz:\n  β₁ = v₁ᵀx\n  β₂ = v₂ᵀx\n  ...\n  βₙ = vₙᵀx\n\nBunları matris çarpımı olarak ifade et — v₁ᵀ, v₂ᵀ, ... satır satır üst üste:\n\n  [β₁]   [— v₁ᵀ —]         \n  [β₂]   [— v₂ᵀ —]         \n  [...] = [  ...   ]  · x = Qᵀx\n  [βₙ]   [— vₙᵀ —]         \n\nQᵀ'nin satırları tam olarak baz vektörlerinin transpozları.\nDolayısıyla: Qᵀx = x'in {v₁,...,vₙ} bazındaki koordinat vektörü.\n\nNeden bu mümkün?\n  Q ortogonal → QᵀQ = I → Qᵀ = Q⁻¹\n  Q: eigenvektör koordinatlarından standart koordinatlara geçiş\n  Qᵀ = Q⁻¹: standart koordinatlardan eigenvektör koordinatlarına geçiş"
+        },
+        {
+          "type": "code",
+          "heading": "DFT = baz değişimi",
+          "text": "ℂᴺ'de iki doğal baz:\n\nStandart baz (zaman):\n  eₖ[n] = δ[n-k] → k. konumda 1, diğerlerinde 0\n  x'i bu bazda yazmak = zaman örnekleri: [x(0), x(1), ..., x(N-1)]\n\nDFT bazı (frekans):\n  vₖ[n] = e^{j(2π/N)kn} → k. harmonik frekanstaki sinüzoid\n  x'i bu bazda yazmak = frekans katsayıları\n\nDFT tam olarak bu baz değişimi:\n  X = Qᵀx → zaman koordinatlarından frekans koordinatlarına\n  x = QX  → frekans koordinatlarından zaman koordinatlarına\n\nNeden bilgi kaybolmuyor?\n  Baz değişimi terslenir (Qᵀ = Q⁻¹)\n  Aynı vektör, farklı gözlükten bakılıyor — içerik aynı\n  Zaman domeninde işlem = frekans domeninde işlem, sadece adres sistemi farklı"
         }
       ]
     },
     {
-      "title": "Baz Değişimi — Matematiksel Temel ve DFT Bağlantısı",
-      "cat": "Signal Processing",
-      "summary": "Aynı vektör, farklı bazlarda farklı koordinat vektörlerine sahip. Baz değişim matrisi T_{e→v} koordinatları dönüştürür. DFT tam olarak budur: standart baz (zaman) ↔ DFT baz (frekans).",
-      "context": "EE499 · Chapter 1.4.2 — Change of Basis",
-      "sections": [
-        {
-          "type": "code",
-          "heading": "Baz değişimi nasıl kurulur?",
-          "text": "V = span{e₁,...,eₙ} = span{v₁,...,vₙ} (V'nin iki farklı bazı)\n\nAynı x ∈ V'yi her iki bazda yaz:\n  x = Σₖ αₖ eₖ  →  x_e = [α₁,...,αₙ]ᵀ  (e-bazındaki koordinatlar)\n  x = Σₖ βₖ vₖ  →  x_v = [β₁,...,βₙ]ᵀ  (v-bazındaki koordinatlar)\n\nBunları nasıl birbirine bağlarız?\n\nHer eₖ'yi v-bazında yaz:\n  e₁ = t₁₁v₁ + t₂₁v₂ + ... + tₙ₁vₙ\n  e₂ = t₁₂v₁ + t₂₂v₂ + ... + tₙ₂vₙ\n  ...\n  Yani: eₖ = Σᵢ tᵢₖ vᵢ\n\nMatris formu:\n  x = [e₁ e₂ ... eₙ] · x_e = [v₁ v₂ ... vₙ] · T_{e→v} · x_e\n\nBağıntı:\n  x_v = T_{e→v} · x_e  (e-koordinatlarından v-koordinatlarına)\n  x_e = T_{v→e} · x_v  (v-koordinatlarından e-koordinatlarına)\n  T_{v→e} = (T_{e→v})⁻¹\n\nSomut anlam: aynı gerçek nesne (x), iki farklı perspektiften görülüyor. T dönüşüm gözlükleri değiştiriyor."
-        },
-        {
-          "type": "code",
-          "heading": "DFT = baz değişimi olarak görmek",
-          "text": "V = ℂᴺ (N-uzunluklu diziler)\n\ne-baz = standart baz {δ[n-k] : k=0,...,N-1}\n→ x_e = zaman domenindeki vektör [x(0), x(1), ..., x(N-1)]ᵀ\n\nv-baz = DFT bazı {vₖ : vₖ[n] = e^{j(2π/N)kn}, k=0,...,N-1}\n→ x_v = frekans domenindeki koordinatlar\n\nT_{v→e} = [v₀ v₁ ... v_{N-1}] = DFT matrisi V\n  sütun k = vₖ = [1, e^{j2π k/N}, e^{j4π k/N}, ..., e^{j2π k(N-1)/N}]ᵀ\n\nx = V · X'   (IDFT formülü: x[n] = (1/N)Σ X[k] e^{j(2π/N)kn})\nX = V⁻¹ · x = (1/N) Vᴴ · x   (DFT formülü: X[k] = Σ x[n] e^{-j(2π/N)kn})\n\nÇünkü: Vᴴ·V = N·I → V⁻¹ = (1/N)Vᴴ\n\nUnitary DFT için: W = (1/√N)·V tanımla.\nO zaman Wᴴ·W = I → W unitary → W⁻¹ = Wᴴ\nUnitary DFT: X[k] = (1/√N) Σ x[n] e^{-j(2π/N)kn}\n            x[n] = (1/√N) Σ X[k] e^{j(2π/N)kn}"
-        },
-        {
-          "type": "insight",
-          "heading": "Baz değişiminin derin anlamı",
-          "text": "Zaman domeninde çalışmak ve frekans domeninde çalışmak, aynı vektörü farklı gözlüklerle görmek demek. Hiçbir bilgi kaybolmuyor — sadece koordinat sistemi değişiyor.\n\nBu görüş şu soruları cevaplıyor:\n- DFT neden terslenebilir? Çünkü baz değişimi matrisi terslenebilir.\n- DFT neden bilgi kaybetmiyor? Çünkü koordinat değişikliği bilgi kaybetmez.\n- DFT matrisi neden Hermitian simetrik? Çünkü DFT bazı ortogonal (Vᴴ·V = NI).\n\nSomut SP bağlantısı: zaman domeninde konvolüsyon = frekans domeninde çarpım. Bu aslında şunu söylüyor: konvolüsyon operatörü, DFT bazında diagonal matris olarak temsil edilir. Baz değişimi operatörleri basitleştiriyor."
-        }
-      ]
-    },
-    {
-      "title": "Norm ve Normlu Vektör Uzayı (NVS)",
+      "title": "Norm, İç Çarpım ve Ortogonallik",
       "cat": "Geometry",
-      "summary": "Norm vektörün büyüklüğü: 3 aksiyom (non-negativity, homogeneity, triangle inequality). ℓ_p ailesi: p=1 elmas, p=2 daire, p=∞ kare. Küçük p → büyük norm değeri, küçük uzay.",
-      "context": "EE499 · Chapter 1.5 — Norm",
+      "summary": "Norm büyüklük ölçer (3 aksiyom). İç çarpım yön ilişkisi ekler (4 aksiyom). İç çarpımdan induced norm her IPS'e NVS özelliği verir. Ortogonallik: ⟨x,y⟩=0. Cauchy-Schwarz açıyı tanımlar. Sadece ℓ₂ normu iç çarpımdan gelir — parallelogram yasasıyla test edilir.",
+      "context": "EE499 · Chapter 1.5–1.6",
       "sections": [
         {
           "type": "code",
-          "heading": "Norm neden gerekli? Soyut vektör uzayında mesafe nasıl tanımlanır?",
-          "text": "Bir vektör uzayında 'bu iki vektör birbirine yakın mı?' sorusunu sormak için mesafe metriğine ihtiyaç vardın. Mesafe metriği normdan gelir: d(x,y) = ||x-y||.\n\nAma norm olmadan bu soru anlamsız. Soyut vektör uzayında (örn. polinom uzayı) iki polinomun 'yakın' olması ne demek?\n\nNorm işte bunu tanımlar: ||·||: V → ℝ bir norm olabilmesi için 3 aksiyom:\n\nAksiyom 1 — Non-negativity:\n  ||x|| ≥ 0  ve  ||x|| = 0 ⟺ x = 0\n  (sadece sıfır vektörünün uzunluğu sıfır)\n  (normun sonlu olması lazım — sonsuz olamaz!)\n\nAksiyom 2 — Homogeneity:\n  ||αx|| = |α| · ||x||  (skalarla büyüt/küçült, norm orantılı değişir)\n\nAksiyom 3 — Triangle inequality (Minkowski eşitsizliği):\n  ||x + y|| ≤ ||x|| + ||y||  (kestirme yol köşegenli yoldan kısa)\n\nNot: p < 1 için triangle inequality sağlanmaz, dolayısıyla ℓ_p ile p<1 bir norm değil.\n\nNormlu Vektör Uzayı (NVS) = (V, ||·||) çifti: vektör uzayı + üzerine tanımlı norm."
+          "heading": "Norm — büyüklük ölçmek",
+          "text": "Soyut vektör uzayında 'büyüklük' yoktur — norm tanımlanarak eklenir.\n\nNorm ||·||: V → ℝ, üç aksiyom:\n  1. Non-negativity: ||x|| ≥ 0,  ||x||=0 ⟺ x=0\n  2. Homogeneity: ||αx|| = |α|·||x||\n  3. Triangle inequality: ||x+y|| ≤ ||x|| + ||y||\n\nℓ_p ailesi (ℝᴺ'de):\n  ||x||₁ = Σ|xₖ|          (Manhattan — elmas şeklinde birim top)\n  ||x||₂ = √(Σ|xₖ|²)      (Öklid — daire şeklinde birim top)\n  ||x||_∞ = max|xₖ|        (kare şeklinde birim top)\n\nFonksiyon uzayları:\n  ||x||_{L₂} = (∫|x(t)|²dt)^{1/2}    (sinyal enerjisinin kare kökü)"
         },
         {
           "type": "code",
-          "heading": "ℓ_p normu ailesi ve geometrik yorumu",
-          "text": "ℂᴺ (veya ℝᴺ) üzerinde ℓ_p normu:\n  ||x||_p = (Σₖ |xₖ|^p)^{1/p}  için p ≥ 1\n\nÖzel durumlar:\n  ||x||₁ = Σ|xₖ|  (Manhattan / taxi-cab norm)\n  ||x||₂ = √(Σ|xₖ|²)  (Öklid norm)\n  ||x||_∞ = max_k|xₖ|  (sonsuz norm — p→∞ limiti)\n\nGeometrik görü — ℝ²'de unit ball {x : ||x||_p ≤ 1}:\n  ℓ₁: elmas / kare köşeli  (|x₁| + |x₂| ≤ 1)\n  ℓ₂: çember / daire  (x₁² + x₂² ≤ 1)\n  ℓ_∞: kare / kutu  (max(|x₁|,|x₂|) ≤ 1)\n\nNorm sıralaması (p < q için ℝᴺ'de):\n  ||x||_p ≥ ||x||_q  (küçük p → büyük sayısal norm değeri)\n  ℓ_p ⊂ ℓ_q  (p'si küçük uzay, daha sıkı, daha az eleman)\n\nFonksiyon uzayları için TERSINE döner:\n  L₁[a,b] ⊃ L₂[a,b] ⊃ ... ⊃ L_∞[a,b]\n  Neden? Sınırlı aralık [a,b]'de büyük p daha kısıtlayıcı koşul koyar."
+          "heading": "İç çarpım — norm yeterli değil",
+          "text": "Norm 'büyüklük' söylüyor ama iki vektörün yön ilişkisini söylemiyor.\n||[1,0]|| = ||[0,1]|| = 1 ama bunlar dik — norm bunu gösteremiyor.\n\nİç çarpım ⟨·,·⟩: V×V → F, dört aksiyom:\n  1. Conjugate symmetry: ⟨x,y⟩ = ⟨y,x⟩*\n  2. Linearity (1. argümanda): ⟨αx,y⟩ = α⟨x,y⟩\n  3. Additivity: ⟨x+y,z⟩ = ⟨x,z⟩ + ⟨y,z⟩\n  4. Non-negativity: ⟨x,x⟩ ≥ 0,  ⟨x,x⟩=0 ⟺ x=0\n\nℝᴺ'de: ⟨x,y⟩ = yᵀx = Σ xₖyₖ\nℂᴺ'de: ⟨x,y⟩ = yᴴx = Σ xₖyₖ*\n  Neden conjugate? yᵀx kullanırsan ⟨x,x⟩ = j·j = -1 < 0 → aksiyom ihlal.\nL₂'de: ⟨x,y⟩ = ∫x(t)y*(t)dt\n\nInduced norm: ||x|| = √⟨x,x⟩\nHer IPS otomatik NVS — ama tersi şart değil (ℓ₁ NVS ama IPS değil).\n\nHiyerarşi:\n  Vektör Uzayı ⊃ Normlu VS ⊃ İç Çarpım Uzayı ⊃ Hilbert Uzayı"
         },
         {
-          "type": "table",
-          "heading": "SP'de kullanılan normlar",
-          "rows": [
-            [
-              "Uzay / Norm",
-              "Formül",
-              "Ne ölçüyor?"
-            ],
-            [
-              "ℓ₁ (finite)",
-              "Σ|xₖ|",
-              "Toplam mutlak değer"
-            ],
-            [
-              "ℓ₂ / Öklid",
-              "√(Σ|xₖ|²)",
-              "Vektör uzunluğu"
-            ],
-            [
-              "ℓ_∞",
-              "max|xₖ|",
-              "En büyük bileşen"
-            ],
-            [
-              "L₁[a,b]",
-              "∫|x(t)|dt",
-              "Toplam mutlak alan"
-            ],
-            [
-              "L₂[a,b]",
-              "(∫|x(t)|²dt)^{1/2}",
-              "Karekök enerji"
-            ],
-            [
-              "C[a,b] sup norm",
-              "max|x(t)|",
-              "Maksimum değer"
-            ],
-            [
-              "Frobenius (matris)",
-              "√(tr(AᴴA))",
-              "Matris 'boyutu'"
-            ]
-          ]
+          "type": "code",
+          "heading": "Ortogonallik, Cauchy-Schwarz ve ℓ₂'nin özelliği",
+          "text": "Ortogonallik: x ⊥ y ⟺ ⟨x,y⟩ = 0\n\nCauchy-Schwarz:\n  |⟨x,y⟩| ≤ ||x||·||y||   her x, y için\n  Bu sayesinde oran [-1,1]'de kalıyor → açı tanımlanabiliyor:\n  cos θ = ⟨x,y⟩ / (||x||·||y||)\n\nSadece ℓ₂ iç çarpımdan geliyor — parallelogram yasasıyla test:\n  Her IPS'te: ||x+y||² + ||x-y||² = 2||x||² + 2||y||²\n  ℓ₁'de test: x=[1,0], y=[0,1]\n    sol: (1+1)² + (1+1)² = 8\n    sağ: 2·1² + 2·1² = 4  →  8 ≠ 4 → ℓ₁ IPS değil\n  Sonuç: ℓ_p normlar arasında YALNIZCA ℓ₂ iç çarpımdan geliyor.\n  'Açı' ve 'ortogonallik' kavramları sadece ℓ₂ ile anlamlı.\n\nOrtogonal komplement:\n  S⊥ = {x ∈ V : ⟨x,s⟩=0 her s ∈ S için}\n  Her zaman alt uzay."
         }
       ]
     },
     {
-      "title": "İç Çarpım ve Inner Product Space (IPS)",
-      "cat": "Geometry",
-      "summary": "İç çarpım normdan zengin: açı ve ortogonallik tanımlar. 4 aksiyom. Induced norm: ||x||=√<x,x>. IPS hiyerarşi: VS ⊃ NVS ⊃ IPS. ℂᴺ için <x,y>=yᴴx, L₂ için integral.",
-      "context": "EE499 · Chapter 1.6 — Inner Product",
-      "sections": [
-        {
-          "type": "code",
-          "heading": "İç çarpım normdan ne ekler? Neden ihtiyaç var?",
-          "text": "Norm 'büyüklük' veriyor ama iki vektörün 'birbirine ne kadar benzediğini' ya da 'aralarındaki açıyı' söylemiyor. Mesela:\n\n- Norm || [1,0] || = || [0,1] || = 1 (eşit büyüklük)\n- Ama [1,0] ile [0,1] birbirine dik — bu bilgi normda yok\n\nİç çarpım, bu 'yön ilişkisini' ölçen bir yapı.\n\nResmi tanım:\n<·,·>: V×V → F, şu 4 aksiyomla:\n\n1. Conjugate symmetry: <x,y> = <y,x>*\n   Gerçel uzaylarda: <x,y> = <y,x> (tam simetrik)\n   Karmaşık uzaylarda: yer değiştirince conjugate alınır\n\n2. Linearity (1. argümanda): <αx, y> = α<x,y>\n   Ama 2. argümanda: <x, αy> = α*<x,y>  (conjugate linear)\n\n3. Additivity: <x+y, z> = <x,z> + <y,z>\n\n4. Non-negativity: <x,x> ≥ 0,  ve  <x,x> = 0 ⟺ x = 0\n   Not: <x,x> her zaman gerçel sayı (conjugate symmetry'den: <x,x> = <x,x>* → gerçel)\n\nInduced norm: ||x|| = √<x,x> — her IPS otomatik bir NVS olur.\n\nHiyerarşi:\n  Vektör Uzayı (VS)\n  └─ Normlu VS (NVS): norm ekle\n     └─ İç Çarpım Uzayı (IPS = Pre-Hilbert): iç çarpım ekle\n        └─ Hilbert Uzayı: IPS + complete (Cauchy dizileri yakınsar)"
-        },
-        {
-          "type": "code",
-          "heading": "Karmaşık uzaylarda neden yᴴx, yᵀx değil?",
-          "text": "ℂᴺ için iki aday var:\n  Seçenek A: <x,y> = yᵀx = Σ xₖyₖ\n  Seçenek B: <x,y> = yᴴx = Σ xₖyₖ*\n\nSeçenek A neden çalışmıyor?\n  x = [j, 0]ᵀ için <x,x> = j·j = j² = -1 < 0\n  Non-negativity ihlal ediliyor! Geçersiz.\n\nSeçenek B çalışıyor:\n  <x,x> = xᴴx = Σ|xₖ|² ≥ 0, ve = 0 iff x = 0 ✓\n\nConjugate symmetry:\n  <y,x> = xᴴy = (yᴴx)* = <x,y>* ✓\n\nLinearity:\n  <αx,y> = yᴴ(αx) = α(yᴴx) = α<x,y> ✓\n\nDolayısıyla karmaşık uzaylarda iç çarpım hep yᴴx, asla yᵀx.\nBu önemli: gerçel vektörlerde yᵀx = yᴴx (aynı şey), ama karmaşık için mutlaka yᴴx."
-        },
-        {
-          "type": "table",
-          "heading": "İç çarpım örnekleri ve induced normları",
-          "rows": [
-            [
-              "Uzay",
-              "İç Çarpım <x,y>",
-              "Induced Norm"
-            ],
-            [
-              "ℝᴺ",
-              "yᵀx = Σ xₖyₖ",
-              "||x||₂ (Öklid)"
-            ],
-            [
-              "ℂᴺ (standart)",
-              "yᴴx = Σ xₖyₖ*",
-              "||x||₂"
-            ],
-            [
-              "ℂᴺ (W ağırlıklı)",
-              "yᴴWx  (W pos.def.)",
-              "√(xᴴWx)"
-            ],
-            [
-              "L₂[a,b]",
-              "∫ₐᵇ x(t)y*(t) dt",
-              "||x||_{L₂}"
-            ],
-            [
-              "ℂᵐˣⁿ matrisler",
-              "tr(YᴴX)",
-              "||X||_F (Frobenius)"
-            ]
-          ]
-        }
-      ]
-    },
-    {
-      "title": "Cauchy-Schwarz, Açı, Parallelogram ve Ortogonallik",
-      "cat": "Geometry",
-      "summary": "Cauchy-Schwarz: |<x,y>| ≤ ||x||·||y|| — açı tanımını mümkün kılar. Parallelogram yasası: sadece IPS'te, ve yalnızca ℓ₂ normun iç çarpımdan geldiğini ispat eder. x⊥y ↔ <x,y>=0.",
-      "context": "EE499 · Chapter 1.6.2 — Cauchy-Schwarz",
-      "sections": [
-        {
-          "type": "code",
-          "heading": "Cauchy-Schwarz eşitsizliği — ispat ve önemi",
-          "text": "Cauchy-Schwarz Eşitsizliği:\n  |<x, y>| ≤ ||x|| · ||y||  her x, y ∈ V için\n  Eşitlik ⟺ x ve y lineer bağımlı (y = αx veya x = 0 veya y = 0)\n\nİspat fikri:\n  0 ≤ ||x - αy||²  = <x-αy, x-αy> = ||x||² - α*<x,y> - α<y,x>* + |α|²||y||²\n  α = <x,y> / ||y||² seç (||y|| ≠ 0 varsay):\n  0 ≤ ||x||² - |<x,y>|² / ||y||²\n  → |<x,y>|² ≤ ||x||² · ||y||² → |<x,y>| ≤ ||x||·||y||  ✓\n\nNeden önemli?\nCS eşitsizliği, iç çarpımın ||x||·||y|| ile normalize edildiğinde [-1,1]'de kaldığını söylüyor.\nBu ise açıyı tanımlamamızı sağlıyor:\n  cos θ = <x,y> / (||x|| · ||y||)  (gerçel uzaylarda)\n  |cos θ| = |<x,y>| / (||x|| · ||y||) ≤ 1  ✓\n\nKarmaşık uzaylarda iki seçenek:\n  cos θ = |<x,y>| / (||x||·||y||)  (modül — daha yaygın)\n  cos θ = Re{<x,y>} / (||x||·||y||)  (gerçel kısım)\n\nSomut örnek — ℝ²:\n  x = [R₁cosθ₁, R₁sinθ₁], y = [R₂cosθ₂, R₂sinθ₂]\n  <x,y> / (||x||·||y||) = (R₁R₂cos θ₁cos θ₂ + R₁R₂sin θ₁sin θ₂) / (R₁R₂) = cos(θ₁-θ₂)  ✓"
-        },
-        {
-          "type": "code",
-          "heading": "Parallelogram yasası — sadece ℓ₂'nin IPS olduğunun kanıtı",
-          "text": "Parallelogram Yasası:\n  ||x+y||² + ||x-y||² = 2||x||² + 2||y||²\n\nBu yasa herhangi bir IPS'te geçerlidir (induced norm üzerinden ispat edilir).\n\nDaha kritik yön: KARŞITI da doğru.\nEğer bir norm parallelogram yasasını sağlıyorsa → o norm bir iç çarpımdan induced.\nVe induced eden iç çarpım şöyle yazılır (polarizasyon eşitliği):\n  <x,y> = (1/4)[||x+y||² - ||x-y||²]  (gerçel)\n  <x,y> = (1/4)[||x+y||² - ||x-y||² + j||x+jy||² - j||x-jy||²]  (karmaşık)\n\nℝ²'de ℓ₁ normu test et:\n  x = [1,0], y = [0,1]\n  ||x+y||₁² + ||x-y||₁² = (1+1)² + (1+1)² = 4 + 4 = 8\n  2||x||₁² + 2||y||₁² = 2·1² + 2·1² = 2 + 2 = 4\n  8 ≠ 4 → Parallelogram yasası sağlanmıyor → ℓ₁ IPS DEĞİL\n\nSonuç: ℓ_p normlar arasında YALNIZCA ℓ₂ (p=2) bir iç çarpımdan geliyor.\nDolayısıyla 'açı' ve 'ortogonallik' sadece ℓ₂ ile tanımlı."
-        },
-        {
-          "type": "code",
-          "heading": "Ortogonallik — tanım, ortogonal komplement, örnekler",
-          "text": "Ortogonallik: IPS'te x ⊥ y ↔ <x, y> = 0 (yani açı = 90°)\n\nGenel kullanım:\n- Sinyal ve gürültü dik ise → projeksiyon onları ayırır\n- Baz vektörleri dik ise → katsayı hesaplamak çok kolay\n- Hata vektörü alt uzaya dik ise → o nokta projeksiyondur\n\nOrtogonal komplement:\n  S⊥ = {x ∈ V : <x,s> = 0  her s ∈ S için}\n  Yani S'deki her şeye dik olan vektörlerin kümesi.\n  S⊥ her zaman alt uzay (kapalılık ispat edilebilir).\n  T = {0}: her uzaya dik: {0}⊥ = V\n  V'nin kendisi için: V⊥ = {0}\n\nSomut SP örneği:\n  IPS = ℓ₂(ℤ), <x,y> = Σ xₖyₖ*\n  S = {x ∈ ℓ₂ : xₖ = 0  için k < 0}  (causal diziler)\n  T = {x ∈ ℓ₂ : xₖ = 0  için k ≥ 0}  (anti-causal diziler)\n  <s,t> = Σₖ sₖtₖ* = Σ_{k<0} sₖtₖ* + Σ_{k≥0} sₖtₖ* = 0 + 0 = 0  (sₖ=0 k<0, tₖ=0 k≥0)\n  Yani S ⊥ T — causal ve anti-causal diziler birbirine dik!"
-        }
-      ]
-    },
-    {
-      "title": "Gram-Schmidt ve Ortonormal Baz Üretimi",
-      "cat": "Geometry",
-      "summary": "Gram-Schmidt: herhangi lineer bağımsız kümeden ortonormal baz üret. Ortonormal bazda katsayı = basit iç çarpım. Polinom uzayında Gram-Schmidt → Legendre polinomları.",
-      "context": "EE499 · Chapter 1.6.4 — Gram-Schmidt",
-      "sections": [
-        {
-          "type": "code",
-          "heading": "Ortonormal baz neden bu kadar değerli?",
-          "text": "Standart bir baz {x₁,...,xₙ} verildiğinde, herhangi bir v ∈ V'yi temsil etmek için n bilinmeyenli lineer sistem çözmek gerekir:\n  v = Σ βₖ xₖ → [x₁|x₂|...|xₙ] · β = v → β = ...matris tersi gerekli\n\nOrtonormal baz {e₁,...,eₙ} ile çok daha kolay:\n  βₖ = <v, eₖ>\nBaşka bir hesap gerekmez. Sadece her baz vektörü ile iç çarpım.\n\nBu neden çalışıyor?\n  <v, eₗ> = <Σₖ βₖ eₖ, eₗ> = Σₖ βₖ <eₖ, eₗ> = Σₖ βₖ δₖₗ = βₗ  ✓\n  (Ortogonallikten çapraz terimler sıfır)\n\nPratik sonuç: CTFS, DFT, sampling theorem katsayıları hep 'ortonormal bazda iç çarpım'."
-        },
-        {
-          "type": "code",
-          "heading": "Gram-Schmidt süreci — adım adım",
-          "text": "Verilen: {x₁, x₂, ..., xₙ} lineer bağımsız, IPS'te\nİstenen: {e₁, e₂, ..., eₙ} ortonormal, span{eₖ} = span{xₖ}\n\nAdım 1:\n  e₁ = x₁ / ||x₁||  (sadece normalize et)\n\nAdım 2:\n  x₂'yi x₂ - <x₂,e₁>e₁ yap  (e₁ bileşenini çıkar)\n  e₂ = (x₂ - <x₂,e₁>e₁) / ||x₂ - <x₂,e₁>e₁||  (normalize et)\n  <e₂, e₁> = 0 olduğu doğrulanabilir  ✓\n\nAdım k:\n  fₖ = xₖ - Σⁿ⁻¹_{n=1} <xₖ, eₙ>eₙ  (önceki tüm baz vektörleri bileşenlerini çıkar)\n  eₖ = fₖ / ||fₖ||  (normalize et)\n\nSonuç:\n  {e₁,...,eₙ} ortonormal: <eₖ,eₗ> = δₖₗ\n  span{e₁,...,eₙ} = span{x₁,...,xₙ}\n\nGörsel sezgi: e₁ yönünde birim vektör al. e₂ için x₂'den e₁'e paralel bileşeni çıkar — kalan e₁'e dik. Normalize et. Her adım bir önceki bazlarla dikliği garanti ediyor."
-        },
-        {
-          "type": "code",
-          "heading": "Gram-Schmidt uygulaması: Legendre Polinomları",
-          "text": "V = Pⁿ[-1,1], <f,g> = ∫₋₁¹ f(t)g(t) dt (gerçel, simetrik)\nStandart baz: {1, t, t², ..., tⁿ} — bunlar lineer bağımsız ama ortonormal değil.\n\n<1, t> = ∫₋₁¹ t dt = [t²/2]₋₁¹ = 0  ✓ (bu iki dik)\n<t, t²> = ∫₋₁¹ t³ dt = 0  ✓ (bu da dik, tek fonksiyon)\n<1, t²> = ∫₋₁¹ t² dt = 2/3 ≠ 0  ✗ (dik değil)\n\nGram-Schmidt uygula:\n\ne₁ = 1/||1|| = 1/√2  (çünkü ||1||² = ∫₋₁¹ 1 dt = 2)\n\ne₂ = (t - <t,e₁>e₁) / ||...|| = t/||t||  (çünkü <t,e₁> = 0)\n  ||t||² = ∫₋₁¹ t² dt = 2/3 → e₂ = √(3/2) · t\n\ne₃ = (t² - <t²,e₁>e₁ - <t²,e₂>e₂) / ||...||:\n  <t²,e₁> = (1/√2)∫₋₁¹ t² dt = (1/√2)·(2/3) = √2/3\n  <t²,e₂> = √(3/2)∫₋₁¹ t³ dt = 0\n  f₃ = t² - (√2/3)·(1/√2) = t² - 1/3\n  e₃ = (15/(2√10))^{1/2} · (t² - 1/3)  ≈ (√10/2√2)·(t²-1/3)\n\nBu ortonormal polinomlara 'Legendre polinomları' denir. Fizikte, kuantum mekaniğinde, approximation theory'de çok önemli."
-        }
-      ]
-    },
-    {
-      "title": "Projeksiyon — Formül, Teorem, Uygulamalar",
+      "title": "Ortonormal Baz, Gram-Schmidt ve Projeksiyon Teoremi",
       "cat": "Applications",
-      "summary": "Projeksiyon: x'e en yakın nokta alt uzayda. Ortogonallik prensibi: x-x̂ ⊥ S. ℂⁿ'de P=BB^H. Genel: P=B(B^HB)^{-1}B^H. Hilbert uzayında projeksiyon garantili.",
-      "context": "EE499 · Chapter 1.7 — Projection",
+      "summary": "Ortonormal bazda koordinat = iç çarpım (βₖ=⟨v,eₖ⟩). Ortonormal → lineer bağımsız — iç çarpım hilesiyle ispat edilir. Gram-Schmidt herhangi bazdan ortonormal baz üretir. Projeksiyon teoremi: en yakın nokta = hata dik olduğunda. P = B(BᴴB)⁻¹Bᴴ.",
+      "context": "EE499 · Chapter 1.6.4 ve 1.7",
       "sections": [
         {
           "type": "code",
-          "heading": "Projeksiyon nedir ve ortogonallik prensibiyle bağlantısı",
-          "text": "Problem: x ∈ V verilmiş, x ∉ S. S alt uzayındaki x'e en yakın noktayı bul.\n  x̂ = argmin_{s ∈ S} ||x - s||²\n\nBu noktaya x'in S'ye projeksiyonu diyoruz.\n\nOrtogonallik Prensibi (Projeksiyon Teoremi):\n  x̂ ∈ S ve ||x-x̂|| ≤ ||x-s|| her s ∈ S için\n  ⟺\n  x̂ ∈ S ve (x - x̂) ⊥ S\n\nYani: projeksiyon var ↔ hata vektörü alt uzaya dik.\nİspat yönü (projeksiyon → ortogonallik):\n  Varsay x̂ = argmin_{s∈S} ||x-s||. Herhangi s ∈ S için:\n  Seç sε = x̂ + εs ∈ S\n  ||x - sε||² = ||x-x̂||² - 2ε Re<x-x̂,s> + ε²||s||² ≥ ||x-x̂||²  (minimum koşulundan)\n  → Re<x-x̂, s> = 0 her s için → <x-x̂, s> = 0 → (x-x̂) ⊥ S  ✓\n\nSezgi: neden dik olan en yakın? Çünkü dik olmayan bir hata varsa, alt uzay yönünde biraz daha ilerlersen mesafeyi azaltabilirsin."
+          "heading": "Ortonormal baz — neden değerli?",
+          "text": "Genel baz {x₁,...,xₙ} ile koordinat bulmak için lineer sistem çözmek gerekir:\n  [x₁|x₂|...|xₙ] · β = v  →  matris tersi lazım\n\nOrtonormal baz {e₁,...,eₙ} ile sadece iç çarpım:\n  βₖ = ⟨v, eₖ⟩\n\nNeden çalışıyor?\n  ⟨v, eₗ⟩ = ⟨Σβₖeₖ, eₗ⟩ = Σβₖ⟨eₖ,eₗ⟩ = Σβₖδₖₗ = βₗ  ✓\n\nOrtonormal → lineer bağımsız (iç çarpım hilesi):\n  Varsay: Σαₖvₖ = 0. Her iki taraftan vₗᵀ çarp:\n  Σαₖ(vₗᵀvₖ) = 0 → Σαₖδₗₖ = 0 → αₗ = 0\n  Bu her l için geçerli → tüm katsayılar sıfır → lineer bağımsız ✓\n\n  Sonuç: n adet ortonormal vektör ℝⁿ'de\n  → lineer bağımsız (kanıtlandı)\n  → n boyutlu uzayı span ediyor\n  → baz koşulları otomatik sağlanıyor\n\nSP'deki yansımaları:\n  DFT katsayıları = iç çarpım (ortonormal sinüzoidlerle)\n  CTFS katsayıları = iç çarpım (ortonormal karmaşık üstellerle)\n  Örnekleme teoremi = iç çarpım (ortonormal sinc bazı)\n  Hepsi aynı yapı: tam ONS + katsayı = iç çarpım"
         },
         {
           "type": "code",
-          "heading": "Projeksiyon matrisi türetme",
-          "text": "S = span{b₁,...,bᵣ} ⊆ ℂⁿ, B = [b₁|b₂|...|bᵣ] ∈ ℂⁿˣʳ\n\nOrtogonallik prensibi: (x - x̂) ⊥ S → <x-x̂, bₖ> = 0 her k için\n→ bₖᴴ(x - x̂) = 0 her k → Bᴴ(x - x̂) = 0\n→ Bᴴx = Bᴴx̂\n\nx̂ ∈ S olduğundan: x̂ = Bc  (bazın lineer kombinasyonu)\n→ Bᴴx = BᴴBc → c = (BᴴB)⁻¹Bᴴx  (BᴴB invertible — sütunlar lineer bağımsız)\n\nSonuç:\n  x̂ = Bc = B(BᴴB)⁻¹Bᴴx = Px\n  Projeksiyon matrisi: P = B(BᴴB)⁻¹Bᴴ\n\nOrtonormal baz ise BᴴB = I:\n  P = B·I⁻¹·Bᴴ = BBᴴ  (çok daha basit!)\n\nProjektion matrisinin özellikleri:\n  P² = P  (idempotent: iki kez proje et = bir kez proje et)\n  Pᴴ = P  (Hermitian simetrik)\n  P·P = P  ve  (I-P)·(I-P) = I-P  (I-P S⊥ ya proyeksion)"
+          "heading": "Gram-Schmidt — herhangi bazdan ortonormal baz üret",
+          "text": "Verilen: {x₁,...,xₙ} lineer bağımsız\nİstenen: {e₁,...,eₙ} ortonormal, aynı uzayı span eden\n\nAdım 1:\n  e₁ = x₁ / ||x₁||\n\nAdım 2:\n  x₂'den e₁ bileşenini çıkar, normalize et:\n  f₂ = x₂ - ⟨x₂,e₁⟩e₁\n  e₂ = f₂ / ||f₂||\n  (⟨x₂,e₁⟩ = x₂'nin e₁ yönündeki koordinatı — bunu çıkarınca e₁'e dik kalıyor)\n\nAdım k:\n  fₖ = xₖ - Σⁿ⁻¹_{n=1} ⟨xₖ,eₙ⟩eₙ\n  eₖ = fₖ / ||fₖ||\n\nGörsel sezgi:\n  e₁ yönünde birim vektör al.\n  x₂'den e₁'e paralel parçayı çıkar — kalan e₁'e otomatik dik.\n  Her adım bir önceki bazlarla dikliği garanti ediyor."
         },
         {
           "type": "code",
-          "heading": "Hilbert uzayı ve projeksiyon garantisi",
-          "text": "ℂⁿ'de projeksiyon her zaman var ve tekil. Ama genel IPS'te projeksiyon olmayabilir!\n\nÖrnek — projeksiyon olmayan durum:\nV = C∞[-1,1] (infinitely differentiable fonksiyonlar)\nS = polinomlar (sonlu dereceli)\nx(t) = eᵗ = 1 + t + t²/2! + t³/3! + ...\n\neᵗ'yi polinomlarla yaklaştırmak istiyoruz — ama her polinom derecesi için daha iyi bir polinom var!\nYani S içinde 'en iyi yaklaşım' mevcut değil — daima daha iyisi bulunabilir.\n\nNeden? S kapsamlı değil (complete değil). Taylor dizisi yakınsar ama limiti S'de değil.\n\nCompleteness (Tamlık) Tanımı:\nBir NVS X, her Cauchy dizisi X'de yakınsıyorsa taktir edilir.\n(Cauchy dizisi: dizinin terimleri birbirine keyfi yakın olabilir: ||xₙ-xₘ|| < ε)\n\nHilbert Uzayı = IPS + complete\n  - Her sonlu boyutlu IPS → Hilbert uzayı (otomatik complete)\n  - ℓ₂, L₂[a,b] → Hilbert uzayı ✓\n\nHilbert'te Projeksiyon Teoremi:\n  X Hilbert uzayı ve S kapalı (complete) alt uzaysa → projeksiyon her zaman var ve tekil."
+          "heading": "Projeksiyon Teoremi",
+          "text": "Problem: x ∈ V, x ∉ S. S alt uzayındaki en yakın noktayı bul.\n  x̂ = argmin_{s ∈ S} ||x-s||²\n\nProjektion Teoremi:\n  x̂ projeksiyon ⟺ (x - x̂) ⊥ S\n\nHata vektörü alt uzaya dik olunca minimum mesafe.\nNeden? Dik olmayan hata varsa, S yönünde biraz daha ilerlersen mesafeyi azaltabilirsin.\nDik olunca: S'nin her yönünde ilerleme mesafeyi artırır — optimal.\n\nProjektion matrisi:\n  S = span{b₁,...,bᵣ}, B = [b₁|...|bᵣ]\n  Ortogonallik: Bᴴ(x-x̂)=0, x̂=Bc\n  → c = (BᴴB)⁻¹Bᴴx\n  → P = B(BᴴB)⁻¹Bᴴ\n  Ortonormal baz ise: P = BBᴴ\n\nÖzellikler:\n  P² = P  (idempotent: iki kez proje = bir kez)\n  Pᴴ = P  (Hermitian)\n  Öz değerler: sadece 0 ve 1\n\nDik ayrışım: V = S ⊕ S⊥\n  x = x̂ + e,  x̂ ∈ S, e ∈ S⊥\n  Pisagor: ||x||² = ||x̂||² + ||e||²\n\nML bağlantısı:\n  Least squares, MMSE, PCA, optimal FIR hepsi projeksiyon teoremi."
         }
       ]
     },
     {
-      "title": "Dik Ayrışım ve Pisagor Teoremi — IPS Geometrisi",
-      "cat": "Geometry",
-      "summary": "V = S ⊕ S⊥: her vektör, S bileşeni (projeksiyon) ve S⊥ bileşeni (hata) olmak üzere tekil ayrışır. Pisagor: ||x||² = ||x̂||² + ||x-x̂||². SP yorumu: toplam enerji = yaklaşım enerjisi + hata enerjisi.",
-      "context": "EE499 · Chapter 1.7 — Orthogonal Decomposition",
-      "sections": [
-        {
-          "type": "code",
-          "heading": "Dik ayrışım: her vektörü iki dik parçaya böl",
-          "text": "Hilbert uzayı V, kapalı alt uzay S ve ortogonal komplementi S⊥:\n  V = S ⊕ S⊥\n\nHer x ∈ V için TAM OLARAK BİR ayrışım var:\n  x = x̂ + e\n  x̂ = P_S x  ∈ S         (projeksiyon bileşeni)\n  e = x - x̂ ∈ S⊥         (hata bileşeni, S'ye dik)\n\nTekillik kanıtı:\nİki farklı ayrışım olsaydı: x = s₁+n₁ = s₂+n₂ (sᵢ∈S, nᵢ∈S⊥)\n  s₁-s₂ = n₂-n₁ ∈ S ∩ S⊥ = {0}  →  s₁=s₂, n₁=n₂  ✓\n\nSP anlamı:\ny = s + n  (s: istenilen sinyal, n: gürültü)\nS = 'temiz sinyallerin uzayı' (örn. bantlı frekanslar)\nS⊥ = 'gürültü uzayı'\ny = P_S y + P_{S⊥} y  →  sinyal bileşeni + gürültü bileşeni\nProjektion filtreleme yapıyor — S⊥ bileşenini atar, S bileşenini tutar."
-        },
-        {
-          "type": "code",
-          "heading": "Pisagor teoremi ve enerji ayrışımı",
-          "text": "Pisagor Teoremi:\nx = x̂ + e  ve  x̂ ⊥ e  ise:\n  ||x||² = ||x̂||² + ||e||²\n\nİspat:\n  ||x||² = <x̂+e, x̂+e> = ||x̂||² + <x̂,e> + <e,x̂> + ||e||²\n                        = ||x̂||² + 0 + 0 + ||e||²  (x̂ ⊥ e)  ✓\n\nSP yorumu — enerji ayrışımı:\n  ||y||² = ||P_S y||² + ||P_{S⊥} y||²\n  Toplam enerji = S-bileşeni enerjisi + S⊥-bileşeni enerjisi\n\nSomut örnek — DFT bantlı filtreleme:\n  y[n]: gürültülü sinyal, S = K bantlı DFT bileşenleri\n  P_S y: sadece K düşük frekanslı bileşeni tut\n  Enerji kaybı: ||y - P_S y||² = Σ_{k=K+1}^{N-1} |Y[k]|²\n\nGenelleştirme: karşılıklı dik x₁,...,xₙ için:\n  ||Σ xₖ||² = Σ ||xₖ||²"
-        },
-        {
-          "type": "insight",
-          "heading": "Projeksiyon teoreminin gücü: hata her zaman dikey olmalı",
-          "text": "Projeksiyon teoremi şunu söylüyor: en iyi yaklaşım = hata dik olunca.\n\nSezgi: Eğer x̂ ile hata e = y - x̂ dik değilse, S yönünde biraz daha ilerleyip mesafeyi azaltabilirsin. Dik olmak = daha fazla iyileştirme imkânı yok = optimal nokta.\n\nBu sezgi şu problemlerin hepsinde kullanılır:\n- Least Squares: 'tahmin hatası gözlemlere dik'\n- Minimum Norm: 'çözüm null space'e dik'\n- FIR filtre: 'frekans hatası S alt uzayına dik'\n- MMSE tahminleme: 'hata gözlemlere dik (istatistiksel dik)'"
-        }
-      ]
-    },
-    {
-      "title": "Hilbert Uzayı ve Tamlık — Projeksiyon Garantisi",
-      "cat": "Foundations",
-      "summary": "Hilbert uzayı = IPS + complete (Cauchy dizileri yakınsar). Sonlu boyutlu her IPS otomatik Hilbert. L₂ ve ℓ₂ Hilbert. Kapalı alt uzayda projeksiyon her zaman var ve tekil. Tamlık olmadan yaklaşım dizisi 'sınıra ulaşamaz'.",
-      "context": "EE499 · Chapter 1.7.1 — Hilbert Spaces and Completeness",
-      "sections": [
-        {
-          "type": "code",
-          "heading": "Tamlık neden gerekli? Projeksiyon her zaman var mı?",
-          "text": "Genel IPS'te projeksiyon olmayabilir. Neden?\n\nSomut sorun: V = C∞[-1,1], S = polinomlar\nx(t) = eᵗ = 1 + t + t²/2! + ... (bu S'de değil)\nHer n için pₙ(t) = 1+t+...+tⁿ/n! daha iyi yaklaşım:\n  ||eᵗ - pₙ||² → 0  (n→∞)\nAma 'en iyi' polinom mevcut değil — her polinom için daha iyisi var!\n\nNeden? S kapsamlı değil → Taylor dizisinin limiti S'de yok.\n\nTamlık (Completeness) Tanımı:\nBir NVS X, Banach uzayıdır eğer her Cauchy dizisi X'de yakınsar:\n  ||xₙ-xₘ|| → 0  ⟹  ∃ x ∈ X s.t. xₙ → x\n(Yani dizinin limiti uzayın içinde olmalı.)\n\nHilbert Uzayı: Complete IPS\n  - Her sonlu boyutlu IPS → otomatik complete → Hilbert  ✓\n  - L₂[a,b], ℓ₂(ℤ) → complete → Hilbert  ✓\n  - C∞[-1,1] polinom normla → complete değil, Hilbert değil"
-        },
-        {
-          "type": "code",
-          "heading": "Projeksiyon Teoremi — tam versiyon",
-          "text": "Hilbert Uzayında Projeksiyon Teoremi:\nH Hilbert uzayı, S ⊆ H kapalı (closed) alt uzay olsun.\nHer x ∈ H için tam olarak bir P_S(x) ∈ S var öyle ki:\n  ||x - P_S(x)|| ≤ ||x - s||  her s ∈ S için\nVe P_S(x), (x - P_S(x)) ⊥ S koşuluyla karakterize edilir.\n\nNeden S kapalı olması gerekiyor?\nKapalı = limit noktalarını içeriyor. S'ye yaklaşan bir dizi\nvarsa, dizinin limiti de S'de olmalı → projeksiyon o 'limiti' tutabilir.\n\nSP sonuçları:\n1. ℂᴺ sonlu boyutlu → her alt uzay kapalı → projeksiyon garantili\n2. L₂'de bantlı sinyaller alt uzayı → kapalı → projeksiyon = ideal LPF\n3. Polinom yaklaşımı → S kapalı değil → projeksiyon olmayabilir\n   (Bu yüzden Chebyshev approximation daha karmaşık teoriler gerektirir)"
-        },
-        {
-          "type": "table",
-          "heading": "Uzay hiyerarşisi ve projeksiyon garantisi",
-          "rows": [
-            [
-              "Uzay Türü",
-              "Complete?",
-              "Projeksiyon Garantisi?",
-              "Örnekler"
-            ],
-            [
-              "Sonlu boyutlu IPS",
-              "✓",
-              "✓ Her alt uzayda",
-              "ℂᴺ, ℝᴺ"
-            ],
-            [
-              "Hilbert Uzayı",
-              "✓",
-              "✓ Kapalı alt uzaylarda",
-              "L₂, ℓ₂"
-            ],
-            [
-              "Banach (IPS değil)",
-              "✓",
-              "✗ Genel garantisiz",
-              "L₁, ℓ∞"
-            ],
-            [
-              "Genel IPS",
-              "✗",
-              "✗ Olmayabilir",
-              "Polinomlar (dense)"
-            ]
-          ]
-        }
-      ]
-    },
-    {
-      "title": "Parseval Eşitliği ve Tam Ortonormal Sistem",
-      "cat": "Signal Processing",
-      "summary": "Tam ONS: her vektörü temsil eder, Parseval sağlanır. Parseval: ||x||² = Σ|<x,eₖ>|². Bessel eşitsizliği: eksik ONS için ≤. DFT, CTFS, örnekleme hepsi aynı yapı: tam ONS + katsayılar = iç çarpım. Sıkıştırma = büyük katsayıları tut.",
-      "context": "EE499 · Chapter 1.7.2 — Complete Orthonormal Systems and Parseval",
-      "sections": [
-        {
-          "type": "code",
-          "heading": "Tam ONS nedir ve Parseval nasıl gelir?",
-          "text": "Ortonormal sistem {eₖ} TAM (complete) olarak adlandırılır eğer:\n  <x, eₖ> = 0  her k için  ⟹  x = 0\n\nYani: eₖ'lere dik olan tek şey sıfır. Bazdan 'kaçan' vektör yok.\n\nBessel Eşitsizliği (her ONS için, tam olmayan da dahil):\n  Σₖ |<x, eₖ>|² ≤ ||x||²\n  (Enerji en fazla x'in toplam enerjisi kadar olabilir)\n\nParseval Eşitliği (TAM ONS için):\n  Σₖ |<x, eₖ>|² = ||x||²\n  (Bessel'de eşitlik: enerji kaybı yok, baz eksiksiz)\n\nEşdeğer tanım: ONS tam ⟺ her x için:\n  x = Σₖ <x, eₖ> eₖ  (tam temsil, limit Hilbert'te yakınsar)"
-        },
-        {
-          "type": "code",
-          "heading": "SP'deki somut Parseval örnekleri",
-          "text": "Örnek 1 — DFT (unitary):\n  V = ℂᴺ,  eₖ[n] = (1/√N) e^{j(2π/N)kn}\n  Parseval: Σₙ |x[n]|² = Σₖ |Xᵤ[k]|²\n  Zaman enerji = frekans enerji  ✓\n\nÖrnek 2 — CTFS:\n  V = L₂[0,T],  eₖ(t) = (1/√T) e^{jk(2π/T)t}\n  Parseval: (1/T) ∫₀ᵀ |x(t)|² dt = Σₖ |aₖ|²\n  Sinyal enerjisi = Fourier katsayılarının enerji toplamı  ✓\n\nÖrnek 3 — Örnekleme Teoremi:\n  V = bantlı L₂, eₙ(t) = (1/√T)sinc((t-nT)/T)\n  Parseval: (1/T)∫|x(t)|²dt = Σₙ |x(nT)|²\n  Sürekli sinyal enerjisi = örneklerin enerji toplamı  ✓\n\nÜç örnek farklı görünüyor ama hepsi aynı: tam ONS + Parseval.\n\nSıkıştırma (compression) bağlantısı:\nEn büyük |<x,eₖ>| katsayılarını tut, küçükleri sıfırla.\nParseval ile toplam enerji kaybı = Σ_{sıfırlanan k} |<x,eₖ>|²\n→ MP3, JPEG, MPEG hepsi bu prensibe dayanır."
-        },
-        {
-          "type": "note",
-          "heading": "Bessel ≤ ile Parseval = arasındaki fark",
-          "text": "Bessel eşitsizliği: Σ|<x,eₖ>|² ≤ ||x||² — sadece sınırlı katsayı sayısıyla gösteriliyor.\n\nParseval eşitliği: Σ|<x,eₖ>|² = ||x||² — sonsuz dizi toplam normla aynı.\n\nNe zaman eşitlik sağlanmaz? ONS tam değilse. Örneğin:\n{e₁, e₂} ∈ ℝ³, ama e₃ eksik. x = e₃ için:\n  |<x,e₁>|² + |<x,e₂>|² = 0 < 1 = ||x||²\n  Bessel sağlanır, Parseval sağlanmaz.\n\nÇıkarım: Parseval'i doğrula → ONS'nin tam olduğunu kanıtla."
-        }
-      ]
-    },
-    {
-      "title": "Optimal FIR Filtre Tasarımı — Projeksiyon Teoreminin SP Uygulaması",
+      "title": "Eigendecomposition: A = QΛQᵀ ve Eigenvektör Bazı",
       "cat": "Applications",
-      "summary": "İdeal LPF non-causal ve IIR — gerçekleştirilemez. M-tap FIR alt uzayına projeksiyon = L₂ optimal FIR. Katsayılar: h[k] = sinc kırpması. Pencere yöntemi bu projeksiyon çözümünün pratikte kullanılan versiyonu.",
-      "context": "EE499 · Chapter 1.7 — Application: Optimal FIR Filter Design",
+      "summary": "Eigenvektör: A altında yönü değişmeyen vektör (Av=λv). Bu bazda A köşegen — her yönü bağımsız scale ediyor, yönler karışmıyor. Üç adımlı boru hattı: Qᵀx (baz değişimi) → Λ (scale) → Q (geri dön). A^k ve A⁻¹ trivial hale geliyor.",
+      "context": "EE499 / Goodfellow ch.2 · Section 2.7",
       "sections": [
         {
           "type": "code",
-          "heading": "Problem: İdeal LPF neden gerçekleştirilemez?",
-          "text": "İdeal alçak geçiren filtre (LPF):\n  H_LPF(e^{jω}) = 1 (|ω| ≤ ωc),  0 (|ω| > ωc)\n  h_LPF[n] = (ωc/π) sinc(ωcn/π)  (zaman domeninde)\n\nProblem:\n1. h_LPF[n] ≠ 0 için n < 0 → non-causal → gerçek zamanlı uygulanamaz\n2. h_LPF[n] tüm n için sıfır değil → IIR → sonsuz katsayı → pratik değil\n\nNe yapalım? M katsayılı causal FIR filtre ile en iyi yaklaşımı bul:\n  H_FIR(e^{jω}) = Σ_{k=0}^{M-1} h[k] e^{-jωk}\n\nAlt uzay kurulumu:\n  V = Tüm DT transfer fonksiyonları (L₂[-π,π])\n  S = {H : H(e^{jω}) = Σ_{k=0}^{M-1} hₖ e^{-jωk}} (M-tap FIR alt uzayı)\n  İç çarpım: <H₁,H₂> = (1/2π)∫_{-π}^{π} H₁(e^{jω}) H₂*(e^{jω}) dω\n  Hedef: argmin_{H ∈ S} ||H_LPF - H||²"
+          "heading": "Eigenvektör nedir?",
+          "text": "A matrisi var. Çoğu x vektörüne uyguladığında hem yön hem büyüklük değişiyor.\nAma bazı özel vektörler var — eigenvektörler — yönleri değişmiyor:\n\n  Av = λv\n  v: eigenvektör (yön aynı kaldı)\n  λ: eigenvalue (sadece büyüklük λ kadar scale oldu)\n\nHesaplama:\n  Av = λv  →  (A-λI)v = 0\n  Sıfırdan farklı çözüm için: det(A-λI) = 0  (karakteristik denklem)\n\nAdımlar:\n  1. det(A-λI) = 0  →  λ₁,...,λₙ  (eigenvalue'lar)\n  2. Her λₖ için (A-λₖI)v=0 çöz  →  vₖ (eigenvektörler)\n  3. Q = [v₁|v₂|...|vₙ],  Λ = diag(λ₁,...,λₙ)\n  4. A = QΛQᵀ\n\nKare matris şartı:\n  Av → m boyutlu, λv → n boyutlu. Eşit olabilmek için m=n.\n  Eigendecomposition sadece kare matrisler için tanımlı."
         },
         {
           "type": "code",
-          "heading": "Projeksiyon ile kapalı form çözüm",
-          "text": "Baz vektörleri: eₖ(ω) = e^{-jωk},  k = 0, ..., M-1\n  ||eₖ||² = (1/2π)∫|e^{-jωk}|²dω = 1  (birim norm)\n  <eₖ, eₗ> = (1/2π)∫e^{-jω(k-l)}dω = δ[k-l]  (ortogonal)\n→ {e₀, e₁, ..., e_{M-1}} ortonormal baz!\n\nProjektion katsayıları (optimal FIR katsayıları):\n  h_opt[k] = <H_LPF, eₖ>\n           = (1/2π) ∫_{-π}^{π} H_LPF(e^{jω}) e^{+jωk} dω\n           = (1/2π) ∫_{-ωc}^{ωc} e^{jωk} dω\n           = (ωc/π) sinc(ωc k/π)  için k = 0, 1, ..., M-1\n\nYorum: Optimal M-tap FIR = ideal LPF impuls yanıtını [0, M-1]'de kır!\nBu 'dikdörtgen pencere yöntemi' — klasik FIR tasarımının projeksiyon teoreminden gelişi."
+          "heading": "Neden eigenvektör bazını seçiyoruz?",
+          "text": "x'i eigenvektörler cinsinden yaz: x = β₁v₁ + β₂v₂ + ... + βₙvₙ\n\nA'yı uygula:\n  Ax = A(β₁v₁ + β₂v₂ + ... + βₙvₙ)\n     = β₁Av₁ + β₂Av₂ + ... + βₙAvₙ      (lineerlik)\n     = β₁λ₁v₁ + β₂λ₂v₂ + ... + βₙλₙvₙ  (Avₖ = λₖvₖ)\n\nHer bileşen bağımsız olarak scale oldu. Yönler karışmadı.\n\nRastgele baz seçseydin:\n  A uyguladığında bir bileşen diğerlerine geçerdi — iç içe girerdi.\n  Takip etmek zor, hesap pahalı.\n\nFaydaları:\n  A^k x = β₁λ₁ᵏv₁ + ... + βₙλₙᵏvₙ\n    (k kez matris çarpımı yerine sadece üs al)\n  A⁻¹ = QΛ⁻¹Qᵀ, Λ⁻¹ = diag(1/λ₁,...,1/λₙ)\n    (köşegen tersini almak trivial)\n  Yapıyı görmek: λₖ büyükse vₖ yönünde güçlü etki"
         },
         {
           "type": "code",
-          "heading": "Gibbs olayı ve pencere yöntemi",
-          "text": "Projeksiyon ideal L₂ çözümü veriyor ama pratikte aşırı sallantı (Gibbs fenomeni) görülür.\n\nNeden? Frekans domeninde dikdörtgen kırpma = zaman domeninde sinc ile konvolüsyon.\nKesim noktasında ~8.9% aşım — pencere büyük olsa bile azalmaz.\n\nDüzeltme: Katsayıları pencereleme:\n  h_window[k] = h_opt[k] · w[k]\n  w[k]: Hamming (0.54-0.46cos(2πk/M-1)), Hanning, Blackman...\n\nPencere etkisi:\n  + Gibbs sallanması azalır\n  - Geçiş bandı genişler (daha az keskin)\n  - L₂ optimum kaybedilir (projeksiyon değil artık)\n\nPencere seçimi = L₂ ile Chebyshev normu arasında trade-off.\nProjeksiyonun verdiği çözüm L₂'de en iyi ama Chebyshev'de olmayabilir.\n\nÖzet: h_opt = projeksiyon çözümü → dikdörtgen pencere\n       h_window = pratik çözüm → sallanmayı azalt, geçiş bandından fedakâr"
+          "heading": "A = QΛQᵀ — üç adımlı boru hattı",
+          "text": "Ax = QΛQᵀx şöyle okunur:\n\n  x  →[Qᵀ]→  y = Qᵀx           x'in eigenvektör koordinatları\n              ↓\n     →[Λ]→   z = Λy             her koordinatı eigenvalue ile çarp\n              ↓\n     →[Q]→   Qz = Ax            tekrar standart koordinatlara dön\n\nAdım 1 — Qᵀx:\n  Önceki kartta kanıtlandı: Qᵀx = koordinat vektörü.\n  βₖ = vₖᵀx = x'in vₖ yönündeki bileşeni.\n\nAdım 2 — Λy:\n  Λ köşegen → her koordinatı bağımsız scale et: βₖ → λₖβₖ\n\nAdım 3 — Q:\n  Q sütunları eigenvektörler.\n  Q·[λ₁β₁,...,λₙβₙ]ᵀ = Σ λₖβₖvₖ\n  Eigenvektör koordinatlarından standart vektöre dönüş.\n\nNot: Ax'i direkt çarpsaydın aynı sonucu alırdın.\nBu ayrışım hesap için değil — A'nın yapısını görmek ve\nkarmaşık işlemleri (A^k, A⁻¹, xᵀAx) basitleştirmek için."
         }
       ]
     },
     {
-      "title": "Projeksiyon Matrisinin Özellikleri — P² = P ve Pᴴ = P",
-      "cat": "Geometry",
-      "summary": "Projeksiyon matrisi P = B(BᴴB)⁻¹Bᴴ: idempotent (P²=P) ve Hermitian (Pᴴ=P). I-P, S⊥'ya projeksiyon. Öz değerler sadece 0 ve 1. Rank(P) = dim(S). Bu iki özellik birlikte 'P bir projeksiyon' tanımını tam olarak karakterize eder.",
-      "context": "EE499 · Chapter 1.7 — Properties of Projection Matrices",
+      "title": "xᵀAx, Positive Definiteness ve Ax=b — Existence/Uniqueness",
+      "cat": "Applications",
+      "summary": "xᵀAx = Σλₖβₖ² eigenvektör bazında — karmaşık quadratic form sadece ağırlıklı kare toplamına dönüşüyor. PSD ↔ tüm λ≥0. Ax=b için existence: b∈R(A) (sütunların span'ı), uniqueness: N(A)={0}. ML'de kovaryans, Hessian, least squares hepsi buradan.",
+      "context": "EE499 / Goodfellow ch.2",
       "sections": [
         {
           "type": "code",
-          "heading": "P² = P: İkinci projeksiyon hiçbir şey yapmaz",
-          "text": "P = B(BᴴB)⁻¹Bᴴ  için:\n\nİdempotentlik (P² = P) ispatı:\n  P² = [B(BᴴB)⁻¹Bᴴ][B(BᴴB)⁻¹Bᴴ]\n     = B · (BᴴB)⁻¹ · (BᴴB) · (BᴴB)⁻¹ · Bᴴ\n     = B · I · (BᴴB)⁻¹ · Bᴴ\n     = B(BᴴB)⁻¹Bᴴ = P  ✓\n\nSezgi: Px ∈ S. P uygularsan yine S'de bir vektör çıkar.\n  P(Px) = Px  (zaten S'deydi, değişmez)\n\nP x için ne anlama geliyor?\n  Px = 0 ⟺ x ∈ N(P) = S⊥  (S'ye dik şeyler sıfıra gönderilir)\n  Px = x ⟺ x ∈ R(P) = S  (S'deki şeyler değişmez)\n\nP'nin öz değerleri:\n  Px = λx ⟹ P²x = λ²x = Px = λx ⟹ λ² = λ ⟹ λ=0 veya λ=1\n  λ=1 öz vektörleri: S  (projeksiyon değişmiyor)\n  λ=0 öz vektörleri: S⊥  (projeksiyon sıfır veriyor)"
+          "heading": "xᵀAx — quadratic form",
+          "text": "xᵀAx bir skalar. A = QΛQᵀ koy:\n  xᵀAx = xᵀ(QΛQᵀ)x = (Qᵀx)ᵀ Λ (Qᵀx)\n\ny = Qᵀx (eigenvektör koordinatları) dersen:\n  xᵀAx = yᵀΛy = λ₁y₁² + λ₂y₂² + ... + λₙyₙ²\n\nKarmaşık quadratic form, eigenvektör bazında bakınca:\n  → sadece eigenvalue'larla ağırlıklı kareler toplamı.\n\nML bağlantısı:\n  Kovaryans: (x-μ)ᵀΣ⁻¹(x-μ) = Mahalanobis mesafesi\n  Hessian H: xᵀHx = x yönündeki eğrilik (loss curvature)\n  Gaussian log likelihood bu formda."
         },
         {
           "type": "code",
-          "heading": "Pᴴ = P: Simetrik projeksiyon",
-          "text": "Hermitian simetri (Pᴴ = P) ispatı:\n  Pᴴ = [B(BᴴB)⁻¹Bᴴ]ᴴ\n     = B · [(BᴴB)⁻¹]ᴴ · Bᴴ\n     = B · [(BᴴB)ᴴ]⁻¹ · Bᴴ\n     = B · [BᴴB]⁻¹ · Bᴴ  (BᴴB Hermitian: (BᴴB)ᴴ = BᴴBᴴᴴ = BᴴB)\n     = P  ✓\n\nBu ne sağlıyor?\n  <Px, y> = (Px)ᴴy = xᴴPᴴy = xᴴPy = <x, Py>  (P self-adjoint)\n\nI-P projeksiyon (S⊥'ya):\n  (I-P)² = I - 2P + P² = I - 2P + P = I-P  ✓  (idempotent)\n  (I-P)ᴴ = Iᴴ - Pᴴ = I - P  ✓  (Hermitian)\n\nP · (I-P) = P - P² = P - P = 0  →  S ve S⊥ bileşenler dik"
+          "heading": "Positive Definite / Semi-Definite",
+          "text": "xᵀAx = λ₁y₁² + λ₂y₂² + ... + λₙyₙ²\n\nyₖ² ≥ 0 her zaman. Toplamın işareti λₖ'lara bağlı:\n\n  Tüm λₖ > 0  →  xᵀAx > 0 her x≠0 için  →  Positive Definite (PD)\n  Tüm λₖ ≥ 0  →  xᵀAx ≥ 0 her x için     →  Positive Semi-Definite (PSD)\n  Bazı λₖ < 0  →  xᵀAx negatif olabilir    →  Indefinite\n\nML bağlantısı:\n  Kovaryans Σ: her zaman PSD (varyans negatif olamaz)\n  Hessian H pozitif definit ise → lokal minimum\n  Hessian indefinit ise → eyer noktası (bazı yönlerde aşağı, bazılarında yukarı)"
+        },
+        {
+          "type": "code",
+          "heading": "Ax = b — sütun uzayı görüşü",
+          "text": "Ax = x₁a₁ + x₂a₂ + ... + xₙaₙ\n  (A'nın sütunlarının x₁,...,xₙ katsayılı kombinasyonu)\n\nEXISTENCE — çözüm var mı?\n  b bu kombinasyonla üretilebiliyor mu?\n  b ∈ R(A) = span{a₁,...,aₙ}  →  çözüm var\n  b ∉ R(A)                    →  çözüm yok\n\n  Her b için garantili existence:\n  R(A) = ℝᵐ olmalı → rank(A) = m → n ≥ m gerekli\n\nUNIQUENESS — çözüm tekil mi?\n  x₀ çözümse, x₀ + n de çözüm (n ∈ N(A))\n  N(A) = {0}  →  tekil çözüm\n  N(A) ≠ {0}  →  sonsuz çözüm\n  Rank-Nullity: rank(A) + dim(N(A)) = n → tekil için rank(A)=n gerekli"
         },
         {
           "type": "table",
-          "heading": "Projeksiyon matrisinin tüm özellikleri",
+          "heading": "Üç durum: tall, fat, square",
           "rows": [
             [
-              "Özellik",
-              "İfade",
-              "Anlam"
+              "Durum",
+              "Yapı",
+              "Existence",
+              "Uniqueness"
             ],
             [
-              "İdempotent",
-              "P² = P",
-              "İki kez proje = bir kez"
+              "Tall (m>n)",
+              "Denklem > bilinmeyen",
+              "Bazı b için yok",
+              "Varsa tekil"
             ],
             [
-              "Hermitian",
-              "Pᴴ = P",
-              "Self-adjoint"
+              "Fat (m<n)",
+              "Bilinmeyen > denklem",
+              "Garantili (full row rank)",
+              "Asla tekil değil"
             ],
             [
-              "Komplement",
-              "(I-P)² = I-P, (I-P)ᴴ = I-P",
-              "I-P de projeksiyon (S⊥'ya)"
-            ],
-            [
-              "Diklik",
-              "P(I-P) = 0",
-              "S ve S⊥ bileşenler dik"
-            ],
-            [
-              "Öz değerler",
-              "λ ∈ {0, 1}",
-              "0-uzayı=S⊥, 1-uzayı=S"
-            ],
-            [
-              "Rank/Trace",
-              "rank(P) = tr(P) = dim(S)",
-              "Boyut sayısı"
-            ],
-            [
-              "Konverse",
-              "P² = P ve Pᴴ = P ⟹ P projeksiyon",
-              "Tam karakterizasyon"
+              "Square (m=n)",
+              "Dengeli",
+              "Garantili",
+              "Tekil — A⁻¹ var"
             ]
           ]
         }
