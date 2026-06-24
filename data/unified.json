@@ -6060,6 +6060,39 @@
           ]
         }
       ]
+    },
+    {
+      "title": "PCA — Teori, Türetme ve Eigenvektör Bağlantısı",
+      "cat": "Applications",
+      "summary": "PCA: veriyi en az bilgi kaybıyla düşük boyuta indirgeme. Reconstruction error minimize etmek, variance maximize etmeye dönüşüyor. Optimal yönler XᵀX'in eigenvektörleri. Xv₁ iç çarpım kanıtının matris formu — her noktanın v₁ koordinatı.",
+      "context": "EE499 / Goodfellow ch.2 · Section 2.12",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Amaç nedir?",
+          "text": "Elimizde m tane veri noktası var, her biri n boyutlu: x⁽¹⁾,...,x⁽ᵐ⁾ ∈ ℝⁿ.\nn çok büyük — görselleştirmek, saklamak, işlemek zor.\n\nHedef: veriyi l boyutlu bir uzaya indir (l << n), mümkün olduğunca az bilgi kaybet.\n\nBunu şöyle yapıyoruz:\n  Encode: c = Dᵀx      (n boyutlu x → l boyutlu c)\n  Decode: x̂ = Dc      (l boyutlu c → n boyutlu x̂, yaklaşım)\n\n  D: n×l matris — 'temel yönler'\n  c: l×1 vektör — 'koordinatlar bu yönlerde'\n\nİdeal: x̂ = x (kayıpsız). Pratikte: ||x - x̂||₂ minimize et.\n\nSoru: D nasıl seçilmeli ki reconstruction error en küçük olsun?"
+        },
+        {
+          "type": "code",
+          "heading": "Optimizasyon problemi ve variance maximize'a dönüşüm",
+          "text": "l=1 durumundan başla (tek yön d bul).\n\nEncode-decode:\n  c = dᵀx      (skalar koordinat)\n  x̂ = (dᵀx)·d  (d yönüne projeksiyon)\n\nReconstruction error (tüm noktalar için):\n  min_d  Σᵢ ||x⁽ⁱ⁾ - (dᵀx⁽ⁱ⁾)d||₂²    subject to dᵀd=1\n\nMatris formunda (X ∈ ℝᵐˣⁿ, her satır bir nokta):\n  min_d  ||X - Xddᵀ||_F²    subject to dᵀd=1\n\nFrobenius norm açılır (sabit terimler atılır):\n  ||X - Xddᵀ||_F² = ||X||_F² - Tr(dᵀXᵀXd)\n\n||X||_F² d'ye bağlı değil → maximize etmek için:\n  max_d  Tr(dᵀXᵀXd)    subject to dᵀd=1\n\nd skaler olduğunda Tr(...) = dᵀXᵀXd:\n  max_d  dᵀXᵀXd    subject to dᵀd=1\n\nReconstruction error minimize = variance maximize."
+        },
+        {
+          "type": "code",
+          "heading": "Neden eigenvektör optimal? — türetme",
+          "text": "A = XᵀX (symmetric PSD), A = QΛQᵀ.\nEigenvektörler {v₁,...,vₙ}, eigenvalue'lar λ₁ ≥ λ₂ ≥ ... ≥ λₙ ≥ 0.\n\nd'yi eigenvektör bazında yaz: d = Σᵢ αᵢvᵢ\n\nKısıt dᵀd = 1:\n  dᵀd = Σᵢ αᵢ² = 1     (ortonormallikten çapraz terimler sıfır)\n\nObjective dᵀAd:\n  dᵀAd = (Σᵢ αᵢvᵢ)ᵀ A (Σⱼ αⱼvⱼ)\n        = Σᵢ Σⱼ αᵢαⱼ vᵢᵀAvⱼ\n        = Σᵢ Σⱼ αᵢαⱼ λⱼ (vᵢᵀvⱼ)    (Avⱼ = λⱼvⱼ)\n        = Σᵢ Σⱼ αᵢαⱼ λⱼ δᵢⱼ        (ortonormal baz)\n        = Σᵢ αᵢ² λᵢ\n\nProblem şimdi:\n  max   α₁²λ₁ + α₂²λ₂ + ... + αₙ²λₙ\n  s.t.  α₁² + α₂² + ... + αₙ² = 1\n\nAğırlıkları (αᵢ²) 1'e sabitli — λᵢ'lerin ağırlıklı ortalaması.\nMaksimum için: tüm ağırlığı en büyük λ'ya ver.\n  α₁=1, diğerleri=0 → d = v₁, maksimum değer = λ₁\n\nSonuç: optimal d = XᵀX'in en büyük eigenvalue'sunun eigenvektörü."
+        },
+        {
+          "type": "code",
+          "heading": "Xv₁ neden koordinat? — iç çarpım kanıtının matris formu",
+          "text": "Tek nokta için:\n  v₁ᵀx⁽ⁱ⁾ = x⁽ⁱ⁾'nin v₁ yönündeki koordinatı (skalar)\n\nBunu daha önce kanıtladık: ortonormal bazda koordinat = iç çarpım.\n  v₁ᵀx = β₁  (v₁ yönündeki bileşen)\n\nTüm m nokta için aynı anda:\n  X:    m×n   (her satır bir veri noktası)\n  v₁:   n×1\n\n  Xv₁:  m×1\n  (Xv₁)ᵢ = (X'in i. satırı) · v₁ = x⁽ⁱ⁾ᵀv₁\n\nYani Xv₁ = tüm noktaların v₁ koordinatları, tek vektörde.\n\nŞimdi bu koordinatları v₁ yönüne geri yansıt (projeksiyon):\n  (Xv₁)·v₁ᵀ = Xv₁v₁ᵀ   (m×n matris)\n  i. satırı = (x⁽ⁱ⁾ᵀv₁)·v₁ᵀ = x⁽ⁱ⁾'nin v₁'e projeksiyonu\n\nX - Xv₁v₁ᵀ = her noktadan v₁ bileşeni çıkarılmış residual."
+        },
+        {
+          "type": "code",
+          "heading": "l>1 için sıradaki bileşenler — residual mantığı",
+          "text": "v₁ bulundu. v₁'in taşıdığı bilgiyi veriden çıkar:\n  X_residual = X - Xv₁v₁ᵀ\n\nNeden?\n  Her noktadan v₁ yönündeki projeksiyon çıkarıldı.\n  X_residual'ın her satırı v₁'e dik — o yönde varyans kalmadı.\n\nAynı problemi X_residual üzerinde çöz:\n  X_residualᵀ X_residual = XᵀX - λ₁v₁v₁ᵀ\n  Bu matrisin eigenvektörleri yine {v₁,...,vₙ}\n  Ama v₁'in eigenvalue'su: λ₁ - λ₁ = 0 (çıkarıldı)\n  Kalan en büyük: λ₂ → v₂ optimal\n\nBu işlemi l kez tekrarla → her seferinde sıradaki eigenvektör çıkıyor.\n\nGenel sonuç:\n  D = [v₁ | v₂ | ... | vₗ]     (n×l matris)\n  XᵀX'in en büyük l eigenvalue'suna karşılık gelen eigenvektörler\n\nFiziksel anlam:\n  v₁: verinin en çok yayıldığı yön (en büyük varyans λ₁)\n  v₂: v₁'e dik, ikinci en çok yayılan yön (λ₂)\n  ...\n  D bu l yönü bir araya topluyor — en bilgilendirici l boyut"
+        }
+      ]
     }
   ],
   "vs02": [
