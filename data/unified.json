@@ -5989,7 +5989,7 @@
       "title": "Eigendecomposition: A = QΛQᵀ ve Eigenvektör Bazı",
       "cat": "Applications",
       "summary": "Eigenvektör: A altında yönü değişmeyen vektör (Av=λv). Bu bazda A köşegen — her yönü bağımsız scale ediyor, yönler karışmıyor. Üç adımlı boru hattı: Qᵀx (baz değişimi) → Λ (scale) → Q (geri dön). A^k ve A⁻¹ trivial hale geliyor.",
-      "context": "EE499 / Goodfellow ch.2 · Section 2.7",
+      "context": "EE499 · Eigendecomposition",
       "sections": [
         {
           "type": "code",
@@ -6012,7 +6012,7 @@
       "title": "xᵀAx, Positive Definiteness ve Ax=b — Existence/Uniqueness",
       "cat": "Applications",
       "summary": "xᵀAx = Σλₖβₖ² eigenvektör bazında — karmaşık quadratic form sadece ağırlıklı kare toplamına dönüşüyor. PSD ↔ tüm λ≥0. Ax=b için existence: b∈R(A) (sütunların span'ı), uniqueness: N(A)={0}. ML'de kovaryans, Hessian, least squares hepsi buradan.",
-      "context": "EE499 / Goodfellow ch.2",
+      "context": "EE499 · Linear Algebra",
       "sections": [
         {
           "type": "code",
@@ -6065,7 +6065,7 @@
       "title": "PCA — Teori, Türetme ve Eigenvektör Bağlantısı",
       "cat": "Applications",
       "summary": "PCA: veriyi en az bilgi kaybıyla düşük boyuta indirgeme. Reconstruction error minimize etmek, variance maximize etmeye dönüşüyor. Optimal yönler XᵀX'in eigenvektörleri. Xv₁ iç çarpım kanıtının matris formu — her noktanın v₁ koordinatı.",
-      "context": "EE499 / Goodfellow ch.2 · Section 2.12",
+      "context": "EE499 · PCA",
       "sections": [
         {
           "type": "code",
