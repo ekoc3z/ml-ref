@@ -6097,128 +6097,56 @@
   ],
   "vs02": [
     {
-      "title": "Lineer Operatör Nedir? — Sistem = Operatör",
+      "title": "Lineer Operatör ve Matris Gösterimi — Sistemi Yazıya Dökmek",
       "cat": "Foundations",
-      "summary": "Operatör iki vektör uzayı arasında bir eşleme. Lineer operatör: toplama ve skalar çarpma korunur. SP'de FIR filtre, türev alma, integral hepsi lineer operatör. Non-lineer örnekler: determinant, kareye alma.",
-      "context": "EE499 · Chapter 2.1 — Linear Operators",
+      "summary": "Lineer operatör iki vektör uzayı arasında lineerliği koruyan eşleme. Sonlu boyutlu uzaylarda her lineer operatörün bir matris temsili var — matrisin k. sütunu, k. baz vektörünün imgesidir. Bu yüzden türev, konvolüsyon, DFT hepsi matrise dönüşüyor.",
+      "context": "EE499 · Linear Operators",
       "sections": [
         {
           "type": "code",
-          "heading": "Operatör kavramı — fonksiyonun genellemesi",
-          "text": "Operatör, matematikte bir eşleme: iki vektör uzayı arasında. Ama bu eşleme sıradan bir fonksiyondan farklı — giriş ve çıkış vektör uzayları olduğu için çok daha geniş bir alan kapsıyor.\n\nResmi tanım:\n  A: X → Y\n  X: giriş vektör uzayı (domain)\n  Y: çıkış vektör uzayı (codomain/range)\n\nBurada A harfi hem 'operator' hem 'matrix' için kullanılıyor ama bunlar AYNI şey değil. A(x) = y bir operatörü ifade eder; Ax = y ise matris çarpımını. İkisi arasındaki fark önemli:\n- Operator A: X → Y herhangi iki vektör uzayı arasında\n- Matrix A ∈ ℂᴹˣᴺ: sütun vektörü alır, sütun vektörü verir\n\nMatris gösterimi: Eğer X ve Y sonlu boyutluysa, her lineer operatörün bir matris temsili var. Ama X = L₂[a,b] gibi sonsuz boyutluysa matris yok — integral operatörü var.\n\nSP'deki somut örnekler:\n- LTI filtre: x[n] → y[n] = x[n]*h[n]  (konvolüsyon operatörü)\n- Türev: x(t) → dx/dt  (diferansiyel operatör)\n- Fourier dönüşümü: x(t) → X(jω)  (integral operatörü)\n- Örnekleme: x(t) → x(nT)  (örnekleme operatörü)"
+          "heading": "Operatör nedir ve lineerlik ne demek?",
+          "text": "Operatör şunu ifade ediyor: bir vektör uzayı alıp başka bir vektör uzayına götüren eşleme.\n  A: X → Y\n  X: giriş uzayı (domain)\n  Y: çıkış uzayı (codomain)\n\nBu sıradan fonksiyondan farkı ne? Giriş ve çıkış birer vektör uzayı — dolayısıyla toplama ve skalar çarpım tanımlı. Bu yapı 'lineerlik' koşulunu anlamlı kılıyor.\n\nLineerlik koşulu:\n  A(αx₁ + βx₂) = αA(x₁) + βA(x₂)\n  ∀x₁,x₂ ∈ X, ∀α,β ∈ F\n\nBu iki şeyi birleştiriyor:\n  1. Additivity:   A(x₁+x₂) = A(x₁) + A(x₂)\n  2. Homogeneity:  A(αx) = αA(x)\n\nSP örnekleri — lineer mi değil mi?\n\nTürev A: P² → P¹, A(x(t)) = dx/dt\n  A(αx₁+βx₂) = αẋ₁+βẋ₂ = αA(x₁)+βA(x₂) ✓ lineer.\n\nKonvolüsyon A(x) = x * h (LTI filtre)\n  LTI = Linear Time-Invariant → isminin içinde 'lineer' var. ✓\n\nDeterminant A(X) = det(X):\n  A(αX) = det(αX) = αᴺ·det(X) ≠ α·det(X) (N>1 için) ✗ lineer değil.\n\nKareye alma A(x) = x²:\n  A(x+y) = (x+y)² = x²+2xy+y² ≠ A(x)+A(y) ✗ lineer değil.\n\nNeden lineerlik bu kadar önemli?\n  - Lineer operatörlerin matris temsili var → sayısal hesaplama mümkün\n  - Ters problem teorisi doğrudan uygulanıyor\n  - Süperpozisyon: baz vektörleri üzerindeki etkiyi bilmek yeterli"
         },
         {
           "type": "code",
-          "heading": "Lineerlik tanımı ve somut testler",
-          "text": "Bir A: X → Y operatörü LİNEERDİR eğer:\n  A(αx₁ + βx₂) = αA(x₁) + βA(x₂)  her x₁,x₂ ∈ X ve α,β ∈ F için\n\nBu iki koşul olarak da yazılır:\n1. Additivity: A(x₁+x₂) = A(x₁) + A(x₂)\n2. Homogeneity: A(αx) = αA(x)\n\nNeden önemli? Lineer operatörlerin matris temsili var ve ters problem teorisi uygulanabilir.\n\nTest 1 — Türev lineer mi?\nA: P² → P¹ (derecesi 2'den küçük polinomlarda türev)\nA(αx₁(t) + βx₂(t)) = d/dt(αx₁ + βx₂) = α(dx₁/dt) + β(dx₂/dt) = αA(x₁) + βA(x₂) ✓\n→ Türev operatörü lineer.\n\nTest 2 — İntegral lineer mi?\nA: P² → ℝ, A(x) = ∫₀¹ x(t)dt\nA(αx₁+βx₂) = ∫(αx₁+βx₂)dt = α∫x₁dt + β∫x₂dt = αA(x₁)+βA(x₂) ✓\n→ İntegral operatörü lineer.\n\nTest 3 — İz (trace) lineer mi?\nA: ℝᴺˣᴺ → ℝ, A(X) = trace(X)\nA(αX+βY) = trace(αX+βY) = α·trace(X)+β·trace(Y) ✓  → Lineer.\n\nTest 4 — Determinant lineer mi?\nA: ℝᴺˣᴺ → ℝ, A(X) = det(X)\nA(αX) = det(αX) = αᴺ·det(X) ≠ α·det(X)  (N > 1 için)\n→ Determinant lineer DEĞİL!\n\nTest 5 — Değerlendirme lineer mi?\nA: P² → ℝ², A(x) = [x(0), x(1)]ᵀ\nLineer — polinom topla, değerlen → değerlendirip topla aynı."
+          "heading": "Matris temsili — lineer operatör nasıl matrise dönüşüyor?",
+          "text": "X ve Y sonlu boyutlu: dim(X) = N, dim(Y) = M.\nX için e-baz seç: {e₁,...,eₙ}, Y için f-baz: {f₁,...,fₘ}\n\nTemel teorem:\n  A: X → Y lineer ise, benzersiz bir A ∈ ℂᴹˣᴺ matrisi var:\n  [A(x)]_f = A · [x]_e\n\nMatrisi nasıl inşa ediyoruz?\n  A'nın k. sütunu = A(eₖ)'nin f-bazındaki koordinatları:\n  A = [ [A(e₁)]_f | [A(e₂)]_f | ... | [A(eₙ)]_f ]\n\nNeden bu işe yarıyor?\n  x = α₁e₁ + α₂e₂ + ... + αₙeₙ  (e-bazındaki temsil)\n  A(x) = α₁A(e₁) + α₂A(e₂) + ... + αₙA(eₙ)  ← lineerlikten\n  N tane baz vektörü üzerindeki etkiyi öğrenmek, her giriş için yeterli.\n\nÖrnek: Türev A: P³ → P², e-baz = {1, t, t², t³}, f-baz = {1, t, t²}\n  A(1)   = 0       → [0,0,0]ᵀ\n  A(t)   = 1       → [1,0,0]ᵀ\n  A(t²)  = 2t      → [0,2,0]ᵀ\n  A(t³)  = 3t²     → [0,0,3]ᵀ\n\n  A = [0 1 0 0]\n      [0 0 2 0]\n      [0 0 0 3]\n\nKontrol: p(t) = a₀ + a₁t + a₂t² + a₃t³\n  A·[a₀,a₁,a₂,a₃]ᵀ = [a₁, 2a₂, 3a₃]ᵀ  → p'(t) = a₁+2a₂t+3a₃t² ✓"
         },
         {
-          "type": "table",
-          "heading": "Lineer ve non-lineer operatör örnekleri",
-          "rows": [
-            [
-              "Operatör",
-              "Tanım",
-              "Lineer?",
-              "Neden?"
-            ],
-            [
-              "Türev",
-              "dx(t)/dt",
-              "✓ Evet",
-              "Chain rule: (αx+βy)' = αx'+βy'"
-            ],
-            [
-              "İntegral",
-              "∫₀¹ x(t)dt",
-              "✓ Evet",
-              "İntegral lineer"
-            ],
-            [
-              "Konvolüsyon",
-              "x[n]*h[n]",
-              "✓ Evet",
-              "LTI = linear time-invariant"
-            ],
-            [
-              "İz (Trace)",
-              "tr(X)",
-              "✓ Evet",
-              "Matris toplama + skalar"
-            ],
-            [
-              "Değerlendirme",
-              "x → [x(0),x(1)]",
-              "✓ Evet",
-              "Topla sonra değerlen = değerlen sonra topla"
-            ],
-            [
-              "Determinant",
-              "det(X)",
-              "✗ Hayır",
-              "det(αX) = αᴺ·det(X) ≠ α·det(X)"
-            ],
-            [
-              "Kareye alma",
-              "x → x²",
-              "✗ Hayır",
-              "(x+y)² ≠ x²+y²"
-            ]
-          ]
+          "type": "code",
+          "heading": "Konvolüsyon matrisi — SP'nin en önemli lineer operatörü",
+          "text": "SP'de en sık karşılaşılan lineer operatör LTI filtre:\n  y[n] = x[n] * h[n]   (konvolüsyon)\n  x ∈ ℂᴺ (giriş), h ∈ ℂᴷ (filtre), y ∈ ℂᴹ (çıkış, M = N+K-1)\n\nBunu matris formuna getir: y = H·x\n\nH'nin yapısı (her sütun h'nin kaydırılmış versiyonu, Toeplitz):\n  H = [h[0]    0       0    ...  0      ]\n      [h[1]  h[0]      0    ...  0      ]\n      [h[2]  h[1]    h[0]   ...  0      ]\n      [ ...   ...     ...   ... ...     ]\n      [h[K-1) h[K-2) h[K-3)... h[0]    ]\n      [  0   h[K-1) h[K-2) ... h[1]    ]\n      [ ...   ...     ...   ... ...     ]\n      [  0     0       0    ... h[K-1)  ]\n\nNeden bu önemli?\n  Artık konvolüsyon = matris-vektör çarpımı: y = H·x.\n  y bilinen, x bilinmiyor → ters problem teorisi uygulanabilir.\n\nSP'deki ters problemler bu formata giriyor:\n  Dekonvolüsyon:      y, H biliniyor → x bul (orijinal sinyal)\n  Görüntü deblurring: y bulanık görüntü, H blur matrisi → x orijinal\n  CT rekonstrüksiyon: y projektörler, H Radon matrisi → x görüntü\n  Kanal denkleme:     y alınan sinyal, H kanal → x gönderilen sinyal\n\nHepsi y = Hx formunda. Artık aynı teorik çerçeve uygulanabiliyor."
         }
       ]
     },
     {
-      "title": "Matris Gösterimi — Her Lineer Op. Bir Matris",
+      "title": "Range ve Null Space — Operatörün İki Yüzü",
       "cat": "Foundations",
-      "summary": "Sonlu boyutlu uzaylarda her lineer operatörün baz seçimine göre bir matris temsili var. A matrisi, her giriş baz vektörünün çıkışını sütun olarak alarak oluşturulur. Baz değişince matris değişir.",
-      "context": "EE499 · Chapter 2.2.1 — Matrix Representation",
+      "summary": "Range space R(A): A'nın ulaşabildiği her yer, Y'nin alt uzayı, dim = rank(A). Null space N(A): A'nın sıfıra gönderdiği her şey, X'in alt uzayı. Rank-Nullity teoremi rank + nullity = N. Bu ikili existence ve uniqueness sorularını tamamen belirliyor.",
+      "context": "EE499 · Range and Null Spaces",
       "sections": [
         {
           "type": "code",
-          "heading": "Matris temsili teoremi ve yapım prensibi",
-          "text": "Temel Gerçek: Eğer A: X → Y lineer ve X, Y sonlu boyutluysa, seçilen bazlara göre bir M×N matris A var öyle ki:\n  [A(x)]_v = A · [x]_e\n\nBurada:\n- [x]_e: x'in e-bazındaki koordinat vektörü (N×1)\n- A: M×N matris (operatörün matris temsili)\n- [A(x)]_v: A(x)'in v-bazındaki koordinat vektörü (M×1)\n\nNasıl oluşturulur? A matrisinin k. sütunu = A(eₖ)'nin v-bazındaki koordinatları:\n  A = [ [A(e₁)]_v  |  [A(e₂)]_v  |  ...  |  [A(eₙ)]_v ]\n\nSezgi: Lineerlik sayesinde A'nın her giriş üzerindeki etkisi, baz vektörleri üzerindeki etkisinden belirleniyor. Baz vektörlerini nereye gönderdiğini bilirsen, her vektörü nereye gönderdiğini bilirsin.\n\nSomut örnek: A: P³ → P² (derecesi 3'ten küçük polinomlarda türev)\nX için e-baz: {1, t, t², t³}\nY için v-baz: {1, t, t²}\n\nA(e₁) = A(1) = 0 = 0·1 + 0·t + 0·t²  →  [A(e₁)]_v = [0,0,0]ᵀ\nA(e₂) = A(t) = 1 = 1·1 + 0·t + 0·t²  →  [A(e₂)]_v = [1,0,0]ᵀ\nA(e₃) = A(t²) = 2t = 0·1 + 2·t + 0·t²  →  [A(e₃)]_v = [0,2,0]ᵀ\nA(e₄) = A(t³) = 3t² = 0·1 + 0·t + 3·t²  →  [A(e₄)]_v = [0,0,3]ᵀ\n\nA = [0 1 0 0]\n    [0 0 2 0]\n    [0 0 0 3]\n\nTest: x(t) = a₀ + a₁t + a₂t² + a₃t³\nA(x) = a₁ + 2a₂t + 3a₃t²\n[A(x)]_v = [a₁, 2a₂, 3a₃]ᵀ\nA·[x]_e = A·[a₀,a₁,a₂,a₃]ᵀ = [a₁, 2a₂, 3a₃]ᵀ ✓"
+          "heading": "Range space nedir — A ne kadar yere ulaşabiliyor?",
+          "text": "A: X → Y operatörü için range space (görüntü uzayı, column space):\n  R(A) = {y ∈ Y : ∃x ∈ X öyle ki A(x) = y}\n  A'nın tüm olası çıktılarının kümesi.\n\nR(A) her zaman Y'nin alt uzayı. Kanıt:\n  y₁, y₂ ∈ R(A) → ∃x₁,x₂: A(x₁)=y₁, A(x₂)=y₂\n  A(αx₁+βx₂) = αA(x₁)+βA(x₂) = αy₁+βy₂ → αy₁+βy₂ ∈ R(A) ✓\n\nMatris için R(A) ne oluyor?\n  A ∈ ℂᴹˣᴺ, x ∈ ℂᴺ:\n  Ax = x₁a₁ + x₂a₂ + ... + xₙaₙ   ← sütunların lineer kombinasyonu\n  R(A) = span{a₁, a₂, ..., aₙ}      ← column space\n  dim(R(A)) = rank(A) = bağımsız sütun sayısı\n  rank(A) ≤ min(M,N)\n\nSP yorumu (konvolüsyon matrisi H: M×N, M > N):\n  R(H) ⊂ ℂᴹ ve dim(R(H)) = N < M\n  R(H) ≠ ℂᴹ → her y için çözüm mümkün değil!\n  Gürültülü ölçüm y genellikle R(H) dışında → tam çözüm yok.\n\nAnlamlı soru: 'Bu y'yi üreten bir x var mı?' = 'y ∈ R(A) mi?'"
         },
         {
           "type": "code",
-          "heading": "Konvolüsyon matrisi — LTI sistemi matris olarak yazma",
-          "text": "SP'nin en önemli lineer operatörü: konvolüsyon.\nx[n] ∈ ℂᴺ (N-uzunluklu giriş), h[n] ∈ ℂᴷ (K-uzunluklu filtre)\ny[n] = x[n]*h[n] ∈ ℂᴹ, M = N+K-1 (tam konvolüsyon uzunluğu)\n\nBunu matris olarak yaz: A: ℂᴺ → ℂᴹ, A(x) = H·x\n\ny(0) = h(0)x(0)\ny(1) = h(1)x(0) + h(0)x(1)\ny(2) = h(2)x(0) + h(1)x(1) + h(0)x(2)\n...\n\nMatris formu:\ny = H·x  (H: M×N konvolüsyon matrisi)\n\nH = [h(0)    0       0    ...  0   ]\n    [h(1)  h(0)      0    ...  0   ]\n    [h(2)  h(1)    h(0)   ...  0   ]\n    [ ...   ...     ...   ... ...  ]\n    [h(K-1) h(K-2) h(K-3) ... h(0) ]\n    [  0   h(K-1) h(K-2)  ... h(1) ]\n    [ ...   ...     ...   ... ...  ]\n    [  0     0       0    ... h(K-1)]\n\nYapı: Alt üçgen band matris. Her sütun bir öncekinin bir aşağı kaydırılmış hali (Toeplitz yapısı).\n\nNeden önemli? Artık konvolüsyon = matris-vektör çarpımı.\ny = H·x formunda yazdığın anda:\n- Ters problem teorisi uygulanabilir (y bilinen, x bilinmeyen)\n- Dekonvolüsyon = 'y = H·x verilen, x'i bul' → ters problem\n- Gürültülü durumda Least Squares çözümü mevcut"
-        },
-        {
-          "type": "insight",
-          "heading": "Baz değişiminin matris temsiline etkisi",
-          "text": "Aynı operatörün farklı bazlarda farklı matris temsilleri var. İlişki:\n  A' = T_{v→v'} · A · T_{e'→e}\n\nSomut anlamı: türev operatörü, standart baz {1,t,t²} ile bir matris verir, ama Legendre bazıyla başka bir matris verir. Matematiksel içerik aynı — sadece koordinat sistemi farklı.\n\nPratikte: DFT bazında konvolüsyon matrisi diyagonal olur. Yani frekans domeninde LTI sistemi = her frekansı ayrı ayrı ölçeklendirmek. Bu özellik sayesinde frekans domeninde analiz çok daha kolay."
-        }
-      ]
-    },
-    {
-      "title": "Range ve Null Uzayı — Operatörün Anatomisi",
-      "cat": "Foundations",
-      "summary": "Range space R(A): A'nın ulaşabildiği her yer. Null space N(A): A'nın sıfıra gönderdiği her şey. İkisi de alt uzay. R(A)=Y → surjective (existence). N(A)={0} → injective (uniqueness). Rank-Nullity teoremi: rank + nullity = N.",
-      "context": "EE499 · Chapter 2.3 — Range and Null Spaces",
-      "sections": [
-        {
-          "type": "code",
-          "heading": "Range space nedir ve SP'de ne anlama gelir?",
-          "text": "A: X → Y operatörü için:\n\nRange space (görüntü uzayı):\n  R(A) = {y ∈ Y : y = A(x) için bazı x ∈ X}\n  Yani A'nın X'teki her x'i Y'de nereye gönderebileceği — A'nın erişebildiği yer.\n\nR(A) her zaman Y'nin alt uzayı (ispatı: y₁,y₂ ∈ R(A) → αy₁+βy₂ ∈ R(A) — lineerlikten).\n\nMatris versiyonu:\n  A: ℂᴺ → ℂᴹ, y = Ax = x₁a₁ + x₂a₂ + ... + xₙaₙ  (sütun kombinasyonu)\n  R(A) = span{a₁, a₂, ..., aₙ}  (sütunların span'ı = column space)\n  dim(R(A)) = rank(A) = bağımsız sütun sayısı\n\nÖnemli sınır: dim(R(A)) ≤ min(M,N)\n- R(A), ℂᴹ'nin alt uzayı → dim ≤ M\n- R(A), N vektör tarafından span → dim ≤ N\n\nSP yorumu: Konvolüsyon matrisi H için R(H) ⊂ ℂᴹ.\nSadece N<M olduğundan R(H) ≠ ℂᴹ → her y için çözüm yok.\n'Bu y ile uyumlu bir giriş var mı?' sorusu = 'y ∈ R(H) mi?' sorusu."
-        },
-        {
-          "type": "code",
-          "heading": "Null space nedir ve ne anlama gelir?",
-          "text": "Null space (çekirdek):\n  N(A) = {x ∈ X : A(x) = 0}\n  Yani A'nın sıfıra gönderdiği tüm vektörler.\n\nN(A) her zaman X'in alt uzayı (alıştırma).\n\nMatris versiyonu:\n  N(A) = {x ∈ ℂᴺ : Ax = 0}  (homojen sistem çözümleri)\n  x ∈ N(A) ⟺ x₁a₁ + x₂a₂ + ... + xₙaₙ = 0  (sütunlar arası lineer bağımlılık)\n  dim(N(A)) = N - rank(A)  (Rank-Nullity teoremi)\n\nSP yorumu: N(A) = {0} ise → çözüm tekil.\nN(A) ≠ {0} ise → sonsuz çözüm var.\n\nKonvolüsyon örneği:\nH: ℂᴺ → ℂᴹ, M = N+K-1 > N (tall matrix)\nSütunlar = h'nin shifted versiyonları → lineer bağımsız (h ≠ 0 ve K≥2 için)\nN(H) = {0} → dim(N(H)) = 0\nYorum: Dekonvolüsyon problemi, çözüm varsa tekil. Var olmak zorunda değil ama varsa bir tane.\n\nRank-Nullity teoremi (Matris versiyonu):\n  dim(X) = rank(A) + dim(N(A))\n  N = rank(A) + nullity(A)\n\nDerin yapı: ℂᴺ = N(A) ⊕ R(Aᴴ) — input uzayı null space ve range of adjoint'in direkt toplamı.\nBenzer: ℂᴹ = R(A) ⊕ N(Aᴴ)"
+          "heading": "Null space nedir — A neyi yok ediyor?",
+          "text": "Null space (çekirdek, kernel):\n  N(A) = {x ∈ X : A(x) = 0}\n  A'nın sıfıra gönderdiği tüm vektörler.\n\nN(A) her zaman X'in alt uzayı:\n  x₁,x₂ ∈ N(A) → A(αx₁+βx₂) = αA(x₁)+βA(x₂) = 0 ✓\n\nMatris için N(A):\n  N(A) = {x ∈ ℂᴺ : Ax = 0}   (homojen sistemin çözüm kümesi)\n  Ax = 0 → x₁a₁+...+xₙaₙ = 0 → sütunlar arası lineer bağımlılık.\n  Sütunlar bağımsızsa → yalnız x=0 → N(A) = {0}\n  Sütunlar bağımlıysa → sonsuz çözüm → N(A) 'büyük'\n\nRank-Nullity Teoremi:\n  rank(A) + dim(N(A)) = N\n  Yani: rank(A) + nullity(A) = N\n\nSezgi: Giriş uzayı N boyutlu. Bunun rank(A) boyutu çıktıya geçiyor.\nGeri kalan nullity(A) boyutu N(A)'ya düşüyor — A bunları yok ediyor.\n\nDört alt uzay (fundamental theorem):\n  ℂᴺ = N(A) ⊕ R(Aᴴ)   (giriş uzayı: null space + row space)\n  ℂᴹ = R(A) ⊕ N(Aᴴ)   (çıkış uzayı: column space + left null space)\n  Bu dört alt uzay birbirini tamamlıyor — lineer cebirin temel yapısı."
         },
         {
           "type": "compare",
-          "heading": "Range space vs Null space — karşılaştırma",
+          "heading": "Range space vs Null space özet",
           "left": {
             "title": "Range Space R(A)",
             "points": [
               "Y'nin alt uzayı",
               "dim = rank(A) ≤ min(M,N)",
-              "R(A) = Y ↔ A surjective (onto)",
-              "Existence: çözüm var ↔ y ∈ R(A)",
               "Matris: sütunların span'ı",
-              "R(A) = ℂᴹ ↔ full row rank"
+              "R(A) = Y ↔ A surjective (onto)",
+              "R(A) = ℂᴹ ↔ full row rank (rank=M)",
+              "Existence: y ∈ R(A) iff çözüm var"
             ]
           },
           "right": {
@@ -6226,869 +6154,232 @@
             "points": [
               "X'in alt uzayı",
               "dim = N - rank(A)",
-              "N(A) = {0} ↔ A injective (1-to-1)",
-              "Uniqueness: tekil ↔ N(A) = {0}",
               "Matris: Ax=0'ın çözüm kümesi",
-              "N(A) = {0} ↔ full column rank"
+              "N(A) = {0} ↔ A injective (1-to-1)",
+              "N(A) = {0} ↔ full column rank (rank=N)",
+              "Uniqueness: N(A)={0} iff çözüm tekil"
             ]
           }
         }
       ]
     },
     {
-      "title": "Ters Problem — Existence ve Uniqueness Çerçevesi",
-      "cat": "Applications",
-      "summary": "Ters problem: A(x)=y verilen, x bul. Existence ↔ y ∈ R(A) ↔ A surjective. Uniqueness ↔ N(A)={0} ↔ A injective. Bijective ise tam ters A⁻¹ var ve bu da lineer. Ters problem doğru çerçeve = range + null space analizi.",
-      "context": "EE499 · Chapter 2.3 — Inverse Problems",
-      "sections": [
-        {
-          "type": "code",
-          "heading": "Ters problem ve iki temel soru",
-          "text": "Ters problem: A: X → Y verilmiş, y ∈ Y verilen, A(x) = y'yi sağlayan x ∈ X bul.\n\nSP'deki somut formlar:\n- Dekonvolüsyon: y = H·x verilen (gözlemlenen sinyal), H ve y bilinen → x bul (orijinal sinyal)\n- CT rekonstrüksiyon: y = Rf verilen (projektörler), R bilinen → f bul (görüntü)\n- Sistem tanımlama: y = H·x verilen, x bilinen → H bul (filtre)\n\nHerhangi bir problemi çözmeye başlamadan önce iki soru:\n\nSoru 1 — Existence (Varlık):\nA(x) = y'nin en az bir çözümü var mı?\n→ Cevap: y ∈ R(A) iff çözüm var.\n\nSoru 2 — Uniqueness (Tekillik):\nVarsa bu çözüm tek mi?\n→ Cevap: Çözüm tekil iff N(A) = {0}\n   Kanıt: İki çözüm x₁, x₂ varsa A(x₁) = A(x₂) = y → A(x₁-x₂) = 0 → x₁-x₂ ∈ N(A).\n   N(A) = {0} ise x₁-x₂ = 0 → x₁ = x₂ (tekil)\n   N(A) ≠ {0} ise, x₀ ∈ N(A), x₀ ≠ 0 alınabilir → x₁ + x₀ başka bir çözüm.\n\nÖnemli ince nokta: Uniqueness kontrolü, existence gerektirmez!\nN(A) = {0} olup olmadığını y'yi hiç bilmeden söyleyebilirsin."
-        },
-        {
-          "type": "code",
-          "heading": "Üç temel fact — existence ve uniqueness ile operatör özellikleri",
-          "text": "FACT 1 — Existence ↔ Surjective:\n  A(x) = y'nin her y ∈ Y için en az bir çözümü var\n  ↔ A surjective (onto)\n  ↔ R(A) = Y\n\nFACT 2 — Uniqueness ↔ Injective:\n  A(x) = y'nin her y için en fazla bir çözümü var\n  ↔ A injective (1-to-1)\n  ↔ N(A) = {0}\n\n  İspat (→): Varsay x₀ ∈ N(A), x₀ ≠ 0. A(x₀) = 0 = A(0).\n  Yani hem x₀ hem 0, A(·) = 0 denkleminin çözümü → uniqueness bozuluyor.\n  Bu yüzden N(A) = {0} gerekiyor.\n\nFACT 3 — Existence+Uniqueness ↔ Bijective:\n  Her y için tam bir çözüm var\n  ↔ A bijective\n  ↔ R(A) = Y ve N(A) = {0}\n  → Tam ters A⁻¹: Y → X mevcuttur ve A⁻¹ da lineer.\n\n  A lineer ise A⁻¹ da lineer:\n  A⁻¹(αy₁ + βy₂) = A⁻¹(αA(x₁) + βA(x₂)) = A⁻¹(A(αx₁+βx₂)) = αx₁+βx₂\n  = α A⁻¹(y₁) + β A⁻¹(y₂) ✓\n\nSP bağlantısı: Çoğu gerçek problem bijective değil. O yüzden:\n- R(A) ≠ Y ise tam çözüm yok → en iyi yaklaşım (Least Squares)\n- N(A) ≠ {0} ise sonsuz çözüm → en küçük normlu (Minimum Norm)"
-        }
-      ]
-    },
-    {
-      "title": "4 Durum Tablosu — Matris Şekli ve Rank ile",
-      "cat": "Applications",
-      "summary": "Lineer sistemi A·x=y çözerken 4 durum var. Matrisin şekli (tall/fat/square) ve rank'ı (full row/col) existence+uniqueness'ı belirler. Case 0: invertible. Case 1: tall, LS. Case 2: fat, min-norm. Case 3: degenerate.",
-      "context": "EE499 · Chapter 2.4 — Four Cases of Linear Systems",
-      "sections": [
-        {
-          "type": "code",
-          "heading": "4 durum çerçevesi — neden tam olarak 4 durum?",
-          "text": "Lineer sistem A ∈ ℂᴹˣᴺ, y ∈ ℂᴹ, bul x ∈ ℂᴺ öyle ki y = Ax.\n\nExistence ve uniqueness bağımsız sorular:\n- Existence: R(A) = ℂᴹ ↔ rank(A) = M ↔ full row rank ↔ (M ≤ N gerekli koşul)\n- Uniqueness: N(A) = {0} ↔ rank(A) = N ↔ full column rank ↔ (M ≥ N gerekli koşul)\n\n4 kombinasyon:\n\nCase 0 (İdeal): Full row rank VE full column rank\n  → M = N = rank(A)  (square, invertible)\n  → Her y için tam bir çözüm: x = A⁻¹y\n\nCase 1 (Tall matrix): Full column rank, NOT full row rank\n  → M > N, rank = N\n  → Existence yok garantisi (R(A) ⊂ ℂᴹ)\n  → Uniqueness var (N(A) = {0})\n  → Çözüm varsa tekil, yoksa Least Squares\n\nCase 2 (Fat matrix): Full row rank, NOT full column rank\n  → M < N, rank = M\n  → Existence garantili (R(A) = ℂᴹ)\n  → Uniqueness yok (N(A) ≠ {0})\n  → Sonsuz çözüm var, seç: Minimum Norm\n\nCase 3 (Degenerate): NOT full row rank AND NOT full column rank\n  → rank(A) < min(M,N)\n  → Ne existence ne uniqueness\n  → En zor durum — genelleştirilmiş pseudo-inverse gerektirir"
-        },
-        {
-          "type": "table",
-          "heading": "4 durum özet tablosu",
-          "rows": [
-            [
-              "Durum",
-              "Matris Tipi",
-              "Existence?",
-              "Uniqueness?",
-              "Çözüm",
-              "SP Örneği"
-            ],
-            [
-              "Case 0",
-              "Square (M=N) full rank",
-              "✓ Her y için",
-              "✓ Tekil",
-              "x = A⁻¹y",
-              "Eşit boyutlu sistem"
-            ],
-            [
-              "Case 1",
-              "Tall (M>N) full col rank",
-              "✗ Garantisiz",
-              "✓ Varsa tekil",
-              "x_LS = (AᴴA)⁻¹Aᴴy",
-              "Dekonvolüsyon, CT rekon."
-            ],
-            [
-              "Case 2",
-              "Fat (M<N) full row rank",
-              "✓ Her y için",
-              "✗ Sonsuz çözüm",
-              "x_MN = Aᴴ(AAᴴ)⁻¹y",
-              "Underdetermined sistem"
-            ],
-            [
-              "Case 3",
-              "Rank deficient",
-              "✗ Garantisiz",
-              "✗ Tekil değil",
-              "Pseudo-inverse (SVD)",
-              "Kötü koşullu sistemler"
-            ]
-          ]
-        },
-        {
-          "type": "code",
-          "heading": "Case 0 bile sorunlu olabilir — gürültü amplifikasyonu",
-          "text": "Case 0'da A invertible ve x = A⁻¹y doğru görünüyor. Ama iki pratik sorun var:\n\nSorun 1 — Gürültü amplifikasyonu (noise amplification):\nGerçek ölçümde: y_tilde = y + n (n: gürültü)\nx_estimated = A⁻¹ y_tilde = A⁻¹(Ax + n) = x + A⁻¹n\n\nA kötü koşulluysa (ill-conditioned): A⁻¹ çok büyük olabilir.\n→ A⁻¹n >> n → gürültü amplify olur → çözüm berbat.\n\nCondition number: κ(A) = ||A||·||A⁻¹|| — büyükse ill-conditioned.\nDekonvolüsyon sorununda H genellikle kötü koşullu → doğrudan ters alma işe yaramıyor.\n\nSorun 2 — Büyük matris:\nGerçek görüntü işleme problemlerinde A çok büyük olabilir (milyonlar×milyonlar).\n→ A⁻¹ hesaplanamaz veya saklanamaz.\nDüzenleştirme (regularization) gerekli: min ||Ax-y||² + λ||x||²\n\nSonuç: Case 0 'kolay' görünse de pratikte regularization olmadan kullanmak tehlikeli."
-        }
-      ]
-    },
-    {
-      "title": "Case 1: Least Squares Çözümü — Tall Matrix",
-      "cat": "Applications",
-      "summary": "Tall matrix (M>N, full column rank): çözüm olmayabilir ama LS en iyi yaklaşımı bulur. Normal denklem: AᴴA·x_LS = Aᴴy. Çözüm: x_LS = (AᴴA)⁻¹Aᴴy. Geometrik yorum: y'yi R(A)'ya proje et.",
-      "context": "EE499 · Chapter 2.4 — Case 1: Least Squares",
-      "sections": [
-        {
-          "type": "code",
-          "heading": "Least Squares problemi neden gerekli? Geometrik sezgi",
-          "text": "A: ℂᴺ → ℂᴹ, M > N (tall matrix), full column rank.\nSorun: y ∈ ℂᴹ verilen, ama R(A) ⊂ ℂᴹ (tam değil).\nÇoğu y için Ax = y'nin tam çözümü yok.\n\nNe yapabiliriz? Tam çözüm yerine en iyi yaklaşımı ara:\n  x_LS = argmin_{x} ||y - Ax||₂²\n\nBu 'en iyi yaklaşım' iki perspektiften görülebilir:\n\nPerspektif 1 — Optimizasyon:\nKayıp fonksiyonu J(x) = ||y - Ax||₂² minimize et.\nGradyeni sıfırla → Normal denklem.\n\nPerspektif 2 — Projeksiyon:\nLeast Squares çözümü geometrik olarak şu demek:\n'y'yi R(A) alt uzayına proje et, adına ŷ_LS de.\nsonra ŷ_LS = A·x_LS'i sağlayan x_LS'i bul.'\n\ny - ŷ_LS ⊥ R(A)  (ortogonallik prensibi)\n→ y - Ax_LS, R(A)'nın her sütununa dik\n→ aₖᴴ(y - Ax_LS) = 0 her k için\n→ Aᴴ(y - Ax_LS) = 0\n→ AᴴAx_LS = Aᴴy  (Normal denklem!)\n\nHer iki perspektif aynı sonucu veriyor."
-        },
-        {
-          "type": "code",
-          "heading": "Normal denklem türetimi — matris kalkülüsü ile",
-          "text": "Gerçel değerli durum için (ℝ'da):\nJ(x) = ||y - Ax||₂² = (y-Ax)ᵀ(y-Ax) = yᵀy - yᵀAx - xᵀAᵀy + xᵀAᵀAx\n\nMatris türevi kuralları:\n- ∇_x(aᵀx) = a\n- ∇_x(xᵀBx) = (B+Bᵀ)x, simetrik B için = 2Bx\n\n∇_x J(x) = 0 - Aᵀy - Aᵀy + 2AᵀAx = 0\n→ -2Aᵀy + 2AᵀAx = 0\n→ AᵀAx_LS = Aᵀy  (Normal denklem, gerçel)\n\nKarmaşık değerli durum (ℂ'de):\n  AᴴAx_LS = Aᴴy\n\nNeden AᴴA invertible? A full column rank → N(A) = {0}\nAᴴAx = 0 ⟹ xᴴAᴴAx = 0 ⟹ ||Ax||² = 0 ⟹ Ax = 0 ⟹ x = 0  (N(A)={0})\nYani N(AᴴA) = {0} → AᴴA invertible.\n\nÇözüm:\n  x_LS = (AᴴA)⁻¹Aᴴy\n\n(AᴴA)⁻¹Aᴴ buna Moore-Penrose left pseudo-inverse denir: A† = (AᴴA)⁻¹Aᴴ\n\nŷ_LS = A·x_LS = A(AᴴA)⁻¹Aᴴy = P_{R(A)} y  (y'nin R(A)'ya projeksiyonu)\nProjektion matrisi: P = A(AᴴA)⁻¹Aᴴ — bu tam olarak Chapter 1'deki projeksiyon formülü!"
-        },
-        {
-          "type": "code",
-          "heading": "Somut örnek: Dekonvolüsyon problemi",
-          "text": "Gerçek problem: Filtre h ile konvolüsyona uğramış y gözlemleniyor, orijinal x'i bul.\ny = H·x  (H: M×N konvolüsyon matrisi, M=N+K-1)\n\nCase 1 durumu: H tall (M>N), full column rank → N(H) = {0} (sütunlar bağımsız)\n- Existence: y ∈ R(H) olmayabilir (gürültü varsa genellikle değil)\n- Uniqueness: Varsa tekil\n\nLS çözümü:\n  x_LS = (HᴴH)⁻¹Hᴴy  (least squares deconvolution)\n  Hᴴy: frekans domeninde matched filtering\n  (HᴴH)⁻¹: inverting spectral distortion\n\nSorun: H kötü koşullu → (HᴴH)⁻¹ gürültüyü amplifiye eder.\nÇözüm: Regularized LS: min ||y-Hx||² + λ||x||² → x_reg = (HᴴH + λI)⁻¹Hᴴy\n\nProjektion yorumu:\nŷ_LS = Hx_LS = P·y (y'nin R(H)'a projeksiyonu)\nR(H) = reachable outputs (konvolüsyon yapılabilen sinyaller)\nŷ_LS bu kümede y'ye en yakın nokta."
-        }
-      ]
-    },
-    {
-      "title": "Case 2: Minimum Norm Çözümü — Fat Matrix",
-      "cat": "Applications",
-      "summary": "Fat matrix (M<N, full row rank): sonsuz çözüm var. T = {xₚ} + N(A). Minimum norm çözümü N(A)'ya dik olan çözüm: x_MN = Aᴴ(AAᴴ)⁻¹y. Geometrik yorum: null space'i 'kapalı tut'.",
-      "context": "EE499 · Chapter 2.4 — Case 2: Minimum Norm",
-      "sections": [
-        {
-          "type": "code",
-          "heading": "Sonsuz çözümler — solution set yapısı",
-          "text": "A: ℂᴺ → ℂᴹ, M < N (fat matrix), full row rank.\nSorun: R(A) = ℂᴹ → her y için çözüm var. Ama N(A) ≠ {0} → sonsuz çözüm!\n\nTüm çözüm kümesi:\nx_particular: özel bir çözüm (Ax_p = y)\nxₙ ∈ N(A): null space elemanı\n\nx = x_p + xₙ de bir çözüm:\n  A(x_p + xₙ) = Ax_p + Axₙ = y + 0 = y  ✓\n\nTüm çözüm kümesi:\n  T = {xₚ} + N(A) = {xₚ + xₙ : xₙ ∈ N(A)}\n\nBu T bir 'linear variety' (alt uzayın ötelenmesi). Alt uzay değil (sıfırı içermeyebilir).\n\nSomut örnek:\nA = [1 0 0],  y = [2/3]\n    [0 1 0]       [5/3]\n→ Rank = 2, N = 3, null space = span{[0,0,1]ᵀ}\nŞu x'ler hepsi çözüm: [2/3, 5/3, 0]ᵀ, [2/3, 5/3, 1]ᵀ, [2/3, 5/3, -42]ᵀ...\n\nHangisini seçelim? Ek kısıt gerekiyor."
-        },
-        {
-          "type": "code",
-          "heading": "Minimum norm çözümü — seçim kriteri ve formül",
-          "text": "Kısıt: T içinden en küçük normlu çözümü seç:\n  x_MN = argmin_{x: Ax=y} ||x||₂\n\nGeometrik sezgi:\nT = {xₚ} + N(A) bir hiperplane (subspace'in ötelenmesi).\n||x|| minimize etmek = orijine en yakın T noktasını bul.\n\nOrtogonallik prensibi:\nT'deki en yakın nokta x_MN ↔ x_MN ⊥ N(A)\n(Hata vektörü = x_MN - 0 = x_MN, alt uzay = N(A))\n\nFormül türetimi:\nx_MN ⊥ N(A) → x_MN = Aᴴz (herhangi z için — bu N(A)⊥ = R(Aᴴ) olduğundan)\n\nBunu Ax = y'ye koy:\n  A(Aᴴz) = y → (AAᴴ)z = y\n  AAᴴ ∈ ℂᴹˣᴹ — full row rank → invertible (M×M)\n  z = (AAᴴ)⁻¹y\n\nSonuç:\n  x_MN = Aᴴz = Aᴴ(AAᴴ)⁻¹y\n\nAᴴ(AAᴴ)⁻¹ buna right pseudo-inverse denir: A† = Aᴴ(AAᴴ)⁻¹\n\nTest: A·x_MN = A·Aᴴ(AAᴴ)⁻¹y = (AAᴴ)(AAᴴ)⁻¹y = y ✓"
-        },
-        {
-          "type": "compare",
-          "heading": "Least Squares vs Minimum Norm — karşılaştırma",
-          "left": {
-            "title": "Case 1 — Least Squares (Tall)",
-            "points": [
-              "M > N, full column rank",
-              "Çözüm yoksa en yakın",
-              "x_LS = (AᴴA)⁻¹Aᴴy",
-              "(AᴴA)⁻¹Aᴴ = left pseudo-inverse",
-              "ŷ_LS = A·x_LS = y'nin R(A)'ya projeksiyonu",
-              "SP: dekonvolüsyon, CT rekon."
-            ]
-          },
-          "right": {
-            "title": "Case 2 — Minimum Norm (Fat)",
-            "points": [
-              "M < N, full row rank",
-              "Sonsuz çözümden en küçüğü",
-              "x_MN = Aᴴ(AAᴴ)⁻¹y",
-              "Aᴴ(AAᴴ)⁻¹ = right pseudo-inverse",
-              "x_MN ⊥ N(A): null space bileşeni sıfır",
-              "SP: underdetermined sistem, interpolasyon"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "title": "Pseudo-Inverse — 4 Durumu Birleştiren Formül",
-      "cat": "Signal Processing",
-      "summary": "Moore-Penrose pseudo-inverse A† dört durum için de tanımlı. Case 0: A†=A⁻¹. Case 1: A†=(AᴴA)⁻¹Aᴴ. Case 2: A†=Aᴴ(AAᴴ)⁻¹. Case 3: SVD ile. A†y her zaman minimum norm LS çözümü.",
-      "context": "EE499 · Chapter 2.4 — Summary and Pseudo-Inverse",
-      "sections": [
-        {
-          "type": "code",
-          "heading": "Pseudo-inverse neden gerekli ve ne garanti eder?",
-          "text": "A: ℂᴹˣᴺ matrisi, y ∈ ℂᴹ.\nHer durumda şu soruyu sormak istiyoruz: 'En iyi x nedir?'\n\n'En iyi' derken:\n- Çözüm varsa: minimum norm çözümü seç\n- Çözüm yoksa: en küçük artık normu (LS) + o artıklar içinde minimum norm\n\nBu ikisini birleştiren şey: Moore-Penrose pseudo-inverse A†\n  x† = A†y  → minimum norm least squares çözümü\n\n4 durum için pseudo-inverse:\n\nCase 0: A square, invertible\n  A† = A⁻¹  (tam ters)\n\nCase 1: A tall (M>N), full column rank\n  A† = (AᴴA)⁻¹Aᴴ  (left pseudo-inverse)\n  A†A = I_N ✓  (left inverse)\n  AA† = P_{R(A)} ≠ I_M (projeksiyon, R(A)'ya)\n\nCase 2: A fat (M<N), full row rank\n  A† = Aᴴ(AAᴴ)⁻¹  (right pseudo-inverse)\n  AA† = I_M ✓  (right inverse)\n  A†A = P_{R(Aᴴ)} ≠ I_N (projeksiyon, R(Aᴴ)'ya)\n\nCase 3: rank-deficient\n  A† = VΣ†Uᴴ  (SVD ile hesaplanır)\n  Σ† = diag(1/σ₁,...,1/σᵣ,0,...,0)  (sıfır olmayan tekil değerlerin tersini al)"
-        },
-        {
-          "type": "code",
-          "heading": "Dersin büyük resmi — her şey nasıl birbirine bağlandı?",
-          "text": "EE499'un Chapter 1+2 tamamen bağlantılı. Büyük resim:\n\nChapter 1'den gelen araçlar:\n- Vektör uzayı → sinyaller, filtreler, görüntüler → hepsi vektör\n- Norm → 'hatanın büyüklüğü' ölçüsü\n- İç çarpım → ortogonallik, projeksiyon katsayıları\n- Projeksiyon teoremi → 'en yakın nokta = diklik koşulu'\n- Gram-Schmidt → ortonormal baz, kolay katsayı hesabı\n\nChapter 2'de bunlar nasıl kullandı:\n- Lineer operatör → sistem = F(sinyaller) → sinyaller\n- Matris gösterimi → her problemi y = Ax formuna getir\n- Range space → 'çözüm var mı?' sorusu\n- Null space → 'çözüm tekil mi?' sorusu\n- Rank-Nullity → uzayın yapısı\n- 4 durum → her gerçek problemi sınıflandır\n- LS çözümü = projeksiyon (Chapter 1!) onto R(A)\n- Min-norm çözümü = N(A)'ya diklik (Chapter 1!)\n\nOrtak mesaj:\n'Verilen y = Ax problemi için, en iyi x'i bulmak\n= doğru alt uzaya projeksiyon yapmak'\n\nVe bu her SP problemine uygulanıyor:\n- FIR filtre tasarımı: istenen frekans yanıtına en yakın gerçekleştirilebilir filtre bul\n- CT rekonstrüksiyon: sınırlı sayıda projektörden görüntüyü bul\n- Deblurring: bulanıklaştırma operatörünün psödo-inversini al\n- Örnekleme: örneklerden bantlı sinyal rekonstrüksiyonu = Sinc baz projeksiyonu"
-        },
-        {
-          "type": "table",
-          "heading": "EE499 Chapter 2 — tüm kavramlar ve bağlantılar",
-          "rows": [
-            [
-              "Kavram",
-              "Tanım",
-              "SP Anlamı"
-            ],
-            [
-              "Linear operator A: X→Y",
-              "A(αx+βy) = αA(x)+βA(y)",
-              "LTI filtre, türev, Fourier"
-            ],
-            [
-              "Matrix representation",
-              "[A(x)]_v = A·[x]_e",
-              "Sonlu boyut → matris çarpımı"
-            ],
-            [
-              "Convolution matrix H",
-              "Toeplitz, tall, M×N, M=N+K-1",
-              "LTI sistemi matris olarak"
-            ],
-            [
-              "Range space R(A)",
-              "span{columns of A}",
-              "Ulaşılabilir çıkışlar"
-            ],
-            [
-              "Null space N(A)",
-              "{x: Ax=0}",
-              "Silinip giden girişler"
-            ],
-            [
-              "Rank-Nullity",
-              "rank + nullity = N",
-              "Uzayın temel boyut ilişkisi"
-            ],
-            [
-              "Case 0: invertible",
-              "M=N, full rank, A†=A⁻¹",
-              "Nadir, noise amplification riski"
-            ],
-            [
-              "Case 1: LS",
-              "M>N, full col rank, x=(AᴴA)⁻¹Aᴴy",
-              "Dekonvolüsyon, CT rekon."
-            ],
-            [
-              "Case 2: min-norm",
-              "M<N, full row rank, x=Aᴴ(AAᴴ)⁻¹y",
-              "Underdetermined, interpolasyon"
-            ],
-            [
-              "Case 3: SVD",
-              "rank-deficient, A†=VΣ†Uᴴ",
-              "Kötü koşullu, regularize et"
-            ]
-          ]
-        }
-      ]
-    },
-    {
-      "title": "Baz Değişimi ve Operatör Matrisi — A' = T A T⁻¹",
+      "title": "Ters Problem — Existence, Uniqueness ve Bijection",
       "cat": "Foundations",
-      "summary": "Aynı lineer operatörün farklı bazlarda farklı matris temsilleri var: A'_{e'→v'} = T_{v→v'} · A_{e→v} · T_{e'→e}. Konvolüsyon DFT bazında diyagonal olur — bu frekans analizinin matematiksel temeli. Baz seçimi problemi basitleştirir.",
-      "context": "EE499 · Chapter 2.2.1 — Change of Basis for Operators",
+      "summary": "Ters problem: A(x)=y verilmiş, x bul. Existence sorusu y ∈ R(A)'ya, uniqueness sorusu N(A)={0}'a indirgeniyor. Bijective operatörde her iki koşul sağlanır → A⁻¹ vardır ve o da lineer. Bu iki soru birbirinden bağımsız ve y'yi bilmeden uniqueness test edilebilir.",
+      "context": "EE499 · Inverse Problems",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "İki temel soru — çözüme başlamadan sorulması gerekenler",
+          "text": "Forward problem: x bilinen → A(x) = y hesapla. (Kolay)\nInverse problem: y bilinen, A bilinen → A(x) = y'yi sağlayan x bul. (Zor)\n\nSP'deki somut ters problemler:\n  Dekonvolüsyon:      y = Hx (bulanık görüntü) → x bul\n  CT rekonstrüksiyon: y = Rf (x-ray ölçümleri) → f bul\n  Sistem tanımlama:   y = Hx, x biliniyor → H bul\n  Gürültü giderme:    y = x + n → x bul\n\nHepsinde ortak yapı: A lineer, y gözlemlendi, x bilinmiyor.\n\nÇözmeye başlamadan önce iki bağımsız soru:\n\nSoru 1 — Existence (Varlık):\n  A(x) = y'nin en az bir çözümü var mı?\n  Cevap: y ∈ R(A) iff çözüm var.\n  R(A) ≠ Y ise → bazı y değerleri için çözüm hiç yok.\n\nSoru 2 — Uniqueness (Tekillik):\n  Varsa, bu çözüm tek mi?\n  Cevap: N(A) = {0} iff çözüm tekil.\n\nÖnemli fark:\n  Uniqueness, y'yi bilmeden test edilebilir — sadece N(A) = {0} mi bak.\n  Existence ise y'ye bağlı: y ∈ R(A) mı kontrol et.\n  Bu bağımsızlık çok pratik: sistemi analiz et, sonra veriye bak."
+        },
+        {
+          "type": "code",
+          "heading": "Uniqueness kanıtı ve bijection",
+          "text": "Neden N(A) = {0} uniqueness garantisi veriyor?\n\nKanıt:\n  x₁ ve x₂ her ikisi de A(x) = y'yi sağlasın:\n    A(x₁) = y  ve  A(x₂) = y\n\n  Çıkartalım:\n    A(x₁) - A(x₂) = 0\n    A(x₁ - x₂) = 0   ← lineerlikten\n    x₁ - x₂ ∈ N(A)\n\n  N(A) = {0} ise: x₁ - x₂ = 0 → x₁ = x₂ ✓  tekil\n  N(A) ≠ {0} ise: n₀ ∈ N(A), n₀ ≠ 0 alınabilir\n    x₁ + n₀ da çözüm: A(x₁+n₀) = A(x₁)+A(n₀) = y+0 = y\n    Demek sonsuz çözüm var. ✗\n\nÜç önemli fact:\n  Existence ↔ A surjective (R(A) = Y)\n  Uniqueness ↔ A injective (N(A) = {0})\n  Her ikisi ↔ A bijective → A⁻¹: Y → X mevcuttur.\n\nA⁻¹ de lineer:\n  A⁻¹(αy₁+βy₂) = A⁻¹(αA(x₁)+βA(x₂))\n  = A⁻¹(A(αx₁+βx₂)) = αx₁+βx₂\n  = α A⁻¹(y₁) + β A⁻¹(y₂) ✓\n\nPratikte: Çoğu SP problemi bijective değil.\n  R(A) ≠ Y → tam çözüm yok → Least Squares\n  N(A) ≠ {0} → sonsuz çözüm → Minimum Norm\n  Her iki sorun birlikte → Pseudo-inverse"
+        }
+      ]
+    },
+    {
+      "title": "4 Durum — Matris Boyutu, Rank ve Çözüm Stratejisi",
+      "cat": "Applications",
+      "summary": "Matrisin boyutu (tall/fat/square) ve rank'ı, existence + uniqueness'ı belirliyor. Case 0: square+full rank → tam çözüm. Case 1: tall → LS. Case 2: fat → min-norm. Case 3: rank-deficient → SVD. Case 0 bile gürültüde tehlikeli: condition number büyükse A⁻¹n >> n.",
+      "context": "EE499 · Four Cases of Linear Systems",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Neden tam olarak 4 durum var?",
+          "text": "A ∈ ℂᴹˣᴺ, sistem: Ax = y\n\nExistence  ↔ R(A) = ℂᴹ ↔ rank(A) = M ↔ full row rank\n  Bunun için M ≤ N gerekli (satır sayısı ≤ sütun sayısı).\n\nUniqueness ↔ N(A) = {0}  ↔ rank(A) = N ↔ full column rank\n  Bunun için M ≥ N gerekli.\n\nBu iki bağımsız koşul 4 kombinasyon veriyor:\n\n─────────────────────────────────────────────────────────\nCase 0 — Square + full rank: M = N = rank(A)\n  Existence ✓ her y için   Uniqueness ✓ tekil\n  → Tam ters var: x = A⁻¹y\n  SP: Eşit boyutlu, iyi koşullanmış sistem (ama gürültüde sorun olabilir)\n─────────────────────────────────────────────────────────\nCase 1 — Tall: M > N, rank = N (full column rank)\n  Existence ✗ çoğu y için   Uniqueness ✓ varsa tekil\n  → Least Squares: x_LS = (AᴴA)⁻¹Aᴴy\n  SP: Dekonvolüsyon, CT rekonstrüksiyon (daha fazla denklem, daha az bilinmeyen)\n─────────────────────────────────────────────────────────\nCase 2 — Fat: M < N, rank = M (full row rank)\n  Existence ✓ her y için   Uniqueness ✗ sonsuz çözüm\n  → Minimum Norm: x_MN = Aᴴ(AAᴴ)⁻¹y\n  SP: Underdetermined sistem (az ölçüm, çok bilinmeyen)\n─────────────────────────────────────────────────────────\nCase 3 — Rank-deficient: rank < min(M,N)\n  Existence ✗   Uniqueness ✗\n  → SVD ile pseudo-inverse: x† = VΣ†Uᴴy\n  SP: Kötü koşullanmış, bozuk sistemler\n─────────────────────────────────────────────────────────"
+        },
+        {
+          "type": "code",
+          "heading": "Case 0 bile tehlikeli olabilir — gürültü amplifikasyonu",
+          "text": "Case 0'da A invertible, x = A⁻¹y tam çözüm verir. Ne kadar kolay!\nAma gerçek ölçümde gürültü var:\n  ỹ = y + n  (n: gürültü vektörü)\n  x̂ = A⁻¹ỹ = A⁻¹(Ax + n) = x + A⁻¹n\n\nHata: A⁻¹n\nBu ne kadar büyük olabilir?\n  ||x̂ - x|| = ||A⁻¹n|| ≤ ||A⁻¹|| · ||n||\n  Göreceli hata ≤ ||A|| · ||A⁻¹|| · (||n|| / ||y||) = κ(A) · göreli_gürültü\n\nCondition number (kondisyon sayısı):\n  κ(A) = ||A|| · ||A⁻¹|| = σ_max / σ_min  (maksimum/minimum tekil değer oranı)\n\n  κ(A) ≈ 1:    iyi koşullanmış → gürültü amplifiye olmuyor → güvenli\n  κ(A) >> 1:   kötü koşullanmış → küçük gürültü büyük hata!\n\nKonvolüsyon örneği:\n  Frekans domeninde: Y[k] = H[k]·X[k]\n  Naif dekonvolüsyon: X̂[k] = Y[k]/H[k] = X[k] + N[k]/H[k]\n  |H[k]| = 0.001 → N[k]/H[k] = 1000·N[k] → 1000 kat amplifikasyon!\n  Yüksek frekanslarda H[k] → 0 → durum daha da kötü.\n\nÇözüm — Tikhonov regularization:\n  min ||Ax - y||² + λ||x||²\n  x_reg = (AᴴA + λI)⁻¹Aᴴy\n  λ küçük: az düzenleme, gürültü amplifikasyonu riski\n  λ büyük: fazla düzenleme, yüksek frekanslar baskılanır\n  Optimal λ: bias-variance tradeoff\n\nBüyük ölçekli problem:\n  Gerçek görüntü rekonstrüksiyonunda A milyonlar × milyonlar boyutunda.\n  A⁻¹ depolanamaz → iteratif yöntemler (CG, LSQR) gerekli."
+        }
+      ]
+    },
+    {
+      "title": "Least Squares — Tall Matrix Sorunu ve Normal Denklem",
+      "cat": "Applications",
+      "summary": "Case 1 (tall, M>N, full column rank): Çoğu y için Ax=y çözümsüz. Çözüm: ||y-Ax||² minimize et. Geometrik anlam: y'yi R(A)'ya proje et. Normal denklem AᴴAx=Aᴴy iki yoldan türetiliyor: matris türevi ve projeksiyon dikliği — ikisi aynı sonucu veriyor.",
+      "context": "EE499 · Least Squares",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "LS problemi neden gerekli?",
+          "text": "Case 1 durumu: A ∈ ℂᴹˣᴺ, M > N, full column rank.\nR(A) ⊂ ℂᴹ, R(A) ≠ ℂᴹ → çoğu y için Ax=y'nin çözümü yok.\n\nNeden gürültülü ölçümde bu hep karşımıza çıkıyor?\n  Gerçekte: y₀ = Ax₀ ∈ R(A)  (temiz sinyal R(A)'da)\n  Ölçüm:   y = y₀ + n         (gürültü eklendi → R(A) dışına çıktı)\n  → y ∉ R(A) → tam çözüm yok.\n\nNe yapıyoruz?\nTam çözüm yerine en küçük hatayı veren x'i arıyoruz:\n  x_LS = argmin_{x} ||y - Ax||₂²\n  ('y'ye en yakın olan Ax'i veren x')\n\nGeometrik sezgi:\n  ℝ²'deki örnek: y bir nokta, R(A) bir çizgi. y R(A)'da değil.\n  En yakın Ax = y'nin R(A)'ya dikeyinden indirilen iz = projeksiyon.\n  Hatayı minimize etmek = projeksiyon bulmak.\n\nProjektion koşulu:\n  e = y - Ax_LS (hata vektörü) ⊥ R(A) olmalı.\n  e ⊥ aₖ ∀k  →  aₖᴴ(y - Ax_LS) = 0  →  Aᴴ(y - Ax_LS) = 0\n  → AᴴAx_LS = Aᴴy  ← Normal Denklem (projeksiyon yoluyla)"
+        },
+        {
+          "type": "code",
+          "heading": "Normal denklem türetimi — matris kalkülüsü ve çözüm",
+          "text": "Aynı sonuca optimizasyon yoluyla da ulaşabiliriz.\n\nJ(x) = ||y - Ax||₂² genişlet (gerçel durumda):\n  J(x) = (y-Ax)ᵀ(y-Ax)\n       = yᵀy - 2yᵀAx + xᵀAᵀAx\n       (çünkü xᵀAᵀy = (yᵀAx)ᵀ = yᵀAx skaler)\n\nGradyan kuralları:\n  ∇_x(aᵀx) = a\n  ∇_x(xᵀBx) = 2Bx  (B simetrik ise)\n\n∇_x J = -2Aᵀy + 2AᵀAx = 0\n  → AᵀAx_LS = Aᵀy  (gerçel, kompleks için Aᴴ)\n\nNeden AᴴA invertible?\n  A full column rank → N(A) = {0}\n  AᴴAx = 0 → xᴴAᴴAx = 0 → ||Ax||² = 0 → Ax = 0 → x = 0\n  N(AᴴA) = {0} → AᴴA invertible ✓\n\nÇözüm:\n  x_LS = (AᴴA)⁻¹Aᴴy\n\nSol pseudo-inverse:\n  A† = (AᴴA)⁻¹Aᴴ\n  A†A = I_N ✓ (sol inverse)\n  AA† = A(AᴴA)⁻¹Aᴴ = P_{R(A)} ≠ I_M (projeksiyon matrisi)\n\nŷ_LS = Ax_LS = P_{R(A)}·y   ← y'nin R(A)'ya projeksiyonu\n\nİki farklı yol — optimizasyon ve projeksiyon — aynı formüle ulaştı.\nBu bir tesadüf değil: MSE minimize = R(A)'ya projeksiyon.\nChapter 1'in projeksiyon teoremi tam olarak buraya çıkıyor."
+        }
+      ]
+    },
+    {
+      "title": "Minimum Norm ve Pseudo-Inverse — Fat Matrix ve Genel Çözüm",
+      "cat": "Applications",
+      "summary": "Case 2 (fat, M<N): sonsuz çözüm var, hepsi T = {xₚ} + N(A) kümesinde. Minimum norm = orijine en yakın = N(A)'ya dik: x_MN = Aᴴ(AAᴴ)⁻¹y (sağ pseudo-inverse). Moore-Penrose A† tüm 4 durumu birleştiriyor — her zaman minimum norm LS çözümü.",
+      "context": "EE499 · Minimum Norm and Pseudo-Inverse",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Sonsuz çözüm kümesinin yapısı ve minimum norm seçimi",
+          "text": "Case 2 durumu: A ∈ ℂᴹˣᴺ, M < N, full row rank.\n  R(A) = ℂᴹ → her y için en az bir çözüm var ✓\n  N(A) ≠ {0} → sonsuz çözüm var ✗\n\nTüm çözüm kümesi nasıl görünüyor?\n  xₚ: herhangi özel bir çözüm (Axₚ = y)\n  n ∈ N(A): null space elemanı\n  A(xₚ + n) = Axₚ + An = y + 0 = y ✓ → xₚ+n de çözüm!\n\n  T = {xₚ + n : n ∈ N(A)} = {xₚ} + N(A)\n  T bir 'linear variety' — alt uzayın ötelenmesi, alt uzay değil.\n\nHangisini seçeceğiz?\n  Ek kısıt olmadan seçim keyfi. Doğal seçim: minimum norm.\n  x_MN = argmin_{x ∈ T} ||x||₂\n\nGeometrik sezgi:\n  T bir hiperplan, orijine en yakın T noktasını bul.\n  Orijinden T'ye dik indir → x_MN.\n  x_MN ⊥ N(A)   (projeksiyon teoremi!)\n\nNeden x_MN ⊥ N(A)?\n  x_MN - 0 = x_MN hata vektörü, N(A) ise alt uzay.\n  Projeksiyon teoreminden: alt uzaya en yakın nokta diklik koşulunu sağlar.\n  Yani x_MN, N(A)'ya dik bileşen içermiyor — tamamen N(A)⊥ = R(Aᴴ)'da."
+        },
+        {
+          "type": "code",
+          "heading": "x_MN formülü ve pseudo-inverse birleşimi",
+          "text": "x_MN ⊥ N(A) → x_MN ∈ R(Aᴴ) (çünkü N(A)⊥ = R(Aᴴ))\n  → x_MN = Aᴴz için bazı z ∈ ℂᴹ\n\nBunu Ax = y'ye koy:\n  A(Aᴴz) = y  →  (AAᴴ)z = y\n  AAᴴ ∈ ℂᴹˣᴹ, full row rank → invertible\n  z = (AAᴴ)⁻¹y\n\nSonuç:\n  x_MN = Aᴴ(AAᴴ)⁻¹y\n\nSağ pseudo-inverse: A† = Aᴴ(AAᴴ)⁻¹\n  AA† = I_M ✓ (sağ inverse)\n  A†A = P_{R(Aᴴ)} ≠ I_N (projeksiyon)\n\nKontrol: Ax_MN = AAᴴ(AAᴴ)⁻¹y = y ✓\n\nMoore-Penrose pseudo-inverse A† — tüm 4 durumu birleştiriyor:\n  Case 0: A† = A⁻¹\n  Case 1: A† = (AᴴA)⁻¹Aᴴ  (sol pseudo-inverse)\n  Case 2: A† = Aᴴ(AAᴴ)⁻¹  (sağ pseudo-inverse)\n  Case 3: A† = VΣ†Uᴴ       (SVD, Σ†: sıfır olmayan σᵢ'lerin tersi, 0'lar kalır)\n\nA†y her durumda ne veriyor?\n  Çözüm yoksa (Case 1): ||y-Ax||₂ minimize eden, bunlar içinde min ||x||\n  Sonsuz çözüm varsa (Case 2): ||x||₂ minimize eden tek çözüm\n  Tam çözüm varsa (Case 0): o çözüm\n\nSonuç: A†y sormak istediğiniz 'en iyi x' sorusunun cevabı — hangi durumda olursanız olun."
+        }
+      ]
+    },
+    {
+      "title": "Baz Değişimi ve DFT — Konvolüsyon Neden Çarpmaya Dönüşüyor",
+      "cat": "Signal Processing",
+      "summary": "Aynı lineer operatörün farklı bazlarda farklı matris temsilleri var: A' = T A T⁻¹. DFT baz vektörleri konvolüsyon matrisinin öz vektörü — bu yüzden DFT bazında konvolüsyon matrisi diyagonal oluyor. Zaman domenindeki dense matris, frekans domeninde trivial çarpıma dönüşüyor.",
+      "context": "EE499 · Basis Change and DFT",
       "sections": [
         {
           "type": "code",
           "heading": "Aynı operatör, farklı baz, farklı matris",
-          "text": "A: X → Y lineer operatörü için iki farklı baz seçimi var:\n  X için e-baz ve v-baz\n  Y için f-baz ve g-baz\n\nAynı operatörün iki farklı matris temsili:\n  [A(x)]_f = A_{e→f} · [x]_e   (e-bazından f-bazına)\n  [A(x)]_g = A_{v→g} · [x]_v  (v-bazından g-bazına)\n\nBaz değişim matrisi:\n  T_{e→v}: e-koordinatlarından v-koordinatlarına\n  [x]_e = T_{v→e} [x]_v  (baz değişimi)\n\nOperatör matrisinin baz değişimi:\n  A_{v→g} = T_{f→g} · A_{e→f} · T_{v→e}\n\nSezgi: Yeni bazda aynı işlemi yapmak için:\n  1. Yeni koordinatı eski koordinata çevir (T_{v→e})\n  2. Eski bazda A uygula (A_{e→f})\n  3. Sonucu yeni koordinata çevir (T_{f→g})\n\nBenzerlik dönüşümü (kare matrisler, X=Y):\n  A' = T A T⁻¹\n  A ve A' aynı operatörü temsil ediyor, sadece koordinat sistemi farklı.\n  İz (trace) ve determinant değişmez — bunlar koordinatsız özellikler."
+          "text": "A: X → Y aynı lineer operatör. Ama baz değişince matris değişiyor.\n\nX'in iki bazı var: {e₁,...,eₙ} ve {v₁,...,vₙ}\nAynı x vektörünün iki farklı koordinatı:\n  x_e = [α₁,...,αₙ]ᵀ  (e-bazında)\n  x_v = [β₁,...,βₙ]ᵀ  (v-bazında)\n\nBaz değişim matrisi T_{e→v}:\n  x_v = T_{e→v} · x_e\n  T_{e→v}'nin k. sütunu = eₖ'nın v-bazındaki koordinatları.\n\nAynı operatörün yeni bazlardaki matrisi:\n  A_new = T_{f→g} · A_old · T_{v→e}\n  Sıra: önce eski koordinata çevir, A uygula, yeni koordinata çevir.\n\nBenzerlik dönüşümü (kare matrisler, X=Y):\n  A' = T A T⁻¹\n  A ve A' aynı operatörü temsil ediyor — sadece koordinat sistemi farklı.\n  İz (trace) ve determinant değişmez — bunlar koordinatsız özellikler.\n\nSP'de baz değişiminin anlamı:\n  e-bazı = {eₙ} = zaman domenindeki standart baz (Dirac delta vektörleri)\n  v-bazı = {vₖ} = DFT baz vektörleri (karmaşık eksponansiyeller)\n  DFT = zaman → frekans dönüşümü = baz değişimi matris çarpımı!"
         },
         {
           "type": "code",
-          "heading": "Türev operatörü örneği: baz değiştirince matris değişiyor",
-          "text": "A: P³ → P², A(x(t)) = dx/dt\n\nBaz 1: e-baz = {1, t, t², t³}, f-baz = {1, t, t²}\n  A(1)=0, A(t)=1, A(t²)=2t, A(t³)=3t²\n  A_e =  [0 1 0 0]\n         [0 0 2 0]\n         [0 0 0 3]\n\nBaz 2: e'-baz = {1, t, t², t³}, f'-baz = {1, t, t²} (aynı)\n  Ama şimdi X için v-baz = {1, t, t²/2, t³/6} kullan:\n  A(1)=0, A(t)=1, A(t²/2)=t, A(t³/6)=t²/2\n  Katsayılar farklı, matris farklı.\n\nAynı operatör, farklı koordinat sistemi, farklı matris görünümü.\nFiziksel içerik (türev alma) aynı.\n\nSPonucu: DFT baz değişimini uygulayınca konvolüsyon matrisi ne olur?"
+          "heading": "DFT bazında konvolüsyon neden diyagonal?",
+          "text": "DFT baz vektörü:\n  vₖ[n] = e^{j2πkn/N}/√N,  n,k = 0,1,...,N-1\n\nBunları sütun olarak yan yana koy: W = [v₀|v₁|...|v_{N-1}]\n  Wᴴ W = I   (ortonormal olduğundan)\n  W unitary matris → W⁻¹ = Wᴴ\n\nAna gerçek: DFT baz vektörleri, döngüsel (circulant) konvolüsyon matrisinin ÖZ VEKTÖRLERİ.\n  H_circ · vₖ = H[k] · vₖ\n  H[k] = Σₙ h[n] e^{-j2πkn/N} = DFT{h}[k] (filtrenin frekans yanıtı)\n\nBir matrisin öz vektör bazında temsili her zaman diyagonal.\nYani DFT bazında konvolüsyon matrisi:\n  H_DFT = Wᴴ H_circ W = diag(H[0], H[1], ..., H[N-1])\n\nFrekans domeninde sistem:\n  Y[k] = H[k] · X[k]  her k için\n  Konvolüsyon → nokta-nokta çarpım!\n\nBu nasıl bir güç:\n  Zaman domeninde: y = H_circ·x  (M×N dense matris çarpımı, O(N²))\n  Frekans domeninde: Y[k] = H[k]·X[k]  (O(N) + FFT O(NlogN))\n  Aynı hesaplama, milyonda bir daha hızlı!\n\nAyrıca analiz kolaylaşıyor:\n  Her frekans k, diğerlerinden bağımsız ölçekleniyor.\n  H[k] = 0 → o frekans tamamen silinmiş.\n  |H[k]| >> 1 → o frekans amplify ediliyor.\n  |H[k]| << 1 → o frekans eziliyor."
         },
         {
           "type": "code",
-          "heading": "Neden baz seçimi bu kadar önemli? DFT bazı problemi sadeleştirir",
-          "text": "Bir LTI sistemi, standart bazda konvolüsyon matrisi H ile temsil edilir:\n  y = H x  (H: Toeplitz yapısı, dense matris)\n\nDFT bazında ne olur?\n  W: DFT değişim matrisi (unitary: Wᴴ=W⁻¹)\n  H_DFT = W H Wᴴ  (DFT bazında aynı operator)\n\nH_DFT diyagonal bir matris:\n  H_DFT = diag(H(e^{j0}), H(e^{j2π/N}), ..., H(e^{j2π(N-1)/N}))\n\nYani: H(e^{jωₖ}) = transfer function değeri frekans ωₖ'da.\n\nDFT bazında operasyon:\n  Ŷ = H_DFT · X̂  →  Ŷ[k] = H(e^{jωₖ}) · X̂[k]\n  Her frekans bağımsız ölçekleniyor — konvolüsyon = çarpım!\n\nBu neden devrimci?\n- Dense matris → diagonal matris: O(N²) → O(N log N) (FFT)\n- Analiz kolaylaşıyor: her frekans bağımsız incelenebilir\n- H_DFT diagonal → terslemek trivial: H⁻¹_DFT = diag(1/H(e^{jωₖ}))"
-        }
-      ]
-    },
-    {
-      "title": "DFT Bazında Konvolüsyon = Çarpım — Neden ve Nasıl?",
-      "cat": "Signal Processing",
-      "summary": "DFT bazında konvolüsyon matrisi diyagonaldir. Bu demek ki: LTI sistem frekans domeninde her frekansı bağımsız ölçeklendirir. Bu özellik, SP'deki en güçlü basitleştirme. Dekonvolüsyon = 1/H(ω) ile çarpma. Gürültüde problem: küçük H(ω) değerleri.",
-      "context": "EE499 · Chapter 2.2 — DFT and Convolution Matrix",
-      "sections": [
-        {
-          "type": "code",
-          "heading": "Konvolüsyon matrisinin DFT bazında diyagonalliği",
-          "text": "Verilen: h[n] ∈ ℂᴷ filtre, x[n] ∈ ℂᴺ sinyal\nDoğrusal (tam) konvolüsyon: y = x * h ∈ ℂᴹ, M=N+K-1\nMatris formu: y = H x (H: M×N Toeplitz konvolüsyon matrisi)\n\nDöngüsel (circular) konvolüsyon durumunu düşün (N=M):\nDöngüsel konvolüsyon matrisi H_circ: N×N circulant matris.\nHer circulant matris, DFT bazında diyagonaldir:\n  W H_circ Wᴴ = diag(H[0], H[1], ..., H[N-1])\n  burada H[k] = DFT{h}[k] = Σₙ h[n]e^{-j2πkn/N}\n\nDolayısıyla döngüsel konvolüsyon:\n  y = H_circ x\n  ↓ DFT ile\n  Y[k] = H[k] · X[k]  her k için\n  Frekans domeninde nokta-nokta çarpım!\n\nNeden bu çalışıyor?\nDFT baz vektörleri, circulant matrisin öz vektörleri.\nH_circ vₖ = H[k] vₖ (vₖ: k. DFT baz vektörü)\nDiagonalleşme = öz vektör bazında temsil."
-        },
-        {
-          "type": "code",
-          "heading": "Pratik dekonvolüsyon: frekans domeninde tersle",
-          "text": "Dekonvolüsyon problemi (gürültüsüz durum):\nY[k] = H[k] · X[k]  →  X[k] = Y[k] / H[k]\n\nIdeal dekonvolution = frekanslarda böl:\n  X̂[k] = Y[k] / H[k]  (H[k] ≠ 0 ise)\n\nSorun 1 — Sıfır frekanslar:\nEğer H[k] = 0 bazı k için → o frekansta bilgi tamamen kaybolmuş.\nBölme mümkün değil → tam tersine alma imkânsız.\n\nSorun 2 — Gürültü amplifikasyonu:\nGürültülü ölçüm: Ỹ[k] = H[k]X[k] + N[k]\nNaif: X̂[k] = Ỹ[k]/H[k] = X[k] + N[k]/H[k]\nEğer |H[k]| << 1 ise  N[k]/H[k] >> N[k]  →  gürültü amplifiye!\n\nÇözüm — Wiener filter (regularized decon):\n  X̂[k] = H*[k] / (|H[k]|² + λ) · Ỹ[k]\n  λ: regularization parametresi (gürültü gücüne bağlı)\n  λ küçük → az düzenleme, gürültü amplifikasyonu riski\n  λ büyük → fazla düzenleme, yüksek frekanslar baskılanır\n\nBu DFT bazında Case 1 LS çözümünün özel hali!"
-        },
-        {
-          "type": "table",
-          "heading": "Zaman vs frekans domeninde problem karşılaştırması",
-          "rows": [
-            [
-              "İşlem",
-              "Zaman Domeninde",
-              "Frekans Domeninde"
-            ],
-            [
-              "Konvolüsyon y=x*h",
-              "Dense Toeplitz matris çarpımı O(N²)",
-              "Nokta-nokta çarpım O(N) + O(NlogN) FFT"
-            ],
-            [
-              "Dekonvolüsyon",
-              "Matris tersi alma",
-              "Her frekansta 1/H[k]"
-            ],
-            [
-              "FIR filtre uygula",
-              "y[n] = Σh[k]x[n-k]",
-              "Y[k] = H[k]X[k]"
-            ],
-            [
-              "Sistem tanımlama",
-              "Toeplitz sistem çöz",
-              "H[k] = Y[k]/X[k]"
-            ]
-          ]
-        }
-      ]
-    },
-    {
-      "title": "Sistem Tanımlama ve Dekonvolüsyon — Existence/Uniqueness Analizi",
-      "cat": "Applications",
-      "summary": "Dekonvolüsyon: y=Hx bilinen, H bilinen, x bul. Sistem tanımlama: y=Hx, x bilinen, H bul. Dekonvolüsyon: R(H)≠ℂᴹ (existence yok garantisi) ama N(H)={0} (uniqueness var). Sistem tanımlama da aynı analiz. Gürültüsüz çözüm varsa tekil.",
-      "context": "EE499 · Chapter 2.3 — Deconvolution and System Identification",
-      "sections": [
-        {
-          "type": "code",
-          "heading": "Dekonvolüsyon problemi — tam analiz",
-          "text": "Setup: x ∈ ℂᴺ (orijinal sinyal), h ∈ ℂᴷ (K≥2, h≠0), y = x * h ∈ ℂᴹ (M=N+K-1)\nMatris formu: y = H x (H: M×N tall Toeplitz matrisi)\n\nExistence analizi:\n  R(H) = span{sütunlar} ⊂ ℂᴹ\n  dim(R(H)) = N < M  →  R(H) ≠ ℂᴹ\n  Keyfi y için Hx=y çözümü OLMAYACAK\n  (Gürültüsüz gerçek y=Hx₀ ise çözüm var, ama gürültülü y+n genellikle R(H)'da değil)\n\nUniqueness analizi:\n  N(H) = {x: Hx=0}\n  H sütunları = h'nin shifted versiyonları → lineer bağımsız (K≥2, h≠0 için)\n  N(H) = {0}  →  rank(H) = N  (full column rank)\n  Çözüm varsa TEKİL  ✓\n\nÖzet: Dekonvolüsyon Case 1 durumu:\n  M > N, full column rank: x_LS = (HᴴH)⁻¹Hᴴy\n  Tam çözüm yoksa (gürültü varsa) → LS en iyi yaklaşım\n  Tam çözüm varsa (y gürültüsüz ise) → LS tam çözümü verir"
-        },
-        {
-          "type": "code",
-          "heading": "Sistem tanımlama problemi — aynı matematik, farklı bilinmeyen",
-          "text": "Sistem tanımlama: Verilen x ve y = x*h, h'yi bul.\n  y = X h  (X: M×K konvolüsyon matrisi, x sabit, h bilinmeyen)\n\nX'in yapısı: X sütunları = x'in shifted versiyonları\n  X = [x₀  0   0  ]\n      [x₁  x₀  0  ]\n      [x₂  x₁  x₀ ]\n      [... ... ...]\n\nAynı existence/uniqueness analizi:\n  Existence: y ∈ R(X)? Her y için çözüm garanti değil.\n    R(X) = span{sütunlar} ⊂ ℂᴹ, rank ≤ K < M\n    → Eğer y = x*h₀ ise çözüm var; keyfi y için değil.\n\n  Uniqueness: N(X) = {h: Xh=0}?\n    Xh=0 → x'in h ile konvolüsyonu sıfır → x ve h aynı anda sıfır olmayan frekansta yok\n    → Genellikle N(X) ≠ {0} değil ama tam analiz h'nin yapısına bağlı.\n\nPratik: EKSİK veri ile sistem tanımlama (az ölçüm):\n  K >> M: fat matrix → underdetermined → min-norm çözüm\n  K << M: tall matrix → overdetermined → LS çözüm\n\nÖnemli fark dekonvolüsyon'dan:\nDekonvolüsyonda H bilinir x bilinmez → H sabit Toeplitz\nSistem tanımlamada x bilinir h bilinmez → X sabit Toeplitz"
-        },
-        {
-          "type": "compare",
-          "heading": "Dekonvolüsyon vs Sistem Tanımlama",
-          "left": {
-            "title": "Dekonvolüsyon",
-            "points": [
-              "Verilen: y ve H (filtre biliniyor)",
-              "Bul: x (orijinal sinyal)",
-              "Matris: H tall, M×N",
-              "Case 1: x_LS = (HᴴH)⁻¹Hᴴy",
-              "SP örnek: görüntü deblurring, CT",
-              "Uniqueness var, existence garantisiz"
-            ]
-          },
-          "right": {
-            "title": "Sistem Tanımlama",
-            "points": [
-              "Verilen: y ve x (giriş biliniyor)",
-              "Bul: h (filtre katsayıları)",
-              "Matris: X tall (genellikle), M×K",
-              "Case 1: h_LS = (XᴴX)⁻¹Xᴴy",
-              "SP örnek: kanal tahminleme, sistem ID",
-              "Uniqueness h'ye bağlı"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "title": "Case 0 Detayı — İnvertible Matris ve Gürültü Amplifikasyonu",
-      "cat": "Applications",
-      "summary": "A square+invertible olunca x=A⁻¹y basit görünür ama iki büyük sorun var: (1) gürültü amplifikasyonu — A kötü koşulluysa A⁻¹n >> n, (2) büyük boyutlu A'nın tersini almanın pratik imkânsızlığı. Condition number κ(A) her şeyi ölçer.",
-      "context": "EE499 · Chapter 2.4 — Case 0: Invertible Systems and Noise Issues",
-      "sections": [
-        {
-          "type": "code",
-          "heading": "Case 0 neden 'kolay' görünür ama değildir?",
-          "text": "Case 0: A ∈ ℂᴺˣᴺ, rank(A)=N (square+full rank → invertible)\n  Ax = y  →  x = A⁻¹y  (tam çözüm, tekil)\n\nGözlemde gürültü var: ỹ = y + n = Ax + n\n  x̂ = A⁻¹ỹ = A⁻¹(Ax + n) = x + A⁻¹n\n\nHata terimi: A⁻¹n\n  Göreceli hata: ||x̂ - x|| / ||x|| = ||A⁻¹n|| / ||x||\n               ≤ ||A⁻¹|| · ||n|| / ||x||\n               ≤ ||A|| · ||A⁻¹|| · (||n||/||Ax||)\n               = κ(A) · (göreli gürültü seviyesi)\n\nKondisyon sayısı:\n  κ(A) = ||A|| · ||A⁻¹|| = σ_max / σ_min  (tekil değer oranı)\n\nκ(A) ≈ 1: iyi koşullu (well-conditioned) → gürültü amplifikasyonu minimal\nκ(A) >> 1: kötü koşullu (ill-conditioned) → küçük gürültü büyük hata!"
-        },
-        {
-          "type": "code",
-          "heading": "Somut ill-conditioning örneği: dekonvolüsyon",
-          "text": "Konvolüsyon (kübik blur) etkisi: Y[k] = H[k] · X[k]\n  H[k] = 1 / (1 + (k/k₀)²)  (Lorentzian blur)\n  Yüksek frekanslar ezilir: H[k] → 0 için büyük k\n\nDekonvolüsyon: X̂[k] = Y[k] / H[k] = X[k] + N[k]/H[k]\n  Büyük k için H[k] << 1 → N[k]/H[k] >> N[k]\n  Gürültü yüksek frekanslarda katbekat amplify!\n\nNümerik örnek:\n  σ = 10⁻³ (gürültü seviyesi), H[k₀] = 10⁻³\n  → X̂[k₀] = X[k₀] + N[k₀]/10⁻³ = X[k₀] + 1000·N[k₀]\n  1:1000 amplifikasyon → çözüm kullanılamaz\n\nDüzeltme — Tikhonov regularization:\n  min ||Ax - y||² + λ||x||²\n  Çözüm: x_reg = (AᴴA + λI)⁻¹Aᴴy\n  Frekans domeninde: X̂_reg[k] = H*[k]Y[k] / (|H[k]|² + λ)\n  λ küçük → az düzenleme, gürültü amplifikasyonu devam\n  λ büyük → çok düzenleme, yüksek frekanslar kaybolur\n  Optimal λ: bias-variance tradeoff"
-        },
-        {
-          "type": "note",
-          "heading": "Pratikte büyük sistem problemi",
-          "text": "Gerçek dünyada A çok büyük olabilir (megapiksel görüntü → milyonlar×milyonlar).\nA⁻¹ depolayıp hesaplamak pratikte imkânsız.\n\nAlternatifler:\n1. İteratif yöntemler: CG (conjugate gradient), LSQR — A⁻¹ türetmeden çözer\n2. Sparse approximation: A sparse ise sparse solver'lar\n3. Frekans domeninde çöz: FFT ile O(N log N)\n4. Regularization: AᴴA + λI'yı daha iyi kondisyonlu yap\n\nÖnemli çıkarım: Case 0 matematiksel olarak temiz ama:\n- Gürültüde problem (κ(A) büyükse)\n- Boyutta problem (çok büyük A)\n- İkisi birlikte regularization zorunlu kılar"
-        }
-      ]
-    },
-    {
-      "title": "Matris Kalkülüsü Temelleri — LS Türetmek İçin Gerekli",
-      "cat": "Foundations",
-      "summary": "Least Squares'ı türetmek için matris gradyan kuralları şart: ∇_x(aᵀx)=a, ∇_x(xᵀBx)=(B+Bᵀ)x. J(x)=||y-Ax||² genişletip gradyan sıfırla → normal denklem. Karmaşık durumda Wirtinger türevi gerekir ama sonuç AᴴA·x=Aᴴy.",
-      "context": "EE499 · Chapter 2.4 — Matrix Calculus for LS Derivation",
-      "sections": [
-        {
-          "type": "code",
-          "heading": "Matris gradyan kuralları — neden bunlara ihtiyaç var?",
-          "text": "LS problemi: min_x J(x) = ||y - Ax||² = (y-Ax)ᵀ(y-Ax)  [gerçel]\n\nJ'yi minimize etmek için: ∇_x J(x) = 0\n\nBunu yapmak için matris kalkülüsü kuralları:\n\nKural 1: ∇_x(aᵀx) = a\n  aᵀx = a₁x₁ + a₂x₂ + ... + aₙxₙ\n  ∂/∂xₖ(aᵀx) = aₖ  →  ∇_x(aᵀx) = a  ✓\n\nKural 2: ∇_x(xᵀa) = a  (aynı şey, xᵀa = aᵀx skalar)\n\nKural 3: ∇_x(xᵀBx) = (B + Bᵀ)x\n  Açılım: xᵀBx = Σᵢ Σⱼ Bᵢⱼ xᵢ xⱼ\n  ∂/∂xₖ(xᵀBx) = Σⱼ Bₖⱼxⱼ + Σᵢ Bᵢₖxᵢ = (B+Bᵀ)x [k. elemanı]\n  B simetrik ise (Bᵀ=B): ∇_x(xᵀBx) = 2Bx\n\nKural 4 (chain rule): ∇_x(xᵀAᵀAx) = 2AᵀAx  (AᵀA simetrik)"
-        },
-        {
-          "type": "code",
-          "heading": "J(x) açılımı ve gradyan hesabı",
-          "text": "Gerçel LS:\nJ(x) = ||y-Ax||² = (y-Ax)ᵀ(y-Ax)\n     = yᵀy - yᵀAx - xᵀAᵀy + xᵀAᵀAx\n     = yᵀy - 2yᵀAx + xᵀAᵀAx  (xᵀAᵀy = yᵀAx skalar)\n\nGradyan:\n  ∇_x J = ∇_x(yᵀy) - 2∇_x(yᵀAx) + ∇_x(xᵀAᵀAx)\n        = 0 - 2Aᵀy + 2AᵀAx\n        (Kural 1: ∇_x(yᵀAx) = (Aᵀy)  çünkü yᵀA = (Aᵀy)ᵀ)\n        (Kural 3: ∇_x(xᵀAᵀAx) = 2AᵀAx  çünkü AᵀA simetrik)\n\n∇_x J = 0  →  -2Aᵀy + 2AᵀAx = 0  →  AᵀA x_LS = Aᵀy\n\nNormal Denklem (gerçel):\n  AᵀA x_LS = Aᵀy\n  x_LS = (AᵀA)⁻¹Aᵀy  (A full column rank ise AᵀA invertible)\n\nKarmaşık (kompleks) genelleme:\n  AᴴA x_LS = Aᴴy  →  x_LS = (AᴴA)⁻¹Aᴴy"
-        },
-        {
-          "type": "note",
-          "heading": "İkinci türev testi — neden minimum?",
-          "text": "J(x) = ||y-Ax||² convex (dışbükey). Tek yerel minimum = global minimum.\n\nHessian matrisi: ∇²_x J = 2AᵀA\n  A full column rank ise AᵀA pozitif tanımlı (positive definite).\n  Tüm öz değerler > 0 → Hessian PD → yerel minimum gerçek minimum.\n\nFull column rank yoksa (Case 3):\n  AᵀA singüler → sonsuz çözüm (birden fazla global minimum)\n  → pseudo-inverse ile minimum norm LS çözümü"
-        }
-      ]
-    },
-    {
-      "title": "Normal Denklem — Üç Farklı Türetim Yolu",
-      "cat": "Foundations",
-      "summary": "AᴴAx_LS = Aᴴy normal denklemine üç ayrı yoldan ulaşılır: (1) matris kalkülüsü ile optimizasyon, (2) projeksiyon teoremi ile geometri, (3) diklik koşulu ile doğrudan. Üçü aynı sonuç: tek matematiksel gerçek, üç perspektif.",
-      "context": "EE499 · Chapter 2.4 — Three Ways to Derive the Normal Equation",
-      "sections": [
-        {
-          "type": "code",
-          "heading": "Yol 1: Matris kalkülüsü (optimizasyon)",
-          "text": "J(x) = ||y - Ax||²\n\n∇_x J = -2Aᴴy + 2AᴴAx = 0\n\n→  AᴴAx_LS = Aᴴy  ✓\n\nBu yol: 'kayıp fonksiyonunu minimize et' perspektifi.\nGüçlü yön: Doğrudan hesaplanabilir, ikinci türev testi yapılabilir.\nZayıf yön: Geometrik sezgi yok."
-        },
-        {
-          "type": "code",
-          "heading": "Yol 2: Projeksiyon teoremi (geometri)",
-          "text": "x_LS = argmin_x ||y - Ax||²\n\nTanım: b = Ax değişkeni koy. Aslında şunu çözüyoruz:\n  b_LS = argmin_{b ∈ R(A)} ||y - b||²\n  (y'yi R(A) alt uzayına proje et)\n\nProjektion teoremi: hata ⊥ R(A) olunca minimum.\n  e = y - b_LS = y - Ax_LS ⊥ R(A)\n  Yani: <e, a_k> = 0  her k için (a_k: A'nın k. sütunu)\n  a_kᴴ(y - Ax_LS) = 0  her k için\n  Aᴴ(y - Ax_LS) = 0\n  AᴴAx_LS = Aᴴy  ✓\n\nb_LS = Ax_LS = A(AᴴA)⁻¹Aᴴy = P_{R(A)} y\nProjektion matrisi P = A(AᴴA)⁻¹Aᴴ tam olarak Chapter 1'deki formül!"
-        },
-        {
-          "type": "code",
-          "heading": "Yol 3: Direk diklik koşulu (en sezgisel)",
-          "text": "x_LS en iyi yaklaşım ↔ hata e = y - Ax_LS her sütuna dik:\n  aₖᴴ e = 0  k=1,...,N\n  →  [aₖ₁ᴴ e, ..., aₙᴴ e] = 0\n  →  Aᴴ e = 0\n  →  Aᴴ(y - Ax_LS) = 0\n  →  AᴴAx_LS = Aᴴy  ✓\n\nÜç yolun özeti:\n  Yol 1 (optimizasyon): gradyan sıfırla\n  Yol 2 (geometri): R(A)'ya projeksiyon, hata ⊥ R(A)\n  Yol 3 (diklik): her sütuna dik koşulu yaz\n\nHepsi aynı sonuç çünkü hepsi aynı fiziksel gerçeği ifade ediyor:\n'En iyi yaklaşım, hatanın R(A)'ya dik olduğu noktada.'\n\nSomut check: A full column rank ise AᴴA invertible (kanıt:\nAᴴAx=0 → xᴴAᴴAx=0 → ||Ax||²=0 → Ax=0 → x=0 since N(A)={0})"
-        }
-      ]
-    },
-    {
-      "title": "LS Çözümü Projeksiyon Olarak — Geometrik Yorum",
-      "cat": "Applications",
-      "summary": "x_LS = (AᴴA)⁻¹Aᴴy: bu A†y (left pseudo-inverse). b_LS = Ax_LS = A(AᴴA)⁻¹Aᴴy = P_{R(A)}y: y'nin R(A)'ya projeksiyonu. Hata e = y-b_LS ⊥ R(A). Chapter 1 projeksiyon formülüyle tamamen aynı — LS ve projeksiyon birleşiyor.",
-      "context": "EE499 · Chapter 2.4 — LS as Projection",
-      "sections": [
-        {
-          "type": "code",
-          "heading": "LS, projeksiyon ve ortogonallik — üçlü birlik",
-          "text": "Şu üç ifade birbirine eşdeğer:\n\n(a) x_LS = argmin_x ||y - Ax||²\n(b) b_LS = P_{R(A)} y  (y'nin R(A)'ya projeksiyonu)\n(c) A ᴴ(y - Ax_LS) = 0  (hata R(A)'ya dik)\n\nİspat yönü (a → c → b):\n  x_LS minimize eder → gradyan = 0 → AᴴAx_LS = Aᴴy → Aᴴ(y-Ax_LS) = 0 → hata ⊥ R(A)\n  → hata ⊥ R(A) → b_LS = Ax_LS, R(A)'daki y'ye en yakın nokta → projeksiyon\n\nFormüller:\n  x_LS = (AᴴA)⁻¹Aᴴy   (input uzayında çözüm)\n  b_LS = A(AᴴA)⁻¹Aᴴy = P_{R(A)} y  (output uzayında projeksiyon)\n\n  P = A(AᴴA)⁻¹Aᴴ  →  Bu tam Chapter 1'deki P = B(BᴴB)⁻¹Bᴴ formülü!\n  (Burada B = A, S = R(A))"
-        },
-        {
-          "type": "code",
-          "heading": "Dik ayrışım ve enerji yorumu",
-          "text": "y'nin dik ayrışımı:\n  y = b_LS + e  (b_LS ∈ R(A), e ∈ R(A)⊥)\n\nPisagor:\n  ||y||² = ||b_LS||² + ||e||²\n  ||y||² = ||Ax_LS||² + ||y - Ax_LS||²\n  Toplam enerji = yaklaşım enerjisi + artık enerji\n\nArtık norm = minimum LS değeri:\n  J(x_LS) = ||e||² = ||y - Ax_LS||²\n  Bu yalnızca y ∈ R(A) ise sıfır (tam çözüm mevcut)\n\nSomut dekonvolüsyon:\n  y = gürültülü ölçüm, R(H) = ulaşılabilir çıkışlar\n  y = b_LS + e:\n  b_LS = H·x_LS: R(H)'a en yakın nokta (gürültüsüz y'nin tahmini)\n  e = y - H·x_LS: gürültü bileşeni (R(H)'a dik)\n\nLS, gürültüyü R(H)'a dik bileşen olarak algılıyor ve onu atıyor."
-        },
-        {
-          "type": "compare",
-          "heading": "Chapter 1 projeksiyon ile Chapter 2 LS — aynı şey!",
-          "left": {
-            "title": "Chapter 1: Projeksiyon Teoremi",
-            "points": [
-              "x ∈ V, S alt uzay",
-              "x̂ = argmin_{s∈S} ||x-s||",
-              "Hata (x-x̂) ⊥ S",
-              "P = B(BᴴB)⁻¹Bᴴ",
-              "x = x̂ + (x-x̂), dik ayrışım"
-            ]
-          },
-          "right": {
-            "title": "Chapter 2: Least Squares",
-            "points": [
-              "y ∈ ℂᴹ, R(A) alt uzayı",
-              "x_LS = argmin_x ||y-Ax||",
-              "Hata (y-Ax_LS) ⊥ R(A)",
-              "P = A(AᴴA)⁻¹Aᴴ",
-              "y = b_LS + e, dik ayrışım"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "title": "Case 2 Detayı — Çözüm Kümesi Yapısı T = {xp} + N(A)",
-      "cat": "Applications",
-      "summary": "Fat matrix (M<N): sonsuz çözüm. Tüm çözümler T = {xp} + N(A) şeklinde. T bir 'linear variety' — alt uzay değil, orijini içermeyebilir. Ek kısıt lazım: hangi çözümü seçelim? Cevap: minimum norm, yani N(A)'ya dik olan.",
-      "context": "EE499 · Chapter 2.4 — Case 2: Solution Set Structure",
-      "sections": [
-        {
-          "type": "code",
-          "heading": "Neden sonsuz çözüm ve tüm çözümler nasıl görünüyor?",
-          "text": "A: ℂᴺ → ℂᴹ, M < N (fat), full row rank.\nÇözüm var (R(A) = ℂᴹ) ama tekil değil (N(A) ≠ {0}).\n\nGözlem: xₙ ∈ N(A) ise Axₙ = 0.\nEğer Axp = y ise A(xp + xₙ) = y + 0 = y  → başka çözüm!\nBu yüzden xp + xₙ da çözüm, her xₙ ∈ N(A) için.\n\nTüm çözümler kümesi:\n  T = {xp + xₙ : xₙ ∈ N(A)} = {xp} + N(A)\n\nT'nin özellikleri:\n  - T bir 'linear variety' (alt uzayın ötelenmesi)\n  - T bir alt uzay DEĞİL (sıfırı içermeyebilir)\n  - T'nin boyutu = dim(N(A)) = N - rank(A) = N - M\n  - T geometrik olarak: M-boyutlu boşlukta (N-M)-boyutlu bir 'düzlem'\n\nSomut örnek:\nA = [1 0 0; 0 1 0],  y = [2/3; 5/3]\nN(A) = span{[0,0,1]ᵀ}  (3. koordinat serbest)\nÖzel çözüm: xp = [2/3, 5/3, 0]ᵀ\nTüm çözümler: [2/3, 5/3, c]ᵀ  her c ∈ ℝ için"
-        },
-        {
-          "type": "code",
-          "heading": "Hangi çözümü seçelim? Minimum norm kriteri",
-          "text": "T içinden seçim yapmak için ek kısıt gerekiyor.\nEn doğal ve yaygın kısıt: minimum ℓ₂ norm.\n\n  x_MN = argmin_{x: Ax=y} ||x||₂\n\nGeometrik soru: T'deki (hyperplane) orijine en yakın nokta hangisi?\n\nOrtogonallik prensibi:\nT'de minimum normlu nokta x_MN, N(A)'ya diktir.\nKanıt:\n  Varsay x_MN ∈ T, ve ∃ xₙ ∈ N(A) öyle ki <x_MN, xₙ> ≠ 0.\n  x_MN - ε·xₙ da T'de (xₙ ∈ N(A) olduğundan)\n  ||x_MN - ε·xₙ||² = ||x_MN||² - 2ε·Re<x_MN,xₙ> + ε²||xₙ||²\n  Uygun ε ile bu ||x_MN||²'den küçük → x_MN minimum değildi, çelişki!\n  Bu yüzden <x_MN, xₙ> = 0 her xₙ ∈ N(A) için → x_MN ⊥ N(A)  ✓\n\nBuna N(A)⊥ = R(Aᴴ) denir → x_MN ∈ R(Aᴴ)"
-        },
-        {
-          "type": "note",
-          "heading": "Minimum norm seçiminin SP anlamı",
-          "text": "Neden minimum norm?\n\n1. En 'seyrek' çözüm: gereksiz bileşenler yok\n2. 'En az enerji' çözümü: fiziksel olarak tasarruflu\n3. N(A)'ya dik: null space bileşeni tamamen sıfır\n   (Null space: 'gözlemlenemeyen' yönler. Min-norm: o yönlere sıfır ata.)\n\nSP örneği: Underdetermined frekans örnekleme.\nAz sayıda frekans ölçümünden sinyali bul → sonsuz sinyal uyumlu.\nMin-norm: minimum enerji sinyali seç.\nAlt yapı: gerçek sinyal genellikle 'seyrek' ise, bunu çözmek daha iyi yöntemler gerektirir (compressed sensing)."
-        }
-      ]
-    },
-    {
-      "title": "Minimum Norm Çözümü — Tam Türetim: x_MN = Aᴴ(AAᴴ)⁻¹y",
-      "cat": "Applications",
-      "summary": "x_MN ⊥ N(A) → x_MN ∈ R(Aᴴ) → x_MN = Aᴴz yaz → Ax_MN=y'ye koy → z çöz. Sonuç: x_MN = Aᴴ(AAᴴ)⁻¹y. AAᴴ ∈ ℂᴹˣᴹ invertible çünkü A full row rank. Simetri güzel: Case 1'de A†=(AᴴA)⁻¹Aᴴ, Case 2'de A†=Aᴴ(AAᴴ)⁻¹.",
-      "context": "EE499 · Chapter 2.4 — Case 2: Minimum Norm Derivation",
-      "sections": [
-        {
-          "type": "code",
-          "heading": "Adım adım türetim",
-          "text": "A: ℂᴺ → ℂᴹ, M < N, full row rank.\nBulmak istiyoruz: x_MN = argmin_{Ax=y} ||x||²\n\nAdım 1 — x_MN ⊥ N(A):\nÖnceki karttan: min-norm çözümü N(A)'ya dik olmak zorunda.\n  x_MN ⊥ N(A)  ↔  x_MN ∈ N(A)⊥\n\nAdım 2 — N(A)⊥ = R(Aᴴ):\nTemel uzay ilişkisi: N(A)⊥ = R(Aᴴ)\n(İspat: y ⊥ N(A) ↔ ∀x∈N(A): <y,x>=0 ↔ yᴴx=0 ↔ y ∈ R(Aᴴ))\nDolayısıyla: x_MN ∈ R(Aᴴ) → ∃ z ∈ ℂᴹ s.t. x_MN = Aᴴz\n\nAdım 3 — z'yi bul:\nAx_MN = y  →  A(Aᴴz) = y  →  (AAᴴ)z = y\n\nAdım 4 — AAᴴ invertible mi?\nA full row rank → M bağımsız satır → rank(AAᴴ) = M → AAᴴ ∈ ℂᴹˣᴹ invertible ✓\nKanıt ayrıca: (AAᴴ)z=0 → zᴴAAᴴz=0 → ||Aᴴz||²=0 → Aᴴz=0 → z=0\n\nAdım 5 — Çözüm:\n  z = (AAᴴ)⁻¹y\n  x_MN = Aᴴz = Aᴴ(AAᴴ)⁻¹y  ✓\n\nDoğrulama: A·x_MN = A·Aᴴ(AAᴴ)⁻¹y = (AAᴴ)(AAᴴ)⁻¹y = y  ✓"
-        },
-        {
-          "type": "code",
-          "heading": "Case 1 ve Case 2 türetimlerinin simetrik yapısı",
-          "text": "Case 1 (Tall, M>N, full column rank):\n  Problem: min ||y-Ax||² (en yakın nokta → projeksiyon)\n  Koşul: (y-Ax_LS) ⊥ R(A) → Aᴴ(y-Ax_LS) = 0\n  Normal denklem: AᴴAx_LS = Aᴴy\n  Çözüm: x_LS = (AᴴA)⁻¹Aᴴy\n  Left pseudo-inverse: A† = (AᴴA)⁻¹Aᴴ  (soldan birim: A†A = I_N)\n\nCase 2 (Fat, M<N, full row rank):\n  Problem: min ||x||² s.t. Ax=y (en kısa çözüm)\n  Koşul: x_MN ⊥ N(A) → x_MN ∈ R(Aᴴ) → x_MN = Aᴴz\n  Denklem: (AAᴴ)z = y\n  Çözüm: x_MN = Aᴴ(AAᴴ)⁻¹y\n  Right pseudo-inverse: A† = Aᴴ(AAᴴ)⁻¹  (sağdan birim: AA† = I_M)\n\nSimetri:\n  Case 1: A†A = I_N (sol ters), AA† = P_{R(A)} (projeksiyon)\n  Case 2: AA† = I_M (sağ ters), A†A = P_{R(Aᴴ)} (projeksiyon)\n  Her iki durumda da A†y = minimum norm LS çözümü."
-        },
-        {
-          "type": "insight",
-          "heading": "Çözümlerin geometrik birliği",
-          "text": "Case 1 ve Case 2 aslında aynı fikrin iki yüzü:\n\nCase 1: y'den R(A)'ya projeksiyon bul (en yakın nokta)\nCase 2: T={xp}+N(A)'dan orijine en yakın nokta bul\n\nHer ikisinde de:\n- 'En iyi seçim' = hata/çözüm uygun alt uzaya dik\n- Formül pseudo-inverse A†y ile\n- Chapter 1'in projeksiyon teoremi arka planda çalışıyor\n\nBu dersin ana mesajı: sinyal işlemedeki ters problemlerin hepsi 'doğru alt uzaya projeksiyon' problemi."
-        }
-      ]
-    },
-    {
-      "title": "SVD ve Case 3 — Rank-Deficient Sistemler ve Regularization",
-      "cat": "Signal Processing",
-      "summary": "SVD: A = UΣVᴴ. Pseudo-inverse: A† = VΣ†Uᴴ (sıfır olmayan tekil değerlerin tersi). Case 3 (rank-deficient): hem LS hem min-norm birleştirilir. Tikhonov regularization: A†λ = V(Σ²+λI)⁻¹ΣUᴴ — küçük tekil değerleri sönümle.",
-      "context": "EE499 · Chapter 2.4 — SVD, Case 3, and Regularization",
-      "sections": [
-        {
-          "type": "code",
-          "heading": "SVD: her matrisin evrensel ayrışımı",
-          "text": "Singular Value Decomposition (SVD):\n  A = U Σ Vᴴ  (A ∈ ℂᴹˣᴺ)\n  U ∈ ℂᴹˣᴹ: unitary (sütunlar: sol tekil vektörler)\n  Σ ∈ ℝᴹˣᴺ: diyagonal (σ₁ ≥ σ₂ ≥ ... ≥ σᵣ > 0, r = rank(A))\n  V ∈ ℂᴺˣᴺ: unitary (sütunlar: sağ tekil vektörler)\n\nMühendislik yorumu:\n  A = Σᵢ σᵢ uᵢ vᵢᴴ  (rank-1 matris toplamı)\n  Her σᵢ uᵢ vᵢᴴ: vᵢ giriş yönünü uᵢ çıkış yönüne σᵢ ile bağlar.\n\nTemel uzaylar:\n  R(A) = span{u₁,...,uᵣ}  (sol tekil vektörler)\n  N(A) = span{v_{r+1},...,v_N}  (sağ tekil vektörler, σ=0)\n  R(Aᴴ) = span{v₁,...,vᵣ}  (σ>0 sağ tekil vektörler)\n  N(Aᴴ) = span{u_{r+1},...,u_M}"
-        },
-        {
-          "type": "code",
-          "heading": "Pseudo-inverse A† ve Case 3 çözümü",
-          "text": "SVD'den pseudo-inverse:\n  A† = V Σ† Uᴴ\n  Σ†: Σ'nın pseudo-inverse = sıfır olmayan tekil değerlerin tersini al\n  Σ† = diag(1/σ₁, 1/σ₂, ..., 1/σᵣ, 0, ..., 0)\n\nCase 3 (rank-deficient, r < min(M,N)):\n  x† = A†y = V Σ† Uᴴ y\n  Bu: minimum norm + minimum residual çözümü\n  - ||y - Ax†||₂ = minimum (LS bileşeni)\n  - ||x†||₂ = minimum (norm bileşeni)\n\nNeden SVD bu iki özelliği birleştiriyor?\n  Uᴴy: y'yi sola tekil bazda yaz\n  Σ†: σ>0 bileşenlerini ölçekle, σ=0 bileşenlerini sıfırla\n    → σ=0 yönleri sıfır bırakılır (min-norm)\n    → σ>0 yönlerde LS bileşeni hesaplanır\n  Vᴴ: tekrar orijinal bazda göster\n\n4 Durum için pseudo-inverse:\n  Case 0: r=M=N → A†=A⁻¹\n  Case 1: r=N<M → A†=(AᴴA)⁻¹Aᴴ\n  Case 2: r=M<N → A†=Aᴴ(AAᴴ)⁻¹\n  Case 3: r<min(M,N) → A†=VΣ†Uᴴ  (en genel)"
-        },
-        {
-          "type": "code",
-          "heading": "Tikhonov regularization — küçük tekil değerleri sönümle",
-          "text": "Sorun: Küçük σᵢ değerleri gürültü amplifikasyonuna yol açar.\n  x† = Σᵢ (1/σᵢ) (uᵢᴴy) vᵢ\n  σᵢ → 0 ise (1/σᵢ) → ∞ → gürültü yükselir\n\nTikhonov regularization:\n  min_x ||y - Ax||² + λ||x||²  (λ > 0)\n  Normal denklem: (AᴴA + λI) x_λ = Aᴴy\n  Çözüm: x_λ = (AᴴA + λI)⁻¹Aᴴy\n\nSVD ile ifade:\n  x_λ = Σᵢ [σᵢ / (σᵢ² + λ)] (uᵢᴴy) vᵢ\n  Filtre faktörü: fᵢ = σᵢ² / (σᵢ² + λ)\n    σᵢ >> √λ: fᵢ ≈ 1 (büyük tekil değerler korunur)\n    σᵢ << √λ: fᵢ ≈ 0 (küçük tekil değerler sönümlenir)\n\nλ seçimi:\n  λ büyük → fazla düzenleme, çözüm smooth ama yaklaşık\n  λ küçük → az düzenleme, çözüm keskin ama gürültülü\n  Optimal λ: cross-validation, L-curve, GCV yöntemleriyle"
+          "heading": "Dekonvolüsyon frekans domeninde ve gürültü problemi",
+          "text": "Gürültüsüz dekonvolüsyon frekans domeninde trivial:\n  Y[k] = H[k]·X[k] → X̂[k] = Y[k] / H[k]\n\nAma pratikte iki sorun:\n\nSorun 1 — Sıfır frekanslar:\n  Bazı k için H[k] = 0 → o frekanstaki sinyal tamamen kaybolmuş.\n  Bölme tanımsız → tam ters alma imkânsız.\n\nSorun 2 — Gürültü amplifikasyonu:\n  Ölçüm: Ỹ[k] = H[k]X[k] + N[k]  (gürültü eklendi)\n  Naif: X̂[k] = Ỹ[k]/H[k] = X[k] + N[k]/H[k]\n  Eğer |H[k]| = 0.001: N[k]/H[k] = 1000·N[k] → 1000 kat amplify!\n  Blur filtreler yüksek frekanslarda küçük → en hassas frekanslar en çok bozuluyor.\n\nÇözüm — Wiener filtre (regularized deconvolution):\n  X̂[k] = H*[k] / (|H[k]|² + λ) · Ỹ[k]\n  λ küçük: az düzenleme, gürültü amplifikasyonu riski\n  λ büyük: fazla düzenleme, yüksek frekanslar bastırılıyor\n  Bu frekans domeninde Tikhonov regularization'ın tam karşılığı.\n\nBüyük resim:\n  SP'de 'zaman domeninde çalış' vs 'frekans domeninde çalış' ikilemi aslında baz seçimi.\n  Her ikisi de aynı matematiksel nesneyi farklı koordinatlarda ifade ediyor.\n  Doğru baz seçimi problemi dramatik şekilde sadeleştiriyor — DFT bunun en güçlü örneği."
         }
       ]
     }
   ],
   "vs03": [
     {
-      "title": "Rassal Değişkenler Neden Vektör Uzayı Oluşturur?",
+      "title": "RV'ler İç Çarpım Uzayı Kuruyor — Beklenti = İç Çarpım, Korelasyon = Açı",
       "cat": "Foundation",
-      "summary": "Rassal değişkenler soyut bir iç çarpım uzayı oluşturur. Bu sayede beklenti E[xy] iç çarpım, RMS değer norm, korelasyon katsayısı ise açının kosinüsü olur.",
-      "context": "EE499 · Chapter 3 · Section 3.1 — IPS of RVs",
+      "summary": "Rassal değişkenler <x,y> = E[xy] iç çarpımıyla bir IPS kuruyor. Norm = RMS değeri, mesafe = MSE'nin kare kökü. Korelasyon katsayısı ρ = cos θ — gerçekten geometrik bir açı. Diklik = korelasyonsuzluk. Ama dikkat: korelasyonsuzluk bağımsızlık değil.",
+      "context": "EE499 · Inner Product Space of Random Variables",
       "sections": [
         {
           "type": "code",
-          "heading": "Bu chapter'ın can alıcı sorusu",
-          "text": "Chapter 1'de vektör uzayı ne demek öğrendik. Chapter 2'de lineer operatörleri, LS'yi, projeksiyon fikrini işledik.\nBu chapter'da ise şunu soruyoruz: rassal değişkenler de bir vektör uzayı olabilir mi?\n\nİlk bakışta garip gelir — x² + 2x gibi bir fonksiyon nasıl 'vektör' olabilir ki? Ama bunu zaten gördük:\nChapter 1'de 'vektör' sadece ok değil, aksiyomları sağlayan HER nesne. Fonksiyonlar da vektördü. Polinomlar da vektördü.\n\nRassal değişkenler de o listeye giriyor. Ve bu sadece teorik bir hüner değil — son derece pratik.\nÇünkü vektör uzayı kurduğunuzda, o uzayın tüm geometrik araçları elinizin altına giriyor:\nprojesiyonlar, diklik, Gram-Schmidt, her şey. Ve bunlar tahmin teorisinde hayatınızı kurtarıyor."
+          "heading": "Neden rassal değişkenler vektör uzayı kuruyor?",
+          "text": "Chapter 1'de 'vektör' sadece ok değil, aksiyomları sağlayan her nesne demiştik.\nFonksiyonlar vektördü. Polinomlar vektördü. Matrisler vektördü.\n\nŞimdi soru: Rassal değişkenler de vektör olabilir mi?\n\nİlk bakışta garip gelir — bir dağılımdan çekilen sayı nasıl 'vektör' olacak?\nAma vektör uzayı aksiyomları kontrolü yapalım:\n  x, y RV, α,β ∈ ℝ\n  αx + βy de bir RV (lineer kombinasyon) ✓\n  0·x = 0 (sıfır vektörü) ✓\n  Diğer aksiyomlar doğrudan sağlanıyor ✓\n\nYani RV'ler bir vektör uzayı. Ama daha güçlüsünü kurabiliriz:\niç çarpım uzayı (IPS).\n\nİç çarpım olarak E[xy] seçelim:\n  <x, y> = E[xy]\n\nİç çarpım aksiyomlarını kontrol edelim:\n  Simetri:   <x,y> = E[xy] = E[yx] = <y,x> ✓\n  Lineerlik: <αx+βz, y> = E[(αx+βz)y] = αE[xy]+βE[zy] ✓  (beklentinin lineerliği)\n  Pozitiflik: <x,x> = E[x²] ≥ 0 ✓  (kare her zaman negatif değil)\n              <x,x> = 0 ↔ x = 0 neredeyse kesinlikle ✓\n\nHepsi sağlandı. Demek ki E[xy] geçerli bir iç çarpım.\nVe bu sadece teorik bir hüner değil — son derece pratik."
         },
         {
           "type": "code",
-          "heading": "İç çarpımı nasıl tanımlıyoruz?",
-          "text": "Normal vektörlerde iç çarpım u·v = Σ uᵢvᵢ'di. Yani bileşen bileşen çarp, topla.\n\nFonksiyon uzayında ise integral alıyorduk: <f,g> = ∫ f(x)g(x) dx\n\nRassal değişkenler için ise beklenti değeri var:\n  <x, y> = E[xy]\n\nNeden bu? Çünkü rassal bir değişken, olası tüm değerleri ve olasılıklarıyla birlikte bir nesnedir.\n'x ve y'nin birlikte davranışını' ölçmek istiyorsak, beklenti mantıklı bir yol.\nBeklenti, ağırlıklı ortalama gibi düşün — olasılıkları ağırlık olarak kullanan bir integral.\n\nBu tanımın çalıştığını görmek için Chapter 1'deki iç çarpım aksiyomlarını kontrol edelim:\n  Simetri:   E[xy] = E[yx]   ✓ (çarpma değişmeli)\n  Lineerlik: E[(αx+βz)y] = αE[xy] + βE[zy]  ✓ (beklentinin lineerliği)\n  Pozitiflik: E[x²] ≥ 0   ✓ (kare her zaman negatif olmaz)\n              E[x²] = 0  ↔  x = 0 (neredeyse kesinlikle)\n\nHepsi sağlanıyor. Demek ki rassal değişkenler bir IPS (İç Çarpım Uzayı) kuruyor."
+          "heading": "Norm = RMS, Korelasyon = Açı — neden bu böyle?",
+          "text": "IPS kurununca norm ve mesafe otomatik türetilebiliyor.\n\nNorm:\n  ||x|| = √<x,x> = √E[x²]  ← RMS (root-mean-square) değeri\n  Sinyalcilere çok tanıdık: RMS = sinyal gücünün karekökü.\n\nMesafe:\n  d(x,y) = ||x-y|| = √E[(x-y)²] = √MSE(x,y)\n  İki RV arasındaki 'uzaklık' = birbirine ne kadar 'yakın' tahmin edilebileceği.\n\nCauchy-Schwarz eşitsizliği otomatik geçerli:\n  |<x,y>| ≤ ||x|| · ||y||\n  |E[xy]| ≤ √E[x²] · √E[y²]\n\nNormalize edince korelasyon katsayısı:\n  ρ_{xy} = E[xy] / (||x|| · ||y||) = <x,y> / (||x|| · ||y||) = cos θ\n\n  ρ = 1  → θ = 0°   → aynı yönde → y = ax (tam lineer bağımlılık)\n  ρ = -1 → θ = 180° → zıt yönde  → y = -ax\n  ρ = 0  → θ = 90°  → dik         → lineer ilişki yok\n\nKorelasyon |ρ| ≤ 1 olması bir kural değil — Cauchy-Schwarz'ın doğal sonucu!\n\nMerkezi (zero-mean) versiyonda:\n  x̃ = x - μ_x ile çalışınca <x̃,ỹ> = E[(x-μ_x)(y-μ_y)] = Cov(x,y)\n  ||x̃|| = σ_x\n  ρ = Cov(x,y) / (σ_x·σ_y) = cos θ\n  Korelasyon katsayısının standart istatistiksel formülü buradan geliyor."
         },
         {
           "type": "code",
-          "heading": "Buradan ne çıkıyor?",
-          "text": "IPS kurulunca iç çarpımdan otomatik olarak norm ve mesafe türetilebiliyor.\n\nNorm: ||x|| = √<x,x> = √E[x²]\nBu, bir rassal değişkenin RMS (root-mean-square) değeri. Sinyalcilere çok tanıdık.\n\nMesafe: d(x,y) = ||x-y|| = √E[(x-y)²]\nBu da MSE'nin (ortalama kare hata) kare kökü. Yani iki rassal değişken arasındaki 'uzaklık',\nbiri diğerine ne kadar 'yakın' tahmin edebileceğimizle doğrudan ilgili.\n\nVe şu çok önemli: Cauchy-Schwarz eşitsizliği otomatik olarak geçerli:\n  |E[xy]| ≤ √E[x²] · √E[y²]\n\nBu eşitsizliği normalize edince ne çıkıyor? Korelasyon katsayısı:\n  |E[xy]| / (||x|| · ||y||) ≤ 1\n  yani |ρ| ≤ 1\n\nDemek ki korelasyon katsayısının -1 ile 1 arasında olması bir kural değil, Cauchy-Schwarz'ın doğal sonucu!"
-        }
-      ]
-    },
-    {
-      "title": "Korelasyon Katsayısı = İki RV Arasındaki Açının Kosinüsü",
-      "cat": "Foundation",
-      "summary": "ρ_{xy} = cos θ. İki rassal değişken arasındaki ilişki, bu uzayda iki vektörün arasındaki açıyla tamamen ölçülür. Diklik = korelasyonsuzluk.",
-      "context": "EE499 · Chapter 3 · Section 3.1 — Correlation as Angle",
-      "sections": [
-        {
-          "type": "code",
-          "heading": "ρ = cos θ derken ne demek istiyoruz?",
-          "text": "Hayatınızda 'iki değişken arasındaki korelasyon' diye bir terim duydunuz ve -1 ile 1 arasında bir sayı olduğunu biliyordunuz. Ama neden? Ve 'açı' ne alaka?\n\nIPS'de iki vektör arasındaki açı şöyle tanımlıydı:\n  cos θ = <u, v> / (||u|| · ||v||)\n\nBunu rassal değişkenlere uygulayalım:\n  cos θ = E[xy] / (√E[x²] · √E[y²])\n\nBu tam olarak korelasyon katsayısı ρ_{xy}! (sıfır ortalamalı durumda)\n\nYani ρ bir 'benzerlik ölçüsü' değil — gerçekten geometrik bir açı.\nİki RV, bu soyut uzayda iki vektör gibi oturuyor, ve aralarındaki açı onların ilişkisini ölçüyor.\n\nρ = 1  → açı = 0°  → aynı yönde → y = ay, mükemmel lineer bağımlılık\nρ = -1 → açı = 180° → zıt yönde  → y = -ax, mükemmel ters bağımlılık\nρ = 0  → açı = 90°  → dik         → hiç lineer ilişki yok"
-        },
-        {
-          "type": "code",
-          "heading": "Diklik = Korelasyonsuzluk — Bu çok önemli",
-          "text": "Geometrik diklik: <u, v> = 0 → u ⊥ v\n\nRassal değişkenler için: E[xy] = 0 → x ⊥ y (bu uzayda dik)\n\nVe E[xy] = 0 demek, istatistikte 'x ve y arasında lineer ilişki yok' demek, yani 'korelasyonsuz'.\n\nBir dakika — 'bağımsız' ile 'korelasyonsuz' aynı şey mi?\n  HAYIR. Bu çok yaygın bir karıştırma.\n\nBağımsızlık: f(x,y) = f(x)·f(y)  → tam bilgi, her türlü ilişki yok\nKorelasyonsuzluk: E[xy] = E[x]·E[y] → sadece lineer ilişki yok, nonlineer olabilir\n\nBağımsız ise korelasyonsuz   (tek yönlü!)\nKorelasyonsuz ise bağımsız   (YANLIŞ — genel olarak)\n\nÖrnek: x ~ Uniform(-1,1), y = x²\n  E[x] = 0, E[y·x] = E[x³] = 0 (simetri nedeniyle)\n  Ama y tamamen x'e bağımlı! y = x² bilince x'i biliyorsun.\n  Korelasyonsuz ama bağımlı.\n\nAma Gaussian için özel durum var: Gaussian RV'lerde korelasyonsuzluk ↔ bağımsızlık.\nBu neden? Çünkü Gaussian dağılım sadece ortalaması ve kovaryansıyla tamamen belirleniyor.\nKovaryans = 0 → joint Gaussian ayrışıyor → bağımsız."
-        },
-        {
-          "type": "code",
-          "heading": "Merkezi RV'ler için açı yorumu",
-          "text": "Pratikte iç çarpımı sıfır ortalamalı (merkezi) versiyonla tanımlıyoruz:\n  x̃ = x - μ_x,   ỹ = y - μ_y\n\nÇünkü 'ilişki' derken sabit kısımları değil, dalgalanmaları kastetmek istiyoruz.\nİki değişken her ikisi de 5 olan sabit değerlerse aralarında 'ilişki' aramak anlamsız.\n\nMerkezi iç çarpım: <x̃, ỹ> = E[(x-μ_x)(y-μ_y)] = Cov(x,y)\nMerkezi norm: ||x̃|| = √Var(x) = σ_x\n\nKorelasyon katsayısı:\n  ρ_{xy} = Cov(x,y) / (σ_x · σ_y)\n         = <x̃, ỹ> / (||x̃|| · ||ỹ||)\n         = cos θ\n\nBir örnekle somutlaştıralım:\nTemperature ve ice cream sales yüksek ρ (~0.9) → neredeyse aynı yönde vektörler\nTemperature ve coat sales düşük ρ (~-0.8) → neredeyse zıt yönde\nKöpek adı uzunluğu ve hisse senedi fiyatı ρ ≈ 0 → birbirine dik, alakasız"
+          "heading": "Diklik = Korelasyonsuzluk — ama bağımsızlık değil!",
+          "text": "Bu uzayda diklik:\n  x ⊥ y ↔ <x,y> = 0 ↔ E[xy] = 0 ↔ korelasyonsuz\n\nYani 'iki RV dik' demek 'aralarında lineer ilişki yok' demek.\n\nAma şunu karıştırmayın: korelasyonsuzluk ≠ bağımsızlık!\n\nBağımsızlık: p(x,y) = p(x)·p(y) → her türlü ilişki yok\nKorelasyonsuzluk: E[xy] = E[x]·E[y] → sadece lineer ilişki yok\n\nBağımsız ise korelasyonsuz (tek yönlü!)\nKorelasyonsuz ise bağımsız — genel olarak YANLIŞ.\n\nKarşı örnek:\n  x ~ Uniform(-1,1), y = x²\n  E[x] = 0 (simetri), E[y·x] = E[x³] = 0 (tek fonksiyon, simetrik dağılım)\n  ρ = 0 → korelasyonsuz. Ama y = x² → y tamamen x'e bağımlı!\n\nGaussian özel durum:\n  x ve y joint Gaussian ise: korelasyonsuzluk ↔ bağımsızlık.\n  Neden? Gaussian dağılım tamamen ortalama ve kovaryansıyla belirleniyor.\n  Kovaryans = 0 → joint Gaussian ayrışıyor → bağımsız.\n  Bu sadece Gaussian'a özel bir özellik."
         }
       ]
     },
     {
       "title": "Gram Matrisi = Oto-Korelasyon Matrisi, Gram-Schmidt = Beyazlatma",
       "cat": "Foundation",
-      "summary": "RV vektörlerinde Gram matrisi doğrudan R_x = E[xx^T] oluyor. Gram-Schmidt sürecini RV'lere uygulayınca 'whitening' elde ediyoruz.",
-      "context": "EE499 · Chapter 3 · Section 3.1 — Gram Matrix & Whitening",
+      "summary": "Chapter 1'deki Gram matrisi G_{ij} = <φᵢ,φⱼ>, RV dünyasında E[xᵢxⱼ] = R_x oluyor. Aynı nesne, farklı isim. Gram-Schmidt'i RV'lere uygulayınca Whitening elde ediliyor: R_z = I (hem korelasyonsuz hem eşit varyans).",
+      "context": "EE499 · Gram Matrix and Whitening",
       "sections": [
         {
           "type": "code",
-          "heading": "Gram matrisi neydi, burada ne oluyor?",
-          "text": "Chapter 2'de bir baz {φ₁, φ₂, ..., φₙ} verilince Gram matrisini hesaplamıştık:\n  G_ij = <φᵢ, φⱼ>\n\nBu matris bize baz vektörlerinin birbirleriyle ne kadar 'örtüştüğünü' söylüyordu.\nProje yansıma katsayılarını bulmak için G·c = d sistemini çözüyorduk.\n\nŞimdi baz elemanları rassal değişkenler: x = [x₁, x₂, ..., xₙ]^T\n  G_ij = <xᵢ, xⱼ> = E[xᵢ·xⱼ]\n\nBu tam olarak oto-korelasyon matrisi:\n  R_x = E[xx^T]\n\nKöşegen elemanlar: E[xᵢ²] = güç (varyans + ortalama kare)\nKöşegen dışı: E[xᵢxⱼ] = xᵢ ve xⱼ arasındaki korelasyon\n\nYani Chapter 2'de gördüğünüz soyut Gram matrisi, istatistikte hep kullandığınız\noto-korelasyon matrisiyle tamamen aynı şey. Farklı isimler, aynı nesne."
+          "heading": "Gram matrisi neydi, RV için ne oluyor?",
+          "text": "Chapter 1'de Gram matrisini görmüştük: bir baz {φ₁,...,φₙ} verilince\n  G_{ij} = <φᵢ, φⱼ>\nBu matris baz vektörlerinin birbirleriyle ne kadar 'örtüştüğünü' ölçüyordu.\nProjektion katsayılarını bulmak için G·c = d sistemini çözüyorduk.\n\nŞimdi baz elemanları RV'ler: x = [x₁, x₂, ..., xₙ]ᵀ\n  G_{ij} = <xᵢ, xⱼ> = E[xᵢ·xⱼ]\n\nBu tam olarak oto-korelasyon matrisi:\n  R_x = E[xxᵀ]\n  (R_x)_{ij} = E[xᵢxⱼ]\n\nKöşegen elemanlar: E[xᵢ²] = i. RV'nin gücü (varyans + ortalama²)\nKöşegen dışı: E[xᵢxⱼ] = xᵢ ve xⱼ arasındaki korelasyon\n\nYani Chapter 1'de gördüğünüz soyut Gram matrisi,\nistatistikte hep kullandığınız oto-korelasyon matrisiyle tamamen aynı nesne.\nFarklı isimler, farklı bağlamlar — aynı matematiksel yapı.\n\nProjektion bağlantısı:\n  Birinden projeksiyon bulurken G·c = d çözüyorduk.\n  LMMSE'de R_y·α = r_xy çözüyoruz.\n  Aynı denklem sistemi. (Bunu bir sonraki kartta detaylandıracağız.)"
         },
         {
           "type": "code",
-          "heading": "Gram-Schmidt'i RV'lere uygulayınca ne olur?",
-          "text": "Gram-Schmidt süreci bir baz alıp onu ortogonal normalize bir baza çeviriyor.\nRassal değişkenlere uyguladığımızda da aynı adımlar işliyor, ama sonuç istatistiksel anlam taşıyor.\n\nDiyelim ki x₁, x₂, ..., xₙ rassal değişkenlerimiz var, birbirleriyle korelasyonlu.\n\nAdım 1: e₁ = x₁ / ||x₁|| = x₁ / √E[x₁²]\n  → e₁ birim varyanslı, x₁ yönünde\n\nAdım 2: x₂'den x₁ yönündeki bileşeni çıkar:\n  x₂' = x₂ - <x₂, e₁>·e₁ = x₂ - (E[x₂e₁]/1)·e₁\n  Bu işlem tam olarak 'x₂'den x₁'in etkisini arındırma'\n  e₂ = x₂' / ||x₂'||\n\nSonunda: E[eᵢ·eⱼ] = δᵢⱼ\n  → Birbirine dik (korelasyonsuz) ve birim varyanslı RV'ler\n\nBunu tek seferde matris işlemiyle yapmak da mümkün:\n  R_x = U Λ Uᵀ   (eigenvalue decomposition)\n  z = Λ^{-1/2} Uᵀ x  →  E[zzᵀ] = I\n\nİşte bu 'whitening' — beyazlatma."
-        },
-        {
-          "type": "code",
-          "heading": "Beyazlatma neden 'beyaz'?",
-          "text": "İstatistikte 'white noise' — beyaz gürültü — şu anlama gelir:\nbileşenler birbirinden bağımsız, hepsi aynı varyanslı, yani R_n = σ²I.\n\nBeyazlatma işlemi de tam bunu yapıyor: korelasyonlu bir x'i alıp\nbileşenleri birbirinden bağımsız ve eşit varyanslı bir z'ye dönüştürüyor:\n  z = Λ^{-1/2} Uᵀ x  →  R_z = I\n\nDekorelasyon ile beyazlatma arasındaki fark:\n  Dekorelasyon: E[zᵢzⱼ] = 0 (i≠j) — korelasyon kaldırıldı, ama varyanslar farklı olabilir\n  Beyazlatma:   E[zzᵀ] = I    — hem korelasyon kaldırıldı, hem varyanslar eşitlendi\n\nNerede kullanılıyor?\n  PCA (Principal Component Analysis): veriyi dekore eder, ama normalize etmez\n  ICA (Independent Component Analysis): whitening ön adım olarak kullanılır\n  Matched filtering: gürültüyü beyazlatıp sonra matched filter uygularsın\n  ZCA whitening: beyazlatma + geri döndürme (görüntülerde)  \n\nPratik not: Gram-Schmidt sayısal olarak kararsız olabilir. QR ayrışımı daha sağlam."
+          "heading": "Gram-Schmidt'i RV'lere uygulayınca — Beyazlatma",
+          "text": "Gram-Schmidt bir baz alıp onu ortonormal baza çeviriyordu.\nRV'lere uyguladığımızda da aynı adımlar işliyor, ama istatistiksel anlam taşıyor.\n\nDiyelim ki x₁, x₂, ..., xₙ korelasyonlu RV'lerimiz var.\n\nAdım 1: e₁ = x₁ / ||x₁|| = x₁ / √E[x₁²]\n  → e₁ birim varyanslı, x₁ yönünde\n\nAdım 2: x₂'den x₁ yönündeki bileşeni çıkar (Gram-Schmidt adımı):\n  x₂' = x₂ - <x₂,e₁>·e₁ = x₂ - E[x₂e₁]·e₁\n  Bu işlem 'x₂'den x₁'in etkisini arındırma'\n  e₂ = x₂' / ||x₂'||\n\n... devam et N'e kadar.\n\nSonuç: E[eᵢ·eⱼ] = δᵢⱼ\n  → Birbirlerine korelasyonsuz ve birim varyanslı RV'ler\n\nBunu tek seferde matris işlemiyle yapmak da mümkün:\n  R_x = U Λ Uᵀ  (eigenvalue decomposition)\n  z = Λ^{-1/2} Uᵀ x  →  E[zzᵀ] = I\n\nBu 'whitening' — beyazlatma:\n  Dekorelasyon: E[zᵢzⱼ] = 0 (i≠j), ama varyanslar farklı olabilir\n  Beyazlatma: E[zzᵀ] = I — hem korelasyon kaldırıldı, hem varyanslar 1'e eşitlendi\n\nNeden 'beyaz'?\n  White noise: bileşenler bağımsız, hepsi eşit varyanslı → R_n = σ²I\n  Whitening: keyfi R_x'li sinyali R_z = I'ya dönüştür.\n\nKullanım yerleri:\n  PCA: veriyi dekore eder (ama normaliz etmez — sadece Λ Uᵀ)\n  ICA: whitening ön adım\n  Matched filtering: önce gürültüyü beyazlat, sonra filtre uygula"
         }
       ]
     },
     {
-      "title": "LMMSE Tahmini — Sıfırdan Neden ve Nasıl?",
+      "title": "LMMSE — Projeksiyon Olarak Tahmin ve Ortogonallik İlkesi",
       "cat": "Estimation",
-      "summary": "Bilinmeyen x'i gözlemler y₁,...,yN'den lineer tahmin et. En iyi katsayılar R_y α = r_xy sisteminden gelir — bu aynı zamanda x'in y uzayına projektesidir.",
-      "context": "EE499 · Chapter 3 · Section 3.2 — Scalar LMMSE",
+      "summary": "LMMSE sorunu: x'i y₁,...,yN'den lineer tahmin et. Optimal katsayılar R_y α = r_xy'den geliyor. Bu iki yoldan türetiliyor: MSE minimize etmek ve x'i span{y}'ye proje etmek — ikisi aynı. Ortogonallik ilkesi: optimal tahminде hata her gözleme dik.",
+      "context": "EE499 · LMMSE Estimation",
       "sections": [
         {
           "type": "code",
-          "heading": "Problem ne, neden zor?",
-          "text": "Diyelim ki bilinmeyen bir x rassal değişkeni var — ölçemiyorsunuz, gözleminiz yok.\nAma x ile ilişkili, gürültülü ölçümler yapabiliyorsunuz: y₁, y₂, ..., yN.\n\nSoru: Bu gözlemlerden x'i en iyi nasıl tahmin edersiniz?\n\nEn genel tahmin edici herhangi bir fonksiyon olabilir: x̂ = f(y₁,...,yN)\nAma bu çok genel. Keyfi bir f'i optimize etmek zor, kapalı form çözüm neredeyse hiç yok.\n\nLineer kısıt: x̂ = α₁y₁ + α₂y₂ + ... + αN·yN = αᵀy\n  → Sadece N tane katsayı α optimize edilecek\n  → Kapalı form çözüm var\n  → Sadece E[xy], E[y²] gibi ikinci dereceden momentler yeterli (tam dağılım gerekmez)\n  → Gaussian gürültüde optimal MMSE ile özdeş!\n\nBu yüzden 'LMMSE' — Linear Minimum Mean Square Error tahmin edicisi."
+          "heading": "Neden lineer? Ve neden sadece 2. dereceden momentler yeterli?",
+          "text": "Problem: x bilinmeyen RV, y₁, y₂, ..., yN gürültülü gözlemler.\nHedеf: x'i bu gözlemlerden en iyi nasıl tahmin ederiz?\n\nEn genel tahmin edici: x̂ = f(y₁,...,yN) — herhangi bir fonksiyon.\nAma bu çok genel: optimal f'yi bulmak genellikle analitik çözüm içermiyor.\n\nLineerlik kısıtı: x̂ = α₁y₁ + α₂y₂ + ... + αₙyₙ = αᵀy\nNeden bu mantıklı?\n  1. Sadece N tane α optimize edilecek → çok daha kolay.\n  2. Kapalı form çözüm var.\n  3. Sadece E[xy], E[y²] gibi 2. dereceden momentler yeterli (tam dağılım gerekmez).\n  4. Gaussian gürültüde LMMSE = optimal MMSE — yani hiçbir şey kaybedilmiyor!\n\nBu yüzden 'Linear Minimum Mean Square Error' tahmin edicisi:\n  x̂_LMMSE = argmin_{α} E[(x - αᵀy)²]\n\nMSE maliyeti:\n  E[(x - αᵀy)²] = E[x²] - 2αᵀE[xy] + αᵀE[yyᵀ]α\n\nα₁'e göre türev alıp sıfıra eşit:\n  ∂E[e²]/∂α₁ = -2E[xy₁] + 2Σⱼ αⱼE[y₁yⱼ] = 0\n  E[e·y₁] = 0\n\nBenzer şekilde her αₖ için:\n  E[e·yₖ] = 0  ∀k = 1,...,N   ← Ortogonallik İlkesi"
         },
         {
           "type": "code",
-          "heading": "Katsayıları nasıl buluyoruz?",
-          "text": "Hata: e = x - x̂ = x - α₁y₁ - α₂y₂ - ... - αN·yN\nMaliyet: E[e²] = E[(x - αᵀy)²]  → minimize et\n\nα₁'e göre türev alıp sıfıra eşit:\n  ∂E[e²]/∂α₁ = E[2·e·(-y₁)] = -2E[e·y₁] = 0\n  → E[e·y₁] = 0\n\nBenzer şekilde her αk için:\n  E[e·yₖ] = 0  ∀k = 1,...,N\n\nBu, ortogonallik ilkesi. Ve şunu söylüyor:\n'Hata e, kullandığın tüm gözlemlerle korelasyonsuz olmalı.'\n\nSezgi: Eğer e ile y₁ arasında hala korelasyon varsa, y₁'den hala bir şeyler 'öğrenilmemiş' demek.\nOptimumda, gözlemlerden öğrenilecek her şey öğrenilmiş, geriye 'rastgele' bir hata kalmış.\n\nŞimdi E[e·yₖ] = 0'ı açalım:\n  E[(x - Σᵢ αᵢyᵢ)·yₖ] = 0\n  E[x·yₖ] = Σᵢ αᵢ E[yᵢ·yₖ]\n\nMatris formuna getirelim:\n  ⎡E[y₁²]   E[y₁y₂] ...⎤ ⎡α₁⎤   ⎡E[xy₁]⎤\n  ⎢E[y₂y₁] E[y₂²]  ...⎥ ⎢α₂⎥ = ⎢E[xy₂]⎥\n  ⎣...      ...     ...⎦ ⎣αN⎦   ⎣E[xyN]⎦\n\n  R_y · α = r_xy\n  ──────────────────────────────────\n  R_y: gözlemlerin Gram matrisi (= oto-korelasyon matrisi)\n  r_xy: x ile gözlemler arasındaki çapraz korelasyon vektörü\n  ──────────────────────────────────\n\nEğer R_y terslenebilirse: α_opt = R_y⁻¹ r_xy\n→ x̂_LMMSE = α_optᵀ y"
+          "heading": "R_y α = r_xy — normal denklem ve projeksiyon bağlantısı",
+          "text": "E[e·yₖ] = 0 koşulunu açalım:\n  E[(x - Σᵢ αᵢyᵢ)·yₖ] = 0\n  E[x·yₖ] = Σᵢ αᵢ E[yᵢ·yₖ]\n\nMatris formuna getirelim:\n  ⎡E[y₁²]   E[y₁y₂] ...⎤ ⎡α₁⎤   ⎡E[xy₁]⎤\n  ⎢E[y₂y₁] E[y₂²]  ...⎥ ⎢α₂⎥ = ⎢E[xy₂]⎥\n  ⎣...      ...     ...⎦ ⎣αₙ⎦   ⎣E[xyₙ]⎦\n\n  R_y · α = r_xy\n  ──────────────────────────────────\n  R_y = E[yyᵀ]:  oto-korelasyon (Gram matrisi!)\n  r_xy = E[xy]:  çapraz korelasyon vektörü\n  ──────────────────────────────────\n\nR_y terslenebilirse: α_opt = R_y⁻¹ r_xy\n→ x̂_LMMSE = (R_y⁻¹ r_xy)ᵀ y\n\nProjektion bağlantısı — bu çok önemli:\n  Chapter 1'deki projeksiyon problemi: Gram matrisi G, G·c = d\n  Buradaki LMMSE: R_y · α = r_xy\n  Tamamen aynı yapı! LMMSE = x'i span{y₁,...,yₙ}'ye proje etmek.\n\nNeden?\n  Projeksiyon teoreminde: hata e = x - x̂, alt uzay span{y}'ye ⊥\n  Burada: E[e·yₖ] = 0 ↔ e ⊥ yₖ (bu uzaydaki diklik)\n  İkisi de aynı koşul → LMMSE = projeksiyon.\n\nMSE formülü:\n  E[e²] = E[x²] - αᵀ_opt r_xy = σ_x² - r_xy^ᵀ R_y⁻¹ r_xy"
         },
         {
           "type": "code",
-          "heading": "Projeksiyon bağlantısı — bunu görmek çok önemli",
-          "text": "Chapter 2'deki projeksiyon problemini hatırlayın:\nVerilen baz {φ₁,...,φN}, hedefe en yakın lineer kombinasyonu bul.\n  G·c = d  (G = Gram matrisi, d = korelasyon vektörü)\n\nBurada aynı şey oluyor ama RV dünyasında:\n  G = R_y = E[yyᵀ]  (Gram matrisi)\n  d = r_xy = E[xy]  (korelasyon vektörü)\n  → R_y α = r_xy\n\nYani LMMSE aslında x'i span{y₁,...,yN}'e projekte etmek!\nx̂, bu uzaydaki en yakın noktadır — ve en yakın nokta, minimum mesafe, minimum MSE.\n\nGeometrik sezgi:\n  x bir noktada, span{y} bir alt uzay.\n  x̂ = x'in bu alt uzaya dikkatmesi.\n  e = x - x̂ = hata, projeksiyon alt uzayına dik.\n  e ⊥ yₖ  ∀k  →  E[e·yₖ] = 0  ✓\n\nBu bağlantı sayesinde Chapter 2'de öğrendiğiniz her şey burada geçerli.\nGram-Schmidt ile baz dikleştirme, projeksiyon stabilitesi, hepsi aynı çerçevede."
-        },
-        {
-          "type": "formula",
-          "heading": "Sonuç formülleri",
-          "text": "$$\\mathbf{R}_y \\boldsymbol{\\alpha} = \\mathbf{r}_{xy}$$\n$$\\boldsymbol{\\alpha}_{opt} = \\mathbf{R}_y^{-1}\\mathbf{r}_{xy}$$\n$$\\hat{x}_{LMMSE} = \\boldsymbol{\\alpha}_{opt}^T \\mathbf{y}$$\n$$\\text{MSE} = \\sigma_x^2 - \\boldsymbol{\\alpha}_{opt}^T \\mathbf{r}_{xy} = \\sigma_x^2 - \\mathbf{r}_{xy}^T \\mathbf{R}_y^{-1}\\mathbf{r}_{xy}$$"
+          "heading": "Ortogonallik ilkesinin iki yüzü",
+          "text": "E[e·yₖ] = 0 koşuluna iki ayrı yoldan ulaştık:\n\nOptimizasyon yolu:\n  E[e²]'yi αₖ'ya göre türev al, sıfıra eşit koy.\n  Sezgi: 'Fonksiyon minimumda → her yönde türev sıfır.'\n  Eğer e ile yₖ arasında hala korelasyon varsa,\n  αₖ'yı biraz değiştirince MSE daha küçülür → henüz optimum değil.\n\nProjektion yolu:\n  x̂ = x'in span{y₁,...,yₙ}'ye projeksiyonu olmalı.\n  Projeksiyon teoremi: hata e = x - x̂ ⊥ span{y}\n  → e ⊥ yₖ → E[e·yₖ] = 0\n\nİkisi aynı sonucu veriyor. Neden?\n  MSE = ||e||² = ||x - x̂||² minimizasyonu\n  = x'e en yakın x̂ bulma\n  = x'in span{y}'ye projeksiyonu.\n  Mesafe minimizasyonu ve projeksiyon aynı problem.\n\nBu bağlantı çok güçlü:\n  - Optimizasyon bakışı: 'nasıl katsayı bulacağım?' sorusunu yanıtlar\n  - Projeksiyon bakışı: 'neden bu mantıklı?' sorusunu yanıtlar\n  - İkisi birlikte: hem algoritma hem geometrik anlam"
         }
       ]
     },
     {
-      "title": "Ortogonallik İlkesi — Optimizasyon mu, Projeksiyon mu?",
+      "title": "LMMSE Uygulamaları — SNR Ağırlıklandırma, Vektör LMMSE ve y=Ax+n Modeli",
       "cat": "Estimation",
-      "summary": "E[e·yₖ]=0 koşuluna iki farklı yoldan gelinir: türev sıfırlama ve projeksiyon dikliği. Her iki bakış açısı aynı R_y α = r_xy sistemini verir.",
-      "context": "EE499 · Chapter 3 · Section 3.2 — Orthogonality Principle",
+      "summary": "Denoising örneği: N gürültülü kanaldan c tahmin et → αₖ ∝ SNRₖ (iyi kanale daha çok güven). Vektör LMMSE: x̂ = Ky, Wiener-Hopf KR_y = R_xy. Yapısal y=Ax+n modeli için x̂ = R_x Aᵀ(AR_x Aᵀ+R_n)⁻¹y — deterministik regularization'la köprü kuruluyor.",
+      "context": "EE499 · LMMSE Applications",
       "sections": [
         {
           "type": "code",
-          "heading": "Optimizasyon perspektifi — türev almak",
-          "text": "Bu yolu zaten gördünüz: E[e²]'yi her αk'ya göre türev alıp sıfıra eşitlemek.\n\n∂E[e²]/∂αk = 0\n→ E[2e·∂e/∂αk] = 0\n→ E[2e·(-yₖ)] = 0\n→ E[e·yₖ] = 0  ✓\n\nBu, calculus dili. 'Fonksiyon minimumda, o yüzden her yönde türev sıfır.'\n\nSezgi: Eğer hata e ile gözlem yₖ arasında hala bir korelasyon varsa,\nyₖ katsayısını biraz değiştirince MSE'yi daha da küçültebilirsin.\nOptimumda bu korelasyon sıfır — başka iyileştirme kalmamış."
+          "heading": "Denoising — SNR ağırlıklandırma sezgisi",
+          "text": "Somut örnek: c ∈ {±1} bilinmiyor, N gürültülü kanaldan ölçülüyor:\n  yₖ = c + nₖ,  nₖ ~ N(0, σ²_nk),  k = 1,...,N\n  n'ler birbirinden ve c'den bağımsız. E[c] = 0, E[c²] = σ_c² = 1.\n\nR_y ve r_cy hesabı (N=2 örneği için):\n  E[y₁²] = E[(c+n₁)²] = σ_c² + σ²_n1\n  E[y₁y₂] = E[(c+n₁)(c+n₂)] = σ_c²  (sadece c ortak, n'ler bağımsız)\n  E[c·yₖ] = E[c·(c+nₖ)] = σ_c²\n\n  R_y = ⎡σ_c² + σ²_n1    σ_c²        ⎤\n        ⎣σ_c²           σ_c² + σ²_n2⎦\n  r_cy = σ_c² · [1, 1]ᵀ\n\nR_y α = r_cy çözülünce SNR_k = σ_c²/σ²_nk tanımlanırsa:\n  αₖ_opt = SNRₖ / (1 + SNR₁ + SNR₂)\n\nGenel N gözlem için:\n  αₖ_opt ∝ SNRₖ   (her gözlemin ağırlığı kendi SNR'sıyla orantılı)\n  Gürültülü kanal → düşük SNR → küçük ağırlık (neredeyse ignore et)\n  Temiz kanal → yüksek SNR → büyük ağırlık\n  LMMSE bu seçimi otomatik yapıyor — insan sezgisini doğruluyor.\n\nMSE = σ_c² / (1 + Σₖ SNRₖ)\n  N → ∞: MSE → 0. Sonsuz gözlemle hatasız tahmin!\n  Eşit SNR: MSE = σ_c² / (1 + N·SNR) → N arttıkça logaritmik iyileşme."
         },
         {
           "type": "code",
-          "heading": "Projeksiyon perspektifi — geometri",
-          "text": "Şimdi tamamen farklı bir gözle bakın.\n\nSoru: x'i span{y₁,...,yN} alt uzayına en yakın nokta nerede?\n\nChapter 1'den biliyoruz: projeksiyon noktası x̂, hata e = x - x̂'i bu alt uzaya dik yapan noktadır.\n  e ⊥ span{y₁,...,yN}\n  → e ⊥ yₖ  ∀k\n  → E[e·yₖ] = 0  ✓\n\nAynı sonuç, tamamen farklı bir yoldan.\n\nNeden aynı sonuç? Çünkü 'hata karesi minimize etmek' ile 'alt uzaya projekte etmek' aslında aynı problem.\nMSE = ||e||² = ||x - x̂||² ve bunu minimize etmek = x'e en yakın x̂'i bulmak = projeksiyonu bulmak.\n\nBu örtüşme tesadüf değil. Hilbert uzayı teorisinin temel bir sonucu.\nVe bu nedenle IPS çerçevesi bu kadar güçlü — iki farklı düşünce biçimi tek noktada birleşiyor."
+          "heading": "Vektör LMMSE ve Wiener-Hopf denklemi",
+          "text": "Skaler durumda tek x tahmin ediyorduk: x̂ = αᵀy\nVektör durumunda birden fazla bilinmeyen: x ∈ ℝᵐ\n\nLineer tahmin edici: x̂ = Ky, K ∈ ℝ^{m×n}\n  K'nın her satırı kᵢᵀ: x̂ᵢ = kᵢᵀy\n\nHedef: min_K E[||e||²] = min_K trace(R_e)\nGüzel: Problem satır satır ayrışıyor!\nHer kᵢ bağımsız optimize edilebilir: R_y kᵢ = r_{xᵢy}  ∀i\n\nTüm satırlar matris olarak:\n  K R_y = R_xy    ← Wiener-Hopf Denklemi\n  ──────────────────────────────────\n  R_x  = E[xxᵀ]  (m×m, x oto-korelasyon)\n  R_y  = E[yyᵀ]  (n×n, y oto-korelasyon)\n  R_xy = E[xyᵀ]  (m×n, çapraz korelasyon)\n  ──────────────────────────────────\n\nR_y terslenebilirse:\n  K_opt = R_xy R_y⁻¹\n  x̂_LMMSE = R_xy R_y⁻¹ y\n\nHata kovaryansı:\n  R_e = R_x - K_opt R_yx = R_x - R_xy R_y⁻¹ R_yx"
         },
         {
           "type": "code",
-          "heading": "Her iki yol aynı sisteme çıkıyor",
-          "text": "Projeksiyon perspektifinden:\n  e ⊥ yₖ  →  E[(x - Σᵢαᵢyᵢ)·yₖ] = 0\n  E[x·yₖ] = Σᵢ αᵢ E[yᵢ·yₖ]\n  → R_y α = r_xy\n\nOptimizasyon perspektifinden:\n  ∂E[e²]/∂αk = 0  →  E[e·yₖ] = 0\n  → R_y α = r_xy\n\nTek sistem, iki yüz.\n\nBunu görmek önemli çünkü:\n  - Optimizasyon yüzü: 'katsayıları nasıl bulacağım?' sorusunu cevaplayabiliyor\n  - Projeksiyon yüzü: 'bu neden mantıklı?' sorusunu cevaplayabiliyor\n\nMühendislik pratiğinde: bazen bir bakış açısı daha yararlı, bazen diğeri.\nKarmaşık bir problem çözüyorsanız ve takıldıysanız, diğer perspektife geçin.\nGenellikle biri direkt hesaplamaya, diğeri yoruma yardımcı olur."
+          "heading": "y=Ax+n modeli — deterministik çözümlerle köprü",
+          "text": "Bu model SP'de her yerde: y = Ax + n, x ve n bağımsız, sıfır ortalamalı.\n\nR_y ve R_xy'yi hesaplayalım:\n  R_y = E[yyᵀ] = E[(Ax+n)(Ax+n)ᵀ]\n      = A·E[xxᵀ]·Aᵀ + E[nnᵀ]  (çapraz terimler x,n bağımsız → sıfır)\n      = AR_x Aᵀ + R_n\n\n  R_xy = E[xyᵀ] = E[x(Ax+n)ᵀ] = R_x Aᵀ\n\nWiener-Hopf K = R_xy R_y⁻¹:\n  K = R_x Aᵀ (AR_x Aᵀ + R_n)⁻¹\n  x̂_LMMSE = R_x Aᵀ (AR_x Aᵀ + R_n)⁻¹ y\n\nMatrix inversion lemma ile alternatif form:\n  x̂_LMMSE = (Aᵀ R_n⁻¹ A + R_x⁻¹)⁻¹ Aᵀ R_n⁻¹ y\n\nChapter 2'deki deterministik çözümlerle karşılaştır:\n  Ağırlıklı LS:  x̂ = (AᵀWA)⁻¹AᵀWy  → W seçimi keyfi\n  Tikhonov:      x̂ = (AᴴA + λI)⁻¹Aᴴy  → λ seçimi keyfi\n\nLMMSE ile:\n  W = R_n⁻¹  (gürültünün tersi korelasyonu — temiz kanalı daha çok ağırlıklandır)\n  λI = R_x⁻¹  (sinyalin tersi kovaryansı — prior bilgisi)\n\nBüyük fark:\n  Deterministik'te W ve λ sezgiyle veya deneme-yanılmayla seçiliyordu.\n  LMMSE'de istatistiklerden otomatik türüyor — teorik olarak motive edilmiş."
         }
       ]
     },
     {
-      "title": "Denoising: Gürültülü Kanaldan SNR'ya Göre Ağırlıklandırma",
-      "cat": "Applications",
-      "summary": "c = ±1 bilinmeyenini N gürültülü gözlemden tahmin et. LMMSE, SNR'ya orantılı ağırlıklar veriyor; yüksek SNR'lı gözleme daha çok güven. N→∞'da MSE sıfıra gider.",
-      "context": "EE499 · Chapter 3 · Section 3.2 — Denoising Example",
-      "sections": [
-        {
-          "type": "code",
-          "heading": "Problem kurulumu — ne tahmin etmeye çalışıyoruz?",
-          "text": "Durum şu: Bir c sinyali var, ±1 alıyor, eşit olasılıkla.\nBu c'yi doğrudan ölçemiyorsunuz. Onun yerine gürültülü versiyonlarını görüyorsunuz:\n\n  yₖ = c + nₖ,  nₖ ~ N(0, σ²_nk),  k = 1,...,N\n\nn'ler birbirinden ve c'den bağımsız.\nHer kanal farklı gürültü varyanslı olabilir: σ²_n1 ≠ σ²_n2 ≠ ...\n\nLMMSE tahmini: ĉ = α₁y₁ + α₂y₂ + ... + αN·yN = αᵀy\nBestimize et katsayıları: R_y α = r_cy\n\nÖnce istatistikleri hesaplayalım.\n  E[c] = 0  (±1 eşit olasılıkla)  μ_c = 0\n  E[c²] = σ_c² = 1"
-        },
-        {
-          "type": "code",
-          "heading": "R_y ve r_cy hesabı — adım adım",
-          "text": "İki gözlem için (N=2):\n\nR_y hesabı:\n  E[y₁²] = E[(c+n₁)²] = E[c²] + 2E[c·n₁] + E[n₁²]\n           = σ_c² + 0 + σ²_n1         (c ve n₁ bağımsız, sıfır ortalamalı)\n           = σ_c² + σ²_n1\n\n  E[y₁y₂] = E[(c+n₁)(c+n₂)] = E[c²] + E[cn₂] + E[n₁c] + E[n₁n₂]\n            = σ_c² + 0 + 0 + 0 = σ_c²\n\n       ⎡σ_c² + σ²_n1    σ_c²        ⎤\n  R_y = ⎣σ_c²           σ_c² + σ²_n2⎦\n\nGözlemlerin korelasyonu sıfır değil! Çünkü hepsi aynı c'yi içeriyor.\n\nr_cy hesabı:\n  E[c·y₁] = E[c·(c+n₁)] = E[c²] + E[c·n₁] = σ_c² + 0 = σ_c²\n  Aynı şekilde: E[c·y₂] = σ_c²\n\n  r_cy = ⎡σ_c²⎤ = σ_c² · ⎡1⎤\n         ⎣σ_c²⎦          ⎣1⎦"
-        },
-        {
-          "type": "code",
-          "heading": "SNR formu ve sezgi",
-          "text": "R_y α = r_cy çözünce karmaşık görünür ama SNR'yi tanımlanınca güzelleşiyor:\n  SNRₖ = σ_c² / σ²_nk  (sinyal gücü / gürültü gücü, k. kanal için)\n\nR_y'yi σ_c² ile bölerek normalize edince:\n  ⎡1 + 1/SNR₁    1       ⎤ ⎡α₁⎤   ⎡1⎤\n  ⎣1             1+1/SNR₂⎦ ⎣α₂⎦ = ⎣1⎦\n\nSistemi çözünce:\n  α₁ᵒᵖᵗ = SNR₁ / (1 + SNR₁ + SNR₂)\n  α₂ᵒᵖᵗ = SNR₂ / (1 + SNR₁ + SNR₂)\n\nBu ne anlama geliyor?\n  - Her gözlemin ağırlığı o gözlemin SNR'sıyla orantılı\n  - Gürültülü kanal → düşük SNR → küçük ağırlık\n  - Temiz kanal → yüksek SNR → büyük ağırlık\n  - SNR₁ = SNR₂ → eşit ağırlık → basit ortalama\n\nBu aslında sağduyu: 'iyi' kanala daha çok güven, 'kötü' kanalı neredeyse ignore et.\nLMMSE bunu otomatik olarak yapıyor, istatistiklerden türetiyor."
-        },
-        {
-          "type": "code",
-          "heading": "N gözlem genellemesi ve ne kadar N gerekir?",
-          "text": "N gözlem için genel sonuç:\n  ĉ_LMMSE = Σₖ [SNRₖ / (1 + Σᵢ SNRᵢ)] · yₖ\n\nMSE formülü:\n  E[e²] = σ_c² / (1 + Σₖ SNRₖ)\n\nBunu yorumlayalım:\n  - Payda: 1 + toplam SNR. N arttıkça bu büyüyor → MSE küçülüyor.\n  - N → ∞ → MSE → 0. Sonsuz gözlemle hatasız tahmin!\n    Ama tabii infinitely many gözlem pratikte yok.\n  - Tüm σ_nk eşit olsa: SNRₖ = SNR, Σ SNRᵢ = N·SNR\n    → MSE = σ_c² / (1 + N·SNR)\n    → SNR yüksekse az N yeterli; SNR düşükse çok N gerekiyor\n\nBu, iletişim teorisinde çok tanıdık bir formül.\nCoherent combining kazancı: N gözlemi birleştirince SNR N kat artıyor."
-        }
-      ]
-    },
-    {
-      "title": "Vektör LMMSE ve Wiener-Hopf Denklemi",
+      "title": "ML, MMSE ve MAP — Üç Tahmin Çerçevesi",
       "cat": "Estimation",
-      "summary": "Skaler değil vektör tahmin: x̂ = Ky. Optimal K, Wiener-Hopf KR_y = R_xy denklemini çözerek bulunur. Problem satır satır ayrışır, her satır bağımsız bir LMMSE.",
-      "context": "EE499 · Chapter 3 · Section 3.2 — Vector LMMSE",
+      "summary": "x deterministik mi rassal mı bilgiye göre yaklaşım değişiyor. ML: x sabit, p(y|x) maximize et → Gaussian gürültüde LS. MMSE: x rassal, posterior mean E[x|y] → optimal ama hesabı zor. MAP: posterior mode argmax p(x|y) → kapalı forma yakın. Gaussian'da MAP=MMSE=LMMSE.",
+      "context": "EE499 · General Estimation Framework",
       "sections": [
         {
           "type": "code",
-          "heading": "Skaler'den vektöre geçiş",
-          "text": "Skaler durumda tek bir x'i tahmin ediyorduk: x̂ = αᵀy\nŞimdi birden fazla bilinmeyen var: x = [x₁,...,xₘ]ᵀ\n\nLineer tahmin edici:\n  x̂ = Ky,  K ∈ ℝ^{m×n}\n\nBurada K bir matris — her satırı kᵢᵀ, her xᵢ için ayrı bir katsayı vektörü.\n  x̂₁ = k₁ᵀ y  ← x₁'i y'den tahmin et\n  x̂₂ = k₂ᵀ y  ← x₂'yi y'den tahmin et\n  ...\n  x̂ₘ = kₘᵀ y  ← xₘ'yi y'den tahmin et\n\nHedef: min_K MSE = min_K E[||e||²] = min_K Σᵢ E[eᵢ²] = min_K trace(R_e)\n\nGüzel olan şu: Bu problem i üzerinden ayrışıyor!\nHer kᵢ'yi bağımsız optimize edebilirsiniz. Her biri skaler LMMSE:\n  R_y kᵢ = r_{xᵢy}  ∀i"
+          "heading": "Hangi bilgiyle hangi yöntemi seçersiniz?",
+          "text": "Tahmin problemi: y gözlemlendi, x'i tahmin et.\nAma 'x ne kadar rassal?' sorusuna göre yaklaşım değişiyor.\n\nBilgi durumu:\n─────────────────────────────────────────────────────────\nx deterministik (bilmediğimiz sabit bir değer)\ny rassal (gürültülü gözlem)\n→ Maximum Likelihood (ML) tahmini\n─────────────────────────────────────────────────────────\nx rassal (hakkında istatistiksel bilgimiz var)\ny rassal (gözlem)\n→ Bayesian yaklaşım:\n   MMSE  = E[x|y]  — optimal ama hesabı zor\n   LMMSE = lineer kısıtlı MMSE — pratik, kapalı form\n   MAP   = argmax p(x|y) — posterior mod, optimize edilebilir\n─────────────────────────────────────────────────────────\n\nML (Maximum Likelihood):\n  x̂_ML = argmax_x p(y|x) = argmax_x log p(y|x)\n\n  Model: y = Ax + n, n ~ N(0, σ²I) (i.i.d. Gaussian gürültü)\n  log p(y|x) = sabit - 1/(2σ²) ||y-Ax||₂²\n  Argmax → argmin ||y-Ax||₂² = x_LS\n\n  Yani Gaussian gürültü altında ML = Least Squares!\n  LS'nin stokastik temeli bu — keyfi bir seçim değil.\n\nFarklı gürültüler farklı maliyet fonksiyonu veriyor:\n  Korelasyonlu Gaussian: Mahalanobis norm (ağırlıklı LS)\n  Laplace:               L1 norm (seyrek çözümler)\n  Poisson (foton sayımı): KL-divergence (iteratif çözüm)"
         },
         {
           "type": "code",
-          "heading": "Wiener-Hopf denklemi nasıl çıkıyor?",
-          "text": "Her satır için: R_y · kᵢ = r_{xᵢy}\n\nBunu tüm satırlar için matris olarak yazalım:\n  R_y · [k₁ k₂ ... kₘ] = [r_{x₁y} r_{x₂y} ... r_{xₘy}]\n  R_y · Kᵀ = R_{xy}ᵀ\n  K · R_y = R_{xy}\n\n  ────────────────────────────────\n  K R_y = R_xy   ← Wiener-Hopf Denklemi\n  ────────────────────────────────\n\nEğer R_y terslenebilirse:\n  K = R_xy · R_y⁻¹\n\nTanımlar:\n  R_x = E[xxᵀ]   → m×m, x oto-korelasyon matrisi\n  R_y = E[yyᵀ]   → n×n, y oto-korelasyon matrisi\n  R_xy = E[xyᵀ]  → m×n, x ve y çapraz korelasyon\n\nWiener-Hopf ismi şuradan geliyor: Norbert Wiener ve Eberhard Hopf bu denklemi\n1931'de integral denklemleri bağlamında buldu. Bugün optimal lineer filtreleme teorisinin temel taşı."
-        },
-        {
-          "type": "code",
-          "heading": "Hata kovaryans matrisi R_e",
-          "text": "Tahmin ne kadar iyi? MSE = trace(R_e).\n\nR_e = E[eeᵀ] = E[(x-x̂)(x-x̂)ᵀ]\n\nTüreterek:\n  R_e = E[eeᵀ] = E[e·(x - x̂)ᵀ] = E[exᵀ] - E[ex̂ᵀ]\n\nOrtogonallik ilkesinden e ⊥ y → E[eyᵀ] = 0\nx̂ = Ky → E[ex̂ᵀ] = E[e(Ky)ᵀ] = E[eyᵀ]Kᵀ = 0\n\nYani: R_e = E[exᵀ] = E[(x-x̂)xᵀ] = E[xxᵀ] - E[x̂xᵀ]\n           = R_x - K · E[yxᵀ] = R_x - K · R_yx\n\nSonuç: R_e = R_x - K R_yx = R_x - R_xy R_y⁻¹ R_yx\n\nMSE ne kadar küçük olabilir?\n  Eğer R_y yüksek boyutluysa ve x-y arasında korelasyon varsa, R_e küçük.\n  Teorik minimum: 'hiçbir şey gözlemlemeden' elde edeceğinizden (ki bu R_x) daha iyi.\n  Gözlem arttıkça R_e küçülür."
+          "heading": "MMSE ve MAP — Bayesian dünyasında tahmin",
+          "text": "Bayesian yaklaşımda x de rassal ve hakkında bir prior bilgimiz var: p(x)\n\nBayes kuralı:\n  p(x|y) = p(y|x)·p(x) / p(y)\n            ────────  ─────\n           likelihood  prior   (p(y) normalizer, x'e bağımsız)\n\nMMSE = posterior mean:\n  Maliyet: E[(x-x̂)²] minimize et → x̂_MMSE = E[x|y] = ∫ x·p(x|y) dx\n  Bu optimal Bayesian tahmin — MSE'yi minimum yapan.\n  Sorun: ∫p(y|x)p(x)dx entegrali genellikle analitik çözülemiyor.\n  → Monte Carlo (örnekleme) gerekiyor → yavaş, karmaşık.\n\nLMMSE = lineer kısıt:\n  Sadece 2. dereceden momentler lazım: E[x], E[y], E[xy], E[yyᵀ]\n  Kapalı form çözüm var.\n  Gaussian'da MMSE = LMMSE (!): posterior Gaussian olunca ortalaması lineer fonksiyon.\n\nMAP = posterior mod:\n  x̂_MAP = argmax_x p(x|y) = argmax_x [log p(y|x) + log p(x)]\n         = argmin_x [-log p(y|x) - log p(x)]\n           ─────────────────  ──────────────\n           data fidelity terimi   regularization terimi\n\nBu son form çok önemli:\n  MAP = data fidelity + regularization minimizasyonu!\n  Chapter 2'de keyfi seçtiğiniz regularization terimi,\n  aslında bir prior dağılımına karşılık geliyor."
         }
       ]
     },
     {
-      "title": "y=Ax+n Modeli: LMMSE'nin Deterministik Çözümlerle Bağlantısı",
+      "title": "MAP = Regularizasyon — Prior Seçimi Ceza Terimini Belirliyor",
       "cat": "Estimation",
-      "summary": "Yapısal y=Ax+n modeli için LMMSE = R_x Aᵀ(AR_x Aᵀ+R_n)⁻¹y. Bu, W=R_n⁻¹ ve regularization=R_x⁻¹ olan MN çözümüyle özdeş. İstatistik, ağırlıkları otomatik belirliyor.",
-      "context": "EE499 · Chapter 3 · Section 3.2 — Structured Model",
-      "sections": [
-        {
-          "type": "code",
-          "heading": "Bu model neden bu kadar önemli?",
-          "text": "y = Ax + n modeli mühendislikte her yerde karşınıza çıkıyor:\n\n  Denoising (gürültü giderme):   A = I, y = x + n (ölçüm = sinyal + gürültü)\n  Dekonvolüsyon:                  A = konvolüsyon matrisi (bulanık görüntü)\n  Tomografi (CT, MRI):            A = Radon dönüşümü (projeksiyon operatörü)\n  Optimal filtreleme/tahmin:      FIR filtre katsayıları bulmak\n  Lineer regresyon:               A = feature matrisi, x = model katsayıları\n  Echo cancellation:              A = multi-path kanal matrisi\n\nHepsinde aynı yapı: x'i bilmiyoruz, y'yi gözlemliyoruz, A biliniyor, n gürültü.\nLMMSE bu modelin genel çözümü."
-        },
-        {
-          "type": "code",
-          "heading": "R_y ve R_xy hesabı bu model için",
-          "text": "y = Ax + n'den yola çıkarak:\n\nR_y = E[yyᵀ] = E[(Ax+n)(Ax+n)ᵀ]\n    = E[Axxᵀ Aᵀ] + E[Axnᵀ] + E[nxᵀAᵀ] + E[nnᵀ]\n\nx ve n bağımsız, sıfır ortalama → çapraz terimler sıfır:\n    = A·E[xxᵀ]·Aᵀ + E[nnᵀ]\n    = A R_x Aᵀ + R_n\n\nR_xy = E[xyᵀ] = E[x(Ax+n)ᵀ] = E[xxᵀ]Aᵀ + E[xnᵀ]\n     = R_x Aᵀ + 0 = R_x Aᵀ\n\nWiener-Hopf K = R_xy R_y⁻¹:\n  K = R_x Aᵀ (A R_x Aᵀ + R_n)⁻¹\n\n  x̂_LMMSE = R_x Aᵀ (A R_x Aᵀ + R_n)⁻¹ y"
-        },
-        {
-          "type": "code",
-          "heading": "Chapter 2 ile karşılaştırma — bağlantı ne kadar derin!",
-          "text": "Chapter 2'de deterministik çözümleri görmüştük:\n\n  LS:         x̂ = (AᴴA)⁻¹Aᴴy\n  MN:         x̂ = Aᴴ(AAᴴ)⁻¹y\n  Weighted:   x̂ = (AᴴWA)⁻¹Aᴴwy   (W: ağırlık matrisi)\n  Regularized: x̂ = (AᴴA + λI)⁻¹Aᴴy  (Tikhonov)\n\nMatrix inversion lemma ile LMMSE'yi alternatif formda yazarsak:\n  x̂_LMMSE = (Aᵀ R_n⁻¹ A + R_x⁻¹)⁻¹ Aᵀ R_n⁻¹ y\n\nKarşılaştırma:\n  W    (ağırlık matrisi)  ↔  R_n⁻¹  (gürültünün ters korelasyonu)\n  λI   (regularization)   ↔  R_x⁻¹  (sinyalin ters korelasyonu = prior)\n\nBüyük fark:\n  Deterministik yaklaşımda W ve λ keyfi seçiyordunuz.\n  'İyi' seçim yapmak için sezgi veya cross-validation gerekiyordu.\n\n  LMMSE'de ise bu değerler istatistiklerden otomatik türüyor:\n  R_x ve R_n veriden tahmin edilebilir.\n  Bu çok daha principled (ilkeli) bir seçim.\n\nSonuç: Deterministik ve stokastik framework'ler aynı noktada buluşuyor,\nama stokastik yaklaşım regularization seçimini teorik olarak motive ediyor."
-        },
-        {
-          "type": "list",
-          "heading": "LMMSE'nin sınırlamaları — ne zaman yetmez?",
-          "items": [
-            "Optimal MMSE estimator olmayabilir: Lineerlik kısıtı nedeniyle nonlineer bir tahmin edici daha küçük MSE verebilir. Örneğin bir sinyali threshold ile tahmin etmek bazen daha iyidir.",
-            "MSE tek maliyet fonksiyonu değil: Bazen medyan hata önemliyse L1, outlier'lara duyarsız olmak istiyorsanız Huber loss daha uygun.",
-            "Ortalama anlamlı maliyet: E[e²] beklenti üzerinden tanımlı — deneyi çok sayıda tekrarlayınca anlamlı. Tek seferlik ölçümde MSE minimizasyonu iyi bir seçim olmayabilir."
-          ]
-        }
-      ]
-    },
-    {
-      "title": "Genel Tahmin Çerçevesi — Hangi Yöntem Ne Zaman?",
-      "cat": "Estimation",
-      "summary": "x ve y'nin ne kadar rassal olduğuna göre farklı yöntemler var: deterministik (LS/MN), ML (x sabit, y rassal), Bayesian (ikisi de rassal: MMSE ve MAP).",
-      "context": "EE499 · Chapter 3 · Section 3.3 — General Estimation Framework",
-      "sections": [
-        {
-          "type": "code",
-          "heading": "Büyük resim: bir problem geldiğinde ne yapıyoruz?",
-          "text": "Tahmin problemi şu: y'yi gözlemleyerek x'i bul.\nAma x ve y'nin 'ne kadar rassal' olduğuna göre yaklaşım değişiyor.\n\nBu chapter'ın öncesinde (Chapter 2'de) deterministik yaklaşım vardı:\n  x ve y sabit sayılar — rassal değil.\n  y = Ax, çöz: LS, MN, MNLS, doğrudan ters.\n\nŞimdi stokastik kısma geçiyoruz. İki senaryo var:\n\n─────────────────────────────────────────────────────────\n  x: deterministik (bilinmiyor ama sabit)\n  y: rassal (gözlem, gürültülü)\n  → Maximum Likelihood (ML) tahmini\n─────────────────────────────────────────────────────────\n  x: rassal (prior istatistiği biliniyor)\n  y: rassal (gözlem)\n  → Bayesian yaklaşım:\n       • MMSE  = E[x|y]  (optimal ama hesabı zor)\n       • LMMSE = lineer kısıtlı MMSE (pratik, kapalı form)\n       • MAP   = argmax p(x|y)  (moda optimizasyonu)\n─────────────────────────────────────────────────────────\n\nHangi bilgi var? O bilgiye göre yöntem seç."
-        },
-        {
-          "type": "code",
-          "heading": "Her yöntemin gerektirdiği bilgi ve tradeoff'ları",
-          "text": "ML:\n  Ne bilmeli: p(y|x) — yani gürültü dağılımı\n  Ne bilmemeli: x hakkında hiçbir prior bilgiye gerek yok\n  Avantaj: güçlü asimptotik özellikler (unbiased, efficient)\n  Dezavantaj: x rassal olsa bile prior bilgisini kullanamıyor\n\nMMSE (= E[x|y]):\n  Ne bilmeli: p(x,y) veya p(x|y) — tam olasılık bilgisi\n  Avantaj: MSE'yi minimum yapan en iyi Bayesian tahmin edici\n  Dezavantaj: p(x|y) hesaplamak çoğunlukla çok zor,\n              kapalı form yok, Monte Carlo simülasyonu gerekebilir\n\nLMMSE:\n  Ne bilmeli: sadece E[x], E[y], E[xy], E[yy^T] — ikinci derece momentler\n  Avantaj: kapalı form çözüm var, hesabı kolay, Gaussian'da MMSE ile özdeş\n  Dezavantaj: lineer olmayan daha iyi tahmin ediciler olabilir\n\nMAP:\n  Ne bilmeli: p(y|x) + p(x) — gürültü dağılımı + prior\n  Avantaj: prior bilgisini optimize edici çerçevede kullanıyor,\n           deterministic framework'e bağlanıyor (regularization!)\n  Dezavantaj: prior ve likelihood doğru seçilmeli"
-        }
-      ]
-    },
-    {
-      "title": "Maximum Likelihood Tahmini — En Olası x'i Seç",
-      "cat": "Estimation",
-      "summary": "x deterministik, y rassal. 'Gördüğüm y'yi en olası yapacak x hangisi?' sorusunun cevabı ML tahmini. i.i.d. Gaussian gürültüde ML = LS.",
-      "context": "EE499 · Chapter 3 · Section 3.3.1 — Maximum Likelihood",
-      "sections": [
-        {
-          "type": "code",
-          "heading": "ML'nin temel fikri nedir?",
-          "text": "Şöyle düşünün: Bir şehrin yağış ortalamasını tahmin etmek istiyorsunuz.\nx = ortalama yağış (bilmiyoruz, ama sabit bir sayı).\nN gün boyunca yağış ölçtünüz: y₁, y₂, ..., yN.\n\nML sorusu: 'Bu ölçümleri gördüğümde, hangi x değeri bu gözlemleri\nen olası yapardı?'\n\nFormülize edelim:\n  Likelihood fonksiyonu: L(x) = p(y₁,...,yN | x)\n  x̂_ML = argmax_x L(x) = argmax_x log L(x)\n\nNeden log alıyoruz?\n  - Logaritma monotonik artış fonksiyonu, argmax değişmez\n  - Bağımsız gözlemlerde p(y|x) = Πᵢ p(yᵢ|x) → log toplamaya dönüşür → hesaplama kolaylaşır\n  - Sayısal kararlılık (çok küçük sayıların çarpımı yerine toplamı)"
-        },
-        {
-          "type": "code",
-          "heading": "i.i.d. Gaussian gürültüyle ML neden LS oluyor?",
-          "text": "Model: y = Ax + n,  n ~ N(0, σ²I)\n\nGözlemler y|x ~ N(Ax, σ²I), her biri bağımsız:\n  p(y|x) = Πᵢ p(yᵢ|x)\n          = Πᵢ (1/√2πσ) exp(-(yᵢ - (Ax)ᵢ)² / 2σ²)\n          = (1/√2πσ)ᴹ exp(-1/(2σ²) ||y-Ax||₂²)\n\nLog-likelihood:\n  log p(y|x) = -M/2 · log(2πσ²) - 1/(2σ²) ||y-Ax||₂²\n               ──────────────────  ────────────────────\n                x'e bağlı değil       x'e bağlı kısım\n\nArgmax:\n  x̂_ML = argmax_x log p(y|x)\n         = argmax_x [-||y-Ax||₂²]\n         = argmin_x  ||y-Ax||₂²\n         = x̂_LS\n\nYani: Gürültüyü Gaussian ve i.i.d. varsayarsanız, ML tahmini otomatik olarak\nEn Küçük Kareler (LS) çözümü veriyor. LS'nin stokastik temeli bu."
-        },
-        {
-          "type": "code",
-          "heading": "Farklı gürültüler farklı tahmin ediciler verir",
-          "text": "Gürültü her zaman Gaussian değil. Ölçüm cihazına göre değişir:\n\nGürültü dağılımı → log p(y|x) → ML minimizasyon terimi:\n\n  i.i.d. Gaussian:\n    n ~ N(0,σ²)  →  -log p ∝ ||y-Ax||₂²  →  x̂_ML = x̂_LS\n\n  Korelasyonlu Gaussian (R_n biliniyor):\n    -log p ∝ (y-Ax)ᵀ R_n⁻¹ (y-Ax) = ||y-Ax||²_{R_n⁻¹}\n    → Ağırlıklı LS, W = R_n⁻¹\n\n  Poisson (foton sayımı, kamera, nükleer görüntüleme):\n    n ~ Poisson → x̂_ML içinde KL-divergence minimizasyonu var\n    Doğrusal değil, iteratif çözüm gerekiyor\n\n  Laplace/Double-Exponential (generalized, p=1):\n    -log p ∝ ||y-Ax||₁  → L1 norm minimizasyonu\n    Seyrek çözüm üretiyor (bazı bileşenler tam sıfır)\n\nSeçiminiz: Fiziksel gürültü modeline uyan likelihood'u kullanın,\nML size doğru cost fonksiyonunu veriyor."
-        }
-      ]
-    },
-    {
-      "title": "Bayesian Tahmin — MMSE ve MAP",
-      "cat": "Estimation",
-      "summary": "x rassal, prior p_x(x) biliniyor. MMSE = posterior mean E[x|y] — optimal ama hesabı çok zor. MAP = posterior modu — optimizasyona indirgeniyor.",
-      "context": "EE499 · Chapter 3 · Section 3.3.2 — Bayesian Estimation",
-      "sections": [
-        {
-          "type": "code",
-          "heading": "Bayesian yaklaşım ne oluyor?",
-          "text": "ML'de x deterministik, sadece gürültüden gelen rastgelelik vardı.\nBayesian'da ise x de rassal — ve hakkında bir bilginiz var.\n\nOrneğin: Bir hastanın kan şekerini tahmin ediyorsunuz.\n  Prior bilgi: p_x(x) — kan şekeri normal insanlar için yaklaşık Gaussian, ortalama 5.5 mmol/L\n  Gözlem: y — kalibrasyonlu bir ölçüm cihazının gürültülü okuması\n  Hedef: x̂ = p(x|y) posterior dağılımını kullanarak tahmin et\n\nBayes kuralı:\n  p(x|y) = p(y|x) · p(x) / p(y)\n            ──────   ─────   ─────\n           likelihood  prior  evidence (sabit, normalizer)\n\np(x|y) 'posterior dağılım' — gözlem y'yi gördükten sonra x hakkında\ngüncellenmiş bilgi. Bayes'in özü: prior'u likelihood ile güncelleyerek posterior elde et."
-        },
-        {
-          "type": "code",
-          "heading": "MMSE = posterior mean — neden?",
-          "text": "MMSE maliyet fonksiyonu: cost(x̂, x) = (x - x̂)²\n\n  x̂_MMSE = argmin_{x̂} E[(x - x̂)²]\n\nBu beklenti x üzerinde, posterior p(x|y)'e göre alınır.\nTürev sıfırlanınca:\n  ∂/∂x̂ E[(x - x̂)²] = -2 E[x-x̂] = 0\n  → x̂_MMSE = E[x|y] = ∫ x · p(x|y) dx\n\nYani MMSE tahmini, posterior dağılımının ortalamasıdır.\n\nBu çok zarif bir sonuç: 'ortalama kare hata minimum?' diye sordunuz, cevap 'posterior ortalamasını al' çıktı.\n\nSorun nerede?\n  - p(x|y) hesaplamak çoğunlukla çok zor — Bayes kuralındaki payda ∫p(y|x)p(x)dx entegrali\n    genellikle analitik olarak çözülemiyor\n  - Kapalı form yok → Monte Carlo (örnekleme) gerekiyor → yavaş\n\n★ Önemli not:\n  Eğer x̂ = f(y) fonksiyonuna lineerlik kısıtı eklerseniz → LMMSE.\n  LMMSE sadece E[x], E[y], E[xy] istiyor. Çok daha kolay.\n  Gaussian istatistiklerde MMSE = LMMSE (!) — çünkü posterior Gaussian olunca\n  ortalaması da linear bir fonksiyon oluyor."
-        },
-        {
-          "type": "code",
-          "heading": "MAP = posterior modu — deterministik çerçeveye köprü",
-          "text": "Farklı bir maliyet fonksiyonu kullanalım: 0-1 loss\n  cost = 0 eğer |x̂-x| < ε, 1 eğer daha büyük\n\nBu maliyeti minimize etmek → en olası x'i bulmak → posterior'un modu:\n  x̂_MAP = argmax_x p(x|y)\n\nBayes kuralı ile:\n  log p(x|y) = log p(y|x) + log p(x) - log p(y)\n                                         ──── x'e bağlı değil, ignore\n\n  x̂_MAP = argmax_x [log p(y|x) + log p(x)]\n          = argmin_x [-log p(y|x) - log p(x)]\n          ──────────────────────────────────\n          data fidelity     regularization\n          (gürültü dağılımına bağlı)   (prior'a bağlı)\n\nBu son form çok önemli: MAP = data fidelity + regularization minimizasyonu!\nYani Chapter 2'de keyfi seçtiğiniz regularization terimi,\naslında bir prior dağılımına karşılık geliyor.\n\nX̂_MAP = argmin_x Δ(y, Ax) + λR(x)"
-        }
-      ]
-    },
-    {
-      "title": "MAP ile Farklı Prior ve Gürültü: Tikhonov'dan LASSO'ya",
-      "cat": "Estimation",
-      "summary": "Prior ve gürültü dağılımına göre MAP farklı optimizasyon problemlerine indirgeniyor. Gaussian prior = Tikhonov, Laplace prior = L1 regularization = sparse recovery.",
-      "context": "EE499 · Chapter 3 · Section 3.3.2 — MAP Variants & Connection to LMMSE",
+      "summary": "MAP: x̂ = argmin[-log p(y|x) - log p(x)]. Prior seçimi R(x)'i, gürültü seçimi Δ(y,Ax)'i belirliyor. Gaussian prior → Tikhonov (L2). Laplace prior → LASSO (L1, seyrek). Gaussian istatistiklerde MAP=MMSE=LMMSE — regularization rastgele değil, prior'dan türüyor.",
+      "context": "EE499 · MAP and Regularization",
       "sections": [
         {
           "type": "code",
           "heading": "Prior seçimi regularization şeklini belirliyor",
-          "text": "x̂_MAP = argmin_x [-log p(y|x) - log p(x)] = argmin_x Δ(y,Ax) + λR(x)\n\nPrior ne seçerseniz R(x) o oluyor:\n\nGaussian prior: p_x(xⱼ) ∝ exp(-xⱼ²/2σ_x²)\n  → -log p(x) ∝ Σxⱼ² = ||x||₂²\n  → R(x) = ||x||₂² — L2 regularization (Tikhonov/Ridge)\n  → Küçük ama sıfır olmayan çözümler tercih edilir\n  → Kapalı form çözüm var: x̂ = (AᴴA + λI)⁻¹Aᴴy\n\nLaplace prior: p_x(xⱼ) ∝ exp(-c|xⱼ|)\n  → -log p(x) ∝ Σ|xⱼ| = ||x||₁\n  → R(x) = ||x||₁ — L1 regularization (LASSO)\n  → Seyrek çözümler üretir: bazı bileşenler tam sıfır\n  → Compressed sensing'in temeli\n  → Kapalı form yok, convex ama non-smooth → iteratif çözüm\n\nGeneralized Gaussian: p_x ∝ exp(-c|xⱼ|^p)\n  → R(x) = ||x||_p^p  → L_p regularization\n  p=1: Laplace, p=2: Gaussian, 0<p<1: daha seyrek"
+          "text": "MAP formülü:\n  x̂_MAP = argmin_x [-log p(y|x) - log p(x)]\n           = argmin_x Δ(y, Ax) + λR(x)\n\nGürültü dağılımı → data fidelity terimi Δ:\n  n ~ N(0,σ²I)   → Δ = ||y-Ax||₂²  (LS / L2)\n  n ~ N(0, R_n)  → Δ = (y-Ax)ᵀ R_n⁻¹ (y-Ax)  (ağırlıklı LS)\n  n ~ Laplace    → Δ = ||y-Ax||₁  (L1 data fidelity)\n  n ~ Poisson    → Δ = KL-divergence (iteratif çözüm)\n\nPrior dağılımı → regularization terimi R:\n\nGaussian prior: p(xⱼ) ∝ exp(-xⱼ²/2σ_x²)\n  -log p(x) ∝ Σxⱼ²/σ_x² = ||x||₂²/σ_x²\n  → R(x) = ||x||₂²  ← L2 regularization (Tikhonov / Ridge)\n  Kapalı form: x̂ = (AᴴA + λI)⁻¹Aᴴy\n  Küçük ama sıfır olmayan bileşenler tercih edilir.\n\nLaplace prior: p(xⱼ) ∝ exp(-c|xⱼ|)\n  -log p(x) ∝ Σ|xⱼ| = ||x||₁\n  → R(x) = ||x||₁  ← L1 regularization (LASSO)\n  Bazı bileşenler tam sıfır → seyrek (sparse) çözümler\n  Kapalı form yok, ama convex → iteratif yöntemler (ISTA, ADMM)\n  Compressed sensing'in matematiksel temeli burası!\n\nλ = gürültü gücü / prior güç oranı\nλ küçük: prior'a az güven, veriye çok güven → az düzenleme\nλ büyük: prior'a çok güven → güçlü düzenleme"
         },
         {
           "type": "code",
-          "heading": "Gürültü seçimi data fidelity şeklini belirliyor",
-          "text": "Aynı şekilde gürültü dağılımı Δ(y, Ax) terimini belirliyor:\n\ni.i.d. Gaussian: n ~ N(0,σ²)\n  → -log p(y|x) ∝ ||y-Ax||₂² → L2 data fidelity\n\nKorelasyonlu Gaussian: n ~ N(0, R_n)\n  → -log p(y|x) ∝ (y-Ax)ᵀ R_n⁻¹ (y-Ax) → Mahalanobis norm\n\nPoisson: foton sayım gürültüsü (CT, PET)\n  → -log p(y|x) ∝ KL-divergence\n  → Iteratif algoritma gerekiyor (EM algoritması)\n\nGeneralized Gaussian (p≠2):\n  → ||y-Ax||_p^p → L_p data fidelity\n\nGenelleştirilmiş MAP formu:\n  x̂_MAP = argmin_x Δ(y, Ax) + λR(x)\n\nGürültü dağılımı → Δ seçimi\nPrior dağılımı → R seçimi\nλ = gürültü/prior güç oranı"
-        },
-        {
-          "type": "code",
-          "heading": "Gaussian istatistiklerde MAP = LMMSE — bu büyük!",
-          "text": "x ~ N(0, R_x) ve n ~ N(0, R_n) alırsak:\n\nLMMSE formülü:\n  x̂_LMMSE = R_x Aᵀ (AR_x Aᵀ + R_n)⁻¹ y\n            = (Aᵀ R_n⁻¹ A + R_x⁻¹)⁻¹ Aᵀ R_n⁻¹ y\n\nMAP formülü (bu istatistiklerle):\n  -log p(y|x) ∝ 1/(2σ_n²) ||y-Ax||₂²  (Gaussian noise)\n  -log p(x)   ∝ xᵀ R_x⁻¹ x / 2        (Gaussian prior)\n  x̂_MAP = argmin_x [||y-Ax||²_{R_n⁻¹} + xᵀ R_x⁻¹ x]\n  → x̂_MAP = (Aᵀ R_n⁻¹ A + R_x⁻¹)⁻¹ Aᵀ R_n⁻¹ y\n\nAynı formül! Gaussian'da MAP = MMSE = LMMSE.\n\nBu neden?\n  Gaussian posterior da Gaussian → modu = ortalaması → MAP = MMSE\n  LMMSE Gaussian'da optimal → MMSE = LMMSE\n  Zincir: MAP = MMSE = LMMSE\n\nPraktik sonuç: R_x ve R_n'i veriden tahmin edin.\nBunu yapınca hem optimal Bayesian tahmini hem de en iyi deterministik\nregularization'ı aynı anda elde ediyorsunuz. Ağırlık ve regularization seçimi\nartık keyfi değil — veriden geliyor."
-        }
-      ]
-    },
-    {
-      "title": "Büyük Ölçekli Ters Problemlerde Optimizasyon",
-      "cat": "Optimization",
-      "summary": "Her tahmin yöntemi Δ(y,Ax)+λR(x) minimizasyonuna indirgeniyor. Kapalı form yoksa sayısal yöntemler gerekiyor. Convex ise global minimum garantili.",
-      "context": "EE499 · Chapter 3 · Section 3.4 — Optimization for Inverse Problems",
-      "sections": [
-        {
-          "type": "code",
-          "heading": "Neden optimizasyon gerekiyor?",
-          "text": "Hem ML hem MAP hem de LMMSE sonuçta şu forma indirgeniyor:\n  x̂ = argmin_x Δ(y, Ax) + λR(x)\n\nBazen bu problemin kapalı form çözümü var — matris denklemi çöz, bitir.\nÖrneğin LS: x̂ = (AᴴA)⁻¹Aᴴy, Tikhonov: x̂ = (AᴴA+λI)⁻¹Aᴴy.\n\nAma çoğunlukla durum şu:\n  - A çok büyük (örneğin 10M×10M boyutlu tomografi matrisi)\n    → (AᴴA)⁻¹ almak mümkün değil, belleğe sığmıyor bile\n  - Δ veya R(x) pürüzsüz değil (L1 normu, Poisson, ...)\n    → Türev her yerde tanımlı değil → kapalı form yok\n  - A kötü koşullanmış (ill-conditioned)\n    → Sayısal ters alma kararsız\n\nÇözüm: İterasyonel (tekrarlayan) sayısal yöntemler.\nHer adımda biraz ilerle, minimize et, yakıns."
-        },
-        {
-          "type": "code",
-          "heading": "Convex ve non-convex — kritik ayrım",
-          "text": "Optimizasyon problemine dalmadan önce sorulması gereken soru:\nJ(x) maliyet fonksiyonu convex mi?\n\nMatematiksel tanım:\n  J(ax₁ + (1-a)x₂) ≤ aJ(x₁) + (1-a)J(x₂)  ∀a∈[0,1]\n  Geometrik: iki nokta arasındaki doğru parçası, fonksiyonun altında.\n\nCONVEX J(x) ise:\n  - Her lokal minimum aynı zamanda global minimum\n  - Herhangi bir yerel optimizasyon yöntemi çözüme yakınsar\n  - Sonuca ulaşılacağı garantidir\n  - LS, Tikhonov, LASSO (L1 reg.) hepsi convex\n\nNON-CONVEX J(x) ise:\n  - Birden fazla local minimum var, hangisindesiniz bilinmez\n  - Başlangıç noktası kritik — farklı başlangıç = farklı sonuç\n  - Global optimum garantisi yok\n  - Deep learning kayıp fonksiyonları genellikle non-convex\n    (ama pratikte iyi çalışıyor — neden? Hala aktif araştırma konusu)\n\nBu yüzden convex problem olduğunu fark etmek çok değerli:\n'Bu problem convex' derseniz, tüm yerel yöntemler işe yarar demek."
-        }
-      ]
-    },
-    {
-      "title": "Gradient İniş, Newton ve Conjugate Gradient",
-      "cat": "Optimization",
-      "summary": "Üç ana iteratif optimizasyon yöntemi: steepest descent (gradient tersine git, yavaş), Newton (Hessian kullan, hızlı ama pahalı), conjugate gradient (ikisi arasında pratik seçim).",
-      "context": "EE499 · Chapter 3 · Section 3.4.3-3.4.4 — Optimization Methods",
-      "sections": [
-        {
-          "type": "code",
-          "heading": "Steepest Descent — sezgiden denkleme",
-          "text": "Sezgi: Bir dağı inerken her adımda en dik yönü seçersiniz.\n\nJ(x) maliyet fonksiyonunun gradient vektörü ∇J(x) nerede en hızlı artıyor?\nTam gradient yönünde. O zaman en hızlı azalma gradient'in tam tersi yönünde:\n  d = -∇J(x)\n\nGüncelleme kuralı:\n  x^(n+1) = x^(n) - τ^(n) · ∇J(x^(n)) / ||∇J(x^(n))||₂\n\nτ adım büyüklüğü (learning rate) — ne kadar ilerliyoruz?\n  Çok büyük: sallanır, yakınsamaz\n  Çok küçük: çok yavaş yakınsar\n  Optimal: line search ile her adımda hesapla (pahalı ama kararlı)\n\nYakınsama hızı: lineer — her adımda sabit bir oran kadar hata azalıyor.\nBir oran r < 1 varsa: hata ~ r^n → logaritmik adım sayısı.\n\nSorun: 'dar vadiler'de (elongated elliptic contours) çok yavaş.\nGradient, vadinin boyunca değil, genişliğine doğru işaret ediyor → zigzag."
-        },
-        {
-          "type": "code",
-          "heading": "Newton Yöntemi — neden bu kadar hızlı?",
-          "text": "Steepest descent, J'yi her noktada düz bir yüzey (hyperplane) ile yaklaşıktı.\nNewton, J'yi ikinci derece yüzey (paraboloid) ile yaklaşıktı:\n\n  J(x + τd) ≈ J(x) + τ dᵀ∇J(x) + τ²/2 dᵀ ∇²J(x) d\n                       ──────────   ─────────────────\n                       1. derece      2. derece (Hessian)\n\nBu ikinci derece yaklaşımı minimize et:\n  ∂/∂d [birinci + ikinci terim] = 0\n  ∇J(x) + τ ∇²J(x) d = 0\n  d = -(∇²J(x))⁻¹ ∇J(x)   (τ=1 ile)\n\nGüncelleme:\n  x^(n+1) = x^(n) - (∇²J(x^(n)))⁻¹ ∇J(x^(n))\n\nYakınsama hızı: kuadratik — her adımda hata kabaca karesi kadar küçülüyor.\nYani 10⁻³ hata varsa bir adımda 10⁻⁶ olabiliyor.\n\nSorun: ∇²J(x) = Hessian matrisi, N×N boyutlu.\n  - Hesaplama: O(N²) eleman, her iterasyonda\n  - Ters alma: O(N³) işlem\n  - N büyük olunca (milyonlarca parametre) imkansız\n\nQuasi-Newton (BFGS):\n  -(∇²J)⁻¹ yerine yaklaşım B kullan, iteratif güncelle.\n  Newton'dan ucuz, Steepest descent'ten hızlı."
-        },
-        {
-          "type": "code",
-          "heading": "Conjugate Gradient — neden bu kadar popüler?",
-          "text": "Conjugate gradient (CG), steepest descent'e bir 'momentum' ekliyor.\nÇok farklı bir teorik temeli var: 'conjugate direction methods'.\n\nFikir: Her adımda, sadece gradient değil, önceki yönleri de kullan.\nBu yönler 'A-conjugate' olacak şekilde seçiliyor: dᵢᵀ A dⱼ = 0 (i≠j)\n\nGüncelleme:\n  d^(0) = -∇J(x^(0))    (ilk adım steepest descent gibi)\n  x^(n+1) = x^(n) + τ^(n) d^(n)\n  d^(n+1) = -∇J(x^(n+1)) + B^(n) d^(n)   (momentum terimi!)\n\nB^(n) iki popüler seçenek:\n  Fletcher-Reeves:  B = -||∇J(x^(n+1))||₂² / ||∇J(x^(n))||₂²\n  Polak-Ribière:    Biraz farklı — pratikte genellikle daha iyi\n\nNeden bu kadar iyi?\n  - Quadratic J için: N adımda kesin çözüme ulaşır (N = boyut)\n  - Non-quadratic için: approximation ama yine çok hızlı\n  - O(N) bellek: sadece gradient vektörü saklanıyor\n  - Newton hızına yakın, Newton maliyeti yok\n\n─────────────────────────────────────────────\nPraktik karşılaştırma:\n  Steepest descent: en basit, en yavaş, N²+ adım gerekebilir\n  Newton:           en hızlı, ama O(N³) her adımda → büyük N'de imkansız\n  Conjugate gradient: ikisi arasında, O(N) bellek, pratikte en yaygın\n  BFGS/L-BFGS:     quasi-Newton, büyük problemler için standart\n─────────────────────────────────────────────"
+          "heading": "Gaussian istatistiklerde MAP = MMSE = LMMSE — zincirleme eşitlik",
+          "text": "x ~ N(0, R_x) ve n ~ N(0, R_n) alırsak:\n\nLMMSE formülü:\n  x̂_LMMSE = R_x Aᵀ (AR_x Aᵀ + R_n)⁻¹ y\n           = (Aᵀ R_n⁻¹ A + R_x⁻¹)⁻¹ Aᵀ R_n⁻¹ y\n\nMAP formülü (aynı istatistiklerle):\n  Gaussian gürültü:  Δ = (y-Ax)ᵀ R_n⁻¹ (y-Ax)\n  Gaussian prior:    R = xᵀ R_x⁻¹ x\n  x̂_MAP = argmin [(y-Ax)ᵀ R_n⁻¹(y-Ax) + xᵀ R_x⁻¹ x]\n  → x̂_MAP = (Aᵀ R_n⁻¹ A + R_x⁻¹)⁻¹ Aᵀ R_n⁻¹ y\n\nHer ikisi de aynı formül! Gaussian'da MAP = LMMSE.\n\nNeden?\n  x,y joint Gaussian → posterior p(x|y) de Gaussian\n  Gaussian dağılımın modu = ortalaması → MAP = MMSE\n  Gaussian'da LMMSE optimal → MMSE = LMMSE\n  Zincir: MAP = MMSE = LMMSE\n\nBu eşitliğin pratikte anlamı:\n  R_x ve R_n'i veriden tahmin et.\n  O zaman hem optimal Bayesian tahmini hem de en iyi deterministik\n  regularization'ı aynı anda elde ediyorsun.\n  Ağırlık matrisi (W = R_n⁻¹) ve regularization (λI → R_x⁻¹)\n  artık keyfi değil — veriden, istatistiklerden geliyor.\n\nBüyük resim:\n  Chapter 2'de deterministik ters problem: y = Ax, x bul.\n  Chapter 3'te stokastik çerçeve aynı formüllere ulaşıyor, ama\n  bu sefer regularization'ın nereden geldiğini biliyoruz — prior!\n  İki chapter aynı noktada birleşiyor."
         }
       ]
     }
