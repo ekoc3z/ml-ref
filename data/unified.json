@@ -6095,167 +6095,410 @@
       ]
     },
     {
-      "title": "y = Ax Çözüm Mantığı: Column Space, Rank, Null Space ve Tüm Bağlantılar",
+      "title": "y = Ax Çözüm Mantığı: Column Space, Rank, Null Space, Orthogonal, SVD ve Tüm Bağlantılar",
       "cat": "Foundations",
-      "summary": "Ax = Σ xᵢ·(i. sütun): matris-vektör çarpımı bir lineer kombinasyon. Column space: A'nın sütunlarının tüm kombinasyonları — y buraya ait değilse çözüm yok. Rank: bağımsız sütun (= satır) sayısı. Null space: A'nın sıfıra götürdüğü yönler. Invertible ↔ kare + full rank, 10 eşdeğer koşul. Diagonal, symmetric, orthogonal matrislerin ne anlama geldiği ve SVD'nin tümünü nasıl birleştirdiği.",
+      "summary": "Ax = x1*(1. sütun) + ... + xn*(n. sütun): matris çarpımı bir lineer kombinasyon. Column space: A sütunlarının span'ı — y burada değilse çözüm yok. Rank: bağımsız sütun = satır sayısı. Null space: sıfıra gönderilen yönler. Invertible ↔ kare + full rank (9 eşdeğer koşul). Diagonal, symmetric, orthogonal, SVD — hepsinin şart-koşul özeti ve bilgi kanalı sezgisi.",
       "context": "EE499 · Primer 1, Chapter 2",
       "sections": [
         {
           "type": "text",
-          "heading": "y = Ax: Temel Çerçeve",
-          "text": "Her şeyin merkezi bu tek denklem: A sabit ve bilinen bir matris, x bilinmiyor, y (ya da b) biliniyor. Soru şu: x'in alabileceği değerlerle y'ye ulaşabilir miyiz ve kaç farklı yolumuz var? Bu sorunun cevabı tamamen A'nın geometrik yapısına bağlı — kaç bağımsız yönü var, hangi yönlere ulaşılamaz, sıfıra gönderilen yönler var mı?"
+          "heading": "y = Ax Sorusu: \"Bu b'ye ulaşabilir miyim?\"",
+          "text": "Her şeyin merkezi bu. A bir matriks, x bilinmiyor, y (ya da b) biliniyor. Soru şu: x'in alabileceği değerlerle y'ye ulaşabilir miyiz, ve kaç yol var? Bunu anlamak için önce A'nın sütunlarını nasıl düşüneceğimizi anlamak gerekiyor."
         },
         {
           "type": "text",
-          "heading": "Ax = Sütunların Lineer Kombinasyonu",
-          "text": "Ax çarpımını matris-vektör işlemi olarak değil geometrik olarak okuyun: Ax = x₁·(A'nın 1. sütunu) + x₂·(A'nın 2. sütunu) + ... + xₙ·(A'nın n. sütunu). Yani x 'her yönde ne kadar gideyim?' sorusunu soruyor, A'nın sütunları ise 'hangi yönler mevcut?' sorusunu cevaplıyor. Ax = b çözümü bulunabilir mi sorusu, b'ye bu yönlerden ulaşılabilir mi sorusuna dönüşüyor."
+          "heading": "Sütunlar = Yönler. x = Katsayılar.",
+          "text": "Ax şunu yapıyor: A'nın her sütununu x'in ilgili elemanıyla çarpıp topluyor."
+        },
+        {
+          "type": "code",
+          "heading": "",
+          "text": "Ax = x1*(A'nın 1. sütunu) + x2*(A'nın 2. sütunu) + ... + xn*(A'nın n. sütunu)"
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Yani x, \"her yönde ne kadar gideyim?\" diyor. A'nın sütunları da \"hangi yönler mevcut?\" diyor."
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Buradan çok net bir soru çıkıyor: A'nın sütunlarının tüm lineer kombinasyonları ne kadar büyük bir uzay kaplıyor? İşte buna column space (sütun uzayı) ya da range deniyor. Ve y = Ax'in çözümü varsa ve varsa ne kadar çözüm var, cevabı tamamen bu uzayda."
         },
         {
           "type": "text",
           "heading": "Column Space: Ulaşabildiğim Her Yer",
-          "text": "Column space (sütun uzayı ya da range), A'nın sütunlarının tüm lineer kombinasyonlarının kümesidir. A ∈ ℝᵐˣⁿ ise column space ℝᵐ içinde bir alt uzaydır. y = Ax'in çözümü var ancak ve ancak y bu column space içindeyse — y oraya ait değilse hiçbir x seçimi bizi oraya götüremez. Column space'in ℝᵐ'nin tamamını kapsaması için rank(A) = m olması gerekir, buna 'full row rank' denir. Örnek: 3×2 matrisin iki sütunu R³'te en fazla bir düzlem oluşturur; y o düzlemin dışındaysa çözüm yoktur."
+          "text": "Column space = A'nın sütunlarının tüm lineer kombinasyonlarının kümesi."
         },
         {
           "type": "text",
-          "heading": "Linear Independence: Gerçekten Farklı Yönler mi?",
-          "text": "n tane sütun olması, column space'in n-boyutlu olmasını garanti etmez. Bir sütun diğerlerinin lineer kombinasyonuysa yeni bir yön eklemiyor — fazlalık. Bir vektör seti lineer bağımsızdır eğer hiçbiri diğerlerinin lineer kombinasyonu değilse. Resmi tanım: c₁v₁ + ... + cₖvₖ = 0 denkleminin tek çözümü c₁=...=cₖ=0 ise, bu vektörler lineer bağımsızdır. Bağımlı vektörler 'aynı yönü farklı isimle söylüyor.' Column space'in boyutunu belirleyen sütun sayısı değil, bağımsız sütun sayısıdır."
+          "heading": "",
+          "text": "A ∈ R^(m×n) ise column space R^m içinde bir alt uzay. Sütunlar n tane, her biri m-boyutlu vektör."
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "y = Ax'in çözümü vardır ancak ve ancak y bu column space içindeyse. Eğer y oraya ait değilse, hiçbir x seçimi bizi oraya götüremez."
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Örnek sezgi: A'nın 3×2 olduğunu düşün. m=3, n=2. İki sütun var, her biri R³ içinde. İki vektörün lineer kombinasyonları en fazla bir düzlem oluşturur R³ içinde. Eğer y o düzlemde değilse — çözüm yok. Bu yüzden \"m > n olunca problem genellikle çözümsüz\" deniyor: denklem sayısı bilinmeyenden fazla, overdetermined."
+        },
+        {
+          "type": "text",
+          "heading": "Linear Independence: Sütunlar Gerçekten Farklı Yönler mi Gösteriyor?",
+          "text": "n tane sütunun column space'i n-boyutlu olmak zorunda değil. Eğer bir sütun diğerlerinin lineer kombinasyonu ise, o sütun aslında yeni bir yön eklemiyor — fazlalık."
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Lineer bağımsızlık tanımı: Bir vektör seti lineer bağımsızdır, eğer hiçbiri diğerlerinin lineer kombinasyonu değilse."
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Daha resmi: c1*v1 + c2*v2 + ... + ck*vk = 0 denkleminin tek çözümü c1=c2=...=ck=0 ise, bu vektörler lineer bağımsızdır."
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Sezgi: Bağımlı vektörler \"aynı yönü farklı isimle söylüyor.\" Lineer bağımlı iki sütun? Column space sadece bir doğru. Üç sütun var ama üçü de bağımlıysa yine bir doğru. Sütun sayısı değil, bağımsız sütun sayısı önemli."
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Şimdi bağlantı: Column space'in boyutu = A'nın lineer bağımsız sütunlarının sayısı."
         },
         {
           "type": "text",
           "heading": "Rank: Her Şeyin Özeti Tek Bir Sayıda",
-          "text": "rank(A), A'nın lineer bağımsız sütunlarının sayısıdır ve bu column space'in boyutuna eşittir. Şaşırtıcı ama kritik gerçek: satır rank'ı ve sütun rank'ı her zaman birbirine eşit. A'nın 'gerçek bilgi boyutu' iki yönden ölçülünce aynı çıkıyor. A ∈ ℝᵐˣⁿ için rank(A) ≤ min(m,n). Full rank: rank(A) = min(m,n), mümkün olan maksimum. Sıfır olmayan singular value sayısı da rank'a eşit — SVD ile direkt görülüyor."
+          "text": "Rank(A) = A'nın lineer bağımsız sütunlarının sayısı = column space'in boyutu."
         },
         {
           "type": "text",
-          "heading": "Row Space ve Null Space",
-          "text": "Row space, A'nın satırlarının tüm lineer kombinasyonlarıdır — ℝⁿ içinde bir alt uzay, boyutu rank(A). Null space ise Ax = 0'ı sağlayan tüm x vektörlerinin kümesidir: A tarafından tamamen sıfıra götürülen yönler. Null space boyutu = n − rank(A), buna 'nullity' denir (rank-nullity teoremi). Kritik gerçek: row space ve null space birbirlerine diktir ve toplamları ℝⁿ'nin tamamını verir. A her x'i alıp ℝᵐ'ye gönderir — null space'teki vektörler tamamen kaybolur, row space'teki vektörler column space'e iletilir. MRI bağlantısı: undersampled Fourier A'sının null space boyutu N−M; bu kadar frekans bileşeni hiç ölçülemiyor, prior bu boşluğu dolduruyor."
+          "heading": "",
+          "text": "Ve çok önemli bir eşitlik: rank(A) = lineer bağımsız satır sayısı da. Satır rank'ı ve sütun rank'ı her zaman birbirine eşit. Bu başta sürpriz gelir ama derin bir gerçek: A'nın kaç \"gerçek boyut\" içerdiğini hem satırlardan hem sütunlardan ölçünce aynı cevap çıkıyor."
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Yani rank(A) şunların hepsine eşit:"
+        },
+        {
+          "type": "list",
+          "heading": "",
+          "items": [
+            "Column space'in boyutu",
+            "Row space'in boyutu",
+            "A'nın \"gerçek\" bilgi boyutu"
+          ]
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "A ∈ R^(m×n) için rank(A) ≤ min(m,n). En fazla min(m,n) lineer bağımsız sütun/satır olabilir."
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Full rank demek, rank(A) = min(m,n) demek. Yani mümkün olan maksimum rank."
+        },
+        {
+          "type": "text",
+          "heading": "Row Space ve Null Space: Diğer Taraf",
+          "text": "Row space: A'nın satırlarının tüm lineer kombinasyonları. R^n içinde bir alt uzay. Boyutu = rank(A)."
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Null space (kernel): Ax = 0 denklemini sağlayan tüm x vektörlerinin kümesi. Yani A tarafından sıfıra gönderilen yönler."
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Null space boyutu = n - rank(A). Buna nullity deniyor."
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Ve kritik gerçek: Row space + null space = R^n'in tamamı, ve ikisi birbirine dik. Uzayı iki parçaya bölerler."
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Sezgi olarak: A her x'i alıp \"sıkıştırıp\" R^m'e gönderir. Null space'teki vektörler tamamen kaybolur (sıfıra gider). Row space'teki vektörler ise A tarafından column space'e iletilir. Yani A'nın \"gördüğü\" kısım row space, \"göremediği\" kısım null space."
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "MRI bağlantısı: Undersampled Fourier matrisi A'da null space boyutu N-M. O N-M boyutluk bölge tamamen ölçülemiyor, görünmez oluyor. Priorun işi tam da bu boşluğu doldurmak."
+        },
+        {
+          "type": "text",
+          "heading": "y = Ax: Kaç Çözüm Var?",
+          "text": "Şimdi hepsini birleştirelim. y = Ax'e bakıyoruz:"
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Çözüm var mı? y, A'nın column space'inde mi? Evet ise: çözüm var. Hayır ise: çözüm yok. Column space R^m'in tamamını kapsasın diye ne gerekiyor? A'nın m tane lineer bağımsız sütunu olması gerekiyor. Yani rank(A) = m. Buna \"full row rank\" deniyor."
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Çözüm kaç tane? Çözüm varsa, tekil mi yoksa sonsuz mu? Eğer Ax = y'nin bir çözümü x0 ise, o zaman x0 + z de çözüm, burada z null space'te. Çünkü A(x0 + z) = Ax0 + Az = y + 0 = y. Demek ki: null space = {0} ise → tek çözüm. Null space'in boyutu > 0 ise → sonsuz çözüm. Null space = {0} ne zaman? rank(A) = n olunca. Yani full column rank."
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Özet tablo:"
         },
         {
           "type": "code",
-          "heading": "y = Ax: Kaç Çözüm Var? — Karar Tablosu",
-          "text": "Durum                    | Rank Koşulu         | Çözüm\n-------------------------+---------------------+------------------------------------\nm = n, full rank         | rank = m = n        | Tek çözüm: x = A⁻¹y\nm > n, full col rank     | rank = n < m        | Çoğu y için yok; LS: x = A⁺y\nm < n, full row rank     | rank = m < n        | Sonsuz çözüm; min-norm: x = A⁺y\nm = n, singular          | rank < n            | Ya yok ya sonsuz (y'ye bağlı)\nm < n, rank deficient    | rank < m < n        | Hem bazı y'ler için yok hem sonsuz\n\nGenel kural:\n  Existence  ⟺  rank(A) = m  ⟺  y ∈ column space\n  Uniqueness ⟺  rank(A) = n  ⟺  null space = {0}\n  Her ikisi  ⟺  A kare + full rank  ⟺  invertible"
+          "heading": "",
+          "text": "                    full column rank?\n                    (rank = n, null = {0})\n\nfull row rank?       EVET                   HAYIR\n(rank = m,     EVET: tek çözüm        EVET: sonsuz çözüm\ncolumn space        A kare + invertible      fat matrix durumu\n= R^m)\n               HAYIR: çözüm yok veya   HAYIR: ya yok ya sonsuz\n                    sonsuz çözüm            (genel durum)"
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Daha net:"
+        },
+        {
+          "type": "list",
+          "heading": "",
+          "items": [
+            "m > n (tall/skinny, overdetermined): rank ≤ n < m. Column space R^m'i kapsamaz. Genel b için çözüm yok.",
+            "m < n (fat/wide, underdetermined): rank ≤ m < n. Null space trivial değil. Çözüm varsa sonsuz çözüm.",
+            "m = n (kare): Her ikisi de mümkün — full rank veya değil."
+          ]
         },
         {
           "type": "text",
           "heading": "Invertible (Tersinir): En Güzel Durum",
-          "text": "A⁻¹'in varlığı şu anlama gelir: A hem injective (her y için en fazla bir x) hem surjective (her y'ye ulaşılabilir). Bu yalnızca kare matrisler için mümkün, ve kare matris için ek koşul full rank. Yani m = n ve rank(A) = n. A invertible olduğunda Ax = b'nin her b için tam olarak bir çözümü var: x = A⁻¹b. Dikkat: A⁻¹ teorik bir araç — pratikte sayısal hassasiyet nedeniyle doğrudan hesaplanmaz, sistem çözücüler kullanılır."
+          "text": "A^(-1) var mı sorusu şudur: A hem injective (her y için en fazla bir x) hem surjective (her y'ye ulaşılabilir) mi?"
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Bu ancak kare matriksler için mümkün, ve kare matriks için de şart: full rank."
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "A ∈ R^(n×n) için şu ifadeler hepsi eşdeğerdir — biri doğruysa hepsi doğru:"
         },
         {
           "type": "list",
-          "heading": "A ∈ ℝⁿˣⁿ İçin: Invertible ↔ Hepsi Eşdeğer",
+          "heading": "",
           "items": [
-            "A tersinir: A⁻¹ mevcut",
+            "A tersinir (invertible)",
             "det(A) ≠ 0",
-            "rank(A) = n (full rank)",
+            "rank(A) = n",
             "Sütunlar lineer bağımsız",
             "Satırlar lineer bağımsız",
-            "Null space = {0}: sıfırdan farklı her x için Ax ≠ 0",
-            "Ax = b'nin her b ∈ ℝⁿ için tek çözümü var",
+            "Null space = {0}",
+            "Ax = b'nin her b için tek çözümü var",
             "Ax = 0'ın tek çözümü x = 0",
-            "Hiçbir eigenvalue sıfır değil",
-            "Hiçbir singular value sıfır değil (SVD'de)"
+            "Hiçbir eigenvalue sıfır değil"
           ]
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Bu liste ezberlenmez — içseleştirilir. Hepsi \"A hiçbir yönü sıfıra götürmüyor, her yöne ulaşabiliyoruz\" demek."
         },
         {
           "type": "text",
           "heading": "Singular: Tam Tersi",
-          "text": "Singular matris: kare ama invertible değil. rank < n, det(A) = 0, en az bir eigenvalue = 0. En az bir yön null space'te — A bu yönü sıfıra götürüyor, bilgi kayboluyor. Singular olunca bazı b'ler için Ax = b ya çözümsüz ya sonsuz çözümlü. Covariance matrisleri, kernel matrisleri — bunlar singular olduğunda geometrik anlam taşır: veri gerçekten bazı yönlerde yayılmıyor, sistem bazı yönleri göremez."
+          "text": "Singular matrix: Kare ama invertible değil. Yani rank < n."
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Singular olunca en az bir eigenvalue sıfır. Determinant sıfır. En az bir yön null space'te. En az bir b için Ax = b ya çözümsüz ya sonsuz çözümlü."
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Neden önemli? Covariance matrisleri, Hessian matriksleri, kernel matrisleri — bunlar çıktığında singular olabilirler ve bu bilgi geometrik anlam taşır."
         },
         {
           "type": "text",
           "heading": "Diagonal Matrix: Hesabı Ucuzlatan Yapı",
-          "text": "D_{ij} = 0 for i ≠ j: sadece köşegen dolu. diag(v)·x = v ⊙ x — her koordinatı sadece kendi ölçek faktörüyle çarpar, başka yönle etkileşim yok. Hesabı son derece ucuz yapar. diag(v) tersinir ancak tüm köşegen elemanlar sıfır değilse; tersi diag([1/v₁,...,1/vₙ]). Kare olmak zorunda değil — rectangular diagonal matrisler de var (SVD'deki D gibi). Eigendecomposition'da Λ diagonal, SVD'de D diagonal: ikisi de A'nın 'her eksende ne kadar ölçeklendirdiği' bilgisini içeriyor."
+          "text": "D_ij = 0 for i ≠ j. Sadece köşegen dolulu, geri kalan sıfır."
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Ne işe yarar? diag(v) * x = v ⊙ x — her koordinatı sadece kendi ölçek faktörüyle çarpar. Başka yönle etkileşim yok. Bu hesabı son derece ucuz yapar."
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "diag(v) tersinir ise ve ancak tüm köşegen elemanlar sıfır değilse. Tersi: diag([1/v1, 1/v2, ..., 1/vn])."
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "SVD'deki Σ (ya da D) işte diagonal — singular değerleri içerir. Eigendecomposition'da: A = V diag(λ) V^(-1). λ'lar köşegende eigenvalue'lar."
         },
         {
           "type": "text",
           "heading": "Symmetric Matrix: Transpozuna Eşit",
-          "text": "A = Aᵀ, yani A_{ij} = A_{ji}. Covariance matrisi C = E[(x−μ)(x−μ)ᵀ] ve Gram matrisi AᵀA her zaman symmetric. Symmetric matrislerin güzel özelliği: her zaman reel eigenvalue'ları var ve eigenvector'ları birbirine diktir. Dolayısıyla her real symmetric A için A = QΛQᵀ — Q orthogonal (dik eigenvector'lar sütunlarda), Λ diagonal (eigenvalue'lar köşegende). Tüm eigenvalue'lar pozitifse positive definite (PD): xᵀAx > 0 for all x ≠ 0. PD Hessian → lokal minimum. PSD covariance → varyans hiçbir yönde negatif olamaz."
+          "text": "A = A^T. Yani A_ij = A_ji."
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Neden önemli? Covariance matrisi C = E[(x-μ)(x-μ)^T] her zaman symmetric. Gram matrisi A^T A her zaman symmetric. Mesafe matrisleri symmetric."
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Symmetric matrislerin özel özelliği: her zaman reel eigenvalue'ları var ve eigenvector'ları birbirine dik. Yani her symmetric A için: A = Q Λ Q^T. Burada Q orthogonal matris (eigenvector'lar sütunlarda), Λ diagonal (eigenvalue'lar köşegende). Bu çok temiz bir form — sadece real sayılar, dik yönler."
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Eğer A hem symmetric hem tüm eigenvalue'lar pozitif: positive definite. Bu durumda x^T A x > 0 for all x ≠ 0. Sezgi: A enerjiyi her yönde büyütüyor, hiçbir yönü küçültmüyor."
         },
         {
           "type": "text",
           "heading": "Orthogonal ve Orthonormal Vektörler",
-          "text": "İki vektör orthogonal: xᵀy = 0. Dot product sıfır, 90 derece açı — hiçbir ortak yönleri yok. Orthonormal: hem orthogonal hem birim normu var (||x||₂ = 1 her biri için), yani xᵢᵀxⱼ = δᵢⱼ. ℝⁿ'de en fazla n tane birbirine orthogonal non-zero vektör olabilir — n+1. vektör mutlaka diğerlerinin lineer kombinasyonudur. Orthonormal set otomatik lineer bağımsızdır. Koordinat sisteminin temiz hali: her ölçüm sadece kendi yönünü etkiliyor, yönler birbirini bozmaz."
+          "text": "Orthogonal: x^T y = 0. Dot product sıfır. Birbirlerine 90 derece. \"Hiçbir ortak yönleri yok.\""
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Orthonormal: Hem orthogonal hem birim normu var (||x||_2 = 1 her biri için)."
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "R^n'de en fazla n tane birbirine orthogonal non-zero vektör olabilir. n+1 vektör olsa biri diğerlerinin lineer kombinasyonu olmak zorunda — lineer bağımlılık kaçınılmaz."
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Sezgi: Orthonormal vektörler koordinat sisteminin \"temiz hali\". Birbirini bozmayan, her biri kendi yönünü ölçen eksenler."
         },
         {
           "type": "text",
           "heading": "Orthogonal Matrix: İsim Yanıltıcı",
-          "text": "'Orthogonal matris' adı kafa karıştırıcı çünkü aslında satırları ve sütunları orthonormal olan kare matris. Tanım: AᵀA = AAᵀ = I. Bundan şu çıkar: A⁻¹ = Aᵀ — tersi bulmak sadece transpoz almak. Orthogonal matris uygulandığında vektörün uzunluğu değişmez: ||Ax||₂ = ||x||₂. Açılar ve iç çarpımlar korunur. Etki yalnızca rotasyon ve/veya reflection. DFT matrisi (1/√N ölçekli) orthogonal. SVD'deki U ve V orthogonal: 'temiz' dönüşümler. D ise 'ne kadar gerdim' bilgisi."
+          "text": "Orthogonal matris deniyor ama aslında satırları ve sütunları orthonormal olan kare matris. (İsimlendirme kötü, ama böyle kabul görmüş.)"
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Tanım: A^T A = A A^T = I."
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Bundan şu çıkar: A^(-1) = A^T. Tersi bulmak çok ucuz — sadece transpoz al."
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "DFT matrisi örneği: F^H F = N * I. Normalize edersen (1/√N * F) gerçekten orthogonal olur, F^H F = I."
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Orthogonal matris uygulandığında ne oluyor? Vektörün uzunluğu değişmiyor: ||Ax||_2 = ||x||_2. Açılar korunuyor. Sadece rotasyon ve/veya reflection."
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Sezgi: Orthogonal matris uzayı \"döndürür\" ama bozmaz. Singular value decomposition'da U ve V işte bu — \"temiz\" dönüşümler, D ise \"ne kadar gerdim\" bilgisi."
         },
         {
           "type": "text",
           "heading": "SVD: Her Şeyi Birleştiren Ayrışım",
-          "text": "Eigendecomposition sadece kare matrislere uygulanır. SVD ise her A ∈ ℝᵐˣⁿ için tanımlıdır — en genel ayrışım. A = UDVᵀ ile A'nın etkisini geometrik olarak üçe bölüyoruz: Vᵀ ile input uzayında rotate et, D ile eksenleri ölçekle (bazı boyutlar sıfıra gidebilir), U ile output uzayında rotate et. U'nun sütunları column space'in yönlerini, V'nin sütunları row space ve null space'in yönlerini veriyor. Rank: sıfır olmayan singular value sayısı. Pseudoinverse, least squares, low-rank approximation hepsi SVD üzerinden tanımlanıyor."
+          "text": "Her A ∈ R^(m×n) için:"
         },
         {
           "type": "code",
-          "heading": "SVD Bileşen Bileşen: A = U · D · Vᵀ",
-          "text": "A = U  ·  D  ·  Vᵀ\n    m×m   m×n   n×n\n\nU (m×m, orthogonal):\n  Sütunlar = sol singular vektörler\n  Column space'in ortonormal bazı\n\nD (m×n, diagonal, σ₁ ≥ σ₂ ≥ ... ≥ 0):\n  Singular values — A'nın her eksende kaç ölçeklendirdiği\n  rank(A) = sıfır olmayan σᵢ sayısı\n\nV (n×n, orthogonal):\n  Sütunlar = sağ singular vektörler\n  σᵢ ≠ 0 → row space'i span eder\n  σᵢ = 0 → null space'i span eder\n\nEtki sırası (Ax = UDVᵀx):\n  1. Vᵀx  : row space koordinatlarına bak\n  2. D·(  ): her ekseni σᵢ kadar ölçekle\n  3. U·(  ): column space'te yerleştir\n\nBağlantılar:\n  Pseudoinverse : A⁺ = VD⁺Uᵀ  (D⁺: σᵢ ≠ 0 → 1/σᵢ)\n  Symmetric PSD : A = QΛQᵀ  (SVD özel hali: U=V=Q)\n  Orthogonal mat: tüm σᵢ = 1"
+          "heading": "",
+          "text": "A = U D V^T\n\n- U ∈ R^(m×m): orthogonal (sol singular vektörler — column space'in yönleri)\n- D ∈ R^(m×n): diagonal (singular values — σ1 ≥ σ2 ≥ ... ≥ 0)\n- V ∈ R^(n×n): orthogonal (sağ singular vektörler — row space'in yönleri)"
         },
         {
           "type": "text",
-          "heading": "Pseudoinverse: Inverse Olmadan En İyi Tahmin",
-          "text": "A tersinir değilse (dikdörtgen veya singular kare) A⁻¹ yok, ama A⁺ = VD⁺Uᵀ her zaman hesaplanabilir — D⁺'da sıfır olmayan σᵢ'leri 1/σᵢ ile değiştiriyorsun. A tall ise (m > n, overdetermined): çoğu y için çözüm yok. A⁺y, ||Ax−y||₂'yi minimize eden x'i verir — least squares solution. A fat ise (m < n, underdetermined): sonsuz çözüm var. A⁺y, ||x||₂'si minimum olan çözümü verir — minimum norm solution, tamamen row space'te yatan çözüm (null space bileşeni sıfır)."
+          "heading": "",
+          "text": "Ne anlatıyor? A'nın etkisini üçe bölüyor: önce V^T ile row space'te rotate et, sonra D ile her ekseni belirli miktarda ölçekle (ve boyut değiştir), sonra U ile column space'te rotate et."
         },
         {
-          "type": "table",
-          "heading": "Tüm Tanımların Özeti",
-          "rows": [
-            [
-              "Terim",
-              "Ne Demek?",
-              "Koşul / Özellik"
-            ],
-            [
-              "Full row rank",
-              "Column space = ℝᵐ, her y'ye ulaşılır",
-              "rank(A) = m"
-            ],
-            [
-              "Full col rank",
-              "Null space = {0}, tekil çözüm mümkün",
-              "rank(A) = n"
-            ],
-            [
-              "Invertible",
-              "A⁻¹ var, her y için tek çözüm",
-              "m = n, rank = n"
-            ],
-            [
-              "Singular",
-              "A⁻¹ yok, kare ama rank < n",
-              "det(A) = 0, ≥1 eigenvalue = 0"
-            ],
-            [
-              "Symmetric",
-              "A = Aᵀ, reel eigenvalue, dik eigenvec",
-              "A_{ij} = A_{ji}"
-            ],
-            [
-              "Diagonal",
-              "Sadece köşegen ≠ 0, ucuz çarpma/tersi",
-              "D_{ij} = 0 for i ≠ j"
-            ],
-            [
-              "Orthogonal mat",
-              "AᵀA = I, A⁻¹ = Aᵀ, uzunluk korur",
-              "Satır + sütun orthonormal"
-            ],
-            [
-              "Orthonormal set",
-              "Hem dik hem birim norm",
-              "xᵢᵀxⱼ = δᵢⱼ"
-            ],
-            [
-              "Pos. definite",
-              "xᵀAx > 0 for all x ≠ 0",
-              "Tüm eigenvalue > 0"
-            ]
+          "type": "text",
+          "heading": "",
+          "text": "Rank bağlantısı: rank(A) = sıfır olmayan singular value sayısı."
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Null space bağlantısı: σi = 0 olan V'nin sütunları null space'i span eder."
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Pseudoinverse bağlantısı: A^+ = V D^+ U^T, burada D^+'da sıfır olmayan σi'leri 1/σi ile değiştiriyorsun."
+        },
+        {
+          "type": "text",
+          "heading": "Pseudoinverse: Inverse Olmadan Çözüm",
+          "text": "A tersinir değilse (dikdörtgen veya singular kare), A^(-1) yok. Ama yine de \"en iyi x\" bulunabilir."
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "A^+ = V D^+ U^T"
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "A tall ise (m > n, overdetermined): Ax = y tam çözümsüz. A^+ y, ||Ax - y||_2'yi minimize eden x'i verir — least squares solution."
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "A fat ise (m < n, underdetermined): Sonsuz çözüm var. A^+ y, ||x||_2'si minimum olan çözümü verir — minimum norm solution."
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Bu, null space sezgisiyle örtüşüyor: minimum norm çözüm null space bileşeni sıfır olan çözüm — tamamen row space'te yatan çözüm."
+        },
+        {
+          "type": "code",
+          "heading": "y = Ax Çözüm Mantığı: Tam Tablo",
+          "text": "Durum                   | Rank Koşulu          | Çözüm\n------------------------|----------------------|---------------------------\nm = n, full rank        | rank = m = n         | Tek çözüm: x = A^(-1)b\nm > n, full col rank    | rank = n < m         | Genel y için yok; LS: x = A^+y\nm < n, full row rank    | rank = m < n         | Sonsuz çözüm; min-norm: x = A^+y\nm = n, singular         | rank < n             | Ya yok ya sonsuz (b'ye göre)\nm < n, rank deficient   | rank < m < n         | Hem sonsuz hem bazı y'ler için yok"
+        },
+        {
+          "type": "code",
+          "heading": "Hepsinin Şart-Koşul Özeti",
+          "text": "Terim           | Ne demek?                                    | Şart\n----------------|----------------------------------------------|------------------\nFull row rank   | Column space = R^m                           | rank = m\nFull col rank   | Null space = {0}                             | rank = n\nInvertible      | Tersinir (kare matris için)                  | m=n, rank=n\nSingular        | Tersinir değil (kare matris)                 | rank < n\nSymmetric       | A = A^T                                      | A_ij = A_ji\nDiagonal        | Sadece köşegen dolu                          | D_ij=0 for i≠j\nOrthogonal mat  | A^T A = I (rows AND cols orthonormal)        | kare + unitary\nOrthonormal set | Hem dik hem birim norm                       | x_i^T x_j = delta_ij\nPos. definite   | x^T Ax > 0 for all x≠0                      | tüm eigenvalue > 0"
+        },
+        {
+          "type": "text",
+          "heading": "İçselleştirme İçin Son Bir Çerçeve",
+          "text": "A ∈ R^(m×n)'yi bir \"bilgi kanalı\" gibi düşün. n boyutlu input x giriyor, m boyutlu output y çıkıyor."
+        },
+        {
+          "type": "list",
+          "heading": "",
+          "items": [
+            "Rank: Kanal kaç bağımsız boyutu geçirebiliyor?",
+            "Null space: Hangi inputlar kanalda yok oluyor?",
+            "Column space: Kanal hangi outputları üretebiliyor?",
+            "Full col rank: Hiçbir input kaybolmuyor — injective.",
+            "Full row rank: Her output üretilebilir — surjective.",
+            "Invertible: İkisi birden — tam birebir eşleşme."
           ]
         },
         {
           "type": "text",
-          "heading": "Bilgi Kanalı: Her Şeyi Bağlayan Sezgi",
-          "text": "A ∈ ℝᵐˣⁿ'yi bir bilgi kanalı gibi düşünün: n boyutlu input x giriyor, m boyutlu output y çıkıyor. Rank kanalın gerçekten kaç bağımsız boyutu geçirebildiğini söylüyor. Null space hangi inputların kanalda yok olduğunu gösteriyor. Column space kanalın hangi outputları üretebildiğini tanımlıyor. Full column rank: hiçbir input kaybolmuyor. Full row rank: her output üretilebilir. Invertible: tam birebir eşleşme, bilgi kaybı sıfır. MRI'da A undersampled Fourier: rank = M < N, null space boyutu = N−M. Prior bu kanalın göremediği kısmı tamamlıyor."
+          "heading": "",
+          "text": "MRI'da A undersampled Fourier: null space var çünkü bazı frekans bileşenleri hiç ölçülmüyor. Priorun işi: null space'teki kayıp bilgiyi fizik/istatistik varsayımıyla tamamlamak."
         }
       ]
     }
