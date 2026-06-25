@@ -6348,6 +6348,145 @@
       ]
     },
     {
+      "title": "MLE: İki Kullanım, Aynı Fikir — Parametre Tahmini vs Sinyal Tahmini",
+      "cat": "Estimation",
+      "summary": "MLE her zaman aynı soruyu sorar: 'Gözlemleri en olası kılan bilinmeyen nedir?' ML kursunda bilinmeyen = dağılım parametresi (mu, sigma). EE499'da bilinmeyen = sinyal (x in y=Ax+n). İkisi de p(gözlem|bilinmeyen) maximize ediyor. Gaussian olunca her ikisi de kareler toplamını minimize etmeye dönüşüyor.",
+      "context": "EE499 · Maximum Likelihood Estimation",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "İki farklı MLE kullanımı — bilinmeyen nedir?",
+          "text": "ML kursu (ch03) — parametre tahmini:\n  Elimde N veri noktası var: x_1, x_2, ..., x_N\n  Bunlar bir dağılımdan geldi, parametresini bilmiyorum.\n  Gaussian varsayıyorum, mu'yu bulmak istiyorum.\n\n  Bilinmeyen = dağılımın parametresi (mu, sigma)\n\nEE499 — sinyal tahmini:\n  Elimde M ölçüm var: y_1, y_2, ..., y_M\n  Bunlar bir sinyalden + gürültüden geldi.\n  x sinyalini bulmak istiyorum.\n\n  Bilinmeyen = sinyal (x)\n\nFark sadece bu. Soru, mantık, formül: tamamen aynı."
+        },
+        {
+          "type": "code",
+          "heading": "Ortak mantık — her ikisinde de aynı soru",
+          "text": "Her ikisinde de:\n\n  1. Bir 'bilinmeyen' var (deterministik, sabit).\n  2. Bir 'gözlem' var (rastgele, gürültülü).\n  3. p(gözlem | bilinmeyen) yazıyorsun.\n  4. Bu fonksiyonu bilinmeyene göre maximize ediyorsun.\n\nSoru her iki durumda da aynı:\n  'Elindeki gözlemleri en olası kılan bilinmeyen nedir?'\n\n─────────────────────────────────────────────────────\nML kursu:  theta_ML = argmax_theta  prod_i  p(x_i | theta)\nEE499:         x_ML = argmax_x              p(y | x)\n─────────────────────────────────────────────────────\n\nFormül yapısı birebir aynı.\nSadece 'bilinmeyen' değişti: theta yerine x."
+        },
+        {
+          "type": "code",
+          "heading": "Gaussian olunca ikisi de aynı yere çıkıyor",
+          "text": "ML kursu — Gaussian dağılım:\n  x_i ~ N(mu, sigma²)\n  log p(x_i | mu) = -log(sqrt(2pi)*sigma) - (x_i - mu)² / (2sigma²)\n  argmax mu = argmin  sum (x_i - mu)²\n  → mu_ML = (1/N) * sum x_i   ← sample mean\n\nEE499 — Gaussian gürültü (y = Ax + n, n ~ N(0, sigma²I)):\n  y_i ~ N((Ax)_i, sigma²)\n  log p(y | x) = sabit - 1/(2sigma²) * ||y - Ax||²\n  argmax x = argmin  ||y - Ax||²\n  → x_ML = x_LS   ← Least Squares çözümü\n\n─────────────────────────────────────────────────────\nİkisi de aynı adımları izliyor:\n  Gaussian yaz → log al → sabit terimleri at\n  → kalan şey sum of squared errors → minimize et.\n─────────────────────────────────────────────────────\n\nKarşılaştırma:\n  ML kursu:  gözlemler = veri noktaları,  bilinmeyen = merkez (mu)\n  EE499:     gözlemler = y ölçümleri,     bilinmeyen = sinyal (x)\n  Her ikisinde de: 'ortalamaya en yakın şeyi bul' demek bu."
+        },
+        {
+          "type": "code",
+          "heading": "p(y|x): iki gözle bakış",
+          "text": "y = x + n,  n ~ N(0, sigma²) basit örneği:\n\nGöz 1 — y fonksiyonu olarak (x sabit):\n  Bu bir Gaussian. x merkezli, sigma varyanslı.\n  'x=3 ise, y'nin değeri büyük ihtimalle 3 civarında olur.'\n  → koşullu dağılım.\n\nGöz 2 — x fonksiyonu olarak (y gözlemlendi, sabit):\n  y = 1.5 ölçtüm. Peki x ne?\n  Hangi x değeri bu y = 1.5'i en olası kılar?\n  → likelihood fonksiyonu.\n\n  x = 1.5'te tepe yapar → x_ML = y.\n  Sezgi: 'En saf tahmin: gördüğün şeyi al.'\n  Gürültü yoksa zaten y = x → x_ML = y tam doğru.\n  Gürültü varsa: elimizdeki tek bilgi y, oradan en iyisini al.\n\nML kursundaki bağlantı:\n  Orada da aynı şey — mu'yu fix et, veriyi bak:\n  'Hangi mu bu x_i'leri en olası kılar?'\n  Gaussian için cevap: merkezi x_i'lere en yakın olan mu, yani ortalama."
+        },
+        {
+          "type": "code",
+          "heading": "Gürültü türü → farklı maliyet fonksiyonu",
+          "text": "Gaussian özel bir durum — farklı gürültüler farklı çözüm veriyor:\n\nGürültü               →  MLE çözümü\n──────────────────────────────────────────────────────\ni.i.d. Gaussian        →  argmin ||y - Ax||²      (LS)\nCorrelated Gaussian    →  argmin (y-Ax)^T Σ⁻¹(y-Ax)   (weighted LS)\nLaplacian (keskin)     →  argmin ||y - Ax||_1    (L1 norm)\nPoisson (foton sayımı) →  KL divergence minimization\nGeneralized Gaussian p →  argmin ||y - Ax||_p^p\n──────────────────────────────────────────────────────\n\nAynı MLE mantığı, farklı gürültü varsayımı → farklı optimizasyon problemi.\nYani LS, L1, ağırlıklı LS gibi deterministik görünen yöntemler aslında\nbirinin altında bir gürültü dağılımı varsayımı taşıyor.\n\nML kursunda da aynı:\n  Gaussian varsay → MLE = sample mean\n  Laplace varsay  → MLE = sample median\n  Farklı dağılım  → farklı tahmin edici"
+        }
+      ]
+    },
+    {
+      "title": "MLE, MAP, VAE — Aradığım Şey Ne? Prior Kimin Üzerinde?",
+      "cat": "Estimation",
+      "summary": "MLE her zaman aynı soruyu sorar: gördüğümü en olası kılan aradığım nedir? ML kursunda aranan mu, EE499'da sinyal x, VAE'de network ağırlıkları theta/phi. z VAE'de hiç 'bulunmuyor' — integrate ediliyor. MAP için prior, tahmin ettiğin şeyin üzerinde olmalı: p(theta). p(z) olması MAP yapmıyor. Weight decay = Gaussian prior ile MAP.",
+      "context": "EE499 · MLE, MAP ve VAE Karşılaştırması",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Ortak şablon — hepsinde aynı yapı",
+          "text": "Her yerde şu form var:\n  p( gördüğüm şey | aradığım şey )\n\nMLE hep şunu yapıyor:\n  'Aradığım şeyin hangi değeri, gördüğümü en olası kılar?'\n\nFark sadece: aradığım şey ne?\n\nML kursu:\n  Gördüğüm:  x_1, ..., x_N  (veri noktaları)\n  Aradığım:  mu  (dağılımın ortalaması)\n  Cevap:     mu = sayı  (örn. 3.2)\n\nEE499:\n  Gördüğüm:  y  (gürültülü ölçüm)\n  Aradığım:  x  (gerçek sinyal)\n  Cevap:     x = vektör\n\nVAE:\n  Gördüğüm:  x  (yüz resimleri, binlerce tane)\n  Aradığım:  theta, phi  (encoder/decoder ağırlıkları)\n  Cevap:     bir fonksiyon — encoder ve decoder ağı"
+        },
+        {
+          "type": "code",
+          "heading": "z ne peki — VAE'de neden hiç 'bulunmuyor'?",
+          "text": "ML kursu:  mu → bulduğumda işim bitiyor\nEE499:     x  → bulduğumda işim bitiyor\nVAE:       z  → hiç 'bulmuyorum' bile\n\nz, VAE'de bir ara değişken. Her resim için farklı.\n'Bu resmin z'si 3.2'dir' demiyorum.\n'Bu resmin z'si N(mu(x), sigma(x)) dağılımından geliyor' diyorum.\nBu dağılımı öğreniyorum — encoder ağırlıkları bu dağılımı tanımlıyor.\n\nVAE'nin sonunda elde ettiğim:\n  encoder: herhangi bir resim ver → z dağılımını söyle\n  decoder: herhangi bir z ver     → resim üret\n\nKL terimi neden var?\n  Test zamanında x yok, z ~ N(0,I)'dan örnekleyeceğim.\n  Eğer encoder z'leri rastgele yerlere dağıtırsa,\n  N(0,I)'dan çektiğim z decoder'a anlamsız gelir.\n  KL terimi: 'encoder'ın z dağılımları N(0,I)'dan uzaklaşmasın.'\n  → Test zamanında N(0,I)'dan örnekleyebilir hale geliyoruz.\n  Bu bir prior değil, latent space'i kullanılabilir tutma zorunluluğu."
+        },
+        {
+          "type": "code",
+          "heading": "p(z) prior'u var — neden MAP değil?",
+          "text": "Kritik soru: prior kimin üzerinde?\n\nMLE:  theta deterministik unknown, p(theta) YOK  → MLE\nMAP:  theta rastgele,              p(theta) VAR  → MAP\n\nPrior, TAHMİN ETTİĞİN ŞEYİN üzerinde olmalı.\n\nVAE'de tahmin edilen:  theta, phi  (network ağırlıkları)\np(theta) var mı?       HAYIR  → MLE\n\nz'de prior var:  p(z) = N(0,I)\nAma z tahmin edilmiyor — z integrate ediliyor.\nz'nin prior'u, theta/phi için MAP yapmıyor.\n\nEğer theta'ya prior koysaydın:\n  p(theta) ~ N(0,I)  →  log p(theta) ∝ -||theta||²\n  loss = reconstruction loss + ||theta||²\n                               ──────────\n                               L2 weight decay\n\n  Bu tam olarak neural network'teki weight decay!\n  Yani: L2 regularization = Gaussian prior ile MAP on theta."
+        },
+        {
+          "type": "table",
+          "heading": "Özet tablo",
+          "rows": [
+            [
+              "Yöntem",
+              "Gördüğüm",
+              "Aradığım",
+              "p(aranan) var mı?",
+              "Yöntem"
+            ],
+            [
+              "ML kursu MLE",
+              "x_i",
+              "mu, sigma",
+              "Yok",
+              "MLE"
+            ],
+            [
+              "EE499 MLE",
+              "y",
+              "x (sinyal)",
+              "Yok",
+              "MLE"
+            ],
+            [
+              "MAP",
+              "y",
+              "x (sinyal)",
+              "Var: p(x)",
+              "MAP"
+            ],
+            [
+              "VAE",
+              "x (resimler)",
+              "theta, phi",
+              "Yok",
+              "MLE"
+            ],
+            [
+              "VAE + L2 reg",
+              "x (resimler)",
+              "theta, phi",
+              "Var: p(theta)",
+              "MAP"
+            ],
+            [
+              "",
+              "",
+              "z",
+              "Var: p(z) = N(0,I)",
+              "Variational Inference"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "title": "MLE → MAP: x Deterministik'ten Rastgele'ye — Prior Devreye Giriyor",
+      "cat": "Estimation",
+      "summary": "MLE'de x deterministik — prior yok, sadece likelihood. MAP'te x rastgele — Bayes kuralıyla likelihood * prior maximize edilir. Gaussian prior → Tikhonov regularization, ama λ artık keyfi değil prior istatistiğinden geliyor. Prior zayıflayınca MAP → MLE.",
+      "context": "EE499 · MAP Estimation",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "MLE'den MAP'e — paradigma kayışı",
+          "text": "MLE:  x deterministik — bilinmeyen ama sabit bir sayı.\n      Prior yok. Sadece 'bu y'yi en olası kılan x nedir?'\n\nMAP:  x artık rastgele — hakkında istatistiksel bilgimiz var.\n      Prior var: p(x) — x'in olası değerleri hakkında önceden bilgi.\n\nMLE'de:\n  x_ML = argmax_x  p(y|x)\n\nMAP'te Bayes kuralı devreye giriyor:\n  p(x|y) = p(y|x) * p(x) / p(y)\n            ────────  ─────\n           likelihood  prior   (p(y) x'e bağlı değil, sabit)\n\n  x_MAP = argmax_x  p(x|y)\n        = argmax_x  p(y|x) * p(x)\n        = argmax_x  log p(y|x) + log p(x)\n        = argmin_x  -log p(y|x) - log p(x)\n                    ───────────  ──────────\n                    data fidelity  regularization"
+        },
+        {
+          "type": "code",
+          "heading": "Prior ne işe yarıyor — sezgi",
+          "text": "MLE:  Sadece veriye bak. 'Bu gözlemleri en olası kılan x?'\nMAP:  Veriye bak + x hakkında önceden ne biliyorsan onu da kullan.\n      'Bu gözlemlere uygun VE a priori olası olan x?'\n\nSomut örnek: y = 1.5 gözlemledin.\n  MLE → x_ML = 1.5  (sadece veriye güven)\n  MAP → x prior'ı N(0,1) ise → x_MAP < 1.5  (prior sıfıra çekiyor)\n        Prior ne kadar güçlüyse, tahmin o kadar sıfıra yaklaşıyor.\n\nPrior güçlendikçe:\n  R_x küçülür → R_x⁻¹ büyür → regularization ağırlaşır\n  → tahmin prior'a yaklaşır, veriden uzaklaşır\n\nPrior zayıflayınca:\n  R_x → sonsuz → R_x⁻¹ → 0 → regularization kayboluyor\n  → MAP → MLE\n\nYani MLE, MAP'in 'prior yok' özel durumu."
+        },
+        {
+          "type": "code",
+          "heading": "Gaussian olunca somutlaşıyor",
+          "text": "y = Ax + n,  n ~ N(0, σ_n²I)\nx ~ N(0, R_x)   ← Gaussian prior\n\n-log p(y|x) ∝ ||y - Ax||²        (Gaussian gürültüden)\n-log p(x)   ∝ xᵀ R_x⁻¹ x        (Gaussian prior'dan)\n\nx_MAP = argmin  ||y - Ax||² + xᵀ R_x⁻¹ x\n                ────────────   ───────────\n                data fidelity   regularization\n\nKapalı form çözüm:\n  x_MAP = (AᵀA + R_x⁻¹)⁻¹ Aᵀy\n\nChapter 2'deki Tikhonov regularization:\n  x_Tikhonov = (AᵀA + λI)⁻¹ Aᵀy\n\nBirebir aynı formül! Fark şu:\n  Tikhonov: λ keyfi seçiliyordu (deneme-yanılma)\n  MAP:      R_x⁻¹ = x'in prior istatistiğinden geliyor\n\nArtık regularization'ın nereden geldiğini biliyoruz: prior!"
+        },
+        {
+          "type": "code",
+          "heading": "Prior seçimi regularization şeklini belirliyor",
+          "text": "Farklı prior'lar farklı regularization veriyor:\n\nGaussian prior:  p(x) ∝ exp(-||x||²)\n  -log p(x) ∝ ||x||²   → L2 regularization (Tikhonov/Ridge)\n  Küçük ama sıfır olmayan bileşenler\n\nLaplace prior:   p(x) ∝ exp(-||x||_1)\n  -log p(x) ∝ ||x||_1  → L1 regularization (LASSO)\n  Bazı bileşenler tam sıfır → sparse çözüm\n  Compressed sensing'in temeli bu\n\nGenel:\n  x_MAP = argmin  -log p(y|x) - log p(x)\n                  ───────────  ──────────\n          gürültü dağılımı    prior dağılımı\n          belirliyor          belirliyor\n\nYani Chapter 2'de 'hangi normu kullanalım?' sorusu aslında\n'x hakkında ne inanıyoruz?' sorusuydu."
+        }
+      ]
+    },
+    {
       "title": "ML, MMSE ve MAP — Üç Tahmin Çerçevesi",
       "cat": "Estimation",
       "summary": "x deterministik mi rassal mı bilgiye göre yaklaşım değişiyor. ML: x sabit, p(y|x) maximize et → Gaussian gürültüde LS. MMSE: x rassal, posterior mean E[x|y] → optimal ama hesabı zor. MAP: posterior mode argmax p(x|y) → kapalı forma yakın. Gaussian'da MAP=MMSE=LMMSE.",
@@ -13567,6 +13706,159 @@
               "Loss: noise prediction MSE"
             ]
           }
+        }
+      ]
+    },
+    {
+      "title": "KL Divergence Yönü — P||Q Mass-Covering, Q||P Mode-Seeking",
+      "cat": "Generative Models",
+      "summary": "D_KL(P||Q) ve D_KL(Q||P) farklı davranış üretiyor. P||Q: Q, P'nin her yerini kapsamak zorunda — geniş, yayvan. Q||P: Q, P'nin sıfır olduğu yerlerden kaçmak zorunda — dar, bir modu seçiyor. İki Gaussian örneğiyle somutlaşıyor.",
+      "context": "CS231n · Generative Models",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Senaryo: p(x) iki modlu, q(x) ile yaklaştırıyoruz",
+          "text": "p(x) gerçek dağılım — iki ayrı tepe var:\n\n  p(x):  ___     ___\n        /   \\   /   \\\n  ─────/─────\\─/─────\\─────\n      sol    sağ\n      mod    mod\n\nq(x) bizim modelimiz — tek parametreli Gaussian.\nİki modun ikisini aynı anda yakalayamaz.\n\nSoru: hangi KL yönünü minimize edersek ne olur?"
+        },
+        {
+          "type": "code",
+          "heading": "D_KL(P||Q) — 'P'yi başa yaz' — Mass-Covering",
+          "text": "D_KL(P||Q) = E_{x~P}[log P(x)/Q(x)]\n\nÖrnekler P'den çekiliyor.\n\nP yüksekken Q sıfıra yaklaşırsa:\n  log(P/Q) → log(P/0) → ∞  ← sonsuz ceza\n\nQ mecburen P'nin yüksek olduğu her yerde kitle bulundurmalı.\nHiçbir modu 'atlayamaz' — atlarsa sonsuz ceza yer.\n\nSonuç: q iki modun arasından geçiyor, ikisini de kapsıyor:\n\n  q(x):      _______\n            /       \\\n  ─────────/─────────\\─────\n      iki mod arası bulanık\n\n'P neredeyse Q da orada olsun'\n→ Yanlış yerlere de kitle koyabilir ama eksik bırakamaz.\n→ Geniş, yayvan, her yeri kaplayan q."
+        },
+        {
+          "type": "code",
+          "heading": "D_KL(Q||P) — 'Q'yu başa yaz' — Mode-Seeking",
+          "text": "D_KL(Q||P) = E_{x~Q}[log Q(x)/P(x)]\n\nÖrnekler Q'dan çekiliyor.\n\nQ yüksekken P sıfıra yaklaşırsa:\n  log(Q/P) → log(Q/0) → ∞  ← sonsuz ceza\n\nQ mecburen P'nin sıfır olduğu bölgelerden kaçmalı.\nİki mod arasındaki çukurda P≈0 → Q oraya kitle koyamaz.\n\nSonuç: q iki moddan birini seçiyor, diğerini ignore ediyor:\n\n  q(x):  ___\n        /   \\\n  ─────/─────\\───────────────\n     sol mod seçildi, sağ yok\n\n'Q neredeyse P de orada olsun'\n→ P'nin güvenli, yoğun bölgelerine sıkışıyor.\n→ Dar, keskin, tek moda odaklanan q."
+        },
+        {
+          "type": "compare",
+          "heading": "Özet",
+          "left": {
+            "title": "D_KL(P||Q)",
+            "points": [
+              "Örnekler P'den çekiliyor",
+              "Q, P'nin yüksek olduğu yerde eksik kalırsa ∞ ceza",
+              "Q geniş, her modu kapsar",
+              "Mass-covering / mean-seeking",
+              "Yanlış yerlere de kitle koyabilir"
+            ]
+          },
+          "right": {
+            "title": "D_KL(Q||P)",
+            "points": [
+              "Örnekler Q'dan çekiliyor",
+              "Q, P'nin sıfır olduğu yere girerse ∞ ceza",
+              "Q dar, bir modu seçer",
+              "Mode-seeking / zero-forcing",
+              "Seçtiği modda iyi, diğer modu tamamen kaçırır"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "title": "VAE'de KL Yönü — Neden D_KL(q||p) Kullanılıyor?",
+      "cat": "Generative Models",
+      "summary": "VAE ELBO'daki KL terimi D_KL(q(z|x)||p(z)) — encoder başa yazılıyor. Mode-seeking davranış üretiyor: encoder prior'ın desteklediği bölgelere sıkışmak zorunda. P||Q kullansaydık prior'ın tüm alanını kapsamaya çalışırdı — bu istenmeyen bir davranış.",
+      "context": "CS231n · Generative Models",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "VAE'deki KL terimi",
+          "text": "VAE ELBO:\n\nELBO = E_z[log p_θ(x|z)]  -  D_KL(q_φ(z|x) || p(z))\n        reconstruction         prior KL\n\nKL yönü: q başa, p sona.\n  q = encoder — öğrenilen approximate posterior\n  p = prior   — N(0,I), sabit"
+        },
+        {
+          "type": "code",
+          "heading": "Bu yönün anlamı — encoder prior'a sıkışıyor",
+          "text": "D_KL(q||p) → örnekler q'dan çekiliyor.\n\nEncoder bir z ürettiğinde prior orada sıfırsa:\n  log(q/p) → ∞  ← sonsuz ceza\n\nEncoder mecburen prior'ın desteklediği bölgelerde z üretmeli.\nPrior'ın ince kuyruklarına, uzak bölgelerine gidemez.\n\nSonuç: latent space N(0,I) civarına sıkışıyor.\nGeneration'da oradan z ~ N(0,I) örnekleyince anlamlı görüntüler çıkıyor —\nçünkü encoder orada çalışmayı öğrendi."
+        },
+        {
+          "type": "code",
+          "heading": "P||Q kullansaydık ne olurdu?",
+          "text": "D_KL(p(z) || q_φ(z|x)) — prior başa yazılsaydı:\n\nÖrnekler prior'dan çekiliyor.\nPrior N(0,I) — çok geniş bir dağılım.\n\nPrior'ın yüksek olduğu her yerde encoder da kitle bulundurmalı:\n→ Encoder tüm N(0,I) uzayını kapsamaya çalışır\n→ Her x için encoder geniş, yayvan bir q üretir\n→ Latent space structured kalmaz, generation bozulur\n\nAyrıca pratik sorun:\n  Prior'dan z örnekleyip encoder'ı evaluate etmek gerekir\n  ama encoder x'e koşullu — prior'dan gelen z için anlamlı değil."
+        },
+        {
+          "type": "insight",
+          "heading": "Sezgi özeti",
+          "text": "D_KL(q||p): encoder kendi ürettiği z'lerin prior'da geçerli olmasını garantiliyor. 'Ben nereye gidiyorsam prior da orada olsun.' Encoder prior'a uyum sağlıyor.\n\nD_KL(p||q): prior'ın her köşesini encoder karşılamak zorunda kalırdı. 'Prior neredeyse encoder da orada olsun.' Encoder prior'ı taklit etmeye zorlanırdı — bu çok farklı ve istenmeyen bir hedef."
+        }
+      ]
+    },
+    {
+      "title": "MLE, MAP, VAE — Aradığım Şey Ne? Prior Kimin Üzerinde?",
+      "cat": "Generative Models",
+      "summary": "MLE her zaman aynı soruyu sorar: gördüğümü en olası kılan aradığım nedir? ML kursunda aranan mu, EE499'da sinyal x, VAE'de network ağırlıkları theta/phi. z VAE'de hiç 'bulunmuyor' — integrate ediliyor. MAP için prior, tahmin ettiğin şeyin üzerinde olmalı: p(theta). p(z) olması MAP yapmıyor. Weight decay = Gaussian prior ile MAP.",
+      "context": "CS231n · Generative Models",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Ortak şablon — hepsinde aynı yapı",
+          "text": "Her yerde şu form var:\n  p( gördüğüm şey | aradığım şey )\n\nMLE hep şunu yapıyor:\n  'Aradığım şeyin hangi değeri, gördüğümü en olası kılar?'\n\nFark sadece: aradığım şey ne?\n\nML kursu:\n  Gördüğüm:  x_1, ..., x_N  (veri noktaları)\n  Aradığım:  mu  (dağılımın ortalaması)\n  Cevap:     mu = sayı  (örn. 3.2)\n\nEE499:\n  Gördüğüm:  y  (gürültülü ölçüm)\n  Aradığım:  x  (gerçek sinyal)\n  Cevap:     x = vektör\n\nVAE:\n  Gördüğüm:  x  (yüz resimleri, binlerce tane)\n  Aradığım:  theta, phi  (encoder/decoder ağırlıkları)\n  Cevap:     bir fonksiyon — encoder ve decoder ağı"
+        },
+        {
+          "type": "code",
+          "heading": "z ne peki — VAE'de neden hiç 'bulunmuyor'?",
+          "text": "ML kursu:  mu → bulduğumda işim bitiyor\nEE499:     x  → bulduğumda işim bitiyor\nVAE:       z  → hiç 'bulmuyorum' bile\n\nz, VAE'de bir ara değişken. Her resim için farklı.\n'Bu resmin z'si 3.2'dir' demiyorum.\n'Bu resmin z'si N(mu(x), sigma(x)) dağılımından geliyor' diyorum.\nBu dağılımı öğreniyorum — encoder ağırlıkları bu dağılımı tanımlıyor.\n\nVAE'nin sonunda elde ettiğim:\n  encoder: herhangi bir resim ver → z dağılımını söyle\n  decoder: herhangi bir z ver     → resim üret\n\nKL terimi neden var?\n  Test zamanında x yok, z ~ N(0,I)'dan örnekleyeceğim.\n  Eğer encoder z'leri rastgele yerlere dağıtırsa,\n  N(0,I)'dan çektiğim z decoder'a anlamsız gelir.\n  KL terimi: 'encoder'ın z dağılımları N(0,I)'dan uzaklaşmasın.'\n  → Test zamanında N(0,I)'dan örnekleyebilir hale geliyoruz.\n  Bu bir prior değil, latent space'i kullanılabilir tutma zorunluluğu."
+        },
+        {
+          "type": "code",
+          "heading": "p(z) prior'u var — neden MAP değil?",
+          "text": "Kritik soru: prior kimin üzerinde?\n\nMLE:  theta deterministik unknown, p(theta) YOK  → MLE\nMAP:  theta rastgele,              p(theta) VAR  → MAP\n\nPrior, TAHMİN ETTİĞİN ŞEYİN üzerinde olmalı.\n\nVAE'de tahmin edilen:  theta, phi  (network ağırlıkları)\np(theta) var mı?       HAYIR  → MLE\n\nz'de prior var:  p(z) = N(0,I)\nAma z tahmin edilmiyor — z integrate ediliyor.\nz'nin prior'u, theta/phi için MAP yapmıyor.\n\nEğer theta'ya prior koysaydın:\n  p(theta) ~ N(0,I)  →  log p(theta) ∝ -||theta||²\n  loss = reconstruction loss + ||theta||²\n                               ──────────\n                               L2 weight decay\n\n  Bu tam olarak neural network'teki weight decay!\n  Yani: L2 regularization = Gaussian prior ile MAP on theta."
+        },
+        {
+          "type": "table",
+          "heading": "Özet tablo",
+          "rows": [
+            [
+              "Yöntem",
+              "Gördüğüm",
+              "Aradığım",
+              "p(aranan) var mı?",
+              "Yöntem"
+            ],
+            [
+              "ML kursu MLE",
+              "x_i",
+              "mu, sigma",
+              "Yok",
+              "MLE"
+            ],
+            [
+              "EE499 MLE",
+              "y",
+              "x (sinyal)",
+              "Yok",
+              "MLE"
+            ],
+            [
+              "MAP",
+              "y",
+              "x (sinyal)",
+              "Var: p(x)",
+              "MAP"
+            ],
+            [
+              "VAE",
+              "x (resimler)",
+              "theta, phi",
+              "Yok",
+              "MLE"
+            ],
+            [
+              "VAE + L2 reg",
+              "x (resimler)",
+              "theta, phi",
+              "Var: p(theta)",
+              "MAP"
+            ],
+            [
+              "",
+              "",
+              "z",
+              "Var: p(z) = N(0,I)",
+              "Variational Inference"
+            ]
+          ]
         }
       ]
     },
