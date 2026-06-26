@@ -287,6 +287,13 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .card-cat-Training.py06,.cat-hdr-Training.py06                {--cc:#ea580c}
 .card-cat-Complexity,.cat-hdr-Complexity                      {--cc:#94a3b8}
 
+/* VS — Practice chapter colours */
+.card-cat-Linear-Algebra.vs04,.cat-hdr-Linear-Algebra.vs04   {--cc:#60a5fa}
+.card-cat-Probability.vs04,.cat-hdr-Probability.vs04         {--cc:#4ade80}
+.card-cat-Estimation.vs04,.cat-hdr-Estimation.vs04           {--cc:#fbbf24}
+.card-cat-ML.vs04,.cat-hdr-ML.vs04                           {--cc:#f97316}
+.card-cat-Deep-Learning.vs04,.cat-hdr-Deep-Learning.vs04     {--cc:#e879f9}
+
 /* VS — Vector Spaces course colours */
 .card-cat-Motivation,.cat-hdr-Motivation                      {--cc:#f0abfc}
 .card-cat-Foundations,.cat-hdr-Foundations                    {--cc:#818cf8}
@@ -629,6 +636,11 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
     <span class="nav-icon">🎲</span><span class="nav-num">03</span>
     <span class="nav-label">Random Variable Spaces</span>
     <span class="nav-count" id="cnt-vs03">0</span>
+  </button>
+  <button class="nav-btn" data-sec="vs04" onclick="switchSection('vs04');closeSidebar()">
+    <span class="nav-icon">🎯</span><span class="nav-num">04</span>
+    <span class="nav-label">Practice</span>
+    <span class="nav-count" id="cnt-vs04">0</span>
   </button>
 
   <div class="course-divider">Stanford CS231n</div>
@@ -1147,6 +1159,16 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
     </div>
   </div>
 
+  <div id="hdr-vs04" class="section-header">
+    <div class="hdr-title">Practice — Mülakat Hazırlık Kartları</div>
+    <div class="hdr-sub">Linear Algebra · Probability · MLE/MAP · ML Training · Deep Learning — kısa intuitive sorular</div>
+    <div class="controls">
+      <select id="flt-vs04"><option value="">All categories</option></select>
+      <input type="search" id="q-vs04" placeholder="Search...">
+      <span class="pill" id="pill-vs04">0 cards</span>
+    </div>
+  </div>
+
   <!-- CS231n section headers -->
   <div id="hdr-cs01" class="section-header">
     <div class="hdr-title">CS231n L2 · Linear Classifiers</div>
@@ -1415,7 +1437,7 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 const CHAPTERS = ['ch01','ch02','ch03','ch04','ch05','ch06','ch07','ch08','ch09','ch10','ch11','ch12',
                    'ida01','ida02','ida03','ida04','ida05','ida06','ida07','ida08','ida09','ida10','ida11','ida12','ida13',
                    'py01','py02','py03','py04','py05','py06','py07',
-                   'vs01','vs02','vs03',
+                   'vs01','vs02','vs03','vs04',
                    'cs01','cs02','cs03','cs04','cs05','cs06','cs07','cs08','cs09','cs10','cs11','cs12','cs13','cs14','cs15','cs16',
                    'lab01','lab02','lab03','lab04','lab05','lab06','lab07','lab08','labtc'];
 let DATA = {};
@@ -1435,7 +1457,7 @@ const CH_CTX = {
   ida01:'ida01',ida02:'ida02',ida03:'ida03',ida04:'ida04',ida05:'ida05',ida06:'ida06',
   ida07:'ida07',ida08:'ida08',ida09:'ida09',ida10:'ida10',ida11:'ida11',ida12:'ida12',ida13:'ida13',
   py01:'py01',py02:'py02',py03:'py03',py04:'py04',py05:'py05',py06:'py06',py07:'py07',
-  vs01:'vs01',vs02:'vs02',vs03:'vs03',
+  vs01:'vs01',vs02:'vs02',vs03:'vs03',vs04:'vs04',
   lab01:'lab01',lab02:'lab02',lab03:'lab03',lab04:'lab04',lab05:'lab05',
   cs01:'cs01',cs02:'cs02',cs03:'cs03',cs04:'cs04',cs05:'cs05',cs06:'cs06',cs07:'cs07',cs08:'cs08',
   cs09:'cs09',cs10:'cs10',cs11:'cs11',cs12:'cs12',cs13:'cs13',cs14:'cs14',cs15:'cs15',cs16:'cs16',

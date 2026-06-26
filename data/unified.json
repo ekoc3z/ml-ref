@@ -6931,6 +6931,497 @@
       ]
     }
   ],
+  "vs04": [
+    {
+      "title": "Column Space, Row Space, Null Space",
+      "cat": "Linear Algebra",
+      "summary": "A ∈ R^(m×n). Column space: sütunların span'ı, R^m içinde yaşar — y = Ax çözülebilirliğini belirler. Row space: satırların span'ı, R^n içinde. Null space: Ax=0'ı sağlayan x'ler, R^n içinde, boyutu n-rank.",
+      "context": "Practice · Linear Algebra",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Column Space",
+          "text": "A'nın sütunlarının tüm lineer kombinasyonları. R^m içinde bir alt uzay. y = Ax'in çözümü var ancak ve ancak y column space'te. rank(A) = m ise column space = R^m (full row rank) — her y için çözüm var."
+        },
+        {
+          "type": "text",
+          "heading": "Row Space",
+          "text": "A'nın satırlarının tüm lineer kombinasyonları. R^n içinde, boyutu = rank(A). A'nın 'gördüğü' input yönleri buradan geliyor."
+        },
+        {
+          "type": "text",
+          "heading": "Null Space",
+          "text": "Ax = 0'ı sağlayan tüm x'ler. R^n içinde, boyutu = n - rank(A). Row space ⊥ null space, ikisi R^n'i tamamen bölüyor. A null space'i sıfıra gönderiyor — bu yönler kaybolup gidiyor."
+        },
+        {
+          "type": "code",
+          "heading": "",
+          "text": "R^n = row space ⊕ null space\n       (rank)      (n-rank)\n\nAx = A(x_row + x_null) = A·x_row + 0 = A·x_row\n→ A yalnızca row space bileşenini görüyor"
+        }
+      ]
+    },
+    {
+      "title": "Ax = b: Çözüm Var mı, Unique mi?",
+      "cat": "Linear Algebra",
+      "summary": "Çözüm var mı ↔ b column space'te ↔ rank(A) = m. Çözüm unique mi ↔ null space = {0} ↔ rank(A) = n. m > n genelde çözümsüz, m < n sonsuz çözüm.",
+      "context": "Practice · Linear Algebra",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Existence",
+          "text": "b column space'te mi? rank(A) = m ise evet (full row rank) — her b için çözüm var. Değilse sadece bazı b'ler için var."
+        },
+        {
+          "type": "text",
+          "heading": "Uniqueness",
+          "text": "Null space = {0} ise çözüm unique. rank(A) = n ise bu sağlanır (full column rank). Null space boş değilse: bir çözüm x₀ bulsan, x₀ + z de çözüm (z ∈ null space) — sonsuz çözüm."
+        },
+        {
+          "type": "list",
+          "heading": "Üç Durum",
+          "items": [
+            "m > n (overdetermined): rank ≤ n < m → column space R^m'yi kapsamaz → genelde çözüm yok → least squares: x = A⁺b",
+            "m < n (underdetermined): null space trivial değil → çözüm varsa sonsuz → min norm: x = A⁺b",
+            "m = n, full rank: tek çözüm, x = A⁻¹b"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "SVD: A = UDVᵀ",
+      "cat": "Linear Algebra",
+      "summary": "Her A için geçerli en genel ayrışım. A'nın etkisini üçe böler: rotate (Vᵀ), scale (D), rotate (U). rank = sıfır olmayan singular value sayısı.",
+      "context": "Practice · Linear Algebra",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "",
+          "text": "A = U  ·  D  ·  Vᵀ\n    m×m   m×n   n×n\n\nU: column space'in yönleri (orthogonal)\nD: singular values σ₁ ≥ σ₂ ≥ ... ≥ 0 (ölçek)\nV: row space'in yönleri (orthogonal)"
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Sezgi: Vᵀ ile input'u rotate et, D ile her ekseni ölçekle (bazıları sıfıra gider = null space), U ile output'a rotate et. rank = sıfır olmayan σ sayısı. σᵢ = 0 → o V sütunu null space'te."
+        },
+        {
+          "type": "text",
+          "heading": "Pseudoinverse",
+          "text": "A⁺ = VD⁺Uᵀ. D⁺'da sıfır olmayan σᵢ'leri 1/σᵢ yap. Tall A (m>n) → least squares çözümü. Fat A (m<n) → minimum norm çözümü."
+        }
+      ]
+    },
+    {
+      "title": "Eigenvalue / Eigenvector",
+      "cat": "Linear Algebra",
+      "summary": "Av = λv. A matrisini uyguladığında yönü değişmeyen vektörler. λ ölçek faktörü. Symmetric matrisin tüm eigenvalue'ları reel, eigenvektörleri dik.",
+      "context": "Practice · Linear Algebra",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Av = λv. A'yı v'ye uyguladığında sadece uzunluk λ kadar değişiyor, yön aynı kalıyor. v: eigenvektör, λ: eigenvalue."
+        },
+        {
+          "type": "text",
+          "heading": "Symmetric A",
+          "text": "A = Aᵀ ise: tüm λ reel, eigenvektörler birbirine dik. A = QΛQᵀ (Q orthogonal, Λ diagonal). Covariance matrisi her zaman symmetric — PCA tam bu ayrışım."
+        },
+        {
+          "type": "list",
+          "heading": "Özel Durumlar",
+          "items": [
+            "Singular matris: en az bir λ = 0 (o yönü sıfıra gönderiyor)",
+            "Positive definite: tüm λ > 0 ↔ xᵀAx > 0 for all x ≠ 0",
+            "Orthogonal matris: tüm |λ| = 1 (uzunluk koruyor)"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Gaussian Dağılım — Neden Her Yerde?",
+      "cat": "Probability",
+      "summary": "Central Limit Theorem: bağımsız küçük etkilerin toplamı Gaussian'a yaklaşıyor. Bu yüzden noise varsayımı default Gaussian. MLE + Gaussian noise → MSE kaybı.",
+      "context": "Practice · Probability",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "CLT",
+          "text": "Birbirinden bağımsız çok sayıda küçük etkiyi toplarsan, toplamları Gaussian'a yaklaşıyor — her birinin dağılımı ne olursa olsun. Piksel gürültüsü: ısıl titreşim + elektromanyetik girişim + elektronik noise... hepsi küçük bağımsız etkiler, toplamı Gaussian."
+        },
+        {
+          "type": "text",
+          "heading": "Maximum Entropy",
+          "text": "Verilen mean ve variance için en az bilgi varsayan dağılım Gaussian. 'Noise var' demek dışında başka şey bilmiyorsak en doğal varsayım bu."
+        },
+        {
+          "type": "text",
+          "heading": "MLE Bağlantısı",
+          "text": "Gaussian noise varsayarsan MLE → MSE kaybı çıkıyor. Bernoulli varsayarsan MLE → BCE kaybı. Kayıp fonksiyonu noise varsayımını kodluyor."
+        }
+      ]
+    },
+    {
+      "title": "Bayes Teoremi",
+      "cat": "Probability",
+      "summary": "P(A|B) = P(B|A)·P(A) / P(B). Prior + likelihood → posterior. Test pozitif çıksa bile nadir hastalıkta hasta olma ihtimali düşük — prior baskın.",
+      "context": "Practice · Probability",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "",
+          "text": "P(A|B) = P(B|A) · P(A) / P(B)\n\nML karşılığı:\nP(θ|data) ∝ P(data|θ) · P(θ)\nposterior  ∝  likelihood  ·  prior"
+        },
+        {
+          "type": "text",
+          "heading": "Nadir Hastalık Örneği",
+          "text": "Test %95 sensitivity, hastalık 1/10000. 10000 kişide test yapsan: 1 hasta → ~1 gerçek pozitif, 9999 sağlıklı → ~500 yanlış pozitif. P(hasta|test+) = 1/501 ≈ %0.2. Test çok doğru olmasına rağmen — çünkü prior çok küçük."
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "MLE sadece likelihood'a bakıyor (prior yok). MAP prior'ı da ekliyor. Bayesian inference tüm posterior dağılımını kullanıyor."
+        }
+      ]
+    },
+    {
+      "title": "Bağımsız Olaylar & Koşullu Olasılık",
+      "cat": "Probability",
+      "summary": "Bağımsız: A'nın olup olmaması B'yi etkilemiyor. P(A∩B) = P(A)·P(B) sadece bağımsızda. Genel: P(A∩B) = P(A|B)·P(B). P(test+|hasta) ≠ P(hasta|test+).",
+      "context": "Practice · Probability",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "",
+          "text": "Bağımsız:  P(A∩B) = P(A) · P(B)\nGenel:     P(A∩B) = P(A|B) · P(B)   ← her zaman geçerli"
+        },
+        {
+          "type": "text",
+          "heading": "İki Farklı Soru",
+          "text": "P(test+|hasta): hasta birine test yaptım, pozitif çıkma ihtimali — sensitivity, laboratuvarda ölçülür."
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "P(hasta|test+): test pozitif çıktı, gerçekten hasta mı — doktorun sorduğu bu. Tamamen farklı. Bayes ile geçiş: P(hasta|test+) = P(test+|hasta)·P(hasta) / P(test+)."
+        }
+      ]
+    },
+    {
+      "title": "MLE — Maximum Likelihood Estimation",
+      "cat": "Estimation",
+      "summary": "Bu veriyi en olası kılan parametreyi bul. Prior yok. Log likelihood'ı maximize et. Az veride overfitting riski — noise dahil her şey ezberleniyor.",
+      "context": "Practice · Estimation",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "",
+          "text": "θ_MLE = argmax P(data | θ)\n      = argmax Σᵢ log P(xᵢ | θ)   ← çarpım → toplam"
+        },
+        {
+          "type": "list",
+          "heading": "Noise Varsayımı → Kayıp Fonksiyonu",
+          "items": [
+            "Gaussian noise → MSE kaybı",
+            "Bernoulli → BCE kaybı",
+            "Laplace noise → MAE (L1) kaybı"
+          ]
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Az veride: likelihood noise'u da fit ediyor. Daha fazla veri: MLE iyileşir. Prior bilgisi varsa MAP kullan."
+        }
+      ]
+    },
+    {
+      "title": "MAP — Maximum A Posteriori",
+      "cat": "Estimation",
+      "summary": "MLE + prior. Posterior'ın modunu bul. log prior terimi regularization olarak geliyor: Gaussian prior → L2, Laplace prior → L1.",
+      "context": "Practice · Estimation",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "",
+          "text": "θ_MAP = argmax P(data|θ) · P(θ)\n      = argmax log likelihood + log prior\n      = argmin loss + regularization"
+        },
+        {
+          "type": "list",
+          "heading": "Prior → Regularization",
+          "items": [
+            "Gaussian prior P(θ) ∝ exp(-‖θ‖²) → L2 regularization (ağırlıkları sıfıra çek)",
+            "Laplace prior P(θ) ∝ exp(-|θ|) → L1 regularization (sparse çözüm)"
+          ]
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Az veride prior belirleyici — variance azalıyor. Çok veride likelihood prior'ı eziyor → MAP ≈ MLE."
+        }
+      ]
+    },
+    {
+      "title": "MLE vs MAP — Karşılaştırma",
+      "cat": "Estimation",
+      "summary": "MLE: sadece veri. MAP: veri + prior = regularization. Bayesian: tüm posterior. Az veride MAP > MLE, çok veride MAP → MLE.",
+      "context": "Practice · Estimation",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "",
+          "text": "              MLE          MAP          Bayesian\nOutput:       tek θ        tek θ        dağılım\nPrior:        yok          var          var\nReg:          yok          var          —\nUncertainty:  yok          yok          var"
+        },
+        {
+          "type": "text",
+          "heading": "Az Veri vs Çok Veri",
+          "text": "log posterior = log likelihood + log prior. Likelihood her veri noktasıyla bir terim ekliyor (N ile büyüyor), prior sabit kalıyor. N=10: prior belirleyici. N=100000: likelihood prior'ı eziyor → MAP ≈ MLE."
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Bayesian inference: tek θ seçmek yerine P(θ|data) dağılımının tamamını kullan. Uncertainty bilgisi var, ama hesabı pahalı (integral). Diffusion modeller MRI'da bu yaklaşım."
+        }
+      ]
+    },
+    {
+      "title": "MLE → MSE Türetimi",
+      "cat": "Estimation",
+      "summary": "Gaussian noise varsay → MLE → MSE. Kayıp fonksiyonu seçimi aslında noise modelini seçmek.",
+      "context": "Practice · Estimation",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "",
+          "text": "Model: y = f(x;θ) + ε,   ε ~ N(0,σ²)\n\nP(yᵢ|xᵢ,θ) = 1/√(2πσ²) · exp(-(yᵢ - f(xᵢ;θ))² / 2σ²)\n\nlog likelihood = -N/2·log(2πσ²) - 1/(2σ²) · Σᵢ(yᵢ - f(xᵢ;θ))²\n\nθ'ya göre maximize et:\n  → sabit terimler düşer\n  → Σᵢ(yᵢ - f(xᵢ;θ))² minimize et\n  → MSE"
+        }
+      ]
+    },
+    {
+      "title": "MLE → BCE Türetimi",
+      "cat": "Estimation",
+      "summary": "Binary sınıflandırmada Bernoulli noise varsay → MLE → BCE. Çok sınıflıda softmax + cross-entropy = MLE.",
+      "context": "Practice · Estimation",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Binary",
+          "text": "P(yᵢ) = pᵢ^yᵢ · (1-pᵢ)^(1-yᵢ)   (yᵢ ∈ {0,1})\n\nlog likelihood = Σᵢ [yᵢ·log(pᵢ) + (1-yᵢ)·log(1-pᵢ)]\n\nMaximize et → negatifini minimize et → BCE"
+        },
+        {
+          "type": "code",
+          "heading": "Çok Sınıflı",
+          "text": "Softmax: P(y=k|x,θ) = exp(zₖ) / Σⱼ exp(zⱼ)\n\nlog likelihood = Σᵢ log P(yᵢ|xᵢ,θ)\n              = Σᵢ log(p_{yᵢ})         ← sadece doğru sınıf\n              = -Σᵢ CE(yᵢ, p̂ᵢ)\n\nMaximize → CE minimize et"
+        }
+      ]
+    },
+    {
+      "title": "KL Divergence",
+      "cat": "Estimation",
+      "summary": "P'yi Q ile ne kadar iyi approximate ediyorum. Asimetrik, her zaman ≥ 0. VAE'de latent space'i düzenli tutar.",
+      "context": "Practice · Estimation",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "",
+          "text": "KL(P‖Q) = Σₓ P(x) · log(P(x)/Q(x))\n\n≥ 0 her zaman,  = 0 yalnızca P = Q ise\nAsimetrik: KL(P‖Q) ≠ KL(Q‖P)"
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "P gerçek dağılım, Q model. P'nin yüksek olduğu yerde Q düşükse büyük ceza — tersi farklı ceza. Bu yüzden asimetrik."
+        },
+        {
+          "type": "text",
+          "heading": "VAE Bağlantısı",
+          "text": "Encoder q(z|x) üretiyor, prior p(z) = N(0,I). KL(q‖p) minimize ediliyor → latent space düzenli ve samplelanabilir kalıyor. Loss = reconstruction + KL."
+        }
+      ]
+    },
+    {
+      "title": "Overfitting & Regularization",
+      "cat": "ML",
+      "summary": "Training noise'unu ezberleme — yeni veriye genelleme yok. L2 = Gaussian prior, L1 = Laplace prior. Dropout, data augmentation, early stopping diğer önlemler.",
+      "context": "Practice · ML",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Model training'deki her noise'u, her aykırı noktayı da öğreniyor. Yeni veride o noise yok → genelleme yok. Yüksek variance: küçük veri değişikliğine model çok duyarlı."
+        },
+        {
+          "type": "list",
+          "heading": "Önlemler",
+          "items": [
+            "L2 regularization: loss + λ‖θ‖² → Gaussian prior → ağırlıkları sıfıra çek",
+            "L1 regularization: loss + λ‖θ‖₁ → Laplace prior → sparse ağırlıklar",
+            "Dropout: random nöronları kapat, ensemble etkisi",
+            "Data augmentation: veriyi çoğalt",
+            "Early stopping: val loss artmaya başlayınca dur"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Bias-Variance Tradeoff",
+      "cat": "ML",
+      "summary": "E[hata] = Bias² + Variance + Noise. Model karmaşıklığı artınca bias ↓ variance ↑. Regularization variance'ı düşürür, bias biraz artar.",
+      "context": "Practice · ML",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "",
+          "text": "E[hata] = Bias² + Variance + Noise (azaltılamaz)\n\nBias:     model çok basit → underfitting, sistematik hata\nVariance: model çok karmaşık → overfitting, noise'a duyarlı"
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Model karmaşıklığı artınca: bias ↓ (veriyi daha iyi fit ediyor), variance ↑ (noise'a da uyuyor). Tatlı nokta ortada."
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Regularization (= MAP prior): variance düşürür (model basitleşiyor), bias biraz artar (esneklik kısıtlanıyor). Daha fazla veri: variance düşer, bias aynı."
+        }
+      ]
+    },
+    {
+      "title": "Cross-Entropy = MLE Bağlantısı",
+      "cat": "ML",
+      "summary": "MLE → log likelihood maximize et → negative log likelihood minimize et → cross-entropy minimize et. Aynı şey. Softmax + CE gradient'i temiz.",
+      "context": "Practice · ML",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "",
+          "text": "MLE: argmax Σᵢ log P(yᵢ|xᵢ,θ)\n   = argmin -Σᵢ log P(yᵢ|xᵢ,θ)      ← NLL\n   = argmin Σᵢ CE(yᵢ, softmax(zᵢ))  ← cross-entropy"
+        },
+        {
+          "type": "text",
+          "heading": "Neden CE, MSE Değil?",
+          "text": "Softmax + MSE kombinasyonunda gradient küçülür (vanishing). CE türevi temiz: dL/dz = softmax(z) - target. Ayrıca CE = MLE → olasılık modelini direkt optimize ediyor."
+        }
+      ]
+    },
+    {
+      "title": "Gradient Descent",
+      "cat": "ML",
+      "summary": "Loss'un negatif gradyanı yönünde küçük adımlar at. θ ← θ - η·∇L. Mini-batch pratikte standart. Adam adaptif learning rate + momentum ile genellikle en iyi.",
+      "context": "Practice · ML",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "",
+          "text": "θ ← θ - η · ∇θ L(θ)\n\nη: learning rate — çok büyük: diverge, çok küçük: yavaş"
+        },
+        {
+          "type": "list",
+          "heading": "Varyantlar",
+          "items": [
+            "Batch GD: tüm veri → kararlı gradient, yavaş",
+            "SGD: tek örnek → hızlı, gürültülü, local min'den çıkabilir",
+            "Mini-batch: 32-256 örnek, pratikte standart",
+            "Momentum: önceki adımın yönünü hatırla, salınımı azalt",
+            "Adam: adaptif LR + momentum, çoğu zaman en iyi başlangıç noktası"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Backpropagation Sezgisel",
+      "cat": "ML",
+      "summary": "Chain rule'un sistematik uygulaması. Her ağırlığı biraz değiştirince loss ne kadar değişir? Forward: output hesapla. Backward: gradyanı output'tan input'a zincirle.",
+      "context": "Practice · ML",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Her ağırlık için: 'bunu biraz artırırsam loss ne kadar değişir?' = ∂L/∂w. Chain rule: uzak katmanlardaki ağırlıklar için gradyan, aradaki tüm katmanların türevlerinin çarpımı."
+        },
+        {
+          "type": "code",
+          "heading": "",
+          "text": "∂L/∂W₁ = ∂L/∂out · ∂out/∂h · ∂h/∂W₁\n        = upstream_grad × lokal_türev\n\nHer node: upstream gradyanı al, lokal türevle çarp, geriye ilet."
+        },
+        {
+          "type": "text",
+          "heading": "Vanishing Gradient",
+          "text": "Derin ağlarda her katmanda türev çarpılıyor. Sigmoid gibi doyurucu aktivasyonlar türevi küçültüyor → gradyan katlar boyunca sıfıra yaklaşıyor → ilk katmanlar öğrenemiyor. ReLU bu sorunu hafifletiyor."
+        }
+      ]
+    },
+    {
+      "title": "VAE vs Autoencoder",
+      "cat": "Deep Learning",
+      "summary": "AE: x → z → x̂, z deterministik, latent space düzensiz. VAE: z dağılım öğreniyor (μ,σ), KL loss latent space'i N(0,I)'a yaklaştırıyor → samplelanabilir.",
+      "context": "Practice · Deep Learning",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Autoencoder",
+          "text": "Encoder: x → z (sıkıştır). Decoder: z → x̂ (geri aç). z deterministik, sadece reconstruction loss. Latent space düzensiz — keyfi bir z noktasından anlamlı örnek üretemezsin."
+        },
+        {
+          "type": "text",
+          "heading": "VAE",
+          "text": "Encoder μ ve σ üretiyor, z ~ N(μ,σ²). KL loss: q(z|x) ile p(z)=N(0,I) arasındaki mesafeyi minimize ediyor → latent space düzenli. Herhangi bir z'den sample al → anlamlı output."
+        },
+        {
+          "type": "code",
+          "heading": "",
+          "text": "Loss = reconstruction loss + KL(q(z|x) ‖ p(z))\n\nKL terimi: latent space düzenli ve sürekli\nRecon terimi: anlamlı kalıyor\n\nAE: sadece reconstruction loss → sıkışık, düzensiz latent space"
+        }
+      ]
+    },
+    {
+      "title": "GAN Nasıl Çalışır?",
+      "cat": "Deep Learning",
+      "summary": "Generator + Discriminator minimax oyunu. G noise'dan gerçekmiş gibi örnek üretiyor, D gerçek/sahte ayırt ediyor. Denge: G gerçek dağılımı öğreniyor.",
+      "context": "Practice · Deep Learning",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "",
+          "text": "min_G max_D  E[log D(x)] + E[log(1 - D(G(z)))]\n\nD: gerçekleri 1, sahteler 0 tahmin et\nG: D'yi kandır, 1 tahmin ettir"
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Eğitim sırayla: D bir adım güncelle (gerçek/sahte ayırt et), G bir adım güncelle (D'yi kandır). Teorik Nash equilibrium: G gerçek dağılımı öğreniyor, D her yerde 0.5 diyor."
+        },
+        {
+          "type": "list",
+          "heading": "Yaygın Sorunlar",
+          "items": [
+            "Mode collapse: G tek tip örnek üretmeye başlar — D'yi kandırıyor ama çeşitlilik sıfır",
+            "Training instability: G ve D dengesi zor, biri diğerini ezerse öğrenme durur",
+            "Vanishing gradient: D çok iyi olursa G'nin gradyanı sıfıra yaklaşır"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Batch Normalization",
+      "cat": "ML",
+      "summary": "Her mini-batch'te aktivasyonları normalize et (mean 0, std 1), sonra γ,β ile yeniden ölçekle. Internal covariate shift azalıyor, yüksek LR kullanılabiliyor.",
+      "context": "Practice · ML",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "",
+          "text": "x̂ = (x - μ_batch) / σ_batch\ny = γ · x̂ + β\n\nγ, β: öğrenilebilir parametre (esneklik için)"
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Her katman bir önceki katmanın dağılımının değişmesinden etkileniyor (internal covariate shift). BN bunu önlüyor — her katman tutarlı bir dağılım görüyor → daha hızlı ve kararlı eğitim."
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Test time'da batch yok: training'deki running mean/std kullanılıyor. Küçük batch'lerde (≤4) BN bozuluyor — Layer Norm veya Group Norm tercih edilir."
+        }
+      ]
+    }
+  ],
   "lab01": [
     {
       "title": "Session 1 — Genel Çerçeve",
@@ -18764,7 +19255,11 @@
     "ida13": "The penultimate chapter examines three techniques for making image analysis systems interpretable and for understanding the representations they learn. As deep networks replace classical algorithms in scientific computing, medical imaging, and safety-critical applications, the ability to explain why a model produced a particular output, and to visualise what it has learned, is increasingly important — both for debugging and for building justified trust.\n\nBag of Visual Words (BoVW) is not an interpretability method but the dominant classical image classification framework before deep learning, presented here as the historical baseline that contextualises the shift to learned representations. The pipeline has three stages. First, local feature descriptors (typically SIFT — Scale-Invariant Feature Transform) are extracted from keypoints detected at multiple scales. SIFT descriptors are 128-dimensional gradient orientation histograms, invariant to scale, rotation, and illumination changes. Second, $k$-means clustering on a large collection of descriptors defines a visual vocabulary (codebook) of $K$ visual words (typically $K \\in [500, 5000]$). Third, each image is encoded as a histogram of visual word occurrences: each descriptor is assigned to its nearest codebook entry, and the image representation is the count vector $h \\in \\mathbb{R}^K$. A SVM classifier trained on these histograms achieves competitive accuracy on benchmark datasets. The limitation is fundamental: the codebook is fixed and task-agnostic; the histogram discards all spatial relationships between visual words; and SIFT's hand-engineered gradient orientation basis is not optimal for any specific task. End-to-end CNNs overcome all three limitations simultaneously — the connection between BoVW and CNN feature learning (both count aggregate occurrences of local patterns) is more than metaphorical: the first convolutional layer learns filters analogous to SIFT gradient templates, and spatial pyramid pooling extends BoVW with coarse spatial binning.\n\nGradCAM (Gradient-weighted Class Activation Mapping, Selvaraju et al., 2017) answers the question: which spatial regions of the input image did the network attend to when predicting class $c$? The method is architecture-agnostic to the early layers — only the final convolutional feature maps $A^k \\in \\mathbb{R}^{H\\times W}$ are required. Channel-wise importance weights are computed as $\\alpha^c_k = \\frac{1}{Z}\\sum_{i,j}\\frac{\\partial y^c}{\\partial A^k_{ij}}$ — the spatially-averaged gradient of the class score $y^c$ with respect to the $k$-th activation map. The saliency map is $L^c_{\\text{GradCAM}} = \\text{ReLU}\\!\\left(\\sum_k \\alpha^c_k A^k\\right)$, upsampled to input resolution and overlaid on the image as a heat map. The ReLU keeps only features positively associated with class $c$ (negative values indicate features of the complementary class). GradCAM is used for debugging — does the model look at the dog or the background when predicting 'dog'? — and for discovering bias. Guided Backpropagation combines GradCAM with the constraint that gradients are only backpropagated through ReLU units where both the gradient and the activation are positive, producing sharper, pixel-level attribution maps that highlight fine-grained texture evidence rather than coarse spatial regions. GradCAM++, Score-CAM, and Eigen-CAM are subsequent refinements addressing specific failure modes.\n\nDimensionality reduction visualises high-dimensional representations in 2D or 3D. PCA projects data onto the directions of maximum variance via eigendecomposition of the covariance matrix — a linear, global method that preserves large pairwise distances but collapses non-linear cluster structure. t-SNE (Stochastic Neighbour Embedding with $t$-distribution, van der Maaten & Hinton, 2008) is the standard for visualising deep representations. High-dimensional affinities are defined as $p_{j|i} = \\exp(-\\|x_i-x_j\\|^2/2\\sigma_i^2)/\\sum_{k\\neq i}\\exp(-\\|x_i-x_k\\|^2/2\\sigma_i^2)$, with $\\sigma_i$ chosen by binary search to achieve a target perplexity (typically 30–50), and symmetrised: $p_{ij} = (p_{j|i}+p_{i|j})/2N$. Low-dimensional affinities use a Student-$t$ distribution with one degree of freedom: $q_{ij} = (1+\\|y_i-y_j\\|^2)^{-1}/\\sum_{k\\neq l}(1+\\|y_k-y_l\\|^2)^{-1}$. The heavy tail of the $t$-distribution compensates for the crowding problem: in high dimensions, points can be far apart in many directions simultaneously, but in 2D there is not enough space. The $t$-distribution places well-separated clusters further apart than Gaussian low-dimensional affinities would, producing the characteristic tight clusters with visible inter-cluster gaps. Training minimises $\\text{KL}(P\\|Q)$ by gradient descent. t-SNE preserves local neighbourhood structure faithfully but does not preserve global distances — two clusters appearing close in the 2D plot may not be genuinely similar. UMAP (McInnes et al., 2018) is a graph-based alternative derived from Riemannian geometry and topological data analysis; it preserves both local and some global structure and runs faster than t-SNE, making it the method of choice for very large datasets (millions of points) such as single-cell RNA sequencing.",
     "vs01": "EE499 Vector Space Methods in Signal Processing — Chapter 1: Linear Vector Spaces.\n\nBu dersin temel iddiası şu: sinyal işlemedeki her problem, doğru matematiksel dil kurulunca tek bir çerçeveye sığar. Sinyaller vektörler olarak, sistemler operatörler olarak modellenir. Bu dil kurulunca FIR filtreleme, CT rekonstrüksiyon, deblurring ve optimal yaklaşım hepsi aynı matematikle çözülür.\n\nVektör uzayı tanımı, soyut bir yapıdır: küme, skalar cisim, toplama ve skalar çarpma operasyonları. 7 aksiyom bu yapıyı tanımlar. Önemli olan ℝ² ya da ℝ³ ile sınırlı olmamak: polinomlar, matrisler, fonksiyonlar, sonsuz uzunluklu diziler — hepsi vektör uzayı oluşturabilir. SP'de en kritik uzaylar L₂[a,b] (sonlu enerjili CT sinyaller) ve ℓ₂(ℤ) (sonlu enerjili DT diziler).\n\nAlt uzay, lineer bağımsızlık ve baz kavramları, vektör uzayının yapısını ortaya koyar. Alt uzaylar kapalılık özelliğiyle tanımlanır; kesişim alt uzay oluştururken birleşim oluşturmaz. Hamel bazı, lineer bağımsız ve span eden bir küme — boyut iyi tanımlıdır ve tüm bazlar aynı eleman sayısına sahiptir. DFT bazı ve sinc bazı, SP'deki somut baz örnekleridir: DFT frekans-zaman dönüşümünü bir baz değişimi olarak yorumlar, sinc bazı ise örnekleme teoremini bir ortonormal baz temsili olarak anlamlandırır.\n\nNorm ve iç çarpım, vektör uzayını geometrik bir yapıya kavuşturur. Norm büyüklük tanımlar; ℓ_p ailesi içinde yalnızca p=2 (Öklid normu) bir iç çarpımdan gelir — parallelogram yasasıyla test edilir. İç çarpım açı ve ortogonalliği tanımlar. Cauchy-Schwarz eşitsizliği \\|⟨x,y⟩\\| ≤ ‖x‖·‖y‖ her IPS'te geçerlidir ve korelasyon katsayısının matematiksel temelini oluşturur. Gram-Schmidt süreci, herhangi bir lineer bağımsız kümeden ortonormal baz üretir — ve ortonormal bazda temsil katsayıları basit iç çarpıma indirgenir. CTFS, DFT, örnekleme teoremi hepsi bu temelden gelir.\n\nProjektion teoremi dersin doruk noktasıdır: bir vektörün alt uzaya projeksiyonu, ortogonallik prensibiyle karakterize edilir. Projeksiyon matrisi P = B(BᴴB)⁻¹Bᴴ olup P² = P ve Pᴴ = P özelliklerini sağlar. Hilbert uzaylarında projeksiyon her zaman vardır ve tekil — ama genel IPS'te completeness olmadan projeksiyon olmayabilir.",
     "vs02": "EE499 Vector Space Methods in Signal Processing — Chapter 2: Linear Operators and Solution of Inverse Problems.\n\nChapter 1'de kurulan vektör uzayı altyapısı, Chapter 2'de sistemleri modellemeye uygulanır. Lineer operatör iki vektör uzayı arasındaki eşleme: A(αx+βy) = αA(x)+βA(y). SP'deki her LTI sistem, her türev işlemi, her Fourier dönüşümü birer lineer operatördür. Sonlu boyutlu uzaylarda her lineer operatörün matris temsili vardır: A matrisinin k. sütunu, k. giriş baz vektörünün çıkış bazındaki koordinatlarından oluşur. Konvolüsyon operatörü Toeplitz yapılı bir matris olarak yazılır — ve bu yazımla birlikte ters problem teorisi uygulanabilir hale gelir.\n\nRange space R(A) ve null space N(A) bir operatörün iki temel anatomik yapısıdır. R(A) = {y: y=A(x) için bazı x}, A'nın erişebildiği çıkışlar kümesi. N(A) = {x: A(x)=0}, A'nın sıfıra gönderdiği girişler. Rank-Nullity teoremi: rank(A) + dim(N(A)) = N. Bu iki uzay, ters problem için yeterli ve gerekli koşulları verir: existence ↔ y ∈ R(A), uniqueness ↔ N(A) = {0}.\n\nLineer sistemler dört duruma ayrılır: Case 0 (invertible, M=N, full rank), Case 1 (tall, M>N, full column rank — uniqueness var, existence yok), Case 2 (fat, M<N, full row rank — existence var, uniqueness yok), Case 3 (rank-deficient). Case 1'de least squares çözümü x_LS = (AᴴA)⁻¹Aᴴy, y'nin R(A)'ya projeksiyonu olarak yorumlanır — Chapter 1'in projeksiyon teoremi burada devreye girer. Case 2'de minimum norm çözümü x_MN = Aᴴ(AAᴴ)⁻¹y, tüm çözümler içinden N(A)'ya dik olanı seçer. Her iki çözüm Moore-Penrose pseudo-inverse A† = (AᴴA)⁻¹Aᴴ (Case 1) veya Aᴴ(AAᴴ)⁻¹ (Case 2) ile birleştirilir.",
-    "vs03": "Bu chapter, Chapter 1 ve 2'de kurduğumuz soyut vektör uzayı geometrisini rassal değişkenler dünyasına taşıyor. Temel soru şu: rassal değişkenler bir iç çarpım uzayı oluşturabilir mi? Cevap evet — ve bu, tahmin teorisini tamamen geometrik bir dile çeviriyor.\n\n3.1 bölümünde rassal değişkenler için iç çarpım \\(\\langle x, y \\rangle = E[xy]\\) olarak tanımlanır. Bu tanımın bir sonucu olarak norm \\(\\|x\\| = \\sqrt{E[x^2]}\\) (RMS değeri), açı ise korelasyon katsayısı \\(\\rho_{xy} = \\cos\\theta\\) olur. Diklik \\(E[xy]=0\\) ise korelasyonsuzluğa karşılık gelir. Gram matrisi, oto-korelasyon matrisi \\(R_x = E[xx^T]\\) ile birebir örtüşür. Gram-Schmidt uygulandığında rassal değişkenler dekore edip beyazlatır (whitening).\n\n3.2 bölümünde LMMSE (Doğrusal Minimum Ortalama Kare Hatalı) tahmini incelenir. \\(\\hat{x} = \\alpha^T y\\) biçimindeki doğrusal tahmin edicilerde optimal katsayılar ortogonallik ilkesinden çıkar: hata \\(e = x - \\hat{x}\\), tüm gözlemlere dik olmalıdır. Bu \\(R_y\\alpha = r_{xy}\\) sistemini verir — Chapter 2'deki Gram matrisi denkleminin stokastik karşılığı. Vektör durumda Wiener-Hopf denklemi \\(KR_y = R_{xy}\\) ortaya çıkar. Gaussian \\(y = Ax + n\\) modeli için en zarif form \\(\\hat{x}_{LMMSE} = R_x A^T(AR_xA^T+R_n)^{-1}y\\) dir.\n\n3.3 bölümünde genel tahmin çerçevesi sunulur: deterministik (LS/MN), Maximum Likelihood (x deterministik, y rassal) ve Bayesian (her ikisi rassal) yöntemler. ML ile i.i.d. Gaussian gürültüde LS çözümüne ulaşılır. MAP tahmini ise data fidelity + regularization minimizasyonu olarak ifade edilir; Gaussian prior ile Tikhonov regularization'a indirgenir. Gaussian istatistiklerde MAP = MMSE = LMMSE birleşir.\n\n3.4 bölümü büyük ölçekli ters problemleri optimizasyon perspektifinden ele alır. Kapalı form çözüm yoksa iteratif yöntemler kullanılır: steepest descent (lineer yakınsama), Newton yöntemi (kuadratik yakınsama ama pahalı), quasi-Newton (BFGS) ve conjugate gradient (pratik denge)."
+    "vs03": "Bu chapter, Chapter 1 ve 2'de kurduğumuz soyut vektör uzayı geometrisini rassal değişkenler dünyasına taşıyor. Temel soru şu: rassal değişkenler bir iç çarpım uzayı oluşturabilir mi? Cevap evet — ve bu, tahmin teorisini tamamen geometrik bir dile çeviriyor.\n\n3.1 bölümünde rassal değişkenler için iç çarpım \\(\\langle x, y \\rangle = E[xy]\\) olarak tanımlanır. Bu tanımın bir sonucu olarak norm \\(\\|x\\| = \\sqrt{E[x^2]}\\) (RMS değeri), açı ise korelasyon katsayısı \\(\\rho_{xy} = \\cos\\theta\\) olur. Diklik \\(E[xy]=0\\) ise korelasyonsuzluğa karşılık gelir. Gram matrisi, oto-korelasyon matrisi \\(R_x = E[xx^T]\\) ile birebir örtüşür. Gram-Schmidt uygulandığında rassal değişkenler dekore edip beyazlatır (whitening).\n\n3.2 bölümünde LMMSE (Doğrusal Minimum Ortalama Kare Hatalı) tahmini incelenir. \\(\\hat{x} = \\alpha^T y\\) biçimindeki doğrusal tahmin edicilerde optimal katsayılar ortogonallik ilkesinden çıkar: hata \\(e = x - \\hat{x}\\), tüm gözlemlere dik olmalıdır. Bu \\(R_y\\alpha = r_{xy}\\) sistemini verir — Chapter 2'deki Gram matrisi denkleminin stokastik karşılığı. Vektör durumda Wiener-Hopf denklemi \\(KR_y = R_{xy}\\) ortaya çıkar. Gaussian \\(y = Ax + n\\) modeli için en zarif form \\(\\hat{x}_{LMMSE} = R_x A^T(AR_xA^T+R_n)^{-1}y\\) dir.\n\n3.3 bölümünde genel tahmin çerçevesi sunulur: deterministik (LS/MN), Maximum Likelihood (x deterministik, y rassal) ve Bayesian (her ikisi rassal) yöntemler. ML ile i.i.d. Gaussian gürültüde LS çözümüne ulaşılır. MAP tahmini ise data fidelity + regularization minimizasyonu olarak ifade edilir; Gaussian prior ile Tikhonov regularization'a indirgenir. Gaussian istatistiklerde MAP = MMSE = LMMSE birleşir.\n\n3.4 bölümü büyük ölçekli ters problemleri optimizasyon perspektifinden ele alır. Kapalı form çözüm yoksa iteratif yöntemler kullanılır: steepest descent (lineer yakınsama), Newton yöntemi (kuadratik yakınsama ama pahalı), quasi-Newton (BFGS) ve conjugate gradient (pratik denge).",
+    "vs04": {
+      "title": "Practice — Mülakat Hazırlık Kartları",
+      "overview": "Linear algebra, probability ve ML'in temel kavramları — interview tarzı kısa sorular ve intuitive cevaplar. Column/row/null space, Ax=b çözüm koşulları, SVD, eigenvalue. Gaussian/CLT, Bayes teoremi, bağımsız olaylar. MLE, MAP, ikisinin karşılaştırması, MLE→MSE ve MLE→BCE türetimleri, KL divergence. Overfitting, bias-variance, cross-entropy=MLE bağlantısı, gradient descent, backprop, batch norm. VAE vs AE, GAN."
+    }
   },
   "summary": {
     "title": "ML Dersi — Baştan Sona Motivasyon Zinciri",
