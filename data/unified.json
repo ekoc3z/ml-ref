@@ -7038,6 +7038,32 @@
       ]
     },
     {
+      "title": "Random Variable",
+      "cat": "Probability",
+      "summary": "Random variable: rastgele değer alabilen değişken. Tek başına sadece olası durumları tanımlar — hangi değerin ne kadar olası olduğunu belirtmek için bir probability distribution gerekir.",
+      "context": "Practice · Probability",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "",
+          "text": "X  → random variable (henüz gerçekleşmemiş, rastgele)\nx  → X'in aldığı somut bir değer\n\nP(X = x) → X'in x değerini alma olasılığı"
+        },
+        {
+          "type": "list",
+          "heading": "Discrete vs Continuous",
+          "items": [
+            "Discrete: sonlu veya sayılabilir sonsuz durum — zar (1-6), coin (H/T), sınıf etiketi",
+            "Continuous: gerçek sayı değeri — piksel yoğunluğu, ağırlık, sıcaklık"
+          ]
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "RV tek başına sadece 'ne olabilir' sorusunu cevaplıyor. 'Ne kadar olası?' sorusu için PMF (discrete) veya PDF (continuous) gerekiyor."
+        }
+      ]
+    },
+    {
       "title": "Gaussian Dağılım — Neden Her Yerde?",
       "cat": "Probability",
       "summary": "Central Limit Theorem: the sum of many independent random variables approaches a Gaussian — regardless of their individual distributions. Bu yüzden noise varsayımı default Gaussian. MLE + Gaussian noise → MSE kaybı.",
@@ -7057,6 +7083,34 @@
           "type": "text",
           "heading": "MLE Bağlantısı",
           "text": "Gaussian noise varsayarsan MLE → MSE kaybı çıkıyor. Bernoulli varsayarsan MLE → BCE kaybı. Kayıp fonksiyonu noise varsayımını kodluyor."
+        }
+      ]
+    },
+    {
+      "title": "Gaussian Mixture Model (GMM)",
+      "cat": "Probability",
+      "summary": "Birden fazla Gaussian'ı karıştırarak kompleks dağılımlar modellenir. P(x) = Σ P(c=i)·P(x|c=i). Her bileşenin kendi mean ve covariance'ı var. Universal approximator: yeterli bileşenle her smooth dağılım yaklaşılabilir.",
+      "context": "Practice · Probability",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "",
+          "text": "P(x) = Σᵢ P(c=i) · P(x | c=i)\n\nP(c=i) = αᵢ          ← prior: i. bileşeni seçme olasılığı\nP(x|c=i) = N(x; μᵢ, Σᵢ)  ← i. Gaussian bileşeni"
+        },
+        {
+          "type": "text",
+          "heading": "Latent Variable",
+          "text": "c hangi bileşenden geldiğini gösteren gizli değişken — gözlemlenmiyor. x gözlemleniyor, c gözlemlenmiyor. Gözlemlenmeden önce c'nin olasılığı prior, x görüldükten sonra P(c|x) posterior."
+        },
+        {
+          "type": "list",
+          "heading": "Bileşen Tipleri",
+          "items": [
+            "Isotropic: Σᵢ = σ²I — her yönde aynı variance, küre şeklinde",
+            "Diagonal: Σᵢ diagonal — eksen hizalı elips",
+            "Full: Σᵢ keyfi — herhangi yönde elips",
+            "Shared: tüm bileşenler aynı Σ — LDA varsayımı"
+          ]
         }
       ]
     },
@@ -7103,6 +7157,85 @@
           "type": "text",
           "heading": "",
           "text": "P(hasta|test+): test pozitif çıktı, gerçekten hasta mı — doktorun sorduğu bu. Tamamen farklı. Bayes ile geçiş: P(hasta|test+) = P(test+|hasta)·P(hasta) / P(test+)."
+        }
+      ]
+    },
+    {
+      "title": "Chain Rule of Probability",
+      "cat": "Probability",
+      "summary": "Herhangi bir joint dağılım koşullu dağılımlara ayrıştırılabilir. P(x1,...,xn) = P(x1) · Π P(xi | x1,...,xi-1). Naive Bayes bu zinciri koşullu bağımsızlıkla basitleştiriyor.",
+      "context": "Practice · Probability",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Genel Formül",
+          "text": "P(x1, x2, ..., xn) = P(x1) · P(x2|x1) · P(x3|x1,x2) · ... · P(xn|x1,...,xn-1)"
+        },
+        {
+          "type": "code",
+          "heading": "Üç Değişken Örneği",
+          "text": "P(a,b,c) = P(a|b,c) · P(b|c) · P(c)\n\nYa da sırayı değiştirince:\nP(a,b,c) = P(a) · P(b|a) · P(c|a,b)"
+        },
+        {
+          "type": "text",
+          "heading": "Nereden Geliyor",
+          "text": "P(A|B) = P(A,B)/P(B) tanımından direkt çıkıyor. P(a,b,c) = P(a|b,c)·P(b,c), sonra P(b,c) = P(b|c)·P(c). Tekrar tekrar uygulayınca zincir oluyor."
+        },
+        {
+          "type": "text",
+          "heading": "Naive Bayes Bağlantısı",
+          "text": "Naive Bayes chain rule'u kullanıyor ama feature'ların sınıf verilmişken koşullu bağımsız olduğunu varsayıyor. O zaman her P(xi | x1,...,xi-1, Ck) → P(xi | Ck) oluyor ve zincir teke düşüyor: P(x|Ck) = Π P(xi|Ck)."
+        }
+      ]
+    },
+    {
+      "title": "Expectation & Variance",
+      "cat": "Probability",
+      "summary": "E[X]: dağılım altında ortalama. Var[X] = E[(X-E[X])^2] = E[X^2] - (E[X])^2. Linearity: E[aX+b] = aE[X]+b. Var[aX+b] = a^2 Var[X].",
+      "context": "Practice · Probability",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Formüller",
+          "text": "Discrete:   E[X] = Σ x · P(x)\nContinuous: E[X] = ∫ x · p(x) dx\n\nVar[X] = E[(X - E[X])^2]\n       = E[X^2] - (E[X])^2   ← hesapta bu daha kullanışlı\n\nStd dev: σ = sqrt(Var[X])"
+        },
+        {
+          "type": "list",
+          "heading": "Linearity",
+          "items": [
+            "E[aX + b] = a·E[X] + b",
+            "E[X + Y] = E[X] + E[Y]  ← her zaman, bağımsızlık gerekmez",
+            "Var[aX + b] = a^2 · Var[X]  ← b kaybolur",
+            "Var[X + Y] = Var[X] + Var[Y]  ← sadece X,Y bağımsızsa"
+          ]
+        },
+        {
+          "type": "text",
+          "heading": "Bernoulli Örneği",
+          "text": "X ~ Bernoulli(p): P(X=1)=p, P(X=0)=1-p. E[X] = p. Var[X] = p(1-p). Maksimum p=0.5'te, Var = 0.25."
+        }
+      ]
+    },
+    {
+      "title": "Covariance & Correlation",
+      "cat": "Probability",
+      "summary": "Cov(x,y) = E[(x-E[x])(y-E[y])]: iki değişkenin birlikte ne kadar değiştiği. Bağımsız → Cov=0, ama Cov=0 bağımsızlık garantisi vermez.",
+      "context": "Practice · Probability",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Formüller",
+          "text": "Cov(x,y) = E[(x - E[x])(y - E[y])]\n\nCorrelation: ρ = Cov(x,y) / (σ_x · σ_y)   ← [-1, 1] aralığında\n\nCov(x,x) = Var(x)"
+        },
+        {
+          "type": "text",
+          "heading": "Covariance Matrix",
+          "text": "x ∈ R^n için Cov(x)_{i,j} = Cov(x_i, x_j). Diagonal elementler variances. Gaussian dağılımı bu matrisle tamamen tanımlanır: N(μ, Σ)."
+        },
+        {
+          "type": "text",
+          "heading": "Bağımsızlık vs Sıfır Covariance",
+          "text": "Bağımsız → Cov=0. Ama Cov=0 → bağımsız DEĞİL. Cov sadece lineer ilişkiyi ölçüyor. y = x^2 örneği: x uniform [-1,1], Cov(x,y)=0 ama y tamamen x'e bağlı."
         }
       ]
     },
@@ -7418,6 +7551,838 @@
           "type": "text",
           "heading": "",
           "text": "Test time'da batch yok: training'deki running mean/std kullanılıyor. Küçük batch'lerde (≤4) BN bozuluyor — Layer Norm veya Group Norm tercih edilir."
+        }
+      ]
+    },
+    {
+      "title": "Sigmoid & Softplus",
+      "cat": "Deep Learning",
+      "summary": "Sigmoid: σ(x) = 1/(1+exp(-x)), çıktı (0,1). Türevi temiz: σ'(x) = σ(x)(1-σ(x)). Büyük |x|'de gradient sıfıra yaklaşır — saturating activation. Softplus: ζ(x) = log(1+exp(x)), ReLU'nun smooth versiyonu.",
+      "context": "Practice · Deep Learning",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Sigmoid",
+          "text": "σ(x) = 1 / (1 + exp(-x))    range: (0, 1)\n\nd/dx σ(x) = σ(x) · (1 - σ(x))   ← türevi kendisiyle ifade\n1 - σ(x)  = σ(-x)               ← simetri\nlog σ(x)  = -ζ(-x)"
+        },
+        {
+          "type": "code",
+          "heading": "Softplus",
+          "text": "ζ(x) = log(1 + exp(x))    range: (0, ∞)\n\nd/dx ζ(x) = σ(x)\nζ(x) - ζ(-x) = x\n\nReLU = max(0,x) ← softplus bunun smooth versiyonu"
+        },
+        {
+          "type": "text",
+          "heading": "Saturation Problemi",
+          "text": "Sigmoid büyük pozitif veya negatif x'te düzleşiyor — gradient σ(x)(1-σ(x)) → 0. Backprop'ta bu katmana gradient ulaşmıyor (vanishing gradient). ReLU ve türevleri bu yüzden tercih ediliyor — pozitif tarafta gradient 1 sabit."
+        },
+        {
+          "type": "code",
+          "heading": "Sigmoid + MSE Sorunu",
+          "text": "MSE loss: L = (y - σ(z))²\ndL/dz   = (σ(z) - y) · σ(z)(1 - σ(z))\n                        ↑\n               saturation buradan geliyor\n\nModel çok yanlış olsa bile (σ(z)≈1, y=0)\nsigmoid terimi → 0, gradient → 0\nöğrenme yavaşlar veya durur"
+        },
+        {
+          "type": "code",
+          "heading": "Sigmoid + CE Çözümü",
+          "text": "CE loss: L = -y·log(σ(z)) - (1-y)·log(1-σ(z))\ndL/dz  = σ(z) - y\n\nSigmoid terimi türevde iptal oluyor.\nGradient temiz — ne kadar yanlışsan o kadar büyük sinyal."
+        }
+      ]
+    },
+    {
+      "title": "Outlier'lara Karşı Robustness",
+      "cat": "ML",
+      "summary": "MSE büyük hataları karesiyle cezalandırır — outlier'lar loss'u domine eder. MAE daha robust. Huber ikisini birleştirir: küçük hatada MSE, büyük hatada MAE davranışı.",
+      "context": "Practice · ML",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Loss Seçimi",
+          "text": "MSE:   L = Σ (y - ŷ)²        ← outlier'a çok duyarlı\nMAE:   L = Σ |y - ŷ|         ← robust, türev süreksiz\nHuber: L = MSE (|e|<δ)        ← ikisinin ortası\n           MAE (|e|≥δ)"
+        },
+        {
+          "type": "text",
+          "heading": "",
+          "text": "Outlier sayısı azsa ve veri temizlenebiliyorsa önce veriyi temizle. Temizlenemiyorsa MAE veya Huber. MLE bağlantısı: MAE = Laplace noise varsayımı, MSE = Gaussian noise varsayımı."
+        }
+      ]
+    },
+    {
+      "title": "Overfitting / Underfitting Teşhisi",
+      "cat": "ML",
+      "summary": "Training loss düşüyor, val loss artıyor → overfitting. Her ikisi de yüksek → underfitting. Loss takılıyor → learning rate veya model kapasitesi sorunu.",
+      "context": "Practice · ML",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Tanı Tablosu",
+          "text": "Train↓  Val↓   → iyi, devam\nTrain↓  Val↑   → overfitting\nTrain↑  Val↑   → underfitting (model çok basit)\nTrain↓  Val==  → val seti çok küçük veya leak var"
+        },
+        {
+          "type": "list",
+          "heading": "Overfitting Çözümleri",
+          "items": [
+            "Dropout — random nöron kapat, co-adaptation engelle",
+            "L2 regularization — MAP prior, ağırlıkları sıfıra çek",
+            "Early stopping — val loss artmaya başlayınca dur",
+            "Data augmentation — etkili veri seti büyüt",
+            "Model kapasitesini küçült"
+          ]
+        },
+        {
+          "type": "list",
+          "heading": "Underfitting Çözümleri",
+          "items": [
+            "Model kapasitesini artır (daha derin/geniş)",
+            "Learning rate artır — adımlar çok küçükse öğrenme durur",
+            "Daha uzun eğit",
+            "Feature engineering — modele daha bilgilendirici input ver"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Gradient Problemleri",
+      "cat": "Deep Learning",
+      "summary": "Loss NaN → gradient exploding. Alt katmanlar öğrenmiyor → gradient vanishing. İkisi de derin ağlarda sık görülür, farklı çözümleri var.",
+      "context": "Practice · Deep Learning",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Exploding Gradient (NaN loss)",
+          "text": "Belirti: loss aniden NaN veya çok büyük\nNeden:  lr çok büyük, gradient patlar\nÇözüm: gradient clipping — ||g|| > threshold ise ölçekle\n        lr küçült\n        batch norm"
+        },
+        {
+          "type": "code",
+          "heading": "Vanishing Gradient (alt katmanlar öğrenmiyor)",
+          "text": "Belirti: loss düşüyor ama ilk katmanlar değişmiyor\nNeden:  sigmoid/tanh → türev ≤ 0.25, çarpım → 0\nÇözüm: ReLU kullan (pozitif tarafta gradient=1)\n        Batch normalization\n        Residual connections (gradient doğrudan akıyor)"
+        }
+      ]
+    },
+    {
+      "title": "Class Imbalance",
+      "cat": "ML",
+      "summary": "Azınlık sınıfı çok az veri → model hep çoğunluk sınıfını tahmin eder, accuracy yüksek görünür ama azınlık sınıfını hiç bulamaz. Accuracy yerine F1, precision, recall kullan.",
+      "context": "Practice · ML",
+      "sections": [
+        {
+          "type": "list",
+          "heading": "Çözümler",
+          "items": [
+            "Weighted loss — azınlık sınıfına daha yüksek ağırlık ver",
+            "Oversampling — azınlık sınıfından daha fazla örnek (SMOTE: sentetik üret)",
+            "Undersampling — çoğunluk sınıfından az örnek al",
+            "Threshold ayarla — softmax çıktısında 0.5 yerine daha düşük eşik"
+          ]
+        },
+        {
+          "type": "code",
+          "heading": "Doğru Metrikler",
+          "text": "Precision = TP / (TP + FP)   ← pozitif dediğimde ne kadar doğru\nRecall    = TP / (TP + FN)   ← gerçek pozitifleri kaçı bulabildim\nF1        = 2·P·R / (P+R)    ← ikisinin harmonik ortalaması"
+        }
+      ]
+    },
+    {
+      "title": "Feature Scaling",
+      "cat": "ML",
+      "summary": "Feature'lar farklı ölçekteyse gradient descent bazı yönlerde çok yavaş ilerler. Normalize et — standardization veya min-max. Tree tabanlı modeller scaling gerekmez.",
+      "context": "Practice · ML",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Yöntemler",
+          "text": "Standardization: x' = (x - μ) / σ    → mean=0, std=1\nMin-max:         x' = (x - min) / (max - min)  → [0,1]\n\nNe zaman şart: gradient descent tabanlı her şey\n               (linear regression, NN, SVM, kNN)\nGerekmez: karar ağaçları, random forest, XGBoost"
+        },
+        {
+          "type": "text",
+          "heading": "Neden Önemli",
+          "text": "Bir feature 0-1, diğeri 0-1000000 olunca: büyük feature'ın gradientı küçük feature'ınkini domine eder. Loss surface çok elongated olur — gradient descent zig-zag yapar, yavaş converge eder."
+        }
+      ]
+    },
+    {
+      "title": "Az Veri ile Çalışmak",
+      "cat": "ML",
+      "summary": "Veri azsa model ezberleme riski yüksek. Data augmentation ile etkili veri seti büyütülür. Transfer learning ile büyük veriyle öğrenilmiş feature'lar küçük veriyle fine-tune edilir.",
+      "context": "Practice · ML",
+      "sections": [
+        {
+          "type": "list",
+          "heading": "Data Augmentation",
+          "items": [
+            "Görüntü: rotate, flip, crop, color jitter, noise ekle",
+            "Metin: synonym replacement, back-translation",
+            "Genel: mixup — iki örneği interpole et, label'ı da interpole"
+          ]
+        },
+        {
+          "type": "text",
+          "heading": "Transfer Learning",
+          "text": "ImageNet'te pretrain edilmiş model al. Son katmanları görevine göre değiştir. Sadece son katmanları eğit (feature extraction) veya tüm ağı küçük lr ile eğit (fine-tuning). Az verili medikal görüntüde standart yaklaşım budur."
+        },
+        {
+          "type": "text",
+          "heading": "Diğer",
+          "text": "Regularization artır — L2, dropout. Daha basit model seç. Cross-validation ile her veri noktasını hem train hem val'da kullan."
+        }
+      ]
+    },
+    {
+      "title": "Learning Rate & Batch Size",
+      "cat": "Deep Learning",
+      "summary": "Learning rate en kritik hyperparameter. Çok büyük → diverge, NaN. Çok küçük → çok yavaş. Batch size: büyük → stabil gradient, küçük → noisy ama regularization etkisi.",
+      "context": "Practice · Deep Learning",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Learning Rate",
+          "text": "Çok büyük: loss zig-zag veya NaN\nÇok küçük: çok yavaş, local minima'da takılır\n\nÇözüm: lr schedule — başta büyük, zamanla küçült\n        warmup: önce küçükten başla, sonra artır\n        Adam: adaptive lr, genelde iyi başlangıç"
+        },
+        {
+          "type": "list",
+          "heading": "Batch Size Tradeoff",
+          "items": [
+            "Büyük batch (256-1024): stabil gradient, paralel hesap, ama sharp minima → genelizasyon bozulabilir",
+            "Küçük batch (16-64): noisy gradient, flat minima bulur, doğal regularization",
+            "Kural: batch büyütünce lr de orantılı artır (linear scaling rule)"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "ROC Curve & AUC",
+      "cat": "ML",
+      "summary": "Binary sınıflandırmada threshold'dan bağımsız performans ölçütü. TPR vs FPR eğrisi. AUC=1 mükemmel, AUC=0.5 random. Class imbalance'da accuracy yetersizken AUC güvenilir.",
+      "context": "Practice · ML",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "",
+          "text": "TPR (Recall) = TP / (TP + FN)   ← gerçek pozitifleri bulma oranı\nFPR          = FP / (FP + TN)   ← yanlış alarm oranı\n\nThreshold'u 0→1 kaydırınca TPR ve FPR değişir\nROC: bu iki değerin eğrisi\nAUC: eğrinin altındaki alan → [0.5, 1]"
+        },
+        {
+          "type": "text",
+          "heading": "Ne Zaman AUC?",
+          "text": "Class imbalance varsa accuracy yanıltıcı — model hep çoğunluk sınıfını tahmin edince %95 accuracy görünür ama hiç işe yaramaz. AUC imbalance'dan etkilenmez. Medikal görüntüde standart metrik."
+        },
+        {
+          "type": "text",
+          "heading": "Threshold Seçimi",
+          "text": "ROC eğrisinde işe yarayan threshold'u seç: yanlış alarm (FPR) düşük tutmak mı öncelik, yoksa kaçırma (FNR) düşük tutmak mı? Kanser tespitinde recall kritik — FN pahalı. Spam'de precision kritik — FP can sıkıcı."
+        }
+      ]
+    },
+    {
+      "title": "SGD vs Momentum vs Adam",
+      "cat": "ML",
+      "summary": "SGD: salt gradient adımı. Momentum: geçmiş gradientleri biriktir, zig-zag azalt. Adam: her parametre için adaptive lr, momentum + RMSprop. Genelde Adam iyi başlangıç.",
+      "context": "Practice · ML",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Karşılaştırma",
+          "text": "SGD:      θ ← θ - lr · g\nMomentum: v ← βv + g\n          θ ← θ - lr · v\nAdam:     m ← β1·m + (1-β1)·g        ← 1. moment\n          v ← β2·v + (1-β2)·g²       ← 2. moment\n          θ ← θ - lr · m / (√v + ε)"
+        },
+        {
+          "type": "list",
+          "heading": "Ne Zaman Ne?",
+          "items": [
+            "Adam: çoğu durumda iyi başlangıç, hızlı converge",
+            "SGD + Momentum: fine-tuning ve büyük modellerde genelizasyon bazen daha iyi",
+            "Momentum: zig-zag azaltır, saddle point'lerden çıkar",
+            "Adam'ın sorunu: sharp minima'ya gidebilir, genelizasyon bazen SGD'den kötü"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "L1 vs L2 Regularization",
+      "cat": "ML",
+      "summary": "L2 (Ridge): ağırlıkları sıfıra yaklaştırır ama sıfırlamaz. L1 (Lasso): sparse çözüm — bazı ağırlıkları tam sıfır yapar, feature selection. L2 = Gaussian prior, L1 = Laplace prior.",
+      "context": "Practice · ML",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "",
+          "text": "L2: loss + λ·Σ θᵢ²    → gradient: -2λθ  (sıfıra çeker)\nL1: loss + λ·Σ|θᵢ|   → gradient: -λ·sign(θ)  (sabit itmek)"
+        },
+        {
+          "type": "text",
+          "heading": "Neden L1 Sparse Yapar?",
+          "text": "L2'nin gradientı θ'ya orantılı — sıfıra yaklaştıkça itme zayıflar, tam sıfır olmaz. L1'in gradientı sign(θ) — büyüklükten bağımsız sabit itme, küçük ağırlıkları tam sıfıra götürür. Geometrik: L1 top köşeli (diamond), optimum köşede = seyrek çözüm."
+        },
+        {
+          "type": "list",
+          "heading": "Ne Zaman Ne?",
+          "items": [
+            "L2: default, çoğu sinir ağında weight decay olarak",
+            "L1: feature selection istiyorsan, yüksek boyutlu az önemli feature varsa",
+            "Elastic Net: L1 + L2 ikisi birden"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Dropout: Train vs Inference",
+      "cat": "Deep Learning",
+      "summary": "Train'de random nöronları kapat (p olasılıkla). Her forward pass farklı bir alt ağ — ensemble etkisi. Inference'da dropout kapalı ama output'u p ile ölçekle (inverted dropout).",
+      "context": "Practice · Deep Learning",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "",
+          "text": "Train:     her nöronu p prob. ile sıfırla\n           aktif nöronu 1/(1-p) ile ölçekle  ← inverted dropout\n\nInference: dropout yok, tüm nöronlar aktif\n           ölçekleme zaten train'de yapıldı → output aynı beklenti"
+        },
+        {
+          "type": "text",
+          "heading": "Neden Çalışıyor?",
+          "text": "Her pass'te farklı nöron kümesi aktif — model belirli nöronlara aşırı bağımlı olamıyor (co-adaptation engelleniyor). Test'te tüm nöronlar aktif → exponential sayıda farklı ağın ortalaması gibi davranıyor — ensemble etkisi."
+        },
+        {
+          "type": "text",
+          "heading": "Dikkat",
+          "text": "model.train() vs model.eval() — PyTorch'ta bu çağrı dropout ve batch norm davranışını değiştiriyor. Inference'da eval() unutulursa sonuçlar tutarsız olur."
+        }
+      ]
+    },
+    {
+      "title": "Train / Val / Test & Data Leakage",
+      "cat": "ML",
+      "summary": "Test seti sadece final değerlendirme için — eğitimde ve hyperparameter seçiminde görülmemeli. Val seti model seçimi ve erken durdurma için. Leakage: test bilgisi eğitime sızarsa sonuçlar gerçekçi değil.",
+      "context": "Practice · ML",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Split Mantığı",
+          "text": "Train  (~70%): model ağırlıklarını öğren\nVal    (~15%): hyperparameter seç, early stopping\nTest   (~15%): sadece final rapor — bir kez kullan"
+        },
+        {
+          "type": "list",
+          "heading": "Data Leakage Örnekleri",
+          "items": [
+            "Normalization stats (mean/std) tüm veriyle hesaplanıp train'e uygulanmış — test bilgisi sızdı",
+            "Feature engineering'de gelecek bilgisi kullanılmış (time series)",
+            "Duplikat örnekler hem train hem test'te",
+            "Val/test seti küçüldükçe val performance'a aşırı fit olursun (hyperparameter overfitting)"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Cross-Validation",
+      "cat": "ML",
+      "summary": "Az veride her örneği hem train hem val'da kullanmak için. k-fold: veriyi k parçaya böl, k kez eğit, her seferinde farklı parça val. Sonuçların ortalaması daha güvenilir tahmin.",
+      "context": "Practice · ML",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "k-Fold",
+          "text": "Veri: [1][2][3][4][5]  (5-fold)\nIter 1: train=[2,3,4,5]  val=[1]\nIter 2: train=[1,3,4,5]  val=[2]\n...\nSonuç: 5 val score'un ortalaması"
+        },
+        {
+          "type": "list",
+          "heading": "Ne Zaman?",
+          "items": [
+            "Az veri — tek val split güvenilir değil, yüksek variance",
+            "Model karşılaştırma — aynı split'lerde test et, adil kıyaslama",
+            "Hyperparameter tuning — her config için CV score hesapla",
+            "Çok veri varsa gerek yok — tek val split yeterli, CV pahalı"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Convolution Intuition",
+      "cat": "Deep Learning",
+      "summary": "Küçük filtre görüntü üzerinde kayar, her konumda dot product. Aynı filtre her yerde — parameter sharing. Yerel özellik tespiti: kenar, köşe, doku. Derin katmanlarda kompleks feature'lar.",
+      "context": "Practice · Deep Learning",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "",
+          "text": "Input: H×W×C\nFilter: k×k×C  (C kanal, hepsiyle dot product)\nOutput: H'×W'×F  (F = filtre sayısı)\n\nParameter sayısı: k×k×C×F  ← input boyutundan bağımsız\nFully connected: H×W×C × H'×W'×F  ← çok daha fazla"
+        },
+        {
+          "type": "text",
+          "heading": "Neden Görüntüde İyi?",
+          "text": "Translation invariance: kedi solda da sağda da kedi. Parameter sharing: aynı kenar detektörü görüntünün her yerinde çalışır. Yerellik: piksel uzak komşulardan çok yakın komşuyla ilişkili."
+        },
+        {
+          "type": "list",
+          "heading": "Katman Hiyerarşisi",
+          "items": [
+            "İlk katmanlar: kenar, renk, yön detektörleri",
+            "Orta katmanlar: köşe, doku, basit şekil",
+            "Derin katmanlar: göz, tekerlek, yüz gibi kompleks feature'lar"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Pooling & Skip Connections",
+      "cat": "Deep Learning",
+      "summary": "Pooling: spatial boyutu küçült, translation invariance artır. Max pooling en güçlü aktivasyonu alır. Skip connection: gradient doğrudan önceki katmana akar — vanishing gradient çözümü.",
+      "context": "Practice · Deep Learning",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Pooling",
+          "text": "Max pooling 2×2, stride 2:\n[1 3]     →  [3]\n[2 4]         4 bölge → 1 değer, boyut yarıya\n\nMax: en belirgin feature'ı al\nAverage: tüm bölgenin ortalaması"
+        },
+        {
+          "type": "text",
+          "heading": "Skip Connection (ResNet)",
+          "text": "F(x) + x — input'u çıktıya direkt ekle. Gradient backprop'ta bu shortcut üzerinden akar — çarpım olmadan, vanishing yok. Ağ F(x)=0 öğrenirse identity mapping — derin katman eklemek hiç zarar vermez, en kötü ihtimalle etkisiz."
+        },
+        {
+          "type": "text",
+          "heading": "U-Net'te Skip Connection",
+          "text": "Encoder'dan decoder'a aynı çözünürlükteki feature map'ler concat edilir. Spatial detay encoder'da kaybolmadan decoder'a aktarılıyor — segmentasyon için kritik."
+        }
+      ]
+    },
+    {
+      "title": "Self-Attention: Q, K, V",
+      "cat": "Deep Learning",
+      "summary": "Her token tüm diğer tokenlarla ilişkisini hesaplar — uzun mesafe bağımlılık. Q (sorgu), K (anahtar), V (değer). Attention weight: Q·K^T / sqrt(d), sonra softmax. Çıktı: weighted sum of V.",
+      "context": "Practice · Deep Learning",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "",
+          "text": "Q = X·Wq,  K = X·Wk,  V = X·Wv\n\nAttention(Q,K,V) = softmax(Q·Kᵀ / √d) · V\n\nsqrt(d): dot product büyüyünce softmax saturate eder → scale"
+        },
+        {
+          "type": "text",
+          "heading": "Sezgi",
+          "text": "Q: 'ben ne arıyorum?' K: 'ben ne sunuyorum?' V: 'içerik ne?' Q·K^T her token çiftinin uyumunu ölçüyor. Softmax ile normalize edince attention weight — ne kadar ilgi göstereyim. V'nin weighted sum'ı = her tokenın diğerlerinden topladığı bilgi."
+        },
+        {
+          "type": "list",
+          "heading": "RNN'ye Göre Avantaj",
+          "items": [
+            "Paralel hesap — RNN sequential, transformer tüm token'ları aynı anda işler",
+            "Long-range dependency — RNN uzak token'ı unutur, attention direkt erişir",
+            "O(n²) complexity — uzun sequence'lerde pahalı (RNN O(n))"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "PCA — Principal Component Analysis",
+      "cat": "ML",
+      "summary": "Veriyi en çok varyansı açıklayan yönlere projekte et. Covariance matrix'in eigenvector'ları bu yönler, eigenvalue'lar her yöndeki varyans. Boyut indirgeme, görselleştirme, noise azaltma.",
+      "context": "Practice · ML",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "",
+          "text": "1. Veriyi normalize et (mean=0)\n2. Covariance matrix: C = XᵀX / (n-1)\n3. Eigendecomposition: C = VΛVᵀ\n4. En büyük k eigenvalue → k principal component\n5. Projeksiyon: Z = X · V_k"
+        },
+        {
+          "type": "text",
+          "heading": "SVD Bağlantısı",
+          "text": "PCA = SVD. X = UDVᵀ yapınca V sütunları principal component'lar, D²/(n-1) eigenvalue'lar. Pratikte covariance matrix yerine direkt SVD daha numerik stabil."
+        },
+        {
+          "type": "list",
+          "heading": "Ne Zaman?",
+          "items": [
+            "Görselleştirme: yüksek boyutlu veriyi 2D/3D'ye indir (t-SNE daha iyi ama yavaş)",
+            "Noise azaltma: küçük eigenvalue'ları at, gürültü çoğunlukla düşük varyanslı",
+            "Feature engineering: correlated feature'ları bağımsız bileşenlere dönüştür",
+            "Dikkat: lineer, non-lineer yapıları yakalayamaz"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "SVM — Support Vector Machine",
+      "cat": "ML",
+      "summary": "İki sınıf arasındaki margin'i maksimize eden karar sınırı bul. Sadece support vector'lar (sınıra en yakın noktalar) belirliyor. Kernel trick ile non-lineer sınır.",
+      "context": "Practice · ML",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Margin Mantığı",
+          "text": "Sınıfları ayıran sonsuz çizgi var — en geniş boşlukta olanı seç. Margin = iki sınıfın en yakın noktaları arasındaki mesafe. Sadece bu sınır noktaları (support vector'lar) karar sınırını belirliyor, diğer noktalar önemsiz."
+        },
+        {
+          "type": "text",
+          "heading": "Kernel Trick",
+          "text": "Veri lineer ayrılmıyor → yüksek boyuta taşı. Kernel: K(x,z) = φ(x)·φ(z) — noktaları açıkça yüksek boyuta taşımadan iç çarpım hesapla. RBF kernel: Gaussian benzerlik, sonsuz boyutlu uzay. Polynomial kernel: polinom özellikler."
+        },
+        {
+          "type": "list",
+          "heading": "Avantaj / Dezavantaj",
+          "items": [
+            "Az veride güçlü — margin + kernel ile iyi genelleme",
+            "Büyük veride yavaş — O(n²) veya O(n³)",
+            "Soft margin (C): C büyük → az hata izni, overfitting riski; C küçük → geniş margin, underfitting"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Ensemble: Bagging vs Boosting",
+      "cat": "ML",
+      "summary": "Bagging: bağımsız modeller paralel eğit, çoğunluk oyu al. Variance azaltır. Random Forest = bagging + feature randomness. Boosting: modeller sıralı, önceki hataları düzelt. Bias azaltır.",
+      "context": "Practice · ML",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "",
+          "text": "Bagging:   D1,D2,...,Dk  bootstrap sample\n           M1,M2,...,Mk  bağımsız eğit\n           tahmin: majority vote / average\n\nBoosting:  M1 eğit → hatalarına ağırlık ver\n           M2 hataları düzelt → M3... → topla"
+        },
+        {
+          "type": "list",
+          "heading": "Random Forest vs Gradient Boosting",
+          "items": [
+            "Random Forest: bagging + her split'te random feature subset → decorrelated trees, paralel",
+            "Gradient Boosting (XGBoost): sequential, her ağaç residual'ı fit eder, güçlü ama overfit riski",
+            "RF: daha hızlı train, GBM: genelde daha yüksek accuracy"
+          ]
+        },
+        {
+          "type": "text",
+          "heading": "Bias-Variance",
+          "text": "Bagging: her model yüksek variance (derin ağaç) → ortalamayla variance düşer, bias değişmez. Boosting: her model yüksek bias (sığ ağaç) → sıralı düzeltmeyle bias düşer, variance artabilir."
+        }
+      ]
+    },
+    {
+      "title": "Activation Functions",
+      "cat": "Deep Learning",
+      "summary": "ReLU: default, pozitif tarafta gradient=1, dying ReLU sorunu. LeakyReLU: negatif tarafta küçük gradient. GELU: smooth, transformer'da standart. Sigmoid/tanh: saturating, derin ağda vanishing.",
+      "context": "Practice · Deep Learning",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "",
+          "text": "ReLU:      max(0, x)              gradient: 0 veya 1\nLeakyReLU: max(αx, x), α=0.01    gradient: α veya 1\nGELU:      x · Φ(x)              smooth, differentiable everywhere\nSigmoid:   1/(1+e^-x)            gradient: max 0.25, saturating\ntanh:      (e^x-e^-x)/(e^x+e^-x) gradient: max 1, saturating"
+        },
+        {
+          "type": "text",
+          "heading": "Dying ReLU",
+          "text": "Negatif bölgede gradient=0. Bir nöron büyük negatif bias alırsa her zaman 0 output → hiç güncellenmez, 'ölü' kalır. LeakyReLU bunu düzeltir. İyi weight init ve düşük lr ile de azaltılabilir."
+        },
+        {
+          "type": "list",
+          "heading": "Ne Zaman Ne?",
+          "items": [
+            "CNN, MLP: ReLU default",
+            "Transformer encoder/decoder: GELU (BERT, GPT standartı)",
+            "Output — binary: sigmoid, multiclass: softmax, regression: linear",
+            "Derin ağda hidden layer'da sigmoid/tanh kullanma"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Normalization: BN vs LN vs IN vs GN",
+      "cat": "Deep Learning",
+      "summary": "Batch Norm: batch boyunca normalize — CNN standartı, küçük batch'te bozulur. Layer Norm: tek örnek içinde normalize — transformer standartı. Instance Norm: style transfer. Group Norm: batch bağımsız CNN alternatifi.",
+      "context": "Practice · Deep Learning",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Neyi Normalize Ediyoruz?",
+          "text": "Input shape: [Batch, Channel, H, W]\n\nBatch Norm:    [B, C, H, W] → B boyutunda normalize\nLayer Norm:    [B, C, H, W] → C,H,W boyutunda normalize (tek örnek)\nInstance Norm: [B, C, H, W] → H,W boyutunda normalize (her kanal)\nGroup Norm:    [B, C, H, W] → C'yi G gruba böl, H,W ile normalize"
+        },
+        {
+          "type": "list",
+          "heading": "Ne Zaman Ne?",
+          "items": [
+            "Batch Norm: CNN, büyük batch — hızlı, iyi regularization",
+            "Layer Norm: Transformer, RNN — batch size'dan bağımsız, sequence'de stabil",
+            "Instance Norm: style transfer — her görüntü bağımsız normalize",
+            "Group Norm: küçük batch CNN — medikal görüntü, batch=1-2 olunca BN bozulur"
+          ]
+        },
+        {
+          "type": "text",
+          "heading": "Train vs Inference (BN)",
+          "text": "Train'de batch istatistikleri (mean/var) kullanılır. Inference'da running mean/var (eğitim boyunca biriktirilen) kullanılır. model.eval() bunu aktive eder."
+        }
+      ]
+    },
+    {
+      "title": "Positional Encoding",
+      "cat": "Deep Learning",
+      "summary": "Self-attention position bilmez — Q·Kᵀ token sırasına duyarsız. Pozisyon bilgisini embedding'e ekle. Sinüzoidal (sabit) veya learned (eğitilebilir). Olmadan 'kedi köpeği ısırdı' ile 'köpek kediyi ısırdı' aynı.",
+      "context": "Practice · Deep Learning",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Sinüzoidal PE",
+          "text": "PE(pos, 2i)   = sin(pos / 10000^(2i/d))\nPE(pos, 2i+1) = cos(pos / 10000^(2i/d))\n\nHer pozisyon farklı frekans kombinasyonu\nToken embedding'ine toplanır: x + PE(pos)"
+        },
+        {
+          "type": "text",
+          "heading": "Neden Sinüzoidal?",
+          "text": "Eğitimde görülmemiş uzun sequence'lere extrapolate edebilir. PE(pos+k) lineer dönüşümle PE(pos)'tan üretilebilir — relatif pozisyon bilgisi öğrenilebilir. Learned PE daha kısa, sinüzoidal daha genellenebilir."
+        },
+        {
+          "type": "text",
+          "heading": "Rotary PE (RoPE)",
+          "text": "Modern LLM'lerde (LLaMA, GPT-4) kullanılan alternatif. Absolute pozisyon yerine relatif pozisyon farkını doğrudan attention'a kodluyor — uzun context'te daha iyi."
+        }
+      ]
+    },
+    {
+      "title": "Multi-Head Attention",
+      "cat": "Deep Learning",
+      "summary": "Tek attention head yerine h farklı head paralel çalıştır, her biri farklı ilişki örüntüsü öğrenir. Çıktıları concat et, project et. Farklı head'ler: syntax, semantik, coreference gibi farklı ilişkilere odaklanır.",
+      "context": "Practice · Deep Learning",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "",
+          "text": "Her head i:\n  Qᵢ = X·Wqᵢ,  Kᵢ = X·Wkᵢ,  Vᵢ = X·Wvᵢ\n  headᵢ = Attention(Qᵢ, Kᵢ, Vᵢ)\n\nMultiHead = Concat(head1,...,headh) · Wo\n\nDimension: d_model / h her head'de → toplam param aynı"
+        },
+        {
+          "type": "text",
+          "heading": "Neden Birden Fazla Head?",
+          "text": "Tek head tüm pozisyon çiftleri için tek bir attention pattern öğrenir. Farklı head'ler farklı alt uzaylarda farklı ilişkileri yakalıyor. Biri yakın komşuları, diğeri uzak bağımlılıkları, bir diğeri sözdizimsel ilişkileri öğrenebilir."
+        }
+      ]
+    },
+    {
+      "title": "Weight Initialization",
+      "cat": "Deep Learning",
+      "summary": "Sıfır init: tüm nöronlar aynı gradient → simetri kırılmaz, hiç öğrenmez. Random: çok büyükse exploding, çok küçükse vanishing. Xavier: sigmoid/tanh için. He: ReLU için.",
+      "context": "Practice · Deep Learning",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "",
+          "text": "Xavier (Glorot): W ~ U[-√(6/(nin+nout)), √(6/(nin+nout))]\n  → sigmoid/tanh ile varyansı katmanlar boyunca korur\n\nHe (Kaiming):   W ~ N(0, √(2/nin))\n  → ReLU ile varyansı korur (ReLU yarıyı sıfırlar, 2x kompanse)"
+        },
+        {
+          "type": "text",
+          "heading": "Neden Önemli?",
+          "text": "Forward pass: aktivasyonların varyansı katmandan katmana patlamamalı veya sönmemeli. Backward pass: gradientların da aynı sorunu var. Init bu dengeyi sağlıyor — iyi init olmadan derin ağ train edilemiyor."
+        },
+        {
+          "type": "text",
+          "heading": "Batch Norm ile İlişki",
+          "text": "Batch Norm init'e duyarlılığı azaltır — her katman output'unu normalize ediyor. Ama yine de iyi init convergence'ı hızlandırır."
+        }
+      ]
+    },
+    {
+      "title": "Diffusion Model Sezgisel",
+      "cat": "Deep Learning",
+      "summary": "Forward: görüntüye adım adım Gaussian noise ekle, T adımda tamamen noise ol. Reverse: noise'tan başlayarak adım adım denoise et. Model her adımda noise'u tahmin etmeyi öğreniyor.",
+      "context": "Practice · Deep Learning",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Forward Process",
+          "text": "q(xₜ|xₜ₋₁) = N(xₜ; √(1-β)·xₜ₋₁, β·I)\n\nx₀ → x₁ → x₂ → ... → xₜ → ... → xT ~ N(0,I)\n\nβ schedule: zamanla artan noise miktarı\nT adım sonunda: tamamen Gaussian noise"
+        },
+        {
+          "type": "code",
+          "heading": "Reverse Process",
+          "text": "pθ(xₜ₋₁|xₜ) = N(xₜ₋₁; μθ(xₜ,t), Σ)\n\nModel εθ(xₜ,t): hangi noise eklendiğini tahmin et\nLoss: ||ε - εθ(xₜ,t)||²  ← MSE, eklenen noise ile tahmin arası\n\nInference: xT~N(0,I)'den başla, T adım denoise et"
+        },
+        {
+          "type": "list",
+          "heading": "GAN'a Göre Fark",
+          "items": [
+            "Training stabil — adversarial yok, sadece MSE",
+            "Mode coverage iyi — GAN mode drop yapar",
+            "Yavaş sampling — T=1000 adım (GAN tek adım)",
+            "DDIM: deterministic sampling, daha az adım"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "VAE Loss Türetimi",
+      "cat": "Deep Learning",
+      "summary": "ELBO: log p(x) alt sınırı. Reconstruction term + KL term. KL: latent space'i prior'a yaklaştır. Reconstruction: decoder çıktısının veriyi açıklaması. İkisi arasında tradeoff β parametresiyle ayarlanır.",
+      "context": "Practice · Deep Learning",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "ELBO Türetimi",
+          "text": "log p(x) = log ∫ p(x|z)p(z)dz\n         ≥ E_q[log p(x|z)] - KL(q(z|x) || p(z))\n              ↑                      ↑\n        reconstruction           regularization\n\nq(z|x): encoder → μ, σ\np(x|z): decoder\np(z) = N(0,I): prior"
+        },
+        {
+          "type": "text",
+          "heading": "Reparameterization Trick",
+          "text": "z = μ + σ·ε, ε ~ N(0,I). Sampling işlemi gradient akışını keser — ε'dan sample alınca μ ve σ'ya gradient gider. Olmadan encoder eğitilemez."
+        },
+        {
+          "type": "text",
+          "heading": "KL Terimi Ne Yapar?",
+          "text": "q(z|x)'i N(0,I)'ye yaklaştırır. Her x için latent kod dağılımlı ve sıfır civarında olur — latent space düzenli. Olmadan her x farklı bölgeye map olur, aralarını interpolate edemezsin, sample alamazsın."
+        }
+      ]
+    },
+    {
+      "title": "Hyperparameter Tuning",
+      "cat": "ML",
+      "summary": "Grid search: tüm kombinasyonları dene, pahalı. Random search: rastgele noktalar, genelde daha verimli. Bayesian optimization: önceki sonuçlardan model kur, en umut verici noktayı dene.",
+      "context": "Practice · ML",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Yöntemler",
+          "text": "Grid search:    lr ∈ {0.1, 0.01, 0.001} × batch ∈ {32,64,128}\n                → 9 deney, tüm kombinasyon\n\nRandom search:  lr ~ LogUniform(0.001, 0.1)\n                batch ~ {32,64,128}\n                → rastgele n deney\n\nBayesian opt:   Gaussian Process ile surrogate model\n                acquisition function → en umut vereni seç"
+        },
+        {
+          "type": "text",
+          "heading": "Neden Random > Grid?",
+          "text": "Bazı hyperparameter'lar diğerlerinden çok daha önemli. Grid search az önemli parametreye de eşit bütçe harcıyor. Random search önemli parametrenin daha fazla değerini görüyor — daha verimli."
+        },
+        {
+          "type": "list",
+          "heading": "Pratik",
+          "items": [
+            "Önce lr ve batch size — en etkili ikisi",
+            "Log scale'de ara: 0.001, 0.003, 0.01, 0.03, 0.1",
+            "Early stopping ile kötü config'leri erken kes (Hyperband)",
+            "Val seti ile değerlendir, test setine dokunma"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "GradCAM — Model Kararını Görselleştirme",
+      "cat": "Deep Learning",
+      "summary": "CNN'in hangi bölgeye bakarak karar verdiğini göster. Son conv katmanının gradientlarını global average pool et, feature map'leri ağırlıklandır. Sınıf aktivasyon haritası üret.",
+      "context": "Practice · Deep Learning",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Algoritma",
+          "text": "1. Forward pass → hedef sınıf skoru y^c hesapla\n2. Son conv katmanı A^k feature map'lerini tut\n3. α^c_k = (1/Z) · Σᵢⱼ ∂y^c/∂A^k_ij  ← global avg pool of gradients\n4. L^c = ReLU(Σ_k α^c_k · A^k)         ← ağırlıklı kombinasyon\n5. Input boyutuna upsample → ısı haritası"
+        },
+        {
+          "type": "text",
+          "heading": "Neden ReLU?",
+          "text": "Sadece pozitif etkisi olan (sınıf aktivasyonunu artıran) bölgeleri görmek istiyoruz. Negatif katkılar başka sınıflara ait — onları filtrele."
+        },
+        {
+          "type": "list",
+          "heading": "Kullanım Alanları",
+          "items": [
+            "Model debug: doğru tahmin ama yanlış bölgeye mi bakıyor?",
+            "Medikal görüntü: model lezyona mı yoksa artifakt'a mı bakıyor?",
+            "Dataset bias tespiti: arka plana göre mi sınıflandırıyor?",
+            "Grad-CAM++, Score-CAM: geliştirilmiş versiyonlar"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "U-Net",
+      "cat": "Deep Learning",
+      "summary": "Encoder-decoder mimarisi, karşılıklı katmanlar arasında skip connection. Encoder: spatial boyutu küçült, feature derinliği artır. Decoder: upsampling ile spatial boyutu geri getir. Skip connection: encoder'dan spatial detayı decoder'a ilet.",
+      "context": "Practice · Deep Learning",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Mimari",
+          "text": "Encoder:  [Conv→Conv→MaxPool] × N  → bottleneck\n           128×128 → 64×64 → 32×32 → 16×16\n\nDecoder:  [Upsample→Conv→Conv] × N\n           16×16 → 32×32 → 64×64 → 128×128\n\nSkip:     encoder katman i → decoder katman (N-i)'ye concat"
+        },
+        {
+          "type": "text",
+          "heading": "Skip Connection Neden Kritik?",
+          "text": "Encoder downsampling sırasında spatial bilgiyi kaybediyor — hangi piksel nerede, kenar nerede. Decoder yalnızca bottleneck'ten giderse bu bilgiye erişemiyor. Skip connection aynı çözünürlükteki encoder feature map'ini decoder'a doğrudan veriyor — hem yüksek seviye semantik hem düşük seviye spatial detay bir arada."
+        },
+        {
+          "type": "list",
+          "heading": "Kullanım Alanları",
+          "items": [
+            "Semantic segmentation: her piksel için sınıf etiketi",
+            "Medical image segmentation: organ, tümör, lezyon sınırları",
+            "Image-to-image translation: giriş ve çıkış aynı çözünürlük",
+            "Denoising, super-resolution: encoder-decoder + skip yapısı aynı"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Cycle-Consistent Learning",
+      "cat": "Deep Learning",
+      "summary": "Eşleştirilmemiş (unpaired) iki domain arasında dönüşüm öğren. A→B→A' dönüşümünde A'≈A olmalı — cycle consistency loss. Paired data gerekmez. CycleGAN bu prensibi GAN ile uygulayan ilk çalışma.",
+      "context": "Practice · Deep Learning",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Loss",
+          "text": "GAN loss:   G_AB gerçekçi B üretsin\n            D_B ayırt edemesin\n\nCycle loss: x → G_AB(x) → G_BA(G_AB(x)) ≈ x\n            y → G_BA(y) → G_AB(G_BA(y)) ≈ y\n\nL_total = L_GAN(G_AB) + L_GAN(G_BA) + λ·L_cycle"
+        },
+        {
+          "type": "text",
+          "heading": "Neden Gerekli?",
+          "text": "Paired data olmadan GAN eğitilince model istediği B üretir — cycle loss bunu kısıtlıyor. A'dan B üretince B'den tekrar A'ya dönebilmeli. Bu kısıt modeli anlamsız dönüşümler yapmaktan alıkoyuyor, içeriği korumasını zorluyor."
+        },
+        {
+          "type": "list",
+          "heading": "Örnek Uygulamalar",
+          "items": [
+            "At → zebra, yaz → kış fotoğraf dönüşümü",
+            "MRI → CT, T1 → T2 medikal modalite dönüşümü",
+            "Boyama → fotoğraf, gündüz → gece"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Federated Learning",
+      "cat": "ML",
+      "summary": "Ham veri paylaşmadan birden fazla site/cihazda model eğitimi. Her site lokal model eğitir, sadece ağırlıkları merkezi sunucuya gönderir. Sunucu ağırlıkları aggrege eder (FedAvg), güncel modeli geri gönderir.",
+      "context": "Practice · ML",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "FedAvg Algoritması",
+          "text": "1. Sunucu global θ'yı gönderir\n2. Her site k: lokal veriyle birkaç adım eğit → θ_k\n3. Sunucu: θ_global = Σ (n_k/n) · θ_k  (ağırlıklı ortalama)\n4. Tekrar et"
+        },
+        {
+          "type": "list",
+          "heading": "Zorluklar",
+          "items": [
+            "Non-IID data: farklı siteler farklı dağılım — aggregation zorlaşır",
+            "Communication cost: her round'da ağırlık transfer",
+            "Stragglers: yavaş/offline siteler round'u geciktirir",
+            "Privacy: ağırlık paylaşımı bile bazı bilgi sızdırabilir (gradient inversion attack)"
+          ]
+        },
+        {
+          "type": "text",
+          "heading": "Neden Önemli?",
+          "text": "Medikal veri yasal ve etik kısıtlamalar nedeniyle merkezileştirilemiyor. Farklı hastane/ülkelerdeki verilerle eğitim federated learning ile mümkün oluyor — veri yerine model bilgisi paylaşılıyor."
+        }
+      ]
+    },
+    {
+      "title": "Autoregressive Model",
+      "cat": "Deep Learning",
+      "summary": "Çıktıyı token token üret, her token önceki tokenlara koşullu. p(x) = Π p(x_i | x_1,...,x_{i-1}). GPT bu prensiple çalışır. Paralel üretim yok — sequential, ama eğitim paralel (teacher forcing).",
+      "context": "Practice · Deep Learning",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Temel Formül",
+          "text": "p(x_1, x_2, ..., x_n) = p(x_1) · p(x_2|x_1) · p(x_3|x_1,x_2) · ...\n                       = Π_i p(x_i | x_{<i})\n\nBu chain rule — tam faktörizasyon, varsayım yok."
+        },
+        {
+          "type": "text",
+          "heading": "Eğitim vs Inference",
+          "text": "Eğitimde teacher forcing: her adımda gerçek önceki token'ı ver, paralel eğit. Inference'da: kendi ürettiği token'ı input olarak kullan — hata birikebilir (exposure bias). GPT, PixelCNN, WaveNet aynı prensibi farklı domainlerde kullanıyor."
+        },
+        {
+          "type": "list",
+          "heading": "Diffusion vs Autoregressive",
+          "items": [
+            "AR: açık olasılık modeli, log-likelihood doğrudan hesaplanabilir",
+            "Diffusion: implicit likelihood, ELBO üzerinden eğitim",
+            "AR: sequential sampling — yavaş, ama kontrol kolay",
+            "Diffusion: paralel değil ama daha az adımda yüksek kalite (DDIM)"
+          ]
         }
       ]
     }
