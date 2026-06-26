@@ -7040,13 +7040,13 @@
     {
       "title": "Gaussian Dağılım — Neden Her Yerde?",
       "cat": "Probability",
-      "summary": "Central Limit Theorem: bağımsız küçük etkilerin toplamı Gaussian'a yaklaşıyor. Bu yüzden noise varsayımı default Gaussian. MLE + Gaussian noise → MSE kaybı.",
+      "summary": "Central Limit Theorem: the sum of many independent random variables approaches a Gaussian — regardless of their individual distributions. Bu yüzden noise varsayımı default Gaussian. MLE + Gaussian noise → MSE kaybı.",
       "context": "Practice · Probability",
       "sections": [
         {
           "type": "text",
           "heading": "CLT",
-          "text": "Birbirinden bağımsız çok sayıda küçük etkiyi toplarsan, toplamları Gaussian'a yaklaşıyor — her birinin dağılımı ne olursa olsun. Piksel gürültüsü: ısıl titreşim + elektromanyetik girişim + elektronik noise... hepsi küçük bağımsız etkiler, toplamı Gaussian."
+          "text": "The sum of many independent random variables approaches a Gaussian — regardless of their individual distributions. Sensor noise: thermal noise + electromagnetic interference + electronic noise... hepsi independent noise sources, toplamı Gaussian."
         },
         {
           "type": "text",
@@ -7344,7 +7344,7 @@
         {
           "type": "text",
           "heading": "Vanishing Gradient",
-          "text": "Derin ağlarda her katmanda türev çarpılıyor. Sigmoid gibi doyurucu aktivasyonlar türevi küçültüyor → gradyan katlar boyunca sıfıra yaklaşıyor → ilk katmanlar öğrenemiyor. ReLU bu sorunu hafifletiyor."
+          "text": "Derin ağlarda her katmanda türev çarpılıyor. Sigmoid gibi saturating activations türevi küçültüyor → gradient katlar boyunca sıfıra yaklaşıyor → ilk katmanlar öğrenemiyor. ReLU bu sorunu hafifletiyor."
         }
       ]
     },
