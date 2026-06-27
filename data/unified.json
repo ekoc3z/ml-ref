@@ -7602,6 +7602,26 @@
           "type": "text",
           "heading": "",
           "text": "Outlier sayısı azsa ve veri temizlenebiliyorsa önce veriyi temizle. Temizlenemiyorsa MAE veya Huber. MLE bağlantısı: MAE = Laplace noise varsayımı, MSE = Gaussian noise varsayımı."
+        },
+        {
+          "type": "text",
+          "heading": "Classification'da MSE Sorunu",
+          "text": "Binary sınıflandırmada raw output (logit) kullanılırsa MSE doğru tahminleri de cezalandırır. y=5, t=1 → çok confident doğru tahmin, ama (5-1)²=16 büyük ceza. Model bu cezayı azaltmak için y=5 olan noktaya doğru sınırı çekiyor — karar sınırı bozuluyor. Doğru tarafta çok uzak bir outlier kümesi tek başına sınırı tamamen ters çevirebilir."
+        },
+        {
+          "type": "text",
+          "heading": "Sigmoid Kısmi Çözüm Getiriyor",
+          "text": "Output'u sigmoid'den geçirince (0,1) aralığına sıkışıyor — y=5 yerine σ(5)≈1 oluyor. MSE: (1-1)²≈0, artık ceza yok. Outlier sınırı çekmiyor."
+        },
+        {
+          "type": "text",
+          "heading": "Ama Sigmoid+MSE Yeni Sorun Getiriyor",
+          "text": "Sigmoid saturate edince gradient σ(z)(1-σ(z))→0. MSE'nin türevinde bu terim kalıyor: dL/dz = (σ(z)-y)·σ(z)(1-σ(z)). Model çok yanlış olsa bile gradient sıfıra yakın — öğrenme durur."
+        },
+        {
+          "type": "code",
+          "heading": "CE+Sigmoid Her İkisini Çözüyor",
+          "text": "CE loss türevi: dL/dz = σ(z) - y\n\nSigmoid terimi türevde iptal oluyor.\nConfident doğru tahmin → σ(z)≈1, t=1 → gradient≈0  (outlier sınırı çekmiyor)\nYanlış tahmin       → σ(z)≈0, t=1 → gradient≈-1  (güçlü sinyal)"
         }
       ]
     },
@@ -7808,6 +7828,16 @@
           "type": "text",
           "heading": "Neden L1 Sparse Yapar?",
           "text": "L2'nin gradientı θ'ya orantılı — sıfıra yaklaştıkça itme zayıflar, tam sıfır olmaz. L1'in gradientı sign(θ) — büyüklükten bağımsız sabit itme, küçük ağırlıkları tam sıfıra götürür. Geometrik: L1 top köşeli (diamond), optimum köşede = seyrek çözüm."
+        },
+        {
+          "type": "text",
+          "heading": "L2: Diffuse Ağırlıklar",
+          "text": "L2 peaky weight vector'ları ağır cezalandırıyor — bir ağırlık çok büyüyünce ceza karesiyle artıyor. Sonuç: model tüm input'ları biraz kullanıyor, birkaç input'u çok kullanmıyor. Gradient descent'te L2 weight decay olarak görünür: W += -lambda * W — her adımda ağırlık sıfıra doğru linear çekiliyor."
+        },
+        {
+          "type": "text",
+          "heading": "L1: Sparse Ağırlıklar",
+          "text": "L1 sparse weight vector üretiyor — nöronlar önemsiz input'larını tamamen sıfırlıyor, sadece en önemli birkaç input'u kullanıyor. Noisy input'lara karşı doğal invariance. Feature selection istemiyorsan L2 genelde daha iyi performans verir."
         },
         {
           "type": "list",
@@ -8171,27 +8201,42 @@
     {
       "title": "Diffusion Model Sezgisel",
       "cat": "Deep Learning",
-      "summary": "Forward: görüntüye adım adım Gaussian noise ekle, T adımda tamamen noise ol. Reverse: noise'tan başlayarak adım adım denoise et. Model her adımda noise'u tahmin etmeyi öğreniyor.",
+      "summary": "VAE'de tek z latent; diffusion'da T tane: x_1,...,x_T gürültülenmiş versiyonlar. Forward process sabit, reverse process öğreniliyor. Model ε_θ adımda eklenen gürültüyü tahmin ediyor. Loss: MSE.",
       "context": "Practice · Deep Learning",
       "sections": [
         {
           "type": "code",
-          "heading": "Forward Process",
-          "text": "q(xₜ|xₜ₋₁) = N(xₜ; √(1-β)·xₜ₋₁, β·I)\n\nx₀ → x₁ → x₂ → ... → xₜ → ... → xT ~ N(0,I)\n\nβ schedule: zamanla artan noise miktarı\nT adım sonunda: tamamen Gaussian noise"
+          "heading": "VAE ile Kıyaslama",
+          "text": "VAE:      latent z (tek)       forward: encoder q_φ(z|x) — öğreniliyor\nDiffusion: latent x_1...x_T   forward: noise schedule q   — sabit, parametresiz\n\nİkisi de: MLE → intractable marginal → ELBO → lower bound optimize et"
         },
         {
           "type": "code",
-          "heading": "Reverse Process",
-          "text": "pθ(xₜ₋₁|xₜ) = N(xₜ₋₁; μθ(xₜ,t), Σ)\n\nModel εθ(xₜ,t): hangi noise eklendiğini tahmin et\nLoss: ||ε - εθ(xₜ,t)||²  ← MSE, eklenen noise ile tahmin arası\n\nInference: xT~N(0,I)'den başla, T adım denoise et"
+          "heading": "Forward Process q — Sabit",
+          "text": "q(x_t | x_{t-1}) = N(√(1-β_t)·x_{t-1},  β_t·I)\n\nx_0 → x_1 → ... → x_T ~ N(0,I)   T=1000 adım\n\nClosed form — herhangi t'ye tek adımda atla:\nx_t = √ᾱ_t·x_0  +  √(1-ᾱ_t)·ε,    ε ~ N(0,I)\nᾱ_t = (1-β_1)·(1-β_2)·...·(1-β_t)\n\nEğitimde x_t'yi t adım beklemeden direkt hesaplıyoruz."
+        },
+        {
+          "type": "code",
+          "heading": "ELBO — VAE ile Aynı Yapı",
+          "text": "VAE ELBO:\nlog p(x) ≥ E[log p_θ(x|z)]  -  KL(q_φ(z|x) || p(z))\n           reconstruction        prior KL\n\nDDPM ELBO:\nlog p(x_0) ≥ E[log p_θ(x_0|x_1)]  -  KL(q(x_T|x_0)||p(x_T))\n              reconstruction          prior KL (sabit → ignore)\n            - Σ KL(q(x_{t-1}|x_t,x_0) || p_θ(x_{t-1}|x_t))\n                denoising terimleri → MSE'ye sadeleşiyor"
+        },
+        {
+          "type": "text",
+          "heading": "Neden Encoder Network Gerekmiyor?",
+          "text": "VAE'de q_φ(z|x) öğreniliyordu çünkü posterior intractable'dı. DDPM'de q(x_{t-1}|x_t, x_0) x_0 bilinince Bayes ile kapalı form çözülüyor — her terim Gaussian, çarpım da Gaussian. Ayrı bir encoder network gerekmez. Ama inference'da x_0 bilinmiyor — p_θ(x_{t-1}|x_t) bunu approximate ediyor."
+        },
+        {
+          "type": "code",
+          "heading": "ε Prediction — Öğrenilen Parametre",
+          "text": "p_θ(x_{t-1}|x_t) = N(μ_θ(x_t,t), σ_t²·I)\n\nμ_θ'yı ε cinsinden ifade edince:\nμ_θ = (1/√α_t) · (x_t - β_t/√(1-ᾱ_t) · ε_θ(x_t,t))\n\nNetwork x_0 veya μ yerine ε_θ tahmin ediyor.\nL_simple = E[||ε - ε_θ(x_t, t)||²]   ← temiz MSE\n\nε her zaman N(0,I) — sabit scale, tutarlı hedef."
         },
         {
           "type": "list",
-          "heading": "GAN'a Göre Fark",
+          "heading": "GAN/VAE'ye Göre Fark",
           "items": [
-            "Training stabil — adversarial yok, sadece MSE",
-            "Mode coverage iyi — GAN mode drop yapar",
-            "Yavaş sampling — T=1000 adım (GAN tek adım)",
-            "DDIM: deterministic sampling, daha az adım"
+            "Training stabil — adversarial yok, sadece MSE regression",
+            "VAE'deki gibi blurry değil — averaging 1000 adıma yayıldı",
+            "Yavaş sampling — T=1000 sequential U-Net pass (GAN tek adım)",
+            "DDIM: deterministic sampling, 50 adımda benzer kalite"
           ]
         }
       ]
@@ -12490,6 +12535,44 @@
           "type": "note",
           "heading": "Learning Rate Schedules",
           "text": "The learning rate alpha is the most important hyperparameter. Common schedules: Step decay (reduce by factor at fixed epochs), Cosine annealing (smooth decay following cosine curve), Warmup + cosine (ramp up first, then decay). A learning rate too high diverges; too low converges slowly. Rule of thumb: start with 3e-4 for Adam."
+        }
+      ]
+    },
+    {
+      "title": "Regularization: L1, L2, Elastic Net",
+      "cat": "Training",
+      "summary": "L2: ağırlıkları sıfıra yaklaştırır, diffuse ve küçük tutar — weight decay. L1: sparse çözüm, bazı ağırlıkları tam sıfırlar — feature selection. Elastic Net: ikisini birleştirir.",
+      "context": "CS231n · Lecture 3 — Loss Functions and Optimization",
+      "sections": [
+        {
+          "type": "code",
+          "heading": "Objective'e Eklenen Terimler",
+          "text": "L2: loss + (1/2)·λ·Σ w²    gradient: +λw\nL1: loss + λ·Σ|w|           gradient: +λ·sign(w)\nElastic Net: loss + λ1·Σ|w| + λ2·Σ w²"
+        },
+        {
+          "type": "text",
+          "heading": "L2 — Weight Decay",
+          "text": "Gradient descent'te L2 weight decay olarak görünür: W += -lambda * W — her adımda ağırlık sıfıra doğru linear çekiliyor. Peaky weight vector'ları karesiyle cezalandırıyor — model tüm input'ları biraz kullanmayı tercih ediyor, birkaç input'u çok kullanmak yerine. Gaussian prior karşılığı."
+        },
+        {
+          "type": "text",
+          "heading": "L1 — Sparse Weights",
+          "text": "Gradient sign(w) — büyüklükten bağımsız sabit itme. Küçük ağırlıklar tam sıfıra gidiyor — nöron o input'u tamamen görmezden geliyor. Nöronlar en önemli input'ların sparse subset'ini kullanıyor, noisy input'lara invariant oluyor. Laplace prior karşılığı. Feature selection istemiyorsan L2 genelde daha iyi performans verir."
+        },
+        {
+          "type": "code",
+          "heading": "Neden L1 Sparse, L2 Değil?",
+          "text": "L2 gradient: λw → w sıfıra yaklaştıkça gradient küçülür → tam sıfır olmaz\nL1 gradient: λ·sign(w) → sabit büyüklükte itme → sıfıra ulaşır\n\nGeometrik: L2 top (smooth), L1 diamond (köşeli)\nMinimum genelde L1 diamond'ın köşesinde → sparse"
+        },
+        {
+          "type": "list",
+          "heading": "Pratik Notlar",
+          "items": [
+            "λ büyütünce regularization artar, underfitting riski",
+            "λ küçültünce regularization azalır, overfitting riski",
+            "Neural network'te L2 = weight decay: her adım W *= (1 - lr·λ)",
+            "L1 + L2 = Elastic Net: sparsity + stability ikisi birden"
+          ]
         }
       ]
     }
