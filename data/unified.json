@@ -7335,9 +7335,44 @@
       "context": "Practice · Estimation",
       "sections": [
         {
+          "type": "text",
+          "heading": "Hedef nedir?",
+          "text": "Elimizde N tane data var, her birinin bir target değeri t_i var (0 ya da 1, ya da 20-dim vektör). Bir model kuruyoruz, w parametreleri var. Bu w'yu öyle seçmek istiyoruz ki: \"Elimizdeki target'ları observe etme olasılığını maksimize eden w nedir?\" Bu tam MLE tanımı: p(t|w) maksimize eden w'yu bul. t'yi en iyi açıklayan, inputları t'ye göre skaleyen sistemi kur."
+        },
+        {
+          "type": "text",
+          "heading": "p(t|w) nedir?",
+          "text": "Her data için model bir posterior üretiyor: p(C1|x_i, w) = p_i, p(C0|x_i, w) = 1-p_i. 10 data var, 1. 5. ve 8. class 1'e ait, diğerleri class 0. Her data bağımsız — p(t|w) bunların joint'i, yani her datanın kendi target'ına uygun posteriorunun çarpımı."
+        },
+        {
           "type": "code",
-          "heading": "Binary",
-          "text": "P(yᵢ) = pᵢ^yᵢ · (1-pᵢ)^(1-yᵢ)   (yᵢ ∈ {0,1})\n\nlog likelihood = Σᵢ [yᵢ·log(pᵢ) + (1-yᵢ)·log(1-pᵢ)]\n\nMaximize et → negatifini minimize et → BCE"
+          "heading": "Joint Likelihood",
+          "text": "p(t|w) = p(C1|x1) · p(C0|x2) · p(C0|x3) · p(C0|x4) · p(C1|x5) · ...\n       = p1 · (1-p2) · (1-p3) · (1-p4) · p5 · ..."
+        },
+        {
+          "type": "text",
+          "heading": "Bernoulli bu seçimi otomatik yapıyor",
+          "text": "Her datanın uygun posteriorunu elle seçmek yerine Bernoulli formülü bunu tek seferde veriyor. t_i=1 ise p_i aktif, t_i=0 ise (1-p_i) aktif. Exponent'taki target değeri uygun posteriorun seçimini otomatik yapıyor."
+        },
+        {
+          "type": "code",
+          "heading": "Bernoulli Formülü",
+          "text": "P(t_i|x_i, w) = p_i^t_i · (1-p_i)^(1-t_i)\n\np(t|w) = prod_i p_i^t_i · (1-p_i)^(1-t_i)"
+        },
+        {
+          "type": "text",
+          "heading": "Neden Negative Log alıyoruz?",
+          "text": "Full çarpım: N büyüdükçe 0.7 · 0.8 · 0.9 · ... → underflow, sayısal olarak sıfıra gidiyor. Log alınca çarpım toplama dönüşür → sayısal stabil. Monoton artan fonksiyon olduğu için max L = max log L. Negatif alınca minimize problemi → gradient descent ile çözülür."
+        },
+        {
+          "type": "code",
+          "heading": "BCE",
+          "text": "log p(t|w) = sum_i [t_i·log(p_i) + (1-t_i)·log(1-p_i)]\n\nBCE = -log p(t|w) = -sum_i [t_i·log(p_i) + (1-t_i)·log(1-p_i)]"
+        },
+        {
+          "type": "text",
+          "heading": "Multi-label (20-dim vektör)",
+          "text": "Her input için 20 ayrı bağımsız Bernoulli kararı. Fotoğrafta 3 class var, 17'si yok. 3 class için (t_i=1): p_i'yi maximize et — o class var, posteriorunu artır. 17 class için (t_i=0): (1-p_i)'yi maximize et — o class yok, background posteriorunu artır. 20 pozisyon bağımsız → joint likelihood hepsinin çarpımı → log alınınca toplam → aynı BCE, 20 kez. Network 20 ayrı binary karar veriyor, her birini MLE mantığıyla öğreniyor."
         },
         {
           "type": "code",
@@ -7999,13 +8034,38 @@
     {
       "title": "PCA — Principal Component Analysis",
       "cat": "ML",
-      "summary": "Veriyi en çok varyansı açıklayan yönlere projekte et. Covariance matrix'in eigenvector'ları bu yönler, eigenvalue'lar her yöndeki varyans. Boyut indirgeme, görselleştirme, noise azaltma.",
+      "summary": "Veriyi en az bilgi kaybıyla düşük boyuta indir. Encode: c = Dᵀx. Optimal D = XᵀX'in en büyük eigenvalue'larının eigenvektörleri. Projeksiyon: Z = X·V_k.",
       "context": "Practice · ML",
       "sections": [
         {
+          "type": "text",
+          "heading": "Amaç",
+          "text": "Elimizde X var, m örnek, n feature — yüksek boyutlu, görselleştirmek zor. Hedef: l boyutlu uzaya indir (l << n), mümkün olduğunca az bilgi kaybet. Encode-decode ile yapıyoruz: encode c = Dᵀx (n→l), decode x̂ = Dc (l→n). D seçimi kritik — hangi l yöne projekte edersek en az bilgi kaybederiz?"
+        },
+        {
           "type": "code",
-          "heading": "",
+          "heading": "Adımlar",
           "text": "1. Veriyi normalize et (mean=0)\n2. Covariance matrix: C = XᵀX / (n-1)\n3. Eigendecomposition: C = VΛVᵀ\n4. En büyük k eigenvalue → k principal component\n5. Projeksiyon: Z = X · V_k"
+        },
+        {
+          "type": "text",
+          "heading": "Neden Covariance Matrix?",
+          "text": "\"Reconstruction error minimize et\" problemini Lagrange ile çözünce XᵀX çıkıyor. XᵀX = (n-1)·C, yani covariance matrix ile aynı eigenvektörler. C'nin her elemanı iki feature'ın birlikte ne kadar değiştiğini ölçüyor: C_ij = (1/(n-1))·Σₙ xₙᵢ·xₙⱼ"
+        },
+        {
+          "type": "text",
+          "heading": "Neden Eigenvektörler Optimal?",
+          "text": "d'yi eigenvektör bazında yazıp objective'i açınca dᵀXᵀXd = Σᵢ αᵢ²λᵢ çıkıyor, kısıt Σᵢ αᵢ²=1. Bu λᵢ'lerin ağırlıklı ortalaması — maksimum için tüm ağırlığı en büyük λ'ya ver. Yani optimal d = XᵀX'in en büyük eigenvalue'sunun eigenvektörü. Başka hiçbir yön daha az bilgi kaybıyla veriyi temsil edemez."
+        },
+        {
+          "type": "text",
+          "heading": "Projeksiyon",
+          "text": "En büyük k eigenvalue'nun eigenvektörleri V_k = [v₁|v₂|...|vₖ] matrisini oluşturuyor (n×k). Bunlar orijinal feature'lar değil, onların lineer kombinasyonları — veriyi en çok ayıran yönler. Z = X·V_k ile her nokta bu k yöndeki koordinatlarıyla ifade ediliyor."
+        },
+        {
+          "type": "text",
+          "heading": "Explained Variance",
+          "text": "Her eigenvalue o yöndeki varyans miktarı. En büyük k eigenvalue'nun toplama oranı = o k yönün veriyi ne kadar temsil ettiği. Örn. ilk 2 eigenvalue toplamın %95'i ise 2D projeksiyon bilginin %95'ini koruyor, diğer yönler noise."
         },
         {
           "type": "text",
@@ -8131,6 +8191,11 @@
           "type": "text",
           "heading": "Train vs Inference (BN)",
           "text": "Train'de batch istatistikleri (mean/var) kullanılır. Inference'da running mean/var (eğitim boyunca biriktirilen) kullanılır. model.eval() bunu aktive eder."
+        },
+        {
+          "type": "text",
+          "heading": "Group Norm: DDPM U-Net'te Neden?",
+          "text": "Orijinal U-Net (2015) Batch Norm kullanır. DDPM'nin U-Net'i Group Norm'a geçer — iki sebep: (1) Yüksek resolution görüntüler → küçük batch (1-4), BN'nin batch istatistikleri gürültülü hale gelir. (2) DDPM U-Net her bloğa timestep t'yi scale+shift olarak enjekte eder (AdaIN benzeri conditioning) — GN kanal grupları üzerinde çalıştığı için bu conditioning ile daha iyi uyuşur, BN'deki running stats ile çakışmaz. Küçük batch gerektiren diğer CNN'lerde de (3D volumetric, yüksek res segmentation) aynı sebepten GN tercih edilir."
         }
       ]
     },
@@ -11642,10 +11707,10 @@
   ],
   "lab08": [
     {
-      "title": "Session 9 (Lab 8) — Genel Çerçeve",
+      "title": "Session 8 (Lab 8) — Genel Çerçeve",
       "cat": "Overview",
       "summary": "Zero-shot anomaly segmentation: SCLIPAD algoritması. CLIP görüntü encoder'ı patch token'lar üretir, text encoder normal/anormal prompt embedding'leri üretir. Cosine similarity → pixel-level anomaly heatmap. MVTec AD dataset üzerinde industrial defect detection.",
-      "context": "ML Lab · Session 9 (Lab 8)",
+      "context": "ML Lab · Session 8 (Lab 8)",
       "sections": [
         {
           "type": "list",
@@ -11681,7 +11746,7 @@
       "title": "MVTec AD Dataset — Task 0 & 1",
       "cat": "Veri",
       "summary": "MVTec AD: 15 endüstriyel kategori, gerçek dünya defect detection benchmark'ı. Normal görüntülerle train, anormal görüntülerle test. Her test örneğinde binary mask ile defect konumu işaretli.",
-      "context": "ML Lab · Session 9 (Lab 8)",
+      "context": "ML Lab · Session 8 (Lab 8)",
       "sections": [
         {
           "type": "list",
@@ -11711,7 +11776,7 @@
       "title": "CLIP Yükleme — Task 3",
       "cat": "CLIP",
       "summary": "open_clip kütüphanesi ile ViT-B-16 backbone, laion400m_e32 pretrained weights. model.visual → image encoder (ViT), model.encode_text → text encoder. Tokenizer ayrıca yükleniyor.",
-      "context": "ML Lab · Session 9 (Lab 8)",
+      "context": "ML Lab · Session 8 (Lab 8)",
       "sections": [
         {
           "type": "code",
@@ -11748,7 +11813,7 @@
       "title": "Modified Image Encoder — Task 4 (qq/kk Attention)",
       "cat": "CLIP",
       "summary": "Standart attention: q @ k.T (query-key). Modified attention: son ViT bloğunda q @ q.T (qq) ve k @ k.T (kk) ayrı ayrı hesaplanır, birleştirilir. Patch-level feature kalitesini artırmak için.",
-      "context": "ML Lab · Session 9 (Lab 8)",
+      "context": "ML Lab · Session 8 (Lab 8)",
       "sections": [
         {
           "type": "text",
@@ -11776,7 +11841,7 @@
       "title": "Text Classifier — Task 5",
       "cat": "CLIP",
       "summary": "Normal ve anormal için ayrı text embedding'leri üretiliyor. Her state prompt'u (7 normal, 4 anormal) 22 template ile çarpışarak genişletiliyor. Tüm kombinasyonların ortalaması alınıyor.",
-      "context": "ML Lab · Session 9 (Lab 8)",
+      "context": "ML Lab · Session 8 (Lab 8)",
       "sections": [
         {
           "type": "list",
@@ -11806,7 +11871,7 @@
       "title": "Anomaly Heatmap — Task 6",
       "cat": "Anomaly Detection",
       "summary": "Patch token'lar × text embedding'ler → cosine similarity → softmax → her patch için anormal olasılığı. Spatial heatmap olarak görselleştirme.",
-      "context": "ML Lab · Session 9 (Lab 8)",
+      "context": "ML Lab · Session 8 (Lab 8)",
       "sections": [
         {
           "type": "code",
@@ -11842,7 +11907,7 @@
       "title": "Zero-shot Anomaly Detection — Genel Bakış",
       "cat": "Anomaly Detection",
       "summary": "Klasik anomaly detection (autoencoder reconstruction error) vs CLIP-based zero-shot. CLIP yaklaşımı eğitim verisi gerektirmiyor — metin açıklaması yeterli. MVTec kategorileri arasında transfer edilebilir.",
-      "context": "ML Lab · Session 9 (Lab 8)",
+      "context": "ML Lab · Session 8 (Lab 8)",
       "sections": [
         {
           "type": "compare",
