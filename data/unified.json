@@ -4,7 +4,7 @@
       "title": "What is Machine Learning?",
       "cat": "Foundations",
       "summary": "ML is the field where computers learn to perform tasks from experience without being explicitly programmed. Tom Mitchell's definition ties together task, performance, and experience into a formal framework that covers everything from spam filters to self-driving cars.",
-      "context": "Lecture 1 · 11.10.2023 — Course opening",
+      "context": "Lecture 1 — Course opening",
       "sections": [
         {
           "type": "text",
@@ -32,7 +32,7 @@
       "title": "Types of Learning",
       "cat": "Foundations",
       "summary": "ML algorithms differ fundamentally by the type of supervision they receive. The choice of paradigm determines what kind of data is needed, what problems can be solved, and how performance is measured — understanding this taxonomy is essential before picking an algorithm.",
-      "context": "Lecture 1 · 11.10.2023 — Taxonomy",
+      "context": "Lecture 1 — Taxonomy",
       "sections": [
         {
           "type": "table",
@@ -105,7 +105,7 @@
       "title": "Probability Theory Essentials",
       "cat": "Foundations",
       "summary": "Probability theory is the mathematical language of ML. The sum rule, product rule, and Bayes theorem are not just formulas — they are the fundamental operations for reasoning under uncertainty, and underlie everything from Bayes Decision Theory to variational autoencoders.",
-      "context": "Lecture 1 · 11.10.2023 — Math prerequisites",
+      "context": "Lecture 1 — Math prerequisites",
       "sections": [
         {
           "type": "formula",
@@ -133,7 +133,7 @@
       "title": "Model Complexity and Generalisation",
       "cat": "Model-Complexity",
       "summary": "Training error alone is a useless metric — what matters is performance on unseen data (generalisation). The bias-variance tradeoff explains why both too-simple and too-complex models fail, and regularisation is the principled way to navigate between them.",
-      "context": "Lecture 1 · 11.10.2023 — Bias-variance tradeoff",
+      "context": "Lecture 1 — Bias-variance tradeoff",
       "sections": [
         {
           "type": "text",
@@ -180,7 +180,7 @@
       "title": "Course Roadmap",
       "cat": "Foundations",
       "summary": "The course builds from theoretical foundations (probability, decision theory) through classical ML (Bayes, discriminants, SVMs, boosting) to modern deep learning (NNs, CNNs, RNNs, Transformers). Understanding the classical methods is essential — deep learning didn't replace them, it extended them.",
-      "context": "Lecture 1 · 11.10.2023 — Course overview",
+      "context": "Lecture 1 — Course overview",
       "sections": [
         {
           "type": "list",
@@ -213,7 +213,7 @@
       "title": "Prior, Likelihood, and Posterior",
       "cat": "Foundations",
       "summary": "Bayes Decision Theory is the gold standard for classification: given perfect knowledge of distributions, it tells us the theoretically optimal decision rule. In practice we never have this perfect knowledge, but the theory tells us what every classifier is trying to approximate.",
-      "context": "Lecture 2 · 16.10.2023 — The probabilistic foundation of classification",
+      "context": "Lecture 2 — The probabilistic foundation of classification",
       "sections": [
         {
           "type": "text",
@@ -241,7 +241,7 @@
       "title": "Loss Functions and the Reject Option",
       "cat": "Classification",
       "summary": "Simply minimising misclassification rate is not always the right objective. In medical diagnosis, misclassifying a sick patient as healthy is far more costly than the reverse. A general loss matrix captures asymmetric costs, leading to decision rules that shift the boundary toward the more dangerous error.",
-      "context": "Lecture 2 · 16.10.2023 — Optimal decision making under loss",
+      "context": "Lecture 2 — Optimal decision making under loss",
       "sections": [
         {
           "type": "text",
@@ -286,7 +286,7 @@
       "title": "Three Approaches to Classification",
       "cat": "Classification",
       "summary": "There are three fundamentally different ways to build a classifier, and understanding their tradeoffs is one of the most important conceptual lessons of the course. The choice affects sample efficiency, robustness, interpretability, and what the model can do beyond classification.",
-      "context": "Lecture 2 · 16.10.2023 — Connecting theory to practice",
+      "context": "Lecture 2 — Connecting theory to practice",
       "sections": [
         {
           "type": "table",
@@ -512,7 +512,7 @@
       "title": "EM Algorithm and Gaussian Mixture Models",
       "cat": "Mixture-Models",
       "summary": "A single Gaussian cannot capture multi-modal data. GMMs mix K Gaussians with different parameters. The EM algorithm provides an elegant iterative procedure: E-step computes soft cluster assignments, M-step re-estimates parameters using those assignments.",
-      "context": "Lecture 5 · 25.10.2023 — Unsupervised density modelling",
+      "context": "Lecture 5 — Unsupervised density modelling",
       "sections": [
         {
           "type": "formula",
@@ -571,7 +571,7 @@
       "title": "Discriminant Functions and Decision Surfaces",
       "cat": "Linear-Models",
       "summary": "Linear discriminant functions assign classes via $y(x) = w^\\top x + w_0$. The decision boundary $y(x)=0$ is a hyperplane perpendicular to $w$. This simple model is the foundation for SVMs, logistic regression, and linear layers in neural networks.",
-      "context": "Lecture 6 · 08.11.2023 — From Bayes to direct classifiers",
+      "context": "Lecture 6 — From Bayes to direct classifiers",
       "sections": [
         {
           "type": "formula",
@@ -616,7 +616,7 @@
       "title": "Least-Squares Classification",
       "cat": "Learning-Algorithms",
       "summary": "Least-squares finds the weight matrix $W$ by minimising the sum of squared differences between model outputs and target labels. It has a closed-form solution via the pseudo-inverse, but is surprisingly poor for classification — it penalises 'too-correct' predictions.",
-      "context": "Lecture 6 · 08.11.2023 — A closed-form classifier",
+      "context": "Lecture 6 — A closed-form classifier",
       "sections": [
         {
           "type": "formula",
@@ -817,7 +817,7 @@
       "title": "Hard-Margin SVM: Formulation",
       "cat": "Hard-Margin-SVM",
       "summary": "The hard-margin SVM finds the maximum-margin hyperplane via a constrained quadratic programme. The solution depends only on a sparse subset of training points — the support vectors — which lie exactly on the margin boundary.",
-      "context": "Lecture 9 · 22.11.2023 — The primal SVM problem",
+      "context": "Lecture 9 — The primal SVM problem",
       "sections": [
         {
           "type": "formula",
@@ -850,7 +850,7 @@
       "title": "Soft-Margin SVM",
       "cat": "Soft-Margin-SVM",
       "summary": "Real data is rarely perfectly linearly separable. Slack variables $\\xi_n$ allow constraint violations, controlled by hyperparameter $C$. Large $C$ → narrow margin, few violations (may overfit). Small $C$ → wide margin, many violations (may underfit).",
-      "context": "Lecture 10 · 29.11.2023 — Handling non-separable data",
+      "context": "Lecture 10 — Handling non-separable data",
       "sections": [
         {
           "type": "formula",
@@ -873,7 +873,7 @@
       "title": "Kernel Trick",
       "cat": "Kernel-Methods",
       "summary": "The SVM dual depends on training points only through inner products $x_n^\\top x_m$. Replacing this with $k(x_n,x_m) = \\phi(x_n)^\\top\\phi(x_m)$ implicitly maps data to a high-dimensional feature space without ever computing the explicit mapping.",
-      "context": "Lecture 10 · 29.11.2023 — Non-linear classification",
+      "context": "Lecture 10 — Non-linear classification",
       "sections": [
         {
           "type": "text",
@@ -967,7 +967,7 @@
       "title": "AdaBoost Algorithm",
       "cat": "Algorithm",
       "summary": "AdaBoost (Freund & Schapire, 1996) builds a strong classifier by sequentially training weak learners on reweighted data, focusing each new learner on the mistakes of previous ones. The final model is a weighted majority vote.",
-      "context": "Lecture 11 · 29.11.2023 — Sequential ensemble learning",
+      "context": "Lecture 11 — Sequential ensemble learning",
       "sections": [
         {
           "type": "formula",
@@ -1039,7 +1039,7 @@
       "title": "From Perceptron to MLP: History",
       "cat": "Foundations",
       "summary": "Neural networks have a rich history of hype and setbacks. The Rosenblatt perceptron (1957) started AI optimism; Minsky & Papert (1969) showed its limits with XOR; backpropagation (Rumelhart 1986) revived the field; deep learning (2012+) transformed it.",
-      "context": "Lecture 12 · 04.12.2023 — Historical and conceptual foundations",
+      "context": "Lecture 12 — Historical and conceptual foundations",
       "sections": [
         {
           "type": "table",
@@ -1376,7 +1376,7 @@
       "title": "Momentum and Adaptive Optimisers",
       "cat": "Adaptive-Methods",
       "summary": "Plain SGD struggles with ill-conditioned loss landscapes. Momentum accumulates gradient history for faster convergence. Adam combines momentum with per-parameter adaptive learning rates and is the default choice for deep learning.",
-      "context": "Lecture 15 · 20.12.2023 — Beyond plain gradient descent",
+      "context": "Lecture 15 — Beyond plain gradient descent",
       "sections": [
         {
           "type": "formula",
@@ -1404,7 +1404,7 @@
       "title": "Batch Normalisation",
       "cat": "Regularization",
       "summary": "Batch Normalisation (Ioffe & Szegedy, 2014) normalises layer activations within each mini-batch, then rescales with learnable parameters. It dramatically stabilises training, allows higher learning rates, and acts as a regulariser.",
-      "context": "Lecture 15 · 20.12.2023 — Stabilising deep network training",
+      "context": "Lecture 15 — Stabilising deep network training",
       "sections": [
         {
           "type": "formula",
@@ -1438,7 +1438,7 @@
       "title": "Adam, SGD+Momentum ve AdamW — Tam Açıklama",
       "cat": "Adaptive-Methods",
       "summary": "Vanilla gradient descent iki problemle boğuşur: gradient zigzag çizer ve tüm parametreler aynı hızda güncellenir. SGD+Momentum zigzag'ı çözer, Adam ikisini birden çözer, AdamW ise Adam'ın bozuk weight decay'ini düzeltir.",
-      "context": "Lecture 15 · 20.12.2023 — Beyond plain gradient descent",
+      "context": "Lecture 15 — Beyond plain gradient descent",
       "sections": [
         {
           "type": "text",
@@ -1554,7 +1554,7 @@
       "title": "Regularization ve Weight Decay",
       "cat": "Regularization",
       "summary": "Model loss düşürmek için weight'leri büyütmeye meyillidir — bu overfitting'e yol açar. Regularization, loss'a complexity penalty ekleyerek modeli basit kalmaya zorlar. Weight decay (L2) büyük weight'leri pahalı hale getirir, böylece model sadece gerçekten önemli pattern'ler için weight büyütür.",
-      "context": "Lecture 15 · 20.12.2023 — Preventing overfitting",
+      "context": "Lecture 15 — Preventing overfitting",
       "sections": [
         {
           "type": "text",
@@ -1670,7 +1670,7 @@
       "title": "Weight Initialization ve Batch Normalization",
       "cat": "Regularization",
       "summary": "Weight initialization training başlamadan önce bir kere yapılır — başlangıç çok büyük veya küçük olursa gradient'ler patlar ya da sıfırlanır. Batch normalization ise training boyunca her mini-batch'te çalışır, her layer'ın input dağılımını stabil tutar.",
-      "context": "Lecture 15 · 20.12.2023 — Preventing overfitting and starting well",
+      "context": "Lecture 15 — Preventing overfitting and starting well",
       "sections": [
         {
           "type": "text",
@@ -1744,7 +1744,7 @@
       "title": "Regularisation and Initialisation",
       "cat": "Learning-Rate",
       "summary": "Dropout randomly zeros activations during training, forcing redundancy. Glorot/He initialisation ensures gradients neither vanish nor explode at the start of training — crucial for training deep networks from scratch.",
-      "context": "Lecture 15 · 20.12.2023 — Preventing overfitting and starting well",
+      "context": "Lecture 15 — Preventing overfitting and starting well",
       "sections": [
         {
           "type": "formula",
@@ -1793,7 +1793,7 @@
       "title": "Motivation for CNNs",
       "cat": "Building-Blocks",
       "summary": "Fully connected networks applied to images are computationally infeasible and ignore spatial structure. CNNs exploit three properties of natural images — locality, translation equivariance, and hierarchical composition — dramatically reducing parameters while improving performance.",
-      "context": "Lectures 15–16 · 20.12.2023–08.01.2024 — Vision-specific inductive biases",
+      "context": "Lectures 15–16–08.01.2024 — Vision-specific inductive biases",
       "sections": [
         {
           "type": "text",
@@ -1820,7 +1820,7 @@
       "title": "Convolution and Pooling",
       "cat": "Building-Blocks",
       "summary": "A convolutional filter slides over the input computing dot products at each position, giving translation equivariance and parameter sharing. Pooling reduces spatial resolution creating translation invariance and reducing computation.",
-      "context": "Lectures 15–16 · 20.12.2023–08.01.2024 — Core CNN operations",
+      "context": "Lectures 15–16–08.01.2024 — Core CNN operations",
       "sections": [
         {
           "type": "formula",
@@ -2001,7 +2001,7 @@
       "title": "From N-grams to Neural Language Models",
       "cat": "Foundations",
       "summary": "Classical n-gram models struggle with data sparsity: most n-grams are never seen in training. Neural language models (Bengio et al., 2003) solve this by learning continuous word representations — the first word embeddings — that generalise across similar words.",
-      "context": "Lecture 18 · 22.01.2024 — Representing language",
+      "context": "Lecture 18 — Representing language",
       "sections": [
         {
           "type": "text",
@@ -2024,7 +2024,7 @@
       "title": "Word2Vec: CBOW and Skip-gram",
       "cat": "Word2Vec",
       "summary": "Word2Vec (Mikolov et al., 2013) trains shallow neural networks specifically to produce word embeddings. CBOW predicts the centre word from context; Skip-gram predicts context words from the centre. Skip-gram produces better semantic embeddings.",
-      "context": "Lecture 18 · 22.01.2024 — Learning word representations",
+      "context": "Lecture 18 — Learning word representations",
       "sections": [
         {
           "type": "formula",
@@ -2064,7 +2064,7 @@
       "title": "Word Embedding Properties",
       "cat": "Properties",
       "summary": "Well-trained word embeddings capture rich semantic and syntactic structure. The famous king − man + woman ≈ queen analogy shows that semantic relationships are encoded as linear vector offsets — geometry in embedding space mirrors meaning.",
-      "context": "Lecture 18 · 22.01.2024 — What embeddings learn",
+      "context": "Lecture 18 — What embeddings learn",
       "sections": [
         {
           "type": "text",
@@ -2111,7 +2111,7 @@
       "title": "Sequence Modelling and RNN Architecture",
       "cat": "Architecture",
       "summary": "RNNs process sequences by maintaining a hidden state that is updated at each step with the current input — a 'memory' that carries context forward. Weight sharing across time makes them parameter-efficient and handles variable-length sequences naturally.",
-      "context": "Lecture 19 · 22.01.2024 — Modelling ordered data",
+      "context": "Lecture 19 — Modelling ordered data",
       "sections": [
         {
           "type": "formula",
@@ -2165,7 +2165,7 @@
       "title": "Backpropagation Through Time and Vanishing Gradients",
       "cat": "Training",
       "summary": "Training RNNs requires unrolling through time and applying backprop (BPTT). Gradients must flow backward through potentially hundreds of timesteps — through a product of weight matrices that causes them to vanish or explode exponentially.",
-      "context": "Lecture 19 · 22.01.2024 — Why plain RNNs struggle",
+      "context": "Lecture 19 — Why plain RNNs struggle",
       "sections": [
         {
           "type": "formula",
@@ -2205,7 +2205,7 @@
       "title": "LSTM: Gated Memory",
       "cat": "LSTM",
       "summary": "LSTM (Hochreiter & Schmidhuber, 1997) adds a cell state $C_t$ — a 'memory tape' — alongside the hidden state. Gating mechanisms precisely control what is remembered, forgotten, and written, creating a gradient highway that solves vanishing gradients.",
-      "context": "Lecture 19 · 22.01.2024 — The gated solution",
+      "context": "Lecture 19 — The gated solution",
       "sections": [
         {
           "type": "formula",
@@ -2233,7 +2233,7 @@
       "title": "Attention Mechanism: Adım Adım Tam Akış",
       "cat": "Attention",
       "summary": "Çok iyi anlamışsın, boşlukları doldurayım.",
-      "context": "Lecture 20 · 24.01.2024 — Attention Models (Bahdanau et al. 2015)",
+      "context": "Lecture 20 — Attention Models (Bahdanau et al. 2015)",
       "sections": [
         {
           "type": "code",
@@ -2266,7 +2266,7 @@
       "title": "Attention: Image Captioning Adım Adım",
       "cat": "Attention",
       "summary": "Language translation'dan tek farkı encoder kısmı — RNN yerine CNN. Attention mekanizması tamamen aynı, sadece neye attention yapıldığı değişiyor: hangi kaynak kelime → resmin hangi bölgesi.",
-      "context": "Lecture 20 · 24.01.2024 — Image Captioning with Attention (Xu et al. ICML 2015)",
+      "context": "Lecture 20 — Image Captioning with Attention (Xu et al. ICML 2015)",
       "sections": [
         {
           "type": "code",
@@ -2309,7 +2309,7 @@
       "title": "Vanilla RNN vs Attention — Adım Adım Karşılaştırma",
       "cat": "Attention",
       "summary": "Vanilla seq2seq RNN tüm input sequence'ı tek bir context vector'e sıkıştırır — decoder her adımda aynı c'ye bakar. Attention'da encoder'ın tüm hidden state'leri saklanır, her decoder adımı kendi context vector'ünü hesaplar ve farklı encoder token'larına odaklanabilir.",
-      "context": "Lecture 20 · 24.01.2024 — Attention Models (Bahdanau et al. 2015)",
+      "context": "Lecture 20 — Attention Models (Bahdanau et al. 2015)",
       "sections": [
         {
           "type": "code",
@@ -2412,7 +2412,7 @@
       "title": "GRU and Seq2Seq with Attention",
       "cat": "GRU",
       "summary": "GRU (Cho et al., 2014) simplifies LSTM to two gates and no separate cell state. Seq2seq with attention (Bahdanau 2015) solves the information bottleneck of compressing a whole sequence into one vector by giving the decoder dynamic access to all encoder states.",
-      "context": "Lectures 19–20 · 22.01.2024 — Simplification and the path to Transformers",
+      "context": "Lectures 19–20 — Simplification and the path to Transformers",
       "sections": [
         {
           "type": "formula",
@@ -2447,7 +2447,7 @@
       "title": "RNN Attention'dan Self-Attention'a: h'ı Neden Kaldırdık?",
       "cat": "Attention",
       "summary": "RNN encoder-decoder attention'da alignment ve context vector decoder'ın hidden state h'ına bağlıydı — decoder feedback olmadan çalışmıyordu. Self-attention bu bağımlılığı kaldırıyor: h'ı da inputtan üretiyor, decoder'a gerek kalmıyor.",
-      "context": "Lecture 21 · 29.01.2024 — General Attention Layer → Self-Attention geçişi",
+      "context": "Lecture 21 — General Attention Layer → Self-Attention geçişi",
       "sections": [
         {
           "type": "text",
@@ -2506,7 +2506,7 @@
       "title": "Multi-Head Attention — Mantık ve Matematik",
       "cat": "Attention",
       "summary": "Multi-head attention, D boyutunu H parçaya bölerek her head'in farklı bir ilişki türü öğrenmesini sağlar. Her head X'ten kendi Q, K, V'sini üretir; scaled dot-product attention hesaplar; sonuçlar concat edilip W_O ile birleştirilir.",
-      "context": "Lecture 21 · 29.01.2024 — Multi-Head Attention (Slide 32–38)",
+      "context": "Lecture 21 — Multi-Head Attention (Slide 32–38)",
       "sections": [
         {
           "type": "text",
@@ -2619,7 +2619,7 @@
       "title": "General Attention Layer: Image Captioning'den Self-Attention'a",
       "cat": "Attention",
       "summary": "Image captioning attention'dan başlayarak adım adım general attention layer'a, oradan da self-attention'a nasıl gelindiğinin evrimi. Her adım bir şeyi değiştiriyor: MLP → dot product → scale → multi-query → key/value ayrımı → self-attention.",
-      "context": "Lecture 21 · 29.01.2024 — General Attention Layer (Slide 17–31)",
+      "context": "Lecture 21 — General Attention Layer (Slide 17–31)",
       "sections": [
         {
           "type": "code",
@@ -2667,7 +2667,7 @@
       "title": "Query, Key, Value — Neden Üç Ayrı Vektör?",
       "cat": "Attention",
       "summary": "Key ve Value neden ayrı? Çünkü 'nasıl bulunacağın' ile 'ne içerdiğin' farklı şeyler. İkisini ayırınca model ikisini de bağımsız optimize edebiliyor.",
-      "context": "Lecture 21 · 29.01.2024 — General Attention Layer (Slide 26–27)",
+      "context": "Lecture 21 — General Attention Layer (Slide 26–27)",
       "sections": [
         {
           "type": "code",
@@ -2700,7 +2700,7 @@
       "title": "Self-Attention: The Core Mechanism",
       "cat": "Attention",
       "summary": "Self-attention allows every position in a sequence to directly attend to every other position, computing a weighted sum of value vectors. This gives O(1) dependency path length (vs O(n) for RNNs) and full parallelisation — at the cost of O(n²) attention computation.",
-      "context": "Lecture 21 · 29.01.2024 — The key Transformer idea",
+      "context": "Lecture 21 — The key Transformer idea",
       "sections": [
         {
           "type": "formula",
@@ -2745,7 +2745,7 @@
       "title": "Positional Encoding",
       "cat": "Attention",
       "summary": "Self-attention permutation invariant — token sırası önemsiz. Pozisyon bilgisi eklemek için her token'a bir positional encoding vektörü toplanır. Sinusoidal encoding parametre gerektirmez ve eğitimde görülmeyen uzunluklara genelleşir.",
-      "context": "Lecture 21 · 29.01.2024 — Positional Encoding (Slide 33–37)",
+      "context": "Lecture 21 — Positional Encoding (Slide 33–37)",
       "sections": [
         {
           "type": "code",
@@ -2778,7 +2778,7 @@
       "title": "Key Varken Positional Encoding Neden Gerekli?",
       "cat": "Attention",
       "summary": "Key semantiği biliyor — 'ben noun'um, canlıyım'. Ama pozisyonu bilmiyor. 'cat bites dog' ve 'dog bites cat'te x_cat embedding'i aynı, k_cat aynı. Model kim subject kim object ayırt edemiyor. PE pozisyonu Key'e yansıtıyor.",
-      "context": "Lecture 21 · 29.01.2024 — Positional Encoding motivasyonu",
+      "context": "Lecture 21 — Positional Encoding motivasyonu",
       "sections": [
         {
           "type": "code",
@@ -2811,7 +2811,7 @@
       "title": "Multi-Head Attention and Positional Encoding",
       "cat": "Attention",
       "summary": "Multi-head attention runs h attention heads in parallel, each learning different relationship types. Positional encoding injects position information since self-attention is permutation-equivariant — without it, word order is invisible to the model.",
-      "context": "Lecture 21 · 29.01.2024 — Attention extensions",
+      "context": "Lecture 21 — Attention extensions",
       "sections": [
         {
           "type": "formula",
@@ -2839,7 +2839,7 @@
       "title": "Transformer Architecture",
       "cat": "Architecture",
       "summary": "The full Transformer (Vaswani et al. 2017) stacks N encoder blocks (bidirectional self-attention + FFN) and N decoder blocks (masked self-attention + cross-attention + FFN). Residual connections and layer normalisation at every sub-layer are essential for stable training.",
-      "context": "Lecture 21 · 29.01.2024 — The full architecture",
+      "context": "Lecture 21 — The full architecture",
       "sections": [
         {
           "type": "formula",
@@ -2867,7 +2867,7 @@
       "title": "Encoder'dan Decoder'a: Tam Mimari ve Boyutlar",
       "cat": "Architecture",
       "summary": "Transformer mimarisinin encoder girişinden decoder çıkışına tam akışı, IDA notasyonu ve boyutlarıyla. n = kaynak uzunluğu, m = hedef uzunluğu, d_model=512, H=8, d_k=d_v=64, N=6.",
-      "context": "Lecture 21 · 29.01.2024 — Full Transformer Architecture",
+      "context": "Lecture 21 — Full Transformer Architecture",
       "sections": [
         {
           "type": "code",
@@ -2930,7 +2930,7 @@
       "title": "Transformer (LLM) — Baştan Sona",
       "cat": "Architecture",
       "summary": "LLM'in token embedding'den sonraki token tahminine kadar tam akışı: tokenization, positional encoding, multi-head attention (Q/K/V projeksiyonları, attention weights, weighted sum), W_O projeksiyonu, residual + layer norm, FFN ve bloğun üst üste yığılması.",
-      "context": "Lecture 21 · 29.01.2024 — Transformer tam mimarisi",
+      "context": "Lecture 21 — Transformer tam mimarisi",
       "sections": [
         {
           "type": "text",
@@ -3066,7 +3066,7 @@
       "title": "BERT and GPT: Pre-trained Transformers",
       "cat": "Pretrained-Models",
       "summary": "Pre-trained Transformers showed that training on massive unlabeled text produces representations that transfer to dozens of tasks with minimal fine-tuning. BERT uses bidirectional encoder attention; GPT uses causal decoder attention (next-token prediction).",
-      "context": "Lecture 21 · 29.01.2024 — The era of pre-trained LLMs",
+      "context": "Lecture 21 — The era of pre-trained LLMs",
       "sections": [
         {
           "type": "compare",
@@ -3115,7 +3115,7 @@
       "title": "Lecture 1 — Q & A",
       "cat": "Fundamentals",
       "summary": "IDA Lecture 1'in tüm sınav soruları ve sade açıklamalarla cevapları. Image analysis alanı, CT, MRI, ultrason, floresan mikroskopi, konfokal, light-sheet ve elektron mikroskobu.",
-      "context": "Lecture 01 · 19.10.2023 — Introduction to Image Data Analysis",
+      "context": "Lecture 01 — Introduction to Image Data Analysis",
       "sections": [
         {
           "type": "code",
@@ -3168,7 +3168,7 @@
       "title": "Image Representation and Digitization",
       "cat": "Fundamentals",
       "summary": "A digital image is a 2D array of pixels, each storing an intensity or color value. Continuous scenes are sampled spatially (resolution) and quantised in amplitude (bit depth). Understanding these steps is essential for every downstream processing task.",
-      "context": "Lecture 01 · 12.10.2023 — Introduction to IDA",
+      "context": "Lecture 01 — Introduction to IDA",
       "sections": [
         {
           "type": "formula",
@@ -3233,7 +3233,7 @@
       "title": "Histograms and Histogram Equalization",
       "cat": "Fundamentals",
       "summary": "The intensity histogram captures the global distribution of pixel values. Histogram equalization redistributes intensities to maximally exploit the available dynamic range, enhancing contrast especially in low-contrast images.",
-      "context": "Lecture 01 · 12.10.2023 — Basic image statistics",
+      "context": "Lecture 01 — Basic image statistics",
       "sections": [
         {
           "type": "formula",
@@ -3256,7 +3256,7 @@
       "title": "Image Connectivity and Morphological Basics",
       "cat": "Fundamentals",
       "summary": "Connectivity defines which pixels are 'neighbours'. 4-connectivity uses horizontal/vertical neighbours; 8-connectivity adds diagonals. Connected component labelling groups pixels into discrete objects — the foundation for object counting and region analysis.",
-      "context": "Lecture 01 · 12.10.2023 — Structural image analysis",
+      "context": "Lecture 01 — Structural image analysis",
       "sections": [
         {
           "type": "compare",
@@ -3305,7 +3305,7 @@
       "title": "Lecture 2 — Q & A",
       "cat": "Filtering",
       "summary": "IDA Lecture 2'nin tüm sınav soruları ve sade açıklamalarla cevapları. Dijital görüntü temsili, yoğunluk dönüşümleri, histogram, konvolüsyon, separable filterlar, frekans alanı, median, morfolojik operasyonlar.",
-      "context": "Lecture 02 · 26.10.2023 — Basic Image Processing Toolbox",
+      "context": "Lecture 02 — Basic Image Processing Toolbox",
       "sections": [
         {
           "type": "code",
@@ -3358,7 +3358,7 @@
       "title": "Convolution and Linear Filtering",
       "cat": "Filtering",
       "summary": "Convolution is the fundamental operation in image processing: a kernel (filter) slides over the image, computing a weighted sum at each position. It is the basis for blurring, sharpening, edge detection, and is the mathematical heart of CNNs.",
-      "context": "Lecture 02 · 19.10.2023 — Basic Toolbox",
+      "context": "Lecture 02 — Basic Toolbox",
       "sections": [
         {
           "type": "formula",
@@ -3417,7 +3417,7 @@
       "title": "Morphological Operations",
       "cat": "Morphology",
       "summary": "Morphological operations (erosion, dilation, opening, closing) manipulate binary or grayscale images using a structuring element. They are essential for noise removal, object separation, hole filling, and shape analysis in segmentation pipelines.",
-      "context": "Lecture 02 · 19.10.2023 — Shape-based image processing",
+      "context": "Lecture 02 — Shape-based image processing",
       "sections": [
         {
           "type": "formula",
@@ -3457,7 +3457,7 @@
       "title": "Fourier Transform and Frequency Domain Analysis",
       "cat": "Frequency",
       "summary": "The Fourier Transform decomposes an image into sinusoidal components at different frequencies. Low frequencies encode global structure (background, large objects); high frequencies encode fine detail and edges. Frequency-domain filtering offers efficient implementation of large kernels.",
-      "context": "Lecture 02 · 19.10.2023 — Frequency domain methods",
+      "context": "Lecture 02 — Frequency domain methods",
       "sections": [
         {
           "type": "formula",
@@ -3535,7 +3535,7 @@
       "title": "Perceptron, MLP, and Backpropagation",
       "cat": "Foundations",
       "summary": "The perceptron is the atomic building block: a linear threshold unit. Stacking layers creates an MLP. Backpropagation — efficient reverse-mode automatic differentiation through the computational graph — is the algorithm that makes training deep networks feasible.",
-      "context": "Lecture 03 · 26.10.2023 — Deep Learning Crash Course",
+      "context": "Lecture 03 — Deep Learning Crash Course",
       "sections": [
         {
           "type": "formula",
@@ -3558,7 +3558,7 @@
       "title": "Convolutional Neural Networks (CNNs)",
       "cat": "Architecture",
       "summary": "CNNs replace fully-connected layers with local convolutions and pooling, exploiting two inductive biases of images: locality (pixels near each other are related) and translation equivariance (a cat detector should fire wherever the cat appears). This massively reduces parameters and improves generalisation.",
-      "context": "Lecture 03 · 26.10.2023 — CNN architecture essentials",
+      "context": "Lecture 03 — CNN architecture essentials",
       "sections": [
         {
           "type": "formula",
@@ -3618,7 +3618,7 @@
       "title": "Loss Functions and Regularisation for Image Tasks",
       "cat": "Training",
       "summary": "Choosing the right loss and regularisation strategy is crucial for image tasks. Cross-entropy for classification, MSE or L1 for regression. Dropout, weight decay, batch normalisation, and data augmentation prevent overfitting in data-limited image domains.",
-      "context": "Lecture 03 · 26.10.2023 — Practical training strategies",
+      "context": "Lecture 03 — Practical training strategies",
       "sections": [
         {
           "type": "formula",
@@ -3651,7 +3651,7 @@
       "title": "Lecture 4 — Q & A",
       "cat": "Classical",
       "summary": "IDA Lecture 4'ün tüm sınav soruları ve sade açıklamalarla cevapları. Template matching, Hough transform, R-CNN ailesi, YOLO, SSD, FPN, Focal Loss.",
-      "context": "Lecture 04 · 10.11.2023 — Object Detection",
+      "context": "Lecture 04 — Object Detection",
       "sections": [
         {
           "type": "code",
@@ -3709,7 +3709,7 @@
       "title": "Classical Object Detection: Template Matching and Hough Transform",
       "cat": "Classical",
       "summary": "Before deep learning, object detection relied on template matching (slide a prototype over the image) and the Hough Transform (vote for parametric shapes). Both are still relevant for constrained industrial inspection and geometrically regular objects.",
-      "context": "Lecture 04 · 09.11.2023 — Object Detection",
+      "context": "Lecture 04 — Object Detection",
       "sections": [
         {
           "type": "formula",
@@ -3727,7 +3727,7 @@
       "title": "Region-Based Detection: R-CNN Family",
       "cat": "Deep-Detection",
       "summary": "The R-CNN line of work brought deep learning to object detection by combining region proposal algorithms with CNN feature extraction. Each iteration — R-CNN, Fast R-CNN, Faster R-CNN — eliminated a bottleneck, ultimately reaching real-time performance.",
-      "context": "Lecture 04 · 09.11.2023 — Deep object detection evolution",
+      "context": "Lecture 04 — Deep object detection evolution",
       "sections": [
         {
           "type": "table",
@@ -3775,7 +3775,7 @@
       "title": "YOLO and Single-Stage Detection",
       "cat": "Deep-Detection",
       "summary": "YOLO (You Only Look Once) reframes detection as a single regression problem: one forward pass predicts all bounding boxes and class probabilities simultaneously. It achieves real-time performance by eliminating the region proposal stage entirely.",
-      "context": "Lecture 04 · 09.11.2023 — Real-time detection",
+      "context": "Lecture 04 — Real-time detection",
       "sections": [
         {
           "type": "formula",
@@ -3851,7 +3851,7 @@
       "title": "Feature Pyramid Networks and Focal Loss",
       "cat": "Deep-Detection",
       "summary": "FPN builds a multi-scale feature pyramid from a single backbone, enabling detection of objects at all scales. Focal Loss solves the extreme foreground/background class imbalance in single-stage detectors that previously forced two-stage designs.",
-      "context": "Lecture 04 · 09.11.2023 — Advanced detection components",
+      "context": "Lecture 04 — Advanced detection components",
       "sections": [
         {
           "type": "text",
@@ -3876,7 +3876,7 @@
       "title": "Lecture 5 — Q & A",
       "cat": "Fundamentals",
       "summary": "IDA Lecture 5'in tüm sınav soruları ve sade açıklamalarla cevapları. Semantic segmentation, active learning, U-Net, Mask R-CNN, RoIAlign, StarDist, Cellpose.",
-      "context": "Lecture 05 · 16.11.2023 — Machine Learning-based Image Segmentation",
+      "context": "Lecture 05 — Machine Learning-based Image Segmentation",
       "sections": [
         {
           "type": "code",
@@ -3929,7 +3929,7 @@
       "title": "Semantic vs Instance Segmentation",
       "cat": "Fundamentals",
       "summary": "Segmentation assigns a label to every pixel. Semantic segmentation gives each pixel a class label (all cells = class 1). Instance segmentation further distinguishes individual objects (cell A vs cell B). Panoptic segmentation combines both.",
-      "context": "Lecture 05 · 16.11.2023 — Image Segmentation",
+      "context": "Lecture 05 — Image Segmentation",
       "sections": [
         {
           "type": "compare",
@@ -3966,7 +3966,7 @@
       "title": "U-Net: Encoder-Decoder for Biomedical Segmentation",
       "cat": "Architecture",
       "summary": "U-Net (Ronneberger et al. 2015) introduced the encoder-decoder with skip connections for biomedical image segmentation. The skip connections preserve fine spatial detail lost during downsampling, achieving state-of-the-art results with very limited training data.",
-      "context": "Lecture 05 · 16.11.2023 — U-Net architecture",
+      "context": "Lecture 05 — U-Net architecture",
       "sections": [
         {
           "type": "text",
@@ -3989,7 +3989,7 @@
       "title": "Mask R-CNN and Instance Segmentation",
       "cat": "Instance",
       "summary": "Mask R-CNN extends Faster R-CNN by adding a small FCN mask head parallel to the box/class head. Combined with RoI Align (replacing RoI Pooling), it predicts per-instance binary masks without interfering with classification performance.",
-      "context": "Lecture 05 · 16.11.2023 — Instance segmentation with Mask R-CNN",
+      "context": "Lecture 05 — Instance segmentation with Mask R-CNN",
       "sections": [
         {
           "type": "text",
@@ -4026,7 +4026,7 @@
       "title": "Cellpose and StarDist: Biology-Inspired Segmentation",
       "cat": "Biology",
       "summary": "Cellpose and StarDist are purpose-built instance segmentation methods for biological cells. Cellpose predicts vector flows toward each cell centre; StarDist represents cells as star-convex polygons. Both dramatically outperform generic methods on biological imagery.",
-      "context": "Lecture 05 · 16.11.2023 — Specialised cell segmentation",
+      "context": "Lecture 05 — Specialised cell segmentation",
       "sections": [
         {
           "type": "text",
@@ -4046,7 +4046,7 @@
       "title": "Lecture 6 — Q & A",
       "cat": "Filtering",
       "summary": "IDA Lecture 6'nın tüm sınav soruları ve sade açıklamalarla cevapları. Nesne takibi, nearest neighbor, supervoxel+GMM, Viterbi, GOTURN, optical flow, FlowNet.",
-      "context": "Lecture 06 · 23.11.2023 — Object Tracking",
+      "context": "Lecture 06 — Object Tracking",
       "sections": [
         {
           "type": "code",
@@ -4094,7 +4094,7 @@
       "title": "Kalman Filter for Object Tracking",
       "cat": "Filtering",
       "summary": "The Kalman filter is the optimal linear estimator for tracking objects under Gaussian noise. It alternates between a predict step (propagate state estimate forward using a motion model) and an update step (correct with new observations). Essential for multi-object tracking (MOT).",
-      "context": "Lecture 06 · 23.11.2023 — Object Tracking",
+      "context": "Lecture 06 — Object Tracking",
       "sections": [
         {
           "type": "formula",
@@ -4134,7 +4134,7 @@
       "title": "Hungarian Algorithm and Multi-Object Tracking",
       "cat": "Assignment",
       "summary": "Multi-object tracking (MOT) is a two-step process: detect objects in each frame, then associate detections across frames. The Hungarian algorithm solves the bipartite matching assignment problem optimally — matching predicted track positions to new detections.",
-      "context": "Lecture 06 · 23.11.2023 — Multi-object tracking pipeline",
+      "context": "Lecture 06 — Multi-object tracking pipeline",
       "sections": [
         {
           "type": "text",
@@ -4152,7 +4152,7 @@
       "title": "Optical Flow and Deep Learning Trackers",
       "cat": "Deep-Tracking",
       "summary": "Optical flow estimates per-pixel motion between frames. FlowNet introduced end-to-end deep optical flow estimation. GOTURN was among the first deep learning object trackers, framing tracking as regression from a siamese CNN.",
-      "context": "Lecture 06 · 23.11.2023 — Deep approaches to motion estimation",
+      "context": "Lecture 06 — Deep approaches to motion estimation",
       "sections": [
         {
           "type": "formula",
@@ -4172,7 +4172,7 @@
       "title": "Lecture 7 — Q & A",
       "cat": "Motivation",
       "summary": "IDA Lecture 7'nin tüm sınav soruları ve sade açıklamalarla cevapları. RNN, attention mekanizması, Transformer mimarisi, ViT, DETR.",
-      "context": "Lecture 07 · 30.11.2023 — Attention and Transformers",
+      "context": "Lecture 07 — Attention and Transformers",
       "sections": [
         {
           "type": "code",
@@ -4235,7 +4235,7 @@
       "title": "From RNNs to Self-Attention in Vision",
       "cat": "Motivation",
       "summary": "RNNs modelled sequential data but struggled with long-range dependencies and couldn't parallelise. Self-attention allows every pixel/patch to directly attend to every other, enabling global context modelling in a single layer. This is the key motivation for applying Transformers to images.",
-      "context": "Lecture 07 · 30.11.2023 — Attention and Transformers",
+      "context": "Lecture 07 — Attention and Transformers",
       "sections": [
         {
           "type": "text",
@@ -4253,7 +4253,7 @@
       "title": "Vision Transformer (ViT)",
       "cat": "Transformers",
       "summary": "ViT (Dosovitskiy et al. 2020) applies the standard NLP Transformer directly to sequences of image patches. With sufficient data and scale, it matches or surpasses CNN performance, showing that the inductive biases of CNNs (locality, equivariance) can be learned rather than hard-coded.",
-      "context": "Lecture 07 · 30.11.2023 — Vision Transformer architecture",
+      "context": "Lecture 07 — Vision Transformer architecture",
       "sections": [
         {
           "type": "formula",
@@ -4404,7 +4404,7 @@
       "title": "DETR: Detection with Transformers",
       "cat": "Transformers",
       "summary": "DETR (Carion et al. 2020) reformulates object detection as a set prediction problem. It eliminates hand-crafted anchors and NMS entirely, using learned object queries and bipartite matching to produce exactly N detections per image.",
-      "context": "Lecture 07 · 30.11.2023 — End-to-end detection",
+      "context": "Lecture 07 — End-to-end detection",
       "sections": [
         {
           "type": "text",
@@ -4422,7 +4422,7 @@
       "title": "Swin Transformer: Hierarchical Window Attention",
       "cat": "Transformers",
       "summary": "Swin Transformer (Liu et al. 2021) restores the hierarchical multi-scale feature maps of CNNs while using self-attention. It computes attention within local windows (not globally), reducing complexity from O(N²) to O(N), and shifts windows between layers for cross-window communication.",
-      "context": "Lecture 07 · 30.11.2023 — Efficient vision transformers",
+      "context": "Lecture 07 — Efficient vision transformers",
       "sections": [
         {
           "type": "text",
@@ -4510,7 +4510,7 @@
       "title": "Encoder ve Decoder: Ne Zaman Ne Gerekir?",
       "cat": "Foundation",
       "summary": "Encoder kendi datasının iç ilişkilerini öğrenir, feature map çıkarır. Decoder bu feature map'i farklı bir amaca dönüştürür — çeviri, detection, segmentation. ViT, DETR ve düz Transformer üzerinden karşılaştırma.",
-      "context": "Lecture 08 · 07.12.2023 — Image Analysis with Transformers",
+      "context": "Lecture 08 — Image Analysis with Transformers",
       "sections": [
         {
           "type": "code",
@@ -4533,7 +4533,7 @@
       "title": "DETR — Adım Adım Boyutlarla",
       "cat": "Foundation",
       "summary": "DETR (Carion et al. 2020) object detection'ı set prediction olarak çözer. CNN backbone → Transformer encoder → object query'li decoder → Hungarian matching. Anchor yok, NMS yok, end-to-end tek loss.",
-      "context": "Lecture 08 · 07.12.2023 — Image Analysis with Transformers",
+      "context": "Lecture 08 — Image Analysis with Transformers",
       "sections": [
         {
           "type": "code",
@@ -4581,7 +4581,7 @@
       "title": "UNETR — Adım Adım Boyutlarla",
       "cat": "Medical",
       "summary": "UNETR (Hatamizadeh et al. 2022) U-Net mimarisini Transformer encoder ile yapar. 3D patch'ler ViT encoder'dan geçer, birden fazla katmanın çıktısı CNN decoder'a skip connection olarak verilir. Global bağlam + spatial detay.",
-      "context": "Lecture 08 · 07.12.2023 — Image Analysis with Transformers",
+      "context": "Lecture 08 — Image Analysis with Transformers",
       "sections": [
         {
           "type": "code",
@@ -4629,7 +4629,7 @@
       "title": "Swin Transformer — Adım Adım",
       "cat": "Foundation",
       "summary": "Swin Transformer (Liu et al. 2021) ViT'in O(N²) attention ve tek ölçek sorunlarını çözer. Windowed local attention + shifted windows + patch merging ile hiyerarşik feature map üretir. Sadece encoder.",
-      "context": "Lecture 08 · 07.12.2023 — Image Analysis with Transformers",
+      "context": "Lecture 08 — Image Analysis with Transformers",
       "sections": [
         {
           "type": "code",
@@ -4707,7 +4707,7 @@
       "title": "ViT vs Swin — Tam Karşılaştırma",
       "cat": "Foundation",
       "summary": "ViT ve Swin Transformer'ın her adımı yan yana, boyutlar ve açıklamalarla. Patch boyutundan classification'a kadar tüm işlemler.",
-      "context": "Lecture 08 · 07.12.2023 — Image Analysis with Transformers",
+      "context": "Lecture 08 — Image Analysis with Transformers",
       "sections": [
         {
           "type": "code",
@@ -4750,7 +4750,7 @@
       "title": "UNETR: Transformers for Medical Image Segmentation",
       "cat": "Medical",
       "summary": "UNETR (Hatamizadeh et al. 2022) uses a ViT encoder to extract global context from volumetric medical images, connected to a CNN decoder via skip connections in a U-shaped architecture. It bridges the global representation strength of Transformers with the spatial precision of U-Net.",
-      "context": "Lecture 08 · 07.12.2023 — Image Analysis with Transformers",
+      "context": "Lecture 08 — Image Analysis with Transformers",
       "sections": [
         {
           "type": "text",
@@ -4787,7 +4787,7 @@
       "title": "SAM: Segment Anything Model",
       "cat": "Foundation",
       "summary": "SAM (Kirillov et al. 2023) is a foundation model for image segmentation. Trained on 1 billion masks, it accepts flexible prompts (points, boxes, text, free-form) and produces high-quality masks for any object in any image — without task-specific fine-tuning.",
-      "context": "Lecture 08 · 07.12.2023 — Foundation models for segmentation",
+      "context": "Lecture 08 — Foundation models for segmentation",
       "sections": [
         {
           "type": "text",
@@ -4817,7 +4817,7 @@
       "title": "Self-Supervised Pretraining: MAE and DINO",
       "cat": "Pretraining",
       "summary": "Masked Autoencoders (MAE) and DINO showed that ViTs can be pretrained self-supervisedly on unlabeled images, learning rich visual representations without any labels — enabling transfer to downstream tasks with minimal fine-tuning.",
-      "context": "Lecture 08 · 07.12.2023 — Self-supervised visual representation learning",
+      "context": "Lecture 08 — Self-supervised visual representation learning",
       "sections": [
         {
           "type": "text",
@@ -4837,7 +4837,7 @@
       "title": "Lecture 9 — Q & A",
       "cat": "Representation",
       "summary": "IDA Lecture 9'un tüm sınav soruları ve sade açıklamalarla cevapları. Point cloud temsili, outlier removal, curvature, PointNet, PointNet++.",
-      "context": "Lecture 09 · 14.12.2023 — Detection and Segmentation in 3D Point Clouds",
+      "context": "Lecture 09 — Detection and Segmentation in 3D Point Clouds",
       "sections": [
         {
           "type": "code",
@@ -4875,7 +4875,7 @@
       "title": "Point Cloud Representation and Preprocessing",
       "cat": "Representation",
       "summary": "A point cloud is an unordered set of 3D points sampled from a surface. Unlike voxels (regular 3D grid) or meshes (connectivity structure), point clouds are sparse and orderless. Preprocessing — normal estimation, outlier removal, downsampling — is critical before any learning.",
-      "context": "Lecture 09 · 14.12.2023 — 3D Point Cloud Analysis",
+      "context": "Lecture 09 — 3D Point Cloud Analysis",
       "sections": [
         {
           "type": "formula",
@@ -4905,7 +4905,7 @@
       "title": "PointNet: Permutation-Invariant Learning",
       "cat": "Architecture",
       "summary": "PointNet (Qi et al. 2017) was the first deep learning architecture to directly consume unordered point clouds. It achieves permutation invariance via a symmetric function (global max pooling) and handles rigid transformations via a learnable T-Net alignment module.",
-      "context": "Lecture 09 · 14.12.2023 — PointNet architecture",
+      "context": "Lecture 09 — PointNet architecture",
       "sections": [
         {
           "type": "formula",
@@ -4928,7 +4928,7 @@
       "title": "PointNet++: Hierarchical Feature Learning",
       "cat": "Architecture",
       "summary": "PointNet++ (Qi et al. 2017) applies PointNet hierarchically using a Set Abstraction module that sub-samples, groups, and extracts features at multiple scales. This builds local context at fine scales and global context at coarse scales, dramatically improving performance on complex shapes.",
-      "context": "Lecture 09 · 14.12.2023 — Multi-scale point cloud learning",
+      "context": "Lecture 09 — Multi-scale point cloud learning",
       "sections": [
         {
           "type": "text",
@@ -4953,7 +4953,7 @@
       "title": "Lecture 10 — Q & A",
       "cat": "Generative",
       "summary": "IDA Lecture 10'un tüm sınav soruları ve sade açıklamalarla cevapları. Generative modeller, autoencoder, VAE, GAN, InfoGAN, conditional GAN, CycleGAN.",
-      "context": "Lecture 10 · 21.12.2023 — Generative Adversarial Networks",
+      "context": "Lecture 10 — Generative Adversarial Networks",
       "sections": [
         {
           "type": "code",
@@ -5011,7 +5011,7 @@
       "title": "Autoencoder ve VAE — Mimari ve Mantık",
       "cat": "Generative",
       "summary": "Autoencoder görüntüyü küçük bir latent vektöre sıkıştırıp geri açar. VAE buna olasılıksal bir katman ekler: encoder nokta değil dağılım üretir, KL loss bu dağılımı N(0,1)'e yakın tutar, böylece latent space her yerden örneklenebilir hale gelir.",
-      "context": "Lecture 10 · 04.01.2024 — Generative Models",
+      "context": "Lecture 10 — Generative Models",
       "sections": [
         {
           "type": "code",
@@ -5069,7 +5069,7 @@
       "title": "Autoencoders and Variational Autoencoders",
       "cat": "Generative",
       "summary": "Autoencoders learn compact latent representations by compressing and reconstructing data. VAEs (Kingma & Welling, 2013) add a probabilistic constraint — the latent space must follow a Gaussian prior — enabling generative sampling. They are trained with the ELBO (Evidence Lower BOund).",
-      "context": "Lecture 10 · 04.01.2024 — Generative Models",
+      "context": "Lecture 10 — Generative Models",
       "sections": [
         {
           "type": "formula",
@@ -5087,7 +5087,7 @@
       "title": "GAN Fundamentals: Minimax Training",
       "cat": "GAN",
       "summary": "GANs (Goodfellow et al. 2014) pit two networks against each other: a generator G produces fake images; a discriminator D tries to distinguish real from fake. Training is a minimax game that, in theory, drives the generator distribution to match the real data distribution.",
-      "context": "Lecture 10 · 04.01.2024 — GAN formulation and training",
+      "context": "Lecture 10 — GAN formulation and training",
       "sections": [
         {
           "type": "formula",
@@ -5129,7 +5129,7 @@
       "title": "Conditional GANs and Image-to-Image Translation",
       "cat": "Conditional",
       "summary": "Conditional GANs (cGANs) condition both G and D on additional information (class label, input image), enabling controlled synthesis. Pix2pix enables paired image-to-image translation; CycleGAN enables unpaired translation using cycle-consistency.",
-      "context": "Lecture 10 · 04.01.2024 — Controlled image generation",
+      "context": "Lecture 10 — Controlled image generation",
       "sections": [
         {
           "type": "text",
@@ -5149,7 +5149,7 @@
       "title": "Lecture 11 — Q & A",
       "cat": "Generative",
       "summary": "IDA Lecture 11'in tüm sınav soruları ve sade açıklamalarla cevapları. Diffusion modeller, forward/backward process, variance schedule, DDPM training, classifier guidance, CLIP, DALL-E 2, Imagen.",
-      "context": "Lecture 11 · 18.01.2024 — Diffusion Models",
+      "context": "Lecture 11 — Diffusion Models",
       "sections": [
         {
           "type": "code",
@@ -5197,7 +5197,7 @@
       "title": "Denoising Diffusion Probabilistic Models: Overview",
       "cat": "Generative",
       "summary": "DDPMs (Ho et al. 2020) define a Markov chain that gradually adds Gaussian noise to data (forward process) and learn to reverse it (backward process). Unlike GANs, training is stable; unlike VAEs, the latent space has the same dimensionality as the data. They currently produce the best image quality.",
-      "context": "Lecture 11 · 11.01.2024 — Denoising Diffusion Probabilistic Models",
+      "context": "Lecture 11 — Denoising Diffusion Probabilistic Models",
       "sections": [
         {
           "type": "compare",
@@ -5234,7 +5234,7 @@
       "title": "Forward Diffusion: Markov Chain and Reparameterisation",
       "cat": "Theory",
       "summary": "The forward process is a fixed Markov chain that adds Gaussian noise with variance β_t at each step. The reparameterisation trick collapses this to a closed-form expression, allowing direct sampling of x_t at any timestep from x_0 without running T sequential steps.",
-      "context": "Lecture 11 · 11.01.2024 — Forward diffusion process",
+      "context": "Lecture 11 — Forward diffusion process",
       "sections": [
         {
           "type": "formula",
@@ -5252,7 +5252,7 @@
       "title": "Reverse Diffusion and Training",
       "cat": "Theory",
       "summary": "The reverse process is learned by a neural network (U-Net with time conditioning) that predicts the noise added at each step. Training minimises a simple MSE loss between predicted and actual noise. The U-Net architecture with temporal embedding enables high-quality denoising.",
-      "context": "Lecture 11 · 11.01.2024 — Learning the reverse diffusion process",
+      "context": "Lecture 11 — Learning the reverse diffusion process",
       "sections": [
         {
           "type": "formula",
@@ -5270,7 +5270,7 @@
       "title": "Conditional Diffusion and Text-to-Image Generation",
       "cat": "Applications",
       "summary": "Classifier-free guidance conditions the diffusion model on a signal (text, class, image) without needing a separate classifier. Combined with latent diffusion (compressing to a lower-dimensional space first), this enables practical text-to-image models like Stable Diffusion and DALL-E 2.",
-      "context": "Lecture 11 · 11.01.2024 — Conditional generation and modern applications",
+      "context": "Lecture 11 — Conditional generation and modern applications",
       "sections": [
         {
           "type": "formula",
@@ -5338,7 +5338,7 @@
       "title": "DDPM — VAE Paraleli ile Tam Matematiksel Akış",
       "cat": "Generative",
       "summary": "DDPM'in matematik yapısı VAE ile karşılaştırmalı: latent variable setup, intractable marginal, ELBO, forward/reverse process ve neden encoder network gerekmediği.",
-      "context": "Lecture 11 · 18.01.2024 — Diffusion Models",
+      "context": "Lecture 11 — Diffusion Models",
       "sections": [
         {
           "type": "code",
@@ -5412,7 +5412,7 @@
       "title": "VAE vs DDPM — ELBO Derivation Tam Karşılaştırması",
       "cat": "Generative",
       "summary": "VAE ve DDPM ELBO türetiminin adım adım karşılaştırması: ortak Bayes hareketi, 3 terim, dropped term, prior KL farkı ve final loss. Benzerlik ve farklar intuition ile.",
-      "context": "Lecture 11 · 18.01.2024 — Diffusion Models",
+      "context": "Lecture 11 — Diffusion Models",
       "sections": [
         {
           "type": "text",
@@ -5546,7 +5546,7 @@
       "title": "DDPM — Training & Inference: Tam Parametreler ve Dimensionlar",
       "cat": "Generative",
       "summary": "DDPM training ve inference adımları tüm variable'ların shape'leriyle. Precomputed schedule, U-Net input/output, loss, sampling algoritması.",
-      "context": "Lecture 11 · 18.01.2024 — Diffusion Models",
+      "context": "Lecture 11 — Diffusion Models",
       "sections": [
         {
           "type": "code",
@@ -5612,7 +5612,7 @@
       "title": "Lecture 12 — Q & A",
       "cat": "Architecture",
       "summary": "IDA Lecture 12'nin tüm sınav soruları ve sade açıklamalarla cevapları. PointNet++ kısıtları, FCPN, EdgeConv/DGCNN, FoldingNet, DDPM ile implant üretimi.",
-      "context": "Lecture 12 · 18.01.2024 — Advanced Methods for Point Cloud Processing",
+      "context": "Lecture 12 — Advanced Methods for Point Cloud Processing",
       "sections": [
         {
           "type": "code",
@@ -5675,7 +5675,7 @@
       "title": "Fully-Convolutional Point Network (FCPN)",
       "cat": "Architecture",
       "summary": "FCPN (Rethage et al. 2018) is a hybrid point-to-voxel architecture: PointNet maps raw points to a regular 3D voxel grid, then standard 3D convolutions process the resulting dense feature volume. This enables processing arbitrarily large point clouds in a single forward pass.",
-      "context": "Lecture 12 · 18.01.2024 — Advanced Point Cloud Methods",
+      "context": "Lecture 12 — Advanced Point Cloud Methods",
       "sections": [
         {
           "type": "text",
@@ -5693,7 +5693,7 @@
       "title": "Dynamic Graph CNN and EdgeConv",
       "cat": "Architecture",
       "summary": "DGCNN (Wang et al. 2019) introduces EdgeConv — a graph convolution that explicitly computes edge features between a point and its k-NN neighbours. The graph is dynamically recomputed at each layer in feature space, enabling the network to capture both local geometric and global semantic relationships.",
-      "context": "Lecture 12 · 18.01.2024 — Graph-based point cloud learning",
+      "context": "Lecture 12 — Graph-based point cloud learning",
       "sections": [
         {
           "type": "formula",
@@ -5711,7 +5711,7 @@
       "title": "FoldingNet and DDPMs for Point Clouds",
       "cat": "Generative",
       "summary": "FoldingNet is an autoencoder that represents a point cloud by 'unfolding' a 2D grid into 3D, learning compact latent codes. DDPMs for point clouds apply the diffusion framework to generate 3D shapes, enabling shape completion and unconditional generation.",
-      "context": "Lecture 12 · 18.01.2024 — Generative models for point clouds",
+      "context": "Lecture 12 — Generative models for point clouds",
       "sections": [
         {
           "type": "text",
@@ -5731,7 +5731,7 @@
       "title": "Lecture 13 — Q & A",
       "cat": "Classical",
       "summary": "IDA Lecture 13'ün tüm sınav soruları ve sade açıklamalarla cevapları. Bag-of-Visual-Words, deconvolutional networks, CNN layer visualization, PCA kısıtları, t-SNE.",
-      "context": "Lecture 13 · 25.01.2024 — CNN Visualization Techniques",
+      "context": "Lecture 13 — CNN Visualization Techniques",
       "sections": [
         {
           "type": "code",
@@ -5779,7 +5779,7 @@
       "title": "Bag of Visual Words",
       "cat": "Classical",
       "summary": "Bag of Visual Words (BoVW) adapts the NLP bag-of-words model to images. Local image descriptors (SIFT, SURF) are clustered into a visual vocabulary. Each image is represented as a histogram of visual word frequencies — a fixed-length descriptor suitable for SVM classification.",
-      "context": "Lecture 13 · 25.01.2024 — Bag of Visual Words and CNN Visualization",
+      "context": "Lecture 13 — Bag of Visual Words and CNN Visualization",
       "sections": [
         {
           "type": "text",
@@ -5821,7 +5821,7 @@
       "title": "CNN Visualization: Understanding What Networks Learn",
       "cat": "Interpretability",
       "summary": "CNN visualisation methods reveal what features each layer and filter has learned. Techniques range from direct filter visualisation to activation maximisation (what input maximises a neuron?) and occlusion sensitivity maps (what image region matters for the prediction?).",
-      "context": "Lecture 13 · 25.01.2024 — Visualizing and understanding CNNs",
+      "context": "Lecture 13 — Visualizing and understanding CNNs",
       "sections": [
         {
           "type": "text",
@@ -5844,7 +5844,7 @@
       "title": "t-SNE: Visualising High-Dimensional Data",
       "cat": "Dimensionality",
       "summary": "t-SNE (van der Maaten & Hinton, 2008) embeds high-dimensional data into 2D for visualisation, preserving local neighbourhood structure. It is the standard tool for exploring and validating learned feature spaces — essential for understanding CNN representations.",
-      "context": "Lecture 13 · 25.01.2024 — Visualizing feature spaces with t-SNE",
+      "context": "Lecture 13 — Visualizing feature spaces with t-SNE",
       "sections": [
         {
           "type": "formula",
