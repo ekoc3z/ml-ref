@@ -21069,18 +21069,18 @@
     {
       "title": "Gambler's Ruin",
       "cat": "Puzzle",
-      "summary": "Start with $a, win $1 with prob p, lose $1 with prob 1−p, stop at $0 or $N. For fair game p=1/2: P(reach $N) = a/N. Expected absorption time = i(N−i).",
+      "summary": "Start with wealth $a$. Win 1 with prob $p$, lose 1 with prob $1-p$, stop at $N$ (win) or $0$ (ruin). Fair game: $P(\\text{reach } N) = a/N$. Absorption time $= i(N-i)$.",
       "context": "Math · Probability & Statistics",
       "sections": [
         {
           "type": "text",
           "heading": "Setup",
-          "text": "You start with \\$a. Win \\$1 with probability $p$, lose \\$1 with probability $1-p$. Stop when you reach \\$N (win) or \\$0 (ruin). What is the probability of reaching \\$N?"
+          "text": "Start with wealth $a$. Each round: gain 1 unit with probability $p$, lose 1 with probability $1-p$. Game ends at $N$ (win) or $0$ (ruin). What is the probability of reaching $N$?"
         },
         {
           "type": "formula",
           "heading": "Recurrence",
-          "text": "Let $q_i$ = probability of reaching $\\$N$ from $\\$i$. Boundary: $q_0=0$, $q_N=1$.\n$$q_i = p \\cdot q_{i+1} + (1-p) \\cdot q_{i-1}$$\n\nThis is a second-order linear recurrence."
+          "text": "Let $q_i$ = probability of reaching $N$ from state $i$. Boundary: $q_0=0$, $q_N=1$.\n$$q_i = p \\cdot q_{i+1} + (1-p) \\cdot q_{i-1}$$\n\nThis is a second-order linear recurrence."
         },
         {
           "type": "formula",
