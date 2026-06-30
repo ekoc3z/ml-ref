@@ -443,12 +443,8 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .math-group-toggle:hover{opacity:1}
 .math-group-arrow{font-size:8px;transition:transform .2s;display:inline-block}
 .math-group-toggle.open .math-group-arrow{transform:rotate(90deg)}
-.math-group-items{
-  overflow:hidden;
-  max-height:0;
-  transition:max-height .25s ease;
-}
-.math-group-items.open{max-height:600px}
+.math-group-items{ display:none }
+.math-group-items.open{ display:block }
 
 /* Prob chapter larger fonts */
 .wiki-article[class*=" math"] .sec-formula,
@@ -1634,8 +1630,10 @@ function closeSidebar(){ $('sidebar').classList.remove('open') }
 function toggleMathGroup(){
   const toggle = $('math-group-toggle');
   const items  = $('math-group-items');
+  const wasOpen = items.classList.contains('open');
   const isOpen = items.classList.toggle('open');
   toggle.classList.toggle('open', isOpen);
+  if(!wasOpen) switchSection('math01');
 }
 
 function switchSection(sec){
