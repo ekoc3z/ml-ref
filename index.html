@@ -447,12 +447,22 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .math-group-items{ display:none }
 .math-group-items.open{ display:block }
 
-/* Prob chapter larger fonts */
+/* Math cards — Notion-like flow, no boxes */
 .wiki-article[class*=" math"] .sec-formula,
-.wiki-article[class*=" math"] .sec-formula{font-size:14px;line-height:2.2}
-.wiki-article[class*=" math"] .sec-formula .katex{font-size:1.15em}
-.wiki-article[class*=" math"] .sec-text{font-size:14px;line-height:1.85}
-.wiki-article[class*=" math"] .sec-list li{font-size:14px;line-height:1.75}
+.wiki-article[class*=" math"] .sec-block-insight,
+.wiki-article[class*=" math"] .sec-block-note{
+  background:none!important;border:none!important;border-left:none!important;
+  border-radius:0;padding:2px 0 10px 0;font-family:inherit;color:var(--text);
+  font-size:14px;line-height:2;
+}
+.wiki-article[class*=" math"] .sec-formula .katex-display{margin:.4em 0}
+.wiki-article[class*=" math"] .sec-formula .katex,
+.wiki-article[class*=" math"] .sec-block-insight .katex,
+.wiki-article[class*=" math"] .sec-block-note .katex{font-size:1.1em}
+.wiki-article[class*=" math"] .sec-text{font-size:14px;line-height:1.9}
+.wiki-article[class*=" math"] .sec-list{padding-left:4px}
+.wiki-article[class*=" math"] .sec-list li{font-size:14px;line-height:1.85}
+.wiki-article[class*=" math"] .sec-heading{font-size:12px;opacity:.85}
 </style>
 </head>
 <body>
