@@ -5543,6 +5543,59 @@
       ]
     },
     {
+      "title": "DDPM — UNet Dahil Baştan Sona",
+      "cat": "Generative",
+      "summary": "DDPM'in schedule'dan U-Net mimarisine, training'den inference'a kadar tam akışı — her adımda dimension'larıyla. Timestep embedding, sinusoidal encoding, ResBlock içi, skip connection mantığı.",
+      "context": "Lecture 11 — Diffusion Models · Lab 7",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Amaç",
+          "text": "Görüntüden gerçekçi yeni görüntüler üret. Ama direkt üretmek zor — distribution çok karmaşık. Fikir: önce görüntüyü adım adım noise'a çevir (basit, bilinen), sonra bu süreci tersine öğren."
+        },
+        {
+          "type": "code",
+          "heading": "0. Schedule — Precomputed",
+          "text": "T = 1000 adım\n\nβ_t : 0.0001 → 0.02         shape (T,)   her adım ne kadar noise ekleneceği\nα_t = 1 - β_t                shape (T,)\nᾱ_t = α_1 · α_2 · ... · α_t shape (T,)   kümülatif çarpım\nσ_t = sqrt(β_t)              shape (T,)   sampling için"
+        },
+        {
+          "type": "code",
+          "heading": "1. Forward Process — Noise Ekleme",
+          "text": "x_0         (B, C, H, W)   gerçek görüntü\n\nt ~ Uniform(1, T)  (B,)    her görüntü için random adım\nε ~ N(0, I)        (B, C, H, W)   Gaussian noise\n\nx_t = sqrt(ᾱ_t) · x_0 + sqrt(1 - ᾱ_t) · ε     (B, C, H, W)\n\nReparameterization trick: t=500'deki x_t'yi hesaplamak için 500 kez adım atmak gerekmez\n— tek formülle direkt hesaplanır. ᾱ_t küçükse noise baskın, büyükse görüntü baskın."
+        },
+        {
+          "type": "code",
+          "heading": "2. U-Net — Timestep Embedding",
+          "text": "Giriş: x_t (B, C, H, W)  +  t (B,)\n\nt (B,)\n      ↓\nSinusoidal Embedding → (B, d_t)      d_t = 256\n      ↓\nMLP (Linear → SiLU → Linear) → (B, d_t)\n= time_emb\n\nBu time_emb her bloğa ayrı ayrı ekleniyor — model \"şu an kaçıncı adımdayım\" biliyor."
+        },
+        {
+          "type": "code",
+          "heading": "2. U-Net — Encoder / Bottleneck / Decoder",
+          "text": "x_t  (B, 1, 28, 28)   ← MNIST örneği\n\n── Encoder ───────────────────────────────\nconv1x1:         (B, 32, 28, 28)\nResBlock + time: (B, 32, 28, 28)    time_emb eklendi\nResBlock + time: (B, 32, 28, 28)\nDownsample:      (B, 32, 14, 14)    ↓ spatial, ↑ receptive field\nResBlock + time: (B, 64, 14, 14)\nAttention:       (B, 64, 14, 14)    self-attention, global context\nDownsample:      (B, 64, 7, 7)\n\n── Bottleneck ────────────────────────────\nResBlock + time: (B, 64, 7, 7)\nAttention:       (B, 64, 7, 7)\nResBlock + time: (B, 64, 7, 7)\n\n── Decoder ───────────────────────────────\nUpsample:        (B, 64, 14, 14)    ↑ spatial\nResBlock + skip + time: (B, 64, 14, 14)    ← encoder skip connection\nAttention:       (B, 64, 14, 14)\nUpsample:        (B, 32, 28, 28)\nResBlock + skip + time: (B, 32, 28, 28)\nResBlock + time: (B, 32, 28, 28)\n\nconv1x1:         (B, 1, 28, 28)\n\nOutput: ε_θ (B, C, H, W) — predicted noise, görüntüyle aynı shape."
+        },
+        {
+          "type": "code",
+          "heading": "2. U-Net — time_emb ResBlock'a Nasıl Giriyor",
+          "text": "ResBlock'un içi:\n\nx giriyor (B, C, H, W)\n      ↓\nconv → GroupNorm → SiLU\n      ↓\n+ Linear(d_t → C)(time_emb)[:, :, None, None]   ← time burada, ResBlock'un içinde\n      ↓\nconv → GroupNorm → SiLU\n      ↓\n+ x (residual bağlantı)\n      ↓\nçıkış (B, C, H, W)\n\nDimension akışı:\n(B, d_t) → Linear(d_t → C) → (B, C)\n         → [:, :, None, None]        → (B, C, 1, 1)\n         → broadcast                 → (B, C, H, W)\n\nLinear(d_t → C): her bloğun kanal sayısına (C) göre farklı projeksiyon.\nBroadcast: tüm piksel konumlarına aynı vektör — timestep global bir bilgi,\n\"şu an ne kadar noisy?\" sorusu tüm görüntü için geçerli.\n\nSkip connection neden var: encoder'ın erken katmanları fine detail taşıyor.\nDecoder hem global context (bottleneck'ten) hem lokal detayı (skip'ten) birleştiriyor."
+        },
+        {
+          "type": "code",
+          "heading": "3. Training",
+          "text": "1. x_0 ~ dataset          (B, C, H, W)\n2. t ~ Uniform(1, T)      (B,)\n3. ε ~ N(0, I)            (B, C, H, W)\n4. x_t = sqrt(ᾱ_t)·x_0 + sqrt(1-ᾱ_t)·ε   (B, C, H, W)\n5. ε_θ = U-Net(x_t, t)   (B, C, H, W)\n6. Loss = MSE(ε, ε_θ)    scalar\n\nModel görüntüyü değil, noise'u tahmin ediyor.\nÇünkü ε her zaman N(0,I) — tahmin etmesi daha kolay, stabil."
+        },
+        {
+          "type": "code",
+          "heading": "4. Inference (Sampling)",
+          "text": "x_T ~ N(0, I)   (B, C, H, W)   saf noise'dan başla\n\nfor t = T, T-1, ..., 1:\n\n    ε_θ = U-Net(x_t, t)        (B, C, H, W)   noise tahmini\n\n    μ_θ = (1/sqrt(α_t))        (B, C, H, W)   x_{t-1} beklentisi\n        · (x_t - β_t/sqrt(1-ᾱ_t) · ε_θ)\n\n    z = N(0,I) if t > 1        stochasticity için\n    z = 0      if t = 1        son adımda noise ekleme\n\n    x_{t-1} = μ_θ + σ_t · z   (B, C, H, W)\n\nreturn x_0"
+        },
+        {
+          "type": "code",
+          "heading": "Genel Akış",
+          "text": "Gerçek görüntü x_0\n      ↓ forward (tek adım, kapalı form)\nNoisy x_t  +  timestep t\n      ↓ U-Net\npredicted noise ε_θ  →  Loss = MSE(ε, ε_θ)\n\n─── Inference ───\n\nSaf noise x_T\n      ↓ T adım U-Net (her adım biraz temizle)\nÜretilen x_0"
+        }
+      ]
+    },
+    {
       "title": "DDPM — Training & Inference: Tam Parametreler ve Dimensionlar",
       "cat": "Generative",
       "summary": "DDPM training ve inference adımları tüm variable'ların shape'leriyle. Precomputed schedule, U-Net input/output, loss, sampling algoritması.",
@@ -8937,6 +8990,67 @@
           "type": "code",
           "heading": "numpy [H,W,C] → tensor [B,C,H,W]",
           "text": "def np_whc_to_tensor_bcwh(img):\n    return torch.tensor(img).permute(2, 0, 1).unsqueeze(0).float()\n# torchmetrics SSIM [B,C,H,W] bekliyor"
+        }
+      ]
+    },
+    {
+      "title": "PSNR — Peak Signal-to-Noise Ratio",
+      "cat": "Görüntü Kalite Metriği",
+      "summary": "Görüntü kalitesini dB cinsinden ölçer. MSE'ye dayalı matematiksel hata metriği — yüksek PSNR = az hata.",
+      "context": "ML Lab · Session 2",
+      "sections": [
+        {
+          "type": "formula",
+          "heading": "Formül",
+          "text": "PSNR = 20 · log10(MAX / √MSE)\n\nMAX: piksel değerlerinin maksimumu (float [0,1] için 1.0, uint8 için 255)\nMSE: iki görüntü arasındaki Mean Squared Error"
+        },
+        {
+          "type": "code",
+          "heading": "Manuel Implementasyon",
+          "text": "def psnr_(img1, img2, max_val=1.0):\n    mse = np.mean((img1 - img2) ** 2)\n    return 20 * np.log10(max_val / np.sqrt(mse))\n\n# tensor'dan numpy'a\nimg1_np = img1.squeeze().permute(1, 2, 0).numpy()  # [B,C,H,W] → [H,W,C]\nimg2_np = img2.squeeze().permute(1, 2, 0).numpy()\npsnr_(img1_np, img2_np)"
+        },
+        {
+          "type": "code",
+          "heading": "torchmetrics ile",
+          "text": "from torchmetrics import PeakSignalNoiseRatio\npsnr = PeakSignalNoiseRatio(data_range=1.0)\npsnr(img1, img2)  # [B,C,H,W] tensor, float [0,1]"
+        },
+        {
+          "type": "list",
+          "heading": "Referans değerler",
+          "items": [
+            "< 20 dB: kötü kalite, gürültü belirgin",
+            "20–30 dB: orta kalite",
+            "30–40 dB: iyi kalite",
+            "> 40 dB: çok iyi, fark neredeyse görünmez",
+            "Aynı görüntü: PSNR = ∞ (MSE = 0)"
+          ]
+        },
+        {
+          "type": "compare",
+          "heading": "PSNR vs SSIM",
+          "left": {
+            "title": "PSNR",
+            "points": [
+              "Saf matematiksel: MSE tabanlı",
+              "dB cinsinden, yorumlaması kolay",
+              "İnsan algısını yansıtmaz",
+              "Bulanık ve gürültülü görüntüyü ayırt edemez"
+            ]
+          },
+          "right": {
+            "title": "SSIM",
+            "points": [
+              "Yapısal: luminance, contrast, structure",
+              "[-1,1] aralığı, insan algısına daha yakın",
+              "Lokal Gaussian kernel kullanır",
+              "Aynı MSE'ye sahip farklı bozulmaları ayırt eder"
+            ]
+          }
+        },
+        {
+          "type": "note",
+          "heading": "Neden log10?",
+          "text": "MSE lineer ölçekte çok geniş bir aralıkta değişir. log10 ile logaritmik skala insan algısına (ses gibi) ve sinyal teorisine uygun hale geliyor. 20 · log10 çünkü genlik oranı (amplitude) için standart dB tanımı: 20·log10(sinyal/gürültü)."
         }
       ]
     },
@@ -20338,6 +20452,863 @@
         }
       ],
       "context": "Python & DSA Kılavuzları"
+    }
+  ],
+  "math01": [
+    {
+      "title": "Bernoulli Distribution",
+      "cat": "Distribution",
+      "summary": "Models a single binary trial — success with probability p, failure with probability 1−p. The simplest non-trivial distribution and the building block of the Binomial.",
+      "context": "Math · Probability & Statistics",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Definition",
+          "text": "RV $X \\sim \\text{Bernoulli}(p)$ takes value 1 (success) with probability $p$ and 0 (failure) with probability $1-p$."
+        },
+        {
+          "type": "formula",
+          "heading": "PMF",
+          "text": "$$P(X = x) = p^x (1-p)^{1-x} \\quad x \\in \\{0, 1\\}$$"
+        },
+        {
+          "type": "formula",
+          "heading": "Mean & Variance",
+          "text": "$$\\mathbb{E}[X] = p \\qquad \\text{Var}(X) = p(1-p)$$"
+        }
+      ]
+    },
+    {
+      "title": "Binomial Distribution",
+      "cat": "Distribution",
+      "summary": "Number of successes in n independent Bernoulli(p) trials. PMF comes directly from counting how many ways k successes can be arranged among n trials.",
+      "context": "Math · Probability & Statistics",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Definition",
+          "text": "$X \\sim \\text{Binomial}(n, p)$: number of successes in $n$ independent Bernoulli($p$) trials."
+        },
+        {
+          "type": "formula",
+          "heading": "PMF",
+          "text": "$$P(X = k) = \\binom{n}{k} p^k (1-p)^{n-k} \\quad k = 0, 1, \\ldots, n$$\n\nNormalization check via binomial theorem:\n$$\\sum_{k=0}^n \\binom{n}{k} p^k (1-p)^{n-k} = (p + (1-p))^n = 1$$"
+        },
+        {
+          "type": "formula",
+          "heading": "Mean & Variance",
+          "text": "$$\\mathbb{E}[X] = np \\qquad \\text{Var}(X) = np(1-p)$$\n\nDerivation of $\\mathbb{E}[X]$: linearity over $n$ Bernoulli RVs, each with $\\mathbb{E}[X_i] = p$.\n\nDerivation of $\\text{Var}(X)$: cross-terms vanish by independence:\n$$\\mathbb{E}[X^2] - (\\mathbb{E}[X])^2 = np(1-p)$$"
+        }
+      ]
+    },
+    {
+      "title": "Poisson Distribution",
+      "cat": "Distribution",
+      "summary": "Number of events in a unit interval when events occur independently at average rate λ. Derived as the limit of Binomial(n, λ/n) as n→∞.",
+      "context": "Math · Probability & Statistics",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Definition",
+          "text": "$X \\sim \\text{Poisson}(\\lambda)$: number of events in a unit interval where events happen at average rate $\\lambda$ per unit time."
+        },
+        {
+          "type": "formula",
+          "heading": "PMF",
+          "text": "$$P(X = k) = \\frac{\\lambda^k e^{-\\lambda}}{k!} \\quad k = 0, 1, 2, \\ldots$$"
+        },
+        {
+          "type": "formula",
+          "heading": "Derivation from Binomial",
+          "text": "Split unit interval into $n$ tiny slots, $p = \\lambda/n$. As $n \\to \\infty$:\n$$\\binom{n}{k}\\left(\\frac{\\lambda}{n}\\right)^k \\left(1-\\frac{\\lambda}{n}\\right)^{n-k} \\to \\frac{\\lambda^k e^{-\\lambda}}{k!}$$\n\nUsing $\\left(1 - \\frac{\\lambda}{n}\\right)^n \\to e^{-\\lambda}$ and $\\binom{n}{k}/n^k \\to 1/k!$."
+        },
+        {
+          "type": "formula",
+          "heading": "Mean, Variance & Sum",
+          "text": "$$\\mathbb{E}[X] = \\lambda \\qquad \\text{Var}(X) = \\lambda$$\n\nSum of independent Poissons:\n$$X_1 \\sim \\text{Poisson}(\\lambda_1),\\; X_2 \\sim \\text{Poisson}(\\lambda_2) \\implies X_1 + X_2 \\sim \\text{Poisson}(\\lambda_1 + \\lambda_2)$$"
+        }
+      ]
+    },
+    {
+      "title": "Geometric Distribution",
+      "cat": "Distribution",
+      "summary": "Number of trials until the first success in a sequence of independent Bernoulli(p) trials. The only discrete memoryless distribution.",
+      "context": "Math · Probability & Statistics",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Definition",
+          "text": "$X \\sim \\text{Geometric}(p)$: number of trials until (and including) the first success."
+        },
+        {
+          "type": "formula",
+          "heading": "PMF & Tail",
+          "text": "$$P(X = k) = (1-p)^{k-1}\\, p \\quad k = 1, 2, 3, \\ldots$$\n\nTail probability (first $k$ trials all failures):\n$$P(X > k) = (1-p)^k$$"
+        },
+        {
+          "type": "formula",
+          "heading": "Memoryless Property",
+          "text": "$$P(X > s + t \\mid X > s) = P(X > t)$$\n\nThe fact that you've already waited $s$ trials without success is irrelevant — the remaining waiting time has the same distribution. The Geometric is the only discrete memoryless distribution."
+        },
+        {
+          "type": "formula",
+          "heading": "Mean & Variance",
+          "text": "$$\\mathbb{E}[X] = \\frac{1}{p} \\qquad \\text{Var}(X) = \\frac{1-p}{p^2}$$"
+        }
+      ]
+    },
+    {
+      "title": "Continuous Uniform Distribution",
+      "cat": "Distribution",
+      "summary": "All values in the interval [a, b] are equally likely. Simple but fundamental — uniform order statistics split [0,1] into equal-length gaps in expectation.",
+      "context": "Math · Probability & Statistics",
+      "sections": [
+        {
+          "type": "formula",
+          "heading": "PDF & CDF",
+          "text": "$$f_X(x) = \\frac{1}{b-a} \\quad a \\leq x \\leq b$$\n\n$$F_X(x) = \\begin{cases} 0 & x < a \\\\ \\dfrac{x-a}{b-a} & a \\leq x \\leq b \\\\ 1 & x > b \\end{cases}$$"
+        },
+        {
+          "type": "formula",
+          "heading": "Mean & Variance",
+          "text": "$$\\mathbb{E}[X] = \\frac{a+b}{2} \\qquad \\text{Var}(X) = \\frac{(b-a)^2}{12}$$\n\nDerivation of mean:\n$$\\mathbb{E}[X] = \\int_a^b x \\cdot \\frac{1}{b-a}\\,dx = \\frac{1}{b-a}\\cdot\\frac{b^2-a^2}{2} = \\frac{a+b}{2}$$"
+        },
+        {
+          "type": "list",
+          "heading": "Key Properties",
+          "items": [
+            "Difference of two independent Uniform RVs is triangular",
+            "The $n+1$ gaps between $n$ uniform points on $[0,1]$ are all distributed the same way (by symmetry)"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Exponential Distribution",
+      "cat": "Distribution",
+      "summary": "Waiting time until the next event in a Poisson process with rate λ. The only continuous memoryless distribution. Continuous analog of the Geometric.",
+      "context": "Math · Probability & Statistics",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Definition",
+          "text": "$X \\sim \\text{Exp}(\\lambda)$ with rate $\\lambda$ models the waiting time until the first event, where events happen at an average rate of $\\lambda$ per unit time — equivalently, the inter-event time in a Poisson process with rate $\\lambda$."
+        },
+        {
+          "type": "formula",
+          "heading": "PDF & Tail",
+          "text": "$$f_X(x) = \\lambda e^{-\\lambda x} \\quad x \\geq 0$$\n\nTail formula (aka survival function):\n$$P(X > x) = e^{-\\lambda x}$$"
+        },
+        {
+          "type": "formula",
+          "heading": "Memoryless & Mean",
+          "text": "$$P(X > s + t \\mid X > s) = P(X > t)$$\n\nThe exponential is the **only** continuous distribution on $[0,\\infty)$ that is memoryless.\n\n$$\\mathbb{E}[X] = \\frac{1}{\\lambda} \\qquad \\text{Var}(X) = \\frac{1}{\\lambda^2}$$\n\nIf events happen at rate $\\lambda$/unit time on average, you wait $1/\\lambda$ units of time between events."
+        },
+        {
+          "type": "formula",
+          "heading": "Relation to Poisson & Min of Exponentials",
+          "text": "Two equivalent statements:\n- Number of events in a unit interval is $\\text{Poisson}(\\lambda)$\n- Inter-event time is $\\text{Exp}(\\lambda)$\n\nHow many events in the next hour? → Poisson. How long until the next event? → Exponential.\n\nMinimum of independent exponentials:\n$$X_1 \\sim \\text{Exp}(\\lambda_1),\\; X_2 \\sim \\text{Exp}(\\lambda_2) \\implies \\min(X_1, X_2) \\sim \\text{Exp}(\\lambda_1 + \\lambda_2)$$\n\nProof: $P(\\min(X_1, X_2) > t) = P(X_1 > t)P(X_2 > t) = e^{-\\lambda_1 t}e^{-\\lambda_2 t} = e^{-(\\lambda_1+\\lambda_2)t}$"
+        }
+      ]
+    },
+    {
+      "title": "Gaussian (Normal) Distribution",
+      "cat": "Distribution",
+      "summary": "The bell curve. Ubiquitous because of the Central Limit Theorem — sums of many independent RVs converge to Gaussian regardless of their original distribution.",
+      "context": "Math · Probability & Statistics",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Definition",
+          "text": "$X \\sim \\mathcal{N}(\\mu, \\sigma^2)$ with mean $\\mu$ and variance $\\sigma^2$."
+        },
+        {
+          "type": "formula",
+          "heading": "Standardization",
+          "text": "Subtract mean to shift to 0, divide by std to rescale to unit variance:\n$$Z = \\frac{X - \\mu}{\\sigma} \\sim \\mathcal{N}(0, 1)$$\n\nExample: if heights are $\\mathcal{N}(70, 9)$, fraction taller than 76 inches:\n$$P(X > 76) = P\\!\\left(Z > \\frac{76-70}{3}\\right) = P(Z > 2)$$"
+        },
+        {
+          "type": "formula",
+          "heading": "Percentiles",
+          "text": "The percentile $z_\\alpha$ is the value such that $P(Z \\leq z_\\alpha) = \\alpha$, i.e. probability mass $\\alpha$ to the **left**.\n\n$$P(Z \\leq z_\\alpha) = \\alpha \\iff P(Z > z_\\alpha) = 1 - \\alpha$$\n\nSymmetry: $z_{1-\\alpha} = -z_\\alpha$\n\n2-sided intervals: $P(|Z| \\leq z_{1-\\alpha/2}) = 1 - \\alpha$\n\nA $(1-\\alpha)$ confidence interval uses $z_{\\alpha/2}$ and $z_{1-\\alpha/2}$ as endpoints.\n\nFor $X \\sim \\mathcal{N}(\\mu, \\sigma^2)$, the $\\alpha$-percentile is:\n$$x_\\alpha = \\mu + \\sigma \\cdot z_\\alpha$$"
+        },
+        {
+          "type": "formula",
+          "heading": "Sum of Gaussians",
+          "text": "If $X_1 \\sim \\mathcal{N}(\\mu_1, \\sigma_1^2)$ and $X_2 \\sim \\mathcal{N}(\\mu_2, \\sigma_2^2)$ are independent:\n$$X_1 + X_2 \\sim \\mathcal{N}(\\mu_1 + \\mu_2,\\; \\sigma_1^2 + \\sigma_2^2)$$"
+        }
+      ]
+    }
+  ],
+  "math02": [
+    {
+      "title": "Expectation",
+      "cat": "Expectation",
+      "summary": "The weighted average of all possible values. For discrete RVs it's a sum; for continuous it's an integral. The tail formula is a powerful alternative that avoids computing the distribution directly.",
+      "context": "Math · Probability & Statistics",
+      "sections": [
+        {
+          "type": "formula",
+          "heading": "Definition",
+          "text": "$$\\mathbb{E}[X] = \\sum_x x\\, P(X = x) \\quad \\text{or} \\quad \\int_{-\\infty}^{\\infty} x\\, f(x)\\,dx$$"
+        },
+        {
+          "type": "formula",
+          "heading": "Expectation of a Function",
+          "text": "$$\\mathbb{E}[g(X)] = \\sum_x g(x)\\,P(X=x) \\quad \\text{or} \\quad \\int_{-\\infty}^{\\infty} g(x)\\,f(x)\\,dx$$"
+        },
+        {
+          "type": "formula",
+          "heading": "Tail Formula (non-negative RVs)",
+          "text": "$$\\mathbb{E}[X] = \\int_0^\\infty P(X > x)\\,dx = \\int_0^\\infty 1 - F(x)\\,dx$$\n\nPowerful when the survival function $P(X > x)$ is easier to compute than the distribution itself. Used extensively for max/min of RVs."
+        }
+      ]
+    },
+    {
+      "title": "Variance & Linearity",
+      "cat": "Expectation",
+      "summary": "Variance measures spread around the mean. Linearity of expectation holds regardless of dependence — one of the most powerful tools in probability.",
+      "context": "Math · Probability & Statistics",
+      "sections": [
+        {
+          "type": "formula",
+          "heading": "Variance",
+          "text": "$$\\text{Var}(X) = \\mathbb{E}[(X - \\mathbb{E}[X])^2] = \\mathbb{E}[X^2] - (\\mathbb{E}[X])^2$$"
+        },
+        {
+          "type": "formula",
+          "heading": "Linearity of Expectation",
+          "text": "For any RVs $X$, $Y$ and constants $a$, $b$, $c$ (regardless of independence):\n$$\\mathbb{E}[aX + bY + c] = a\\,\\mathbb{E}[X] + b\\,\\mathbb{E}[Y] + c$$"
+        },
+        {
+          "type": "formula",
+          "heading": "Independence",
+          "text": "For **independent** $X$ and $Y$:\n$$\\mathbb{E}[XY] = \\mathbb{E}[X]\\,\\mathbb{E}[Y]$$\n$$\\text{Var}(X + Y) = \\text{Var}(X) + \\text{Var}(Y)$$"
+        }
+      ]
+    },
+    {
+      "title": "Zoo of Functions: PMF, PDF, CDF",
+      "cat": "Zoo of Functions",
+      "summary": "Three ways to describe a distribution. PMF for discrete, PDF for continuous, CDF for both. Knowing how to move between them (integrate PDF → CDF, differentiate CDF → PDF) is essential.",
+      "context": "Math · Probability & Statistics",
+      "sections": [
+        {
+          "type": "formula",
+          "heading": "PMF (discrete)",
+          "text": "$$p(k) = P(X = k)$$\n\nProperties: $p(k) \\geq 0$ and $\\sum_k p(k) = 1$"
+        },
+        {
+          "type": "formula",
+          "heading": "PDF (continuous)",
+          "text": "$$f(x) \\text{ such that } P(a \\leq x \\leq b) = \\int_a^b f(x)\\,dx$$\n\nDifferentiate CDF to get PDF: $f(x) = F'(x)$"
+        },
+        {
+          "type": "formula",
+          "heading": "CDF (discrete & continuous)",
+          "text": "$$F(x) = P(X \\leq x)$$\n\nFor discrete: $F(x) = \\sum_{k \\leq x} p(k)$\n\nFor continuous: $F(x) = \\int_{-\\infty}^x f(x)\\,dx$\n\nNote: $P(a \\leq x \\leq b) = F(b) - F(a)$"
+        }
+      ]
+    },
+    {
+      "title": "Max & Min of n RVs",
+      "cat": "Expectation",
+      "summary": "CDF of max is the product of individual CDFs; tail of min is the product of tails. For Uniform(0,1): E[max] = n/(n+1), E[min] = 1/(n+1). For Exponential: min is still Exponential.",
+      "context": "Math · Probability & Statistics",
+      "sections": [
+        {
+          "type": "formula",
+          "heading": "CDF of Max & Min",
+          "text": "For $X_1, \\ldots, X_n$ iid with common CDF $F_X$:\n\nMax $M = \\max_i X_i$:\n$$F_M(x) = P(M \\leq x) = P(\\text{all } X_i \\leq x) = [F_X(x)]^n$$\n\nMin $m = \\min_i X_i$:\n$$P(m > x) = P(\\text{every } X_i > x) = [1 - F_X(x)]^n$$\n$$F_m(x) = 1 - [1 - F_X(x)]^n$$"
+        },
+        {
+          "type": "text",
+          "heading": "Two approaches for E[max] or E[min]",
+          "text": "3-step recipe: CDF → PDF → integrate. Or for non-negative RVs: tail formula $\\mathbb{E}[X] = \\int_0^\\infty P(X > x)\\,dx$ directly."
+        },
+        {
+          "type": "formula",
+          "heading": "Uniform(0,1) example",
+          "text": "Max $M = \\max_i X_i$:\n- CDF: $F_M(x) = x^n$\n- PDF: $f_M(x) = nx^{n-1}$\n- $\\mathbb{E}[M] = \\int_0^1 x \\cdot nx^{n-1}\\,dx = \\dfrac{n}{n+1}$\n\nMin $m = \\min_i X_i$:\n- $\\mathbb{E}[m] = \\dfrac{1}{n+1}$\n\nIntuition: $n$ uniform points split $[0,1]$ into $n+1$ equal-length segments on average."
+        },
+        {
+          "type": "formula",
+          "heading": "Exponential example",
+          "text": "For $X_i \\sim \\text{Exponential}(\\lambda)$:\n\nMin:\n$$P(m > x) = [P(X_i > x)]^n = e^{-n\\lambda x}$$\n$$\\mathbb{E}[m] = \\int_0^\\infty e^{-n\\lambda x}\\,dx = \\frac{1}{n\\lambda}$$\n\nMax grows logarithmically with $n$ (more complicated to derive).\n\nFor $X_i \\sim \\mathcal{N}(0,1)$: $\\mathbb{E}[\\max_i X_i] \\approx \\sqrt{2 \\ln n}$"
+        }
+      ]
+    }
+  ],
+  "math03": [
+    {
+      "title": "Markov's Inequality",
+      "cat": "Inequality",
+      "summary": "For any non-negative RV, P(X ≥ a) ≤ E[X]/a. Intuition: the mean cannot be smaller than the contribution from values above a.",
+      "context": "Math · Probability & Statistics",
+      "sections": [
+        {
+          "type": "formula",
+          "heading": "Statement",
+          "text": "For any non-negative RV $X$ and $a > 0$:\n$$P(X \\geq a) \\leq \\frac{\\mathbb{E}[X]}{a}$$"
+        },
+        {
+          "type": "formula",
+          "heading": "Proof",
+          "text": "$$\\mathbb{E}[X] \\geq \\sum_{x \\geq a} x\\,P(X=x) \\geq a \\sum_{x \\geq a} P(X=x) = a\\,P(X \\geq a)$$\n\nDivide both sides by $a$."
+        },
+        {
+          "type": "text",
+          "heading": "Intuition",
+          "text": "$\\mathbb{E}[X]$ cannot be smaller than the contribution of values greater than $a$. So if $\\mathbb{E}[X]$ is small, there cannot be much probability mass above $a$."
+        }
+      ]
+    },
+    {
+      "title": "Chebyshev's Inequality",
+      "cat": "Inequality",
+      "summary": "P(|X − μ| ≥ kσ) ≤ 1/k². At least 1 − 1/k² of the distribution lies within k standard deviations of the mean. E.g. 75% within 2σ. Proof: apply Markov to (X − μ)².",
+      "context": "Math · Probability & Statistics",
+      "sections": [
+        {
+          "type": "formula",
+          "heading": "Statement",
+          "text": "For any RV $X$ with mean $\\mu$ and variance $\\sigma^2$:\n$$P(|X - \\mu| \\geq k\\sigma) \\leq \\frac{1}{k^2}$$\n\nAlternate form with $\\epsilon = k\\sigma$:\n$$P(|X - \\mu| \\geq \\epsilon) \\leq \\frac{\\sigma^2}{\\epsilon^2}$$"
+        },
+        {
+          "type": "formula",
+          "heading": "Proof",
+          "text": "Apply Markov's inequality to $(X - \\mu)^2$:\n$$P(|X-\\mu| \\geq k\\sigma) = P((X-\\mu)^2 \\geq k^2\\sigma^2) \\leq \\frac{\\mathbb{E}[(X-\\mu)^2]}{k^2\\sigma^2} = \\frac{\\sigma^2}{k^2\\sigma^2} = \\frac{1}{k^2}$$"
+        },
+        {
+          "type": "text",
+          "heading": "Interpretation",
+          "text": "At least $1 - 1/k^2$ of the distribution lies within $k$ standard deviations of the mean. E.g. 75% of probability mass sits within 2 standard deviations, for any distribution."
+        }
+      ]
+    },
+    {
+      "title": "Jensen's Inequality",
+      "cat": "Inequality",
+      "summary": "For convex φ: φ(E[X]) ≤ E[φ(X)]. For concave φ: ≥. Describes how expectations interact with convex/concave transformations. Key application: log E[X] ≥ E[log X].",
+      "context": "Math · Probability & Statistics",
+      "sections": [
+        {
+          "type": "formula",
+          "heading": "Statement",
+          "text": "$$\\varphi \\text{ convex} \\implies \\varphi(\\mathbb{E}[X]) \\leq \\mathbb{E}[\\varphi(X)]$$\n$$\\varphi \\text{ concave} \\implies \\varphi(\\mathbb{E}[X]) \\geq \\mathbb{E}[\\varphi(X)]$$"
+        },
+        {
+          "type": "text",
+          "heading": "Memory trick",
+          "text": "Use $\\varphi(x) = x^2$ (convex) with $X \\in \\{-1, +1\\}$. Then $\\mathbb{E}[X] = 0$ so $\\varphi(\\mathbb{E}[X]) = 0$, but $\\mathbb{E}[\\varphi(X)] = 1$. Jensen says $0 \\leq 1$. ✓"
+        },
+        {
+          "type": "list",
+          "heading": "Convex functions (φ″ ≥ 0)",
+          "items": [
+            "$x^2, x^4, \\ldots$ ($x^n$ for any even $n$)",
+            "$|x|$",
+            "$a^x$ for $a > 1$",
+            "$1/x$ for $x > 0$",
+            "$\\max(x_1, x_2, \\ldots)$"
+          ]
+        },
+        {
+          "type": "list",
+          "heading": "Concave functions (φ″ ≤ 0)",
+          "items": [
+            "$\\sqrt{x}$",
+            "$\\log x$",
+            "$x^p$ for $0 < p < 1$",
+            "$\\min(x_1, x_2, \\ldots)$",
+            "Linear functions are both convex and concave"
+          ]
+        },
+        {
+          "type": "formula",
+          "heading": "Key consequence",
+          "text": "Worth memorizing: $\\log \\mathbb{E}[X] \\geq \\mathbb{E}[\\log X]$\n\n(since log is concave, Jensen gives $\\log(\\mathbb{E}[X]) \\geq \\mathbb{E}[\\log X]$)"
+        }
+      ]
+    },
+    {
+      "title": "AM-GM & Cauchy-Schwarz Inequalities",
+      "cat": "Inequality",
+      "summary": "AM-GM: arithmetic mean ≥ geometric mean, always. Cauchy-Schwarz: E[XY]² ≤ E[X²]E[Y²]. Both follow from Jensen's inequality.",
+      "context": "Math · Probability & Statistics",
+      "sections": [
+        {
+          "type": "formula",
+          "heading": "AM-GM Inequality",
+          "text": "Arithmetic mean is always ≥ geometric mean:\n$$\\frac{a_1 + \\cdots + a_n}{n} \\geq \\sqrt[n]{a_1 \\cdots a_n}$$\n\nProof: take log of both sides, apply Jensen's inequality (log is concave), then exponentiate both sides."
+        },
+        {
+          "type": "formula",
+          "heading": "Cauchy-Schwarz Inequality",
+          "text": "$$\\mathbb{E}[XY]^2 \\leq \\mathbb{E}[X^2]\\,\\mathbb{E}[Y^2]$$\n\nAlternate form (vectors):\n$$\\left(\\sum_{i=1}^n x_i y_i\\right)^2 \\leq \\left(\\sum_{i=1}^n x_i^2\\right)\\left(\\sum_{i=1}^n y_i^2\\right)$$"
+        }
+      ]
+    },
+    {
+      "title": "Union Bound (Boole's Inequality)",
+      "cat": "Inequality",
+      "summary": "P(A₁ ∪ ⋯ ∪ Aₙ) ≤ P(A₁) + ⋯ + P(Aₙ). A simple but powerful bound: the probability that at least one bad event happens is at most the sum of the individual probabilities.",
+      "context": "Math · Probability & Statistics",
+      "sections": [
+        {
+          "type": "formula",
+          "heading": "Statement",
+          "text": "$$P(A_1 \\cup A_2 \\cup \\cdots \\cup A_n) \\leq P(A_1) + P(A_2) + \\cdots + P(A_n)$$"
+        },
+        {
+          "type": "text",
+          "heading": "Usage",
+          "text": "Used when you want an upper bound on the probability that any one of many bad events occurs. The bound becomes tight when the events are nearly disjoint (mutually exclusive). It's loose when events have large overlaps, but it's often good enough for analysis purposes."
+        }
+      ]
+    }
+  ],
+  "math04": [
+    {
+      "title": "Conditional Probability & Bayes Rule",
+      "cat": "Conditional Probability",
+      "summary": "Conditional probability updates beliefs after observing evidence. Bayes rule reverses the conditioning — from P(B|A) to P(A|B). P(A) is the prior, P(A|B) is the posterior.",
+      "context": "Math · Probability & Statistics",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Setup",
+          "text": "Suppose we have two random variables $X$ and $Y$.\n- **Joint distribution**: $P(X=x, Y=y)$\n- **Marginal distribution**: $P(X=x) = \\sum_y P(X=x, Y=y)$\n- **Conditional distribution**: $P(X=x \\mid Y=y)$"
+        },
+        {
+          "type": "formula",
+          "heading": "Bayes Rule",
+          "text": "$$P(A \\mid B) = \\frac{P(B \\mid A)\\, P(A)}{P(B)}$$\n\n- $P(A)$: **prior** (what we believed before seeing $B$)\n- $P(A \\mid B)$: **posterior** (what we believe after seeing $B$)\n- Compute $P(B)$ via law of total probability"
+        },
+        {
+          "type": "note",
+          "heading": "Classic example: rare disease",
+          "text": "Test has 95% sensitivity, 5% false positive rate. Disease prevalence: 1 in 10,000.\n\nP(positive test | sick) = 0.95. But:\n- 1 sick person → ~1 true positive\n- 9,999 healthy → ~500 false positives\n- P(sick | positive) = 1/501 ≈ 0.2%\n\nThe prior (disease is rare) dominates even a 95% accurate test. This is base-rate neglect."
+        }
+      ]
+    },
+    {
+      "title": "Law of Total Expectation & Total Probability",
+      "cat": "Conditional Probability",
+      "summary": "Compute E[X] or P(A) by conditioning on Y and averaging over Y. The tower property says E[X] = E_Y[E[X|Y]]. These are the fundamental tools for breaking complex expectations into simpler conditional pieces.",
+      "context": "Math · Probability & Statistics",
+      "sections": [
+        {
+          "type": "formula",
+          "heading": "Law of Total Expectation (Tower Property)",
+          "text": "$$\\mathbb{E}[X] = \\sum_y \\mathbb{E}[X \\mid Y=y] \\cdot P(Y=y) \\quad \\text{or} \\quad \\int_{-\\infty}^\\infty \\mathbb{E}[X \\mid Y=y]\\,f(y)\\,dy$$\n\nCan also be stated as: $\\mathbb{E}[X] = \\mathbb{E}_Y[\\mathbb{E}[X \\mid Y]]$\n\nNote: $\\mathbb{E}[X \\mid Y]$ is itself a random variable expressed in terms of $Y$."
+        },
+        {
+          "type": "formula",
+          "heading": "Law of Total Probability",
+          "text": "$$P(A) = \\sum_y P(A \\mid Y=y) \\cdot P(Y=y)$$"
+        }
+      ]
+    },
+    {
+      "title": "Central Limit Theorem",
+      "cat": "Limit Theorem",
+      "summary": "The mean of n iid RVs is approximately Gaussian with mean μ and variance σ²/n, regardless of the original distribution. This is why the Gaussian appears everywhere in nature.",
+      "context": "Math · Probability & Statistics",
+      "sections": [
+        {
+          "type": "formula",
+          "heading": "Statement",
+          "text": "Mean of $n$ iid RVs $X_i$ with mean $\\mu$ and variance $\\sigma^2$, no matter what the $X_i$ look like:\n$$\\bar{X}_n = \\frac{1}{n}\\sum_{i=1}^n X_i \\approx \\mathcal{N}\\!\\left(\\mu,\\, \\frac{\\sigma^2}{n}\\right)$$"
+        },
+        {
+          "type": "formula",
+          "heading": "Variance Derivation",
+          "text": "$$\\text{Var}(\\bar{X}_n) = \\text{Var}\\!\\left(\\frac{1}{n}\\sum_{i=1}^n X_i\\right) = \\frac{1}{n^2}\\text{Var}\\!\\left(\\sum_{i=1}^n X_i\\right) = \\frac{1}{n^2}\\sum_{i=1}^n \\text{Var}(X_i) = \\frac{n\\sigma^2}{n^2} = \\frac{\\sigma^2}{n}$$"
+        },
+        {
+          "type": "formula",
+          "heading": "Standard Error & Confidence Interval",
+          "text": "**Standard error** = standard deviation of $\\bar{X}_n$ = $\\sigma / \\sqrt{n}$\n\nError shrinks like $\\sqrt{n}$ — need 100× samples to reduce error 10×.\n\n$(1-\\alpha)$ confidence interval:\n$$\\bar{X}_n \\pm z_{1-\\alpha/2} \\cdot \\frac{\\sigma}{\\sqrt{n}}$$"
+        }
+      ]
+    },
+    {
+      "title": "Law of Large Numbers",
+      "cat": "Limit Theorem",
+      "summary": "The sample mean of n iid RVs converges to the true mean as n→∞. Proved using Chebyshev: Var(X̄ₙ) = σ²/n → 0, so the mean concentrates.",
+      "context": "Math · Probability & Statistics",
+      "sections": [
+        {
+          "type": "formula",
+          "heading": "Statement",
+          "text": "Mean of $n$ iid RVs $X_i$ with mean $\\mu$ converges to the true average:\n$$P(|\\bar{X}_n - \\mu| > \\epsilon) \\to 0 \\quad \\text{for any } \\epsilon > 0$$"
+        },
+        {
+          "type": "formula",
+          "heading": "Proof (from Chebyshev)",
+          "text": "Substitute $\\epsilon = k\\sigma$ into Chebyshev's inequality applied to $\\bar{X}_n$:\n$$P(|\\bar{X}_n - \\mu| > \\epsilon) \\leq \\frac{\\text{Var}(\\bar{X}_n)}{\\epsilon^2} = \\frac{\\sigma^2}{n\\epsilon^2} \\to 0$$\n\nAs $n \\to \\infty$, the variance of the sample mean shrinks to zero."
+        }
+      ]
+    }
+  ],
+  "math05": [
+    {
+      "title": "Markov Chains",
+      "cat": "Markov Chain",
+      "summary": "A sequence of RVs where the future depends only on the present state, not the history. Described by a transition matrix P where P_ij = P(X_{t+1}=j | X_t=i). Rows sum to 1.",
+      "context": "Math · Probability & Statistics",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Definition",
+          "text": "A **Markov chain** is a sequence of RVs $X_0, X_1, X_2, \\ldots$ taking values in some state space $S$ satisfying the **Markov property**: the future depends only on the present state, not the past history."
+        },
+        {
+          "type": "formula",
+          "heading": "Transition Matrix",
+          "text": "For finite state spaces, the chain is described by the **transition matrix** $P$ where:\n$$P_{ij} = P(X_{t+1} = j \\mid X_t = i)$$\n\nRows sum to 1 — each row is a probability distribution over next states.\n\nIf $\\pi_t$ is the distribution over states at time $t$:\n$$\\pi_{t+1} = \\pi_t P$$"
+        },
+        {
+          "type": "formula",
+          "heading": "Stationary Distribution",
+          "text": "A **stationary distribution** $\\pi$ satisfies:\n$$\\pi = \\pi P$$\n\nUnder mild conditions, the chain has a unique stationary distribution and $\\pi_t \\to \\pi$ regardless of the starting state.\n\nExpected return time to state $i$:\n$$\\mathbb{E}[\\text{return to state } i] = \\frac{1}{\\pi_i}$$"
+        }
+      ]
+    },
+    {
+      "title": "Absorption Time & Probability",
+      "cat": "Markov Chain",
+      "summary": "For chains with absorbing states: use first-step analysis to set up a linear system for expected absorption time h_i and absorption probability q_i. Solve the system.",
+      "context": "Math · Probability & Statistics",
+      "sections": [
+        {
+          "type": "formula",
+          "heading": "Expected Absorption Time",
+          "text": "Let $h_i$ = expected time to absorption starting from state $i$. For target absorbing state $A$: $h_A = 0$.\n$$h_i = 1 + \\sum_j P_{ij}\\, h_j$$\n\nFor non-absorbing states $i \\neq A$: set up system of linear equations, solve."
+        },
+        {
+          "type": "formula",
+          "heading": "Absorption Probability",
+          "text": "Let $q_i$ = probability of reaching desired absorbing state $A$ starting from $i$.\n- $q_A = 1$ (at desired absorbing state)\n- $q_B = 0$ for all other absorbing states $B$\n\n$$q_i = \\sum_j P_{ij}\\, q_j$$\n\nFor non-absorbing states: again a linear system."
+        },
+        {
+          "type": "list",
+          "heading": "Solving strategy",
+          "items": [
+            "For small chains: solve the linear system directly",
+            "For structured chains: guess a closed form from small cases and verify it satisfies the recurrence",
+            "Fit boundary conditions",
+            "Symmetry trick: collapse equivalent states to reduce system size",
+            "Stationary distribution shortcut: on regular graphs, expected hitting time between adjacent vertices is always $n-1$ where $n$ = number of vertices"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "First-Step Analysis",
+      "cat": "Problem Type",
+      "summary": "Express the quantity you want in terms of itself, conditioning on the first step. Set up a system of equations and solve. Classic example: expected flips to get two heads in a row = 6.",
+      "context": "Math · Probability & Statistics",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "The technique",
+          "text": "Focus on the **first step** of the process and express the expectations you want to solve for in terms of themselves. Then solve the system of linear equations."
+        },
+        {
+          "type": "formula",
+          "heading": "Example: two heads in a row",
+          "text": "Let $E_0$ = expected flips to finish after just flipping tails (or just started). $E_1$ = expected flips after just flipping heads.\n\n$$E_0 = \\underbrace{\\tfrac{1}{2}(1+E_0)}_{\\text{tails, no progress}} + \\underbrace{\\tfrac{1}{2}(1+E_1)}_{\\text{heads}}$$\n\n$$E_1 = \\underbrace{\\tfrac{1}{2}(1+E_0)}_{\\text{tails, start over}} + \\underbrace{\\tfrac{1}{2} \\cdot 0}_{\\text{heads again}}$$\n\nSolving: $E_0 = 6$"
+        }
+      ]
+    },
+    {
+      "title": "Counting in Expectation",
+      "cat": "Problem Type",
+      "summary": "How many things are expected to satisfy some property? Define indicator variables X_i = 1[item i has property], form N = Σ X_i, then E[N] = Σ P(X_i=1) by linearity — regardless of dependence.",
+      "context": "Math · Probability & Statistics",
+      "sections": [
+        {
+          "type": "list",
+          "heading": "The technique",
+          "items": [
+            "Define $X_i = \\mathbf{1}[\\text{item } i \\text{ has property}]$",
+            "Define total count $N = \\sum_i X_i$",
+            "Compute $\\mathbb{E}[X_i] = P(X_i = 1)$ for each $i$ (use symmetry when possible)",
+            "Apply linearity: $\\mathbb{E}[N] = \\sum_i P(X_i = 1)$"
+          ]
+        },
+        {
+          "type": "formula",
+          "heading": "Example: fixed points in a random permutation",
+          "text": "By symmetry, position $i$ is equally likely to have any item, so $P(X_i = 1) = 1/n$.\n\n$$\\mathbb{E}[N] = \\sum_{i=1}^n \\frac{1}{n} = 1$$\n\nExpected number of fixed points = 1, regardless of $n$."
+        }
+      ]
+    }
+  ],
+  "math06": [
+    {
+      "title": "Birthday Problem",
+      "cat": "Puzzle",
+      "summary": "How many people until P(two share a birthday) > 50%? Answer: ~23. P(collision) = 1 − P(all unique birthdays). With d days in a year and n people, P(all unique) = d!/(d−n)!·d^n.",
+      "context": "Math · Probability & Statistics",
+      "sections": [
+        {
+          "type": "formula",
+          "heading": "Setup",
+          "text": "P(collision) = 1 − P(all unique birthdays)\n\nLet $d$ = number of days in the year, $n$ = number of people:\n$$P(\\text{all unique}) = \\frac{d}{d} \\cdot \\frac{d-1}{d} \\cdot \\frac{d-2}{d} \\cdots \\frac{d-n+1}{d} = \\frac{d!}{(d-n)! \\cdot d^n}$$"
+        },
+        {
+          "type": "text",
+          "heading": "Result",
+          "text": "With $d = 365$, P(collision) exceeds 50% at $n = 23$ people. Counterintuitive because we're not asking if someone shares a birthday with a specific person — we're asking if any two share a birthday."
+        }
+      ]
+    },
+    {
+      "title": "Gambler's Ruin",
+      "cat": "Puzzle",
+      "summary": "Start with $a, win $1 with prob p, lose $1 with prob 1−p, stop at $0 or $N. For fair game p=1/2: P(reach $N) = a/N. Expected absorption time = i(N−i).",
+      "context": "Math · Probability & Statistics",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Setup",
+          "text": "You start with \\$a. Win \\$1 with probability $p$, lose \\$1 with probability $1-p$. Stop when you reach \\$N (win) or \\$0 (ruin). What is the probability of reaching \\$N?"
+        },
+        {
+          "type": "formula",
+          "heading": "Recurrence",
+          "text": "Let $q_i$ = probability of reaching $\\$N$ from $\\$i$. Boundary: $q_0=0$, $q_N=1$.\n$$q_i = p \\cdot q_{i+1} + (1-p) \\cdot q_{i-1}$$\n\nThis is a second-order linear recurrence."
+        },
+        {
+          "type": "formula",
+          "heading": "Fair game result (p = 1/2)",
+          "text": "For $p = 1/2$: consecutive differences are equal → $q_i$ is linear in $i$.\n$$q_i = \\frac{i}{N} \\quad \\text{(with } q_0=0,\\; q_N=1 \\text{)}$$\n\nAlternate derivation (martingale):\n$$\\mathbb{E}[W_T] = q_a \\cdot N + (1-q_a) \\cdot 0 = q_a \\cdot N$$\n\nBut $\\mathbb{E}[W_T] = a$ (no drift in fair game), so $q_a = a/N$.\n\nExpected absorption time: $h_i = i(N-i)$"
+        }
+      ]
+    },
+    {
+      "title": "Random Walk",
+      "cat": "Puzzle",
+      "summary": "S_n = X_1 + ⋯ + X_n with each X_i = ±1 equally. E[S_n] = 0, Var(S_n) = n. Typical distance from origin grows like √n. Biased case: E[S_n] = n(2p−1).",
+      "context": "Math · Probability & Statistics",
+      "sections": [
+        {
+          "type": "formula",
+          "heading": "Simple symmetric random walk",
+          "text": "Let $S_n = X_1 + \\cdots + X_n$ where each $X_i = \\pm 1$ with equal probability.\n\n$$\\mathbb{E}[S_n] = \\mathbb{E}[X_i] = 0$$\n\nEach $X_i = \\pm 1$ has variance $\\mathbb{E}[X_i^2] - (\\mathbb{E}[X_i])^2 = 1 - 0 = 1$:\n$$\\text{Var}(S_n) = \\sum_{i=1}^n \\text{Var}(X_i) = n$$\n\nTypical distance from origin (std dev) grows like $\\sqrt{n}$."
+        },
+        {
+          "type": "formula",
+          "heading": "Biased case",
+          "text": "If $X_i = +1$ with prob $p$, else $-1$:\n$$\\mathbb{E}[S_n] = n(p \\cdot 1 + (1-p)\\cdot(-1)) = n(2p-1)$$"
+        }
+      ]
+    },
+    {
+      "title": "Coupon Collector",
+      "cat": "Puzzle",
+      "summary": "n different coupon types, each box gives one uniformly at random. Expected number of boxes to collect all n types = n·Hₙ ≈ n·ln(n). The last coupon takes n boxes on average.",
+      "context": "Math · Probability & Statistics",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Setup",
+          "text": "There are $n$ different types of coupons. Each cereal box gives one coupon uniformly at random. How many boxes do you expect to need to collect all $n$ types?"
+        },
+        {
+          "type": "formula",
+          "heading": "Phase analysis",
+          "text": "Let phase $k$ = phase in which we have exactly $k$ distinct types. When we have $k$ types, the probability of getting a new type is $(n-k)/n$, so time in phase $k$ is $\\text{Geom}((n-k)/n)$:\n$$\\mathbb{E}[X_k] = \\frac{n}{n-k}$$\n\nTotal expected time:\n$$\\mathbb{E}[X] = \\sum_{k=0}^{n-1} \\mathbb{E}[X_k] = \\sum_{k=0}^{n-1} \\frac{n}{n-k} = n\\sum_{j=1}^n \\frac{1}{j} = n \\cdot H_n$$\n\nwhere $H_n = 1 + 1/2 + 1/3 + \\cdots + 1/n$ is the $n$-th **harmonic number** ($H_n \\approx \\ln n$ for large $n$).\n\nThe final phase (getting the last coupon) takes $n$ boxes on average!"
+        }
+      ]
+    },
+    {
+      "title": "Reservoir Sampling",
+      "cat": "Puzzle",
+      "summary": "Stream of n items; return one item uniformly at random without knowing n in advance. Algorithm: keep first item; for each new item n, replace with probability 1/n. Correctness by induction.",
+      "context": "Math · Probability & Statistics",
+      "sections": [
+        {
+          "type": "list",
+          "heading": "Algorithm",
+          "items": [
+            "Keep the first item: $s = x_1$",
+            "For $n = 2, 3, 4, \\ldots$: with probability $1/n$, replace $s$ with $x_n$"
+          ]
+        },
+        {
+          "type": "formula",
+          "heading": "Proof by induction",
+          "text": "Claim: after processing $n$ items, each $x_1, \\ldots, x_n$ is stored in $s$ with probability $1/n$.\n\nBase case ($n=1$): trivially $s = x_1$ with probability $1 = 1/1$.\n\nInductive step: after processing $x_n$, two cases:\n- $s = x_n$ (replace): happens with prob $1/n$\n- $s = x_k$ for $k < n$ (keep): requires $s = x_k$ after step $n-1$ (prob $1/(n-1)$ by induction) AND we rejected $x_n$ (prob $(n-1)/n$):\n$$\\frac{1}{n-1} \\cdot \\frac{n-1}{n} = \\frac{1}{n}$$\n\nSo every $x_k$ is in the reservoir with probability $1/n$ after $n$ steps."
+        }
+      ]
+    },
+    {
+      "title": "Secretary Problem",
+      "cat": "Puzzle",
+      "summary": "n candidates in random order, decide immediately after each interview. Strategy: reject first k, then hire next candidate better than all first k. Optimal k = n/e, success probability ≈ 1/e ≈ 37%.",
+      "context": "Math · Probability & Statistics",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Setup",
+          "text": "Interview $n$ candidates in random order. After each interview, decide immediately to hire or reject. Goal: maximize probability of hiring the best candidate. Strategy: reject first $k$ candidates, then hire the next one better than all of the first $k$."
+        },
+        {
+          "type": "formula",
+          "heading": "Optimal threshold",
+          "text": "Let $P(k)$ = probability of success with threshold $k$. Let $b$ = position of best candidate.\n\nFor strategy to succeed: (1) $b > k$ and (2) best among positions $1, \\ldots, b-1$ is in $1, \\ldots, k$.\n\n$$P(k) = \\sum_{b=k+1}^n \\frac{1}{n} \\cdot \\frac{k}{b-1} = \\frac{k}{n}\\sum_{b=k+1}^n \\frac{1}{b-1} \\approx \\frac{k}{n}\\ln\\frac{n}{k}$$\n\nLet $r = k/n$. Maximize $-r\\log r$: take derivative $-\\frac{d}{dr}r\\log r = -\\log r - 1 = 0$, giving $\\log r = -1 \\implies r = 1/e$.\n\n$$k = \\frac{n}{e} \\approx 0.368n$$\n\n$$P^* = \\frac{1}{e} \\approx 37\\%$$"
+        }
+      ]
+    },
+    {
+      "title": "Monty Hall Problem",
+      "cat": "Puzzle",
+      "summary": "n doors, car behind one. You pick one, host opens k doors (no car). Should you switch? Yes — switching gives probability (n−1)/n of winning for the general case. Proved with Bayes rule.",
+      "context": "Math · Probability & Statistics",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Setup",
+          "text": "Let $A \\in \\{1, 2, \\ldots, n\\}$ represent the car's location. Let $B$ = set of doors Monty opens. We pick door $c$. We want $P(A=j \\mid B)$ for each unopened door $j$.\n\nComparing $P(A=j \\mid B)$ for different $j$ reduces to comparing $P(B \\mid A=j)$, since the prior $P(A=j) = 1/n$ is the same for all $j$."
+        },
+        {
+          "type": "formula",
+          "heading": "Case 1: Monty opens n−2 doors (leaving 2 total)",
+          "text": "Let $r$ = the one remaining door (not $c$, not opened).\n\n- $P(B \\mid A=t) = 1/(n-1)$: car is behind your door, $n-1$ choices of which doors to leave\n- $P(B \\mid A=r) = 1$: Monty is completely constrained, must leave door $r$ closed\n- $P(B \\mid A=k) = 0$ for any opened door $k \\in B$\n\nNormalizing:\n$$P(A=t \\mid B) = \\frac{1}{n}, \\quad P(A=r \\mid B) = \\frac{n-1}{n}$$\n\n**Switch to win with probability $(n-1)/n$!**"
+        },
+        {
+          "type": "insight",
+          "heading": "General principle",
+          "text": "The sum of probabilities of opened doors ($k/n$ where $k$ is the number of opened doors) is redistributed onto the remaining unopened, unchosen doors. Your original door stays at $1/n$. The more doors Monty opens, the stronger the case for switching."
+        }
+      ]
+    },
+    {
+      "title": "Maximum Likelihood Estimation",
+      "cat": "Statistics",
+      "summary": "Pick the parameter θ that makes the observed data most probable. log-likelihood trick turns products into sums. MLE of Bernoulli = sample frequency, MLE of Exponential = 1/sample mean.",
+      "context": "Math · Probability & Statistics",
+      "sections": [
+        {
+          "type": "formula",
+          "heading": "Definition",
+          "text": "Given data $x_1, \\ldots, x_n$ drawn from distribution with unknown parameter $\\theta$:\n$$L(\\theta) = \\prod_{i=1}^n p(x_i;\\theta)$$\n$$\\hat{\\theta}_{\\text{MLE}} = \\arg\\max_\\theta L(\\theta)$$\n\nLog-likelihood trick — take log to turn product into sum:\n$$\\ell(\\theta) = \\log L(\\theta) = \\sum_{i=1}^n \\log p(x_i;\\theta)$$\n\nDifferentiate w.r.t. $\\theta$, set to zero, solve for $\\hat{\\theta}$."
+        },
+        {
+          "type": "formula",
+          "heading": "Bernoulli MLE",
+          "text": "PMF: $P(X=x;p) = p^x(1-p)^{1-x}$. Let $k$ = number of 1s.\n$$\\ell(p) = k\\log p + (n-k)\\log(1-p)$$\n$$\\ell'(p) = \\frac{k}{p} - \\frac{n-k}{1-p} = 0 \\implies \\hat{p} = \\frac{k}{n}$$\n\nMLE = sample frequency."
+        },
+        {
+          "type": "formula",
+          "heading": "Exponential MLE",
+          "text": "PDF: $f(x;\\lambda) = \\lambda e^{-\\lambda x}$.\n$$\\ell(\\lambda) = \\sum_i \\log(\\lambda e^{-\\lambda x_i}) = n\\log\\lambda - \\lambda\\sum_i x_i$$\n$$\\ell'(\\lambda) = \\frac{n}{\\lambda} - \\sum_i x_i = 0 \\implies \\hat{\\lambda}_{\\text{MLE}} = \\frac{n}{\\sum_i x_i}$$\n\nMLE = reciprocal of sample mean. Makes sense: $\\text{Exp}(\\lambda)$ has mean $1/\\lambda$."
+        },
+        {
+          "type": "formula",
+          "heading": "Uniform(0, θ) MLE",
+          "text": "PDF: $f(x;\\theta) = 1/\\theta$ for $x \\leq \\theta$, else 0.\n$$L(\\theta) = \\begin{cases} 1/\\theta^n & \\text{if } \\max x_i \\leq \\theta \\\\ 0 & \\text{otherwise} \\end{cases}$$\n\nMaximized for smallest $\\theta \\geq \\max x_i$:\n$$\\hat{\\theta} = \\max_i x_i$$\n\nMLE = largest observed value (not the sample mean)."
+        },
+        {
+          "type": "insight",
+          "heading": "Connection to loss functions",
+          "text": "Training with CE loss $= -\\frac{1}{N}\\sum_i \\log p(x_i)$ is the same as maximizing log likelihood. Models are trained to make observed data as probable as possible."
+        }
+      ]
+    },
+    {
+      "title": "Bias & Variance of Estimators",
+      "cat": "Statistics",
+      "summary": "An estimator θ̂ is a function of random data, so it's itself an RV. Bias = E[θ̂] − θ. Variance = how much θ̂ depends on which data was drawn. MSE = Bias² + Variance.",
+      "context": "Math · Probability & Statistics",
+      "sections": [
+        {
+          "type": "formula",
+          "heading": "Definitions",
+          "text": "True parameter $\\theta$, estimator $\\hat{\\theta}$ (a function of random data → itself an RV).\n\n**Bias**: how close is $\\hat{\\theta}$ to $\\theta$ on average?\n$$\\text{bias}[\\hat{\\theta}] = \\mathbb{E}[\\hat{\\theta}] - \\theta$$\n\n**Variance**: how much does $\\hat{\\theta}$ depend on the data distribution?\n$$\\text{var}(\\hat{\\theta}) = \\mathbb{E}[(\\hat{\\theta} - \\mathbb{E}[\\hat{\\theta}])^2]$$\n\n**Mean Squared Error**:\n$$\\text{MSE}(\\hat{\\theta}) = \\mathbb{E}[(\\hat{\\theta} - \\theta)^2] = \\text{Bias}(\\hat{\\theta})^2 + \\text{Var}(\\hat{\\theta})$$"
+        }
+      ]
+    },
+    {
+      "title": "Taylor Series & Derivative Rules",
+      "cat": "Math Tools",
+      "summary": "Taylor series approximates a function using only information at a single point. e^x = 1 + x + x²/2! + ⋯ has infinite radius of convergence. Key derivative rules: power, exp, log, chain, product, quotient.",
+      "context": "Math · Probability & Statistics",
+      "sections": [
+        {
+          "type": "formula",
+          "heading": "Taylor Series",
+          "text": "Approximates $f(x)$ using a polynomial from information at a single point $a$:\n$$f(x) = \\sum_{n=0}^\\infty \\frac{f^{(n)}(a)}{n!}(x-a)^n$$\n\nAround $a=0$ (Maclaurin series):\n$$e^x = 1 + x + \\frac{x^2}{2!} + \\frac{x^3}{3!} + \\cdots = \\sum_{n=0}^\\infty \\frac{x^n}{n!}$$\n\nHas infinite radius of convergence — converges to $e^x$ everywhere."
+        },
+        {
+          "type": "formula",
+          "heading": "Derivative Rules",
+          "text": "$$\\frac{d}{dx}x^n = nx^{n-1} \\qquad \\frac{d}{dx}e^x = e^x$$\n$$\\frac{d}{dx}\\log x = \\frac{1}{x} \\qquad \\frac{d}{dx}\\sin x = \\cos x \\qquad \\frac{d}{dx}\\cos x = -\\sin x$$\n\n**Chain rule**: $\\dfrac{d}{dx}f(g(x)) = f'(g(x))\\cdot g'(x)$\n\n**Product rule**: $\\dfrac{d}{dx}f(x)g(x) = f'(x)g(x) + f(x)g'(x)$\n\n**Quotient rule**: $\\dfrac{d}{dx}\\dfrac{f(x)}{g(x)} = \\dfrac{f'(x)g(x) - f(x)g'(x)}{g(x)^2}$"
+        },
+        {
+          "type": "formula",
+          "heading": "Handy Identities",
+          "text": "Harmonic number: $H_n = \\sum_{k=1}^n \\frac{1}{k} \\approx \\log n$ for large $n$\n\nLog-mean inequality: $\\sqrt{xy} \\leq \\dfrac{x+y}{2}$ for $x, y > 0$\n\nIdentities for $e$:\n$$e = \\lim_{n\\to\\infty}\\left(1+\\frac{1}{n}\\right)^n \\qquad \\frac{1}{e} = \\lim_{n\\to\\infty}\\left(1-\\frac{1}{n}\\right)^n \\qquad e^x = \\lim_{n\\to\\infty}\\left(1+\\frac{x}{n}\\right)^n$$\n\nExponential series:\n$$e = \\sum_{k=0}^\\infty \\frac{1}{k!} \\qquad e^x = \\sum_{n=0}^\\infty \\frac{x^n}{n!} \\qquad e^{-1} = 1 - \\frac{1}{1!} + \\frac{1}{2!} - \\frac{1}{3!} + \\cdots$$"
+        }
+      ]
+    },
+    {
+      "title": "Combinatorics",
+      "cat": "Math Tools",
+      "summary": "Four counting regimes: order matters/no replacement → permutations n!/(n−k)!; order doesn't matter/no replacement → combinations C(n,k); with replacement → n^k or C(n+k−1, k). Inclusion-exclusion for overlapping sets.",
+      "context": "Math · Probability & Statistics",
+      "sections": [
+        {
+          "type": "formula",
+          "heading": "Combinations & Permutations",
+          "text": "**Combination** — choosing $k$ items from $n$, order doesn't matter:\n$$\\binom{n}{k} = \\frac{n!}{k!(n-k)!} = \\frac{P(n,k)}{k!}$$\n\n**Permutation** — arranging $k$ items from $n$, order matters:\n$$P(n,k) = \\frac{n!}{(n-k)!}$$\n\n**Multinomial** — $n$ objects with $n_1$ of type 1, $n_2$ of type 2, …:\n$$\\binom{n}{n_1, \\ldots, n_m} = \\frac{n!}{n_1! \\cdots n_m!}$$"
+        },
+        {
+          "type": "table",
+          "heading": "Summary table",
+          "rows": [
+            [
+              "Order matters?",
+              "Replacement?",
+              "Count"
+            ],
+            [
+              "Yes",
+              "No",
+              "$n!/(n-k)!$ (permutations)"
+            ],
+            [
+              "No",
+              "No",
+              "$\\binom{n}{k}$ (combinations)"
+            ],
+            [
+              "Yes",
+              "Yes",
+              "$n^k$"
+            ],
+            [
+              "No",
+              "Yes",
+              "$\\binom{n+k-1}{k}$ (stars & bars)"
+            ]
+          ]
+        },
+        {
+          "type": "formula",
+          "heading": "Stars & Bars",
+          "text": "Choosing $k$ items from $n$ types **with replacement**, order doesn't matter:\n$$\\binom{n+k-1}{k}$$\n\nInterpretation: represent each choice as $k$ stars and $n-1$ bars. Choose which of $n+k-1$ positions are stars.\n\nEquivalently: number of ways to write non-negative integer $k$ as sum of $n$ non-negative integers."
+        },
+        {
+          "type": "formula",
+          "heading": "Inclusion-Exclusion",
+          "text": "$$P(A \\cup B) = P(A) + P(B) - P(A \\cap B)$$\n$$P(A \\cup B \\cup C) = P(A)+P(B)+P(C) - P(A\\cap B) - P(A\\cap C) - P(B\\cap C) + P(A\\cap B\\cap C)$$\n\nAs counts:\n$$|A \\cup B \\cup C| = |A|+|B|+|C| - |A\\cap B| - |A\\cap C| - |B\\cap C| + |A\\cap B\\cap C|$$"
+        }
+      ]
     }
   ],
   "overviews": {

@@ -429,6 +429,33 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
   button,select,input[type=search]{padding:5px 8px;font-size:11px}
   .sec-compare{grid-template-columns:1fr}
 }
+
+/* ── MATH collapsible group ── */
+.math-group-toggle{
+  display:flex;align-items:center;gap:6px;
+  padding:10px 16px 4px;
+  font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:1.8px;
+  color:#f0abfc;opacity:.75;
+  border-top:1px solid var(--border);margin-top:4px;
+  cursor:pointer;user-select:none;
+  transition:opacity .15s;
+}
+.math-group-toggle:hover{opacity:1}
+.math-group-arrow{font-size:8px;transition:transform .2s;display:inline-block}
+.math-group-toggle.open .math-group-arrow{transform:rotate(90deg)}
+.math-group-items{
+  overflow:hidden;
+  max-height:0;
+  transition:max-height .25s ease;
+}
+.math-group-items.open{max-height:600px}
+
+/* Prob chapter larger fonts */
+.wiki-article[class*=" math"] .sec-formula,
+.wiki-article[class*=" math"] .sec-formula{font-size:14px;line-height:2.2}
+.wiki-article[class*=" math"] .sec-formula .katex{font-size:1.15em}
+.wiki-article[class*=" math"] .sec-text{font-size:14px;line-height:1.85}
+.wiki-article[class*=" math"] .sec-list li{font-size:14px;line-height:1.75}
 </style>
 </head>
 <body>
@@ -771,6 +798,43 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
     <span class="nav-label">Transformer Captioning</span>
     <span class="nav-count" id="cnt-labtc">0</span>
   </button>
+
+  <div class="math-group-toggle" id="math-group-toggle" onclick="toggleMathGroup()">
+    <span class="math-group-arrow">▶</span>
+    <span>MATH · Probability &amp; Stats</span>
+  </div>
+  <div class="math-group-items" id="math-group-items">
+    <button class="nav-btn" data-sec="math01" onclick="switchSection('math01');closeSidebar()">
+      <span class="nav-icon">🎲</span><span class="nav-num">01</span>
+      <span class="nav-label">Distributions</span>
+      <span class="nav-count" id="cnt-math01">0</span>
+    </button>
+    <button class="nav-btn" data-sec="math02" onclick="switchSection('math02');closeSidebar()">
+      <span class="nav-icon">📊</span><span class="nav-num">02</span>
+      <span class="nav-label">Expectation &amp; Variance</span>
+      <span class="nav-count" id="cnt-math02">0</span>
+    </button>
+    <button class="nav-btn" data-sec="math03" onclick="switchSection('math03');closeSidebar()">
+      <span class="nav-icon">⚖️</span><span class="nav-num">03</span>
+      <span class="nav-label">Inequalities</span>
+      <span class="nav-count" id="cnt-math03">0</span>
+    </button>
+    <button class="nav-btn" data-sec="math04" onclick="switchSection('math04');closeSidebar()">
+      <span class="nav-icon">🔗</span><span class="nav-num">04</span>
+      <span class="nav-label">Conditional &amp; Limit Theorems</span>
+      <span class="nav-count" id="cnt-math04">0</span>
+    </button>
+    <button class="nav-btn" data-sec="math05" onclick="switchSection('math05');closeSidebar()">
+      <span class="nav-icon">🔄</span><span class="nav-num">05</span>
+      <span class="nav-label">Markov &amp; Problem Types</span>
+      <span class="nav-count" id="cnt-math05">0</span>
+    </button>
+    <button class="nav-btn" data-sec="math06" onclick="switchSection('math06');closeSidebar()">
+      <span class="nav-icon">🧩</span><span class="nav-num">06</span>
+      <span class="nav-label">Puzzles &amp; MLE</span>
+      <span class="nav-count" id="cnt-math06">0</span>
+    </button>
+  </div>
 
   <div class="sidebar-foot">
     <button id="btn-import">&#128194; JSON Yükle</button>
@@ -1406,6 +1470,67 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
     </div>
   </div>
 
+  <!-- MATH section headers -->
+  <div id="hdr-math01" class="section-header">
+    <div class="hdr-title">Math 01 · Distributions</div>
+    <div class="hdr-sub">Bernoulli, Binomial, Poisson, Geometric, Uniform, Exponential, Gaussian</div>
+    <div class="controls">
+      <select id="flt-math01"><option value="">All categories</option></select>
+      <input type="search" id="q-math01" placeholder="Search...">
+      <span class="pill" id="pill-math01">0 cards</span>
+    </div>
+  </div>
+
+  <div id="hdr-math02" class="section-header">
+    <div class="hdr-title">Math 02 · Expectation &amp; Variance</div>
+    <div class="hdr-sub">E[X], Var(X), PMF, PDF, CDF, linearity, independence, Zoo of functions</div>
+    <div class="controls">
+      <select id="flt-math02"><option value="">All categories</option></select>
+      <input type="search" id="q-math02" placeholder="Search...">
+      <span class="pill" id="pill-math02">0 cards</span>
+    </div>
+  </div>
+
+  <div id="hdr-math03" class="section-header">
+    <div class="hdr-title">Math 03 · Inequalities</div>
+    <div class="hdr-sub">Markov, Chebyshev, Jensen, AM-GM, Cauchy-Schwarz, union bound</div>
+    <div class="controls">
+      <select id="flt-math03"><option value="">All categories</option></select>
+      <input type="search" id="q-math03" placeholder="Search...">
+      <span class="pill" id="pill-math03">0 cards</span>
+    </div>
+  </div>
+
+  <div id="hdr-math04" class="section-header">
+    <div class="hdr-title">Math 04 · Conditional Probabilities &amp; Limit Theorems</div>
+    <div class="hdr-sub">Bayes rule, total probability, tower property, CLT, LLN, confidence intervals</div>
+    <div class="controls">
+      <select id="flt-math04"><option value="">All categories</option></select>
+      <input type="search" id="q-math04" placeholder="Search...">
+      <span class="pill" id="pill-math04">0 cards</span>
+    </div>
+  </div>
+
+  <div id="hdr-math05" class="section-header">
+    <div class="hdr-title">Math 05 · Markov Chains &amp; Problem Types</div>
+    <div class="hdr-sub">Transition matrix, stationary distribution, absorption, first-step analysis, max/min RVs, counting</div>
+    <div class="controls">
+      <select id="flt-math05"><option value="">All categories</option></select>
+      <input type="search" id="q-math05" placeholder="Search...">
+      <span class="pill" id="pill-math05">0 cards</span>
+    </div>
+  </div>
+
+  <div id="hdr-math06" class="section-header">
+    <div class="hdr-title">Math 06 · Puzzles, MLE &amp; Math Tools</div>
+    <div class="hdr-sub">Birthday, Gambler's ruin, Secretary, Monty Hall, MLE, bias-variance, Taylor series</div>
+    <div class="controls">
+      <select id="flt-math06"><option value="">All categories</option></select>
+      <input type="search" id="q-math06" placeholder="Search...">
+      <span class="pill" id="pill-math06">0 cards</span>
+    </div>
+  </div>
+
 </header>
 
 <div id="overview-panel" class="ch-overview-panel" style="display:none">
@@ -1439,7 +1564,8 @@ const CHAPTERS = ['ch01','ch02','ch03','ch04','ch05','ch06','ch07','ch08','ch09'
                    'py01','py02','py03','py04','py05','py06','py07',
                    'vs01','vs02','vs03','vs04',
                    'cs01','cs02','cs03','cs04','cs05','cs06','cs07','cs08','cs09','cs10','cs11','cs12','cs13','cs14','cs15','cs16',
-                   'lab01','lab02','lab03','lab04','lab05','lab06','lab07','lab08','labtc'];
+                   'lab01','lab02','lab03','lab04','lab05','lab06','lab07','lab08','labtc',
+                   'math01','math02','math03','math04','math05','math06'];
 let DATA = {};
 CHAPTERS.forEach(c => DATA[c] = []);
 let OVERVIEWS = {};
@@ -1461,7 +1587,8 @@ const CH_CTX = {
   lab01:'lab01',lab02:'lab02',lab03:'lab03',lab04:'lab04',lab05:'lab05',
   cs01:'cs01',cs02:'cs02',cs03:'cs03',cs04:'cs04',cs05:'cs05',cs06:'cs06',cs07:'cs07',cs08:'cs08',
   cs09:'cs09',cs10:'cs10',cs11:'cs11',cs12:'cs12',cs13:'cs13',cs14:'cs14',cs15:'cs15',cs16:'cs16',
-  lab06:'lab06',lab07:'lab07',lab08:'lab08',labtc:'labtc'
+  lab06:'lab06',lab07:'lab07',lab08:'lab08',labtc:'labtc',
+  math01:'math01',math02:'math02',math03:'math03',math04:'math04',math05:'math05',math06:'math06'
 };
 
 /* ==================== HELPERS ==================== */
@@ -1504,9 +1631,19 @@ function setTheme(t){
 /* ==================== SIDEBAR ==================== */
 function openSidebar(){ $('sidebar').classList.add('open') }
 function closeSidebar(){ $('sidebar').classList.remove('open') }
+function toggleMathGroup(){
+  const toggle = $('math-group-toggle');
+  const items  = $('math-group-items');
+  const isOpen = items.classList.toggle('open');
+  toggle.classList.toggle('open', isOpen);
+}
 
 function switchSection(sec){
   SEC = sec;
+  if(sec.startsWith('math')){
+    $('math-group-items').classList.add('open');
+    $('math-group-toggle').classList.add('open');
+  }
   document.querySelectorAll('.nav-btn[data-sec]').forEach(b => b.classList.toggle('active', b.dataset.sec === sec));
   document.querySelectorAll('.section-header').forEach(h => h.classList.remove('active'));
   $('hdr-'+sec).classList.add('active');
