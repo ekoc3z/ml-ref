@@ -148,13 +148,16 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .wiki-article{border-bottom:1px solid var(--border);padding:22px 28px;border-left:3px solid var(--cc,var(--border));transition:background .1s}
 .wiki-article:last-child{border-bottom:none}
 .wiki-article-header{margin-bottom:10px}
-.wiki-article-title{font-size:16px;font-weight:700;color:var(--text);cursor:pointer;display:inline-block;margin-bottom:6px;line-height:1.35}
+.wiki-article-title{font-size:21px;font-weight:700;color:var(--text);cursor:pointer;display:inline-block;margin-bottom:6px;line-height:1.35}
 .wiki-article-title:hover{color:var(--cc,var(--accent-light))}
 .wiki-article-meta{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .wiki-article-ctx{font-size:11px;color:var(--muted);font-style:italic;opacity:.8}
-.wiki-article-lead{font-size:13px;line-height:1.75;color:#9aa5bc;margin:10px 0 18px;font-style:italic;padding:8px 14px;background:rgba(255,255,255,.02);border-left:2px solid var(--border);border-radius:0 4px 4px 0}
+.wiki-article-lead{font-size:16px;line-height:1.75;color:#9aa5bc;margin:10px 0 18px;font-style:italic;padding:8px 14px;background:rgba(255,255,255,.02);border-left:2px solid var(--border);border-radius:0 4px 4px 0}
 .wiki-article-body .sec-block{margin-bottom:16px}
 .wiki-article-body .sec-block:last-child{margin-bottom:0}
+.wiki-article>*{max-width:780px}
+.sec-text+.sec-text{margin-top:.8em}
+.sec-block-qa .sec-text{font-size:16.5px}
 
 /* CHAPTER CATEGORY COLORS */
 .card-cat-Foundations.ch01,.cat-hdr-Foundations.ch01         {--cc:#7ec8fa}
@@ -305,7 +308,7 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .card-cat-Optimization.vs03,.cat-hdr-Optimization.vs03         {--cc:#6ee7b7}
 
 /* Code block */
-.sec-code{background:var(--code-bg);border:1px solid var(--border);border-radius:6px;padding:12px 14px;font-family:'Fira Code','Cascadia Code','Courier New',monospace;font-size:12px;color:var(--sec-code-text);white-space:pre;overflow-x:auto;line-height:1.6;display:block;margin:0}
+.sec-code{background:var(--code-bg);border:1px solid var(--border);border-radius:6px;padding:12px 14px;font-family:'Fira Code','Cascadia Code','Courier New',monospace;font-size:14px;color:var(--sec-code-text);white-space:pre;overflow-x:auto;line-height:1.6;display:block;margin:0}
 .qa-mark{color:#38bdf8;margin-right:6px;font-size:8px;vertical-align:2px;opacity:1;letter-spacing:0}
 .sec-block-qa{border-left:2px solid rgba(56,189,248,.25);padding-left:10px;margin-left:-10px}
 
@@ -340,24 +343,24 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 /* POPUP */
 .popup-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.75);display:flex;justify-content:center;align-items:center;z-index:100;opacity:0;visibility:hidden;transition:opacity .2s,visibility .2s}
 .popup-overlay.show{opacity:1;visibility:visible}
-.popup-box{background:var(--popup-bg);border:1px solid var(--border);border-radius:16px;padding:26px;max-width:720px;width:94%;max-height:90vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.4)}
-.popup-title{font-size:18px;font-weight:700;color:var(--accent-light);margin-bottom:3px}
+.popup-box{background:var(--popup-bg);border:1px solid var(--border);border-radius:16px;padding:28px 32px;max-width:820px;width:94%;max-height:90vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.4)}
+.popup-title{font-size:22px;font-weight:700;color:var(--accent-light);margin-bottom:3px}
 .popup-meta{font-size:11px;color:var(--muted);margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap}
 .popup-meta .p-cat{text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
 .popup-meta .p-ctx{font-style:italic;opacity:.8;color:var(--muted)}
 
 /* Section rendering */
 .sec-block{margin-bottom:18px}
-.sec-heading{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--accent-light);opacity:.7;margin-bottom:7px}
-.sec-text{font-size:13px;line-height:1.7;color:var(--sec-text)}
-.sec-formula{font-family:'SF Mono',Consolas,'Courier New',monospace;background:var(--sec-formula-bg);border:1px solid var(--sec-formula-border);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:12px 14px;font-size:12px;color:var(--sec-formula-text);overflow-x:auto;line-height:2}
+.sec-heading{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--accent-light);opacity:.7;margin-bottom:7px}
+.sec-text{font-size:17px;line-height:1.75;color:var(--sec-text)}
+.sec-formula{font-family:'SF Mono',Consolas,'Courier New',monospace;background:var(--sec-formula-bg);border:1px solid var(--sec-formula-border);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:12px 16px;font-size:16px;color:var(--sec-formula-text);overflow-x:auto;line-height:1.9}
 .sec-formula .katex-display{margin:.3em 0;overflow-x:auto;overflow-y:hidden}
 .sec-formula .katex{font-size:1.05em;color:var(--text)}
 .katex-display>.katex{text-align:left!important;padding-left:8px}
 .sec-list{list-style:none;padding:0}
-.sec-list li{font-size:13px;color:var(--sec-text);line-height:1.65;padding:3px 0 3px 14px;position:relative}
+.sec-list li{font-size:17px;color:var(--sec-text);line-height:1.7;padding:3px 0 3px 14px;position:relative}
 .sec-list li::before{content:"›";position:absolute;left:0;color:var(--accent);font-weight:700}
-.sec-table{width:100%;border-collapse:collapse;font-size:12px}
+.sec-table{width:100%;border-collapse:collapse;font-size:14.5px}
 .sec-table th{background:var(--popup-tbl-head);color:var(--accent-light);padding:7px 10px;text-align:left;font-weight:700;border-bottom:2px solid var(--border)}
 .sec-table td{padding:7px 10px;border-bottom:1px solid var(--border);color:var(--sec-text);vertical-align:top}
 .sec-table tr:last-child td{border-bottom:none}
@@ -366,20 +369,20 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .sec-cmp-box{background:var(--sec-cmp-bg);border:1px solid var(--border);border-radius:8px;padding:12px}
 .sec-cmp-title{font-size:11px;font-weight:700;color:var(--accent-light);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}
 .sec-cmp-pts{list-style:none;padding:0}
-.sec-cmp-pts li{font-size:12px;color:var(--sec-text);line-height:1.65;padding:2px 0 2px 12px;position:relative}
+.sec-cmp-pts li{font-size:15px;color:var(--sec-text);line-height:1.65;padding:2px 0 2px 12px;position:relative}
 .sec-cmp-pts li::before{content:"·";position:absolute;left:0;color:var(--accent)}
 .sec-note-box{background:var(--sec-note-bg);border:1px solid var(--sec-note-border);border-radius:8px;padding:11px 14px}
-.sec-note-box .sec-text{font-size:12px;color:var(--sec-note-text)}
+.sec-note-box .sec-text{font-size:15px;color:var(--sec-note-text)}
 .sec-insight-box{background:var(--sec-insight-bg);border-left:3px solid var(--sec-insight-border);border-radius:0 8px 8px 0;padding:11px 14px}
 .sec-insight-box .sec-text{color:var(--sec-insight-text)}
 
 /* legacy popup fields */
 .popup-lbl{font-size:10px;color:var(--accent-light);opacity:.6;text-transform:uppercase;letter-spacing:.6px;font-weight:700;margin-bottom:5px}
-.popup-formula{font-family:'SF Mono',Consolas,'Courier New',monospace;background:var(--sec-formula-bg);border:1px solid var(--sec-formula-border);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:12px 14px;font-size:12px;color:var(--sec-formula-text);white-space:pre;overflow-x:auto;margin-bottom:14px;line-height:1.7}
-.popup-desc{font-size:13px;line-height:1.65;color:var(--sec-text);margin-bottom:12px}
+.popup-formula{font-family:'SF Mono',Consolas,'Courier New',monospace;background:var(--sec-formula-bg);border:1px solid var(--sec-formula-border);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:12px 16px;font-size:16px;color:var(--sec-formula-text);white-space:pre-wrap;overflow-x:auto;margin-bottom:14px;line-height:1.8}
+.popup-desc{font-size:17px;line-height:1.75;color:var(--sec-text);margin-bottom:12px}
 .popup-intuition{font-size:13px;line-height:1.7;color:var(--sec-insight-text);background:var(--sec-insight-bg);border-left:3px solid var(--sec-insight-border);border-radius:0 8px 8px 0;padding:11px 14px;margin-bottom:12px}
 .popup-notes{font-size:12px;color:var(--sec-note-text);background:var(--sec-note-bg);border:1px solid var(--sec-note-border);border-radius:8px;padding:9px 13px;line-height:1.6}
-.popup-summary{font-size:13.5px;line-height:1.75;color:var(--sec-text);margin-bottom:14px;font-style:italic}
+.popup-summary{font-size:16px;line-height:1.75;color:var(--sec-text);margin-bottom:14px;font-style:italic}
 .popup-divider{border:none;border-top:1px solid var(--border);margin:0 0 18px}
 .popup-close-btn{margin-top:18px;width:100%;padding:10px;background:var(--accent-bg);border:none;border-radius:8px;color:#fff;font-size:14px;cursor:pointer}
 .popup-close-btn:hover{background:var(--accent)}
@@ -391,7 +394,7 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .ch-ov-inner{max-width:920px}
 .ch-ov-label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1.3px;color:var(--accent-light);opacity:.55;margin-bottom:14px;display:flex;align-items:center;gap:10px;cursor:default}
 .ch-ov-label::after{content:'';flex:1;height:1px;background:var(--border)}
-.ch-ov-body p{font-size:13px;line-height:1.85;color:var(--overview-text);margin-bottom:14px}
+.ch-ov-body p{font-size:16px;line-height:1.85;color:var(--overview-text);margin-bottom:14px}
 .ch-ov-body p:last-child{margin-bottom:0}
 .ch-ov-body .katex-display{margin:.4em 0;overflow-x:auto}
 
@@ -425,7 +428,7 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
   #card-grid{padding:0}
   .cat-heading{padding:14px 16px 8px}
   .wiki-article{padding:16px}
-  .wiki-article-title{font-size:14px}
+  .wiki-article-title{font-size:18px}
   button,select,input[type=search]{padding:5px 8px;font-size:11px}
   .sec-compare{grid-template-columns:1fr}
 }
@@ -447,6 +450,15 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .math-group-items{ display:none }
 .math-group-items.open{ display:block }
 
+/* ── ML-OVERALL group + iki yonlu rozet ── */
+.nav-group-toggle{display:flex;align-items:center;gap:6px;padding:12px 16px 4px;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:1.8px;color:var(--accent-light);opacity:.85;cursor:pointer;user-select:none}
+.nav-group-toggle:hover{opacity:1}
+.nav-group-toggle.open .math-group-arrow{transform:rotate(90deg)}
+.nav-group-items{display:none;border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:4px}
+.nav-group-items.open{display:block}
+.mlo-badge{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--count-bg);color:var(--accent-light);cursor:pointer;opacity:.85;white-space:nowrap}
+.mlo-badge:hover{opacity:1}
+
 /* Math cards — Notion-like flow, no boxes */
 .wiki-article[class*=" math"] .sec-formula,
 .wiki-article[class*=" math"] .sec-block-insight,
@@ -459,9 +471,9 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .wiki-article[class*=" math"] .sec-formula .katex,
 .wiki-article[class*=" math"] .sec-block-insight .katex,
 .wiki-article[class*=" math"] .sec-block-note .katex{font-size:1.1em}
-.wiki-article[class*=" math"] .sec-text{font-size:14px;line-height:1.9}
+.wiki-article[class*=" math"] .sec-text{line-height:1.9}
 .wiki-article[class*=" math"] .sec-list{padding-left:4px}
-.wiki-article[class*=" math"] .sec-list li{font-size:14px;line-height:1.85}
+.wiki-article[class*=" math"] .sec-list li{line-height:1.85}
 .wiki-article[class*=" math"] .sec-heading{font-size:12px;opacity:.85}
 </style>
 </head>
@@ -479,7 +491,7 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
     <span class="nav-label">Ders Özeti</span>
   </button>
 
-  <button class="nav-btn active" data-sec="ch01" onclick="switchSection('ch01');closeSidebar()">
+  <button class="nav-btn" data-sec="ch01" onclick="switchSection('ch01');closeSidebar()">
     <span class="nav-icon">🔭</span><span class="nav-num">01</span>
     <span class="nav-label">Introduction</span>
     <span class="nav-count" id="cnt-ch01">0</span>
@@ -870,7 +882,7 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
     <div class="hdr-sub">Ham görüntü verisinden üretici modellere: her adım yeni bir yetenek ekliyor</div>
   </div>
 
-  <div id="hdr-ch01" class="section-header active">
+  <div id="hdr-ch01" class="section-header">
     <div class="hdr-title">01 · Introduction</div>
     <div class="hdr-sub">ML Taxonomy · Model Complexity · Probability Theory · Course Roadmap</div>
     <div class="controls">
@@ -1566,7 +1578,14 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 
 <script>
 /* ==================== STATE ==================== */
-const CHAPTERS = ['ch01','ch02','ch03','ch04','ch05','ch06','ch07','ch08','ch09','ch10','ch11','ch12',
+const MLO_NAV = [
+ {key:'mlo01',num:'01',icon:'🧭',title:'Öğrenme Problemi',sub:'Ne öğreniyoruz, neyle ölçüyoruz, model ne kadar esnek olmalı'},
+ {key:'mlo02',num:'02',icon:'🎲',title:'Olasılık ve Bayes',sub:'Koşullu olasılık · Bayes · prior, likelihood, posterior · Gaussian'},
+ {key:'mlo03',num:'03',icon:'🎯',title:'MLE, MAP ve Loss Fonksiyonları',sub:'Likelihood → MAP → regularization · CE ve MSE aslında MLE · KL'},
+ {key:'mlo04',num:'04',icon:'⚖️',title:'Bias-Variance ve Regularization',sub:'Overfitting teşhisi · train/val/test · L1, L2, weight decay'},
+ {key:'mlo05',num:'05',icon:'⚙️',title:'Optimization ve Gradient Descent',sub:'Batch/SGD/mini-batch · momentum · Adam, AdamW · LR ve batch size'},
+];
+const CHAPTERS = ['mlo01','mlo02','mlo03','mlo04','mlo05','ch01','ch02','ch03','ch04','ch05','ch06','ch07','ch08','ch09','ch10','ch11','ch12',
                    'ida01','ida02','ida03','ida04','ida05','ida06','ida07','ida08','ida09','ida10','ida11','ida12','ida13',
                    'py01','py02','py03','py04','py05','py06','py07',
                    'vs01','vs02','vs03','vs04',
@@ -1579,12 +1598,13 @@ let OVERVIEWS = {};
 let SUMMARY = null;
 let IDA_SUMMARY = null;
 let VS_SUMMARY = null;
-let SEC = 'ch01';
+let SEC = 'mlo01';
 let F = {};
 let VIEW_MODE = 'wiki';
 CHAPTERS.forEach(c => F[c] = {cat:'', q:''});
 
 const CH_CTX = {
+  mlo01:'mlo01',mlo02:'mlo02',mlo03:'mlo03',mlo04:'mlo04',mlo05:'mlo05',
   ch01:'ch01',ch02:'ch02',ch03:'ch03',ch04:'ch04',ch05:'ch05',ch06:'ch06',
   ch07:'ch07',ch08:'ch08',ch09:'ch09',ch10:'ch10',ch11:'ch11',ch12:'ch12',
   ida01:'ida01',ida02:'ida02',ida03:'ida03',ida04:'ida04',ida05:'ida05',ida06:'ida06',
@@ -1801,20 +1821,21 @@ function renderCards(sec){
       grid.appendChild(hdr);
     }
     groups[cat].forEach(item => {
+      const icc = catClass(item.cat, item._home || sec);
       const article = document.createElement('div');
-      article.className = 'wiki-article card-cat-' + cc;
+      article.className = 'wiki-article card-cat-' + icc;
 
       // Title — click opens focused popup view
       const titleEl = document.createElement('div');
       titleEl.className = 'wiki-article-title';
       titleEl.textContent = item.title;
-      titleEl.onclick = () => showPopup(item, cc);
+      titleEl.onclick = () => showPopup(item, icc);
 
       // Meta: category tag + context
       const metaEl = document.createElement('div');
       metaEl.className = 'wiki-article-meta';
       const tagEl = document.createElement('span');
-      tagEl.className = 'card-tag card-cat-' + cc;
+      tagEl.className = 'card-tag card-cat-' + icc;
       tagEl.textContent = item.cat;
       metaEl.appendChild(tagEl);
       if(item.context){
@@ -1822,6 +1843,18 @@ function renderCards(sec){
         ctxEl.className = 'wiki-article-ctx';
         ctxEl.textContent = item.context;
         metaEl.appendChild(ctxEl);
+      }
+      // ML-OVERALL <-> kaynak chapter: iki yonlu baglanti rozeti
+      if(sec.startsWith('mlo') && item._home){
+        const b = document.createElement('span'); b.className = 'mlo-badge';
+        b.textContent = '↳ kaynak: ' + item._home; b.title = 'Bu kartın evi';
+        b.onclick = (e) => { e.stopPropagation(); switchSection(item._home); };
+        metaEl.appendChild(b);
+      } else if(item._mlo && item._mlo.length){
+        item._mlo.forEach(m => { const b = document.createElement('span'); b.className = 'mlo-badge';
+          b.textContent = `◆ ML-OVERALL ${m.num} · ${m.i}/${m.n}`; b.title = m.title;
+          b.onclick = (e) => { e.stopPropagation(); switchSection(m.key); };
+          metaEl.appendChild(b); });
       }
 
       const hdrEl = document.createElement('div');
@@ -1878,7 +1911,7 @@ function renderGridCards(sec){
     return true;
   });
   items.forEach(item => {
-    const cc = catClass(item.cat, sec);
+    const cc = catClass(item.cat, item._home || sec);
     const card = document.createElement('div');
     card.className = 'compact-card card-cat-' + cc;
     card.onclick = () => showPopup(item, cc);
@@ -1902,15 +1935,22 @@ function renderGridCards(sec){
 }
 
 /* ==================== RENDER SECTIONS ==================== */
+/* Duzyazi: \n\n -> yeni paragraf, tek \n -> satir sonu. */
+function paras(txt){
+  return String(txt||'').split(/\n\s*\n/).map(p=>p.trim()).filter(Boolean)
+    .map(p=>`<p class="sec-text">${esc(p).replace(/\n/g,'<br>')}</p>`).join('');
+}
 function renderSection(s){
   const h = s.heading ? `<div class="sec-heading">${esc(s.heading)}</div>` : '';
   switch(s.type){
-    case 'text':
-      return `<div class="sec-block">${h}<p class="sec-text">${esc(s.text||'')}</p></div>`;
+    case 'text': {
+      const hq = s.qa && s.heading ? `<div class="sec-heading"><span class="qa-mark">▶</span>${esc(s.heading)}</div>` : h;
+      return `<div class="sec-block${s.qa?' sec-block-qa':''}">${hq}${paras(s.text)}</div>`;
+    }
     case 'insight':
-      return `<div class="sec-block">${h}<div class="sec-insight-box"><p class="sec-text">${esc(s.text||'')}</p></div></div>`;
+      return `<div class="sec-block">${h}<div class="sec-insight-box">${paras(s.text)}</div></div>`;
     case 'note':
-      return `<div class="sec-block">${h}<div class="sec-note-box"><p class="sec-text">${esc(s.text||'')}</p></div></div>`;
+      return `<div class="sec-block">${h}<div class="sec-note-box">${paras(s.text)}</div></div>`;
     case 'formula':
       return `<div class="sec-block">${h}<div class="sec-formula">${esc(s.text||'').replace(/\n/g,'<br>')}</div></div>`;
     case 'list':
@@ -2086,6 +2126,32 @@ function showTxPopup(node){
   $('tx-close').onclick=hidePopup;
 }
 
+/* ==================== ML-OVERALL NAV (veriden uretilir) ==================== */
+function buildMloNav(){
+  const sb = $('sidebar'); const shdr = sb.querySelector('.sidebar-hdr');
+  const tog = document.createElement('div'); tog.className='nav-group-toggle open'; tog.id='mlo-group-toggle';
+  tog.innerHTML = '<span class="math-group-arrow">▶</span><span>ML-OVERALL · Temeller</span>';
+  tog.onclick = () => { const it=$('mlo-group-items'); const o=it.classList.toggle('open'); tog.classList.toggle('open',o); };
+  const wrap = document.createElement('div'); wrap.className='nav-group-items open'; wrap.id='mlo-group-items';
+  MLO_NAV.forEach((m,i) => {
+    const b = document.createElement('button'); b.className='nav-btn'+(i===0?' active':''); b.dataset.sec=m.key;
+    b.onclick = () => { switchSection(m.key); closeSidebar(); };
+    b.innerHTML = `<span class="nav-icon">${m.icon}</span><span class="nav-num">${m.num}</span><span class="nav-label">${esc(m.title)}</span><span class="nav-count" id="cnt-${m.key}">0</span>`;
+    wrap.appendChild(b);
+  });
+  shdr.insertAdjacentElement('afterend', wrap);
+  shdr.insertAdjacentElement('afterend', tog);
+  const root = $('hdr-root');
+  MLO_NAV.forEach((m,i) => {
+    const h = document.createElement('div'); h.id='hdr-'+m.key; h.className='section-header'+(i===0?' active':'');
+    h.innerHTML = `<div class="hdr-title">ML-OVERALL ${m.num} · ${esc(m.title)}</div><div class="hdr-sub">${esc(m.sub)}</div>
+      <div class="controls"><select id="flt-${m.key}"><option value="">All categories</option></select>
+      <input type="search" id="q-${m.key}" placeholder="Search..."><span class="pill" id="pill-${m.key}">0 cards</span></div>`;
+    root.appendChild(h);
+  });
+}
+buildMloNav();
+
 /* ==================== FILTERS ==================== */
 CHAPTERS.forEach(sec => {
   $('flt-'+sec).onchange = function(){ F[sec].cat = this.value; render() };
@@ -2104,6 +2170,18 @@ document.addEventListener('keydown', e => {
 /* ==================== LOAD DATA ==================== */
 function applyData(d){
   CHAPTERS.forEach(c => { if(d[c]) DATA[c] = d[c]; });
+  // ML-OVERALL: kartlar yerinden oynamaz, id ile REFERANS verilir (ayni nesne iki yerde gorunur)
+  const IDX = {};
+  CHAPTERS.forEach(c => { if(c.startsWith('mlo')) return;
+    DATA[c].forEach(card => { card._mlo = null; if(card.id){ IDX[card.id] = card; card._home = c; } }); });
+  CHAPTERS.filter(c => c.startsWith('mlo')).forEach(c => DATA[c] = []);
+  (d.mlo||[]).forEach(ch => {
+    if(DATA[ch.key] === undefined) return;
+    const nav = MLO_NAV.find(m => m.key === ch.key); const list = [];
+    (ch.cards||[]).forEach(id => { const card = IDX[id]; if(!card) return; list.push(card);
+      (card._mlo = card._mlo||[]).push({key:ch.key, num:nav?nav.num:'', title:nav?nav.title:(ch.title||''), i:list.length, n:ch.cards.length}); });
+    DATA[ch.key] = list;
+  });
   if(d.overviews) OVERVIEWS = d.overviews;
   if(d.summary) SUMMARY = d.summary;
   if(d.ida_summary) IDA_SUMMARY = d.ida_summary;
