@@ -1510,9 +1510,10 @@
           "text": "İki sorunu da çözüyor.\n\nm momentum'u çözüyor — aynı SGD+momentum mantığı, zigzag sönümleniyor.\n\nv adaptive rate'i çözüyor — her weight'in gradient karelerinin ortalaması. Büyük gradient alan weight'in v'si büyük → α/√v küçülüyor → adım küçülüyor. Nadir güncellenen weight'in v'si küçük → α/√v büyüyor → adım büyüyor. Her weight kendi geçmişine göre efektif learning rate ayarlıyor."
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "Adam Formülü",
-          "text": "m = β₁·m + (1-β₁)·g       ← 1. moment: gradient ortalaması (momentum)\nv = β₂·v + (1-β₂)·g²      ← 2. moment: gradient² ortalaması (adaptive rate)\n\nm̂ = m / (1 - β₁ᵗ)         ← bias correction\nv̂ = v / (1 - β₂ᵗ)         ← bias correction\n\nx = x - α · m̂ / (√v̂ + ε)\n\nTipik değerler: β₁ = 0.9, β₂ = 0.999, α = 0.001, ε = 10⁻⁸"
+          "text": "m = β₁·m + (1-β₁)·g       ← 1. moment: gradient ortalaması (momentum)\nv = β₂·v + (1-β₂)·g²      ← 2. moment: gradient² ortalaması (adaptive rate)\n\nm̂ = m / (1 - β₁ᵗ)         ← bias correction\nv̂ = v / (1 - β₂ᵗ)         ← bias correction\n\nx = x - α · m̂ / (√v̂ + ε)\n\nTipik değerler: β₁ = 0.9, β₂ = 0.999, α = 0.001, ε = 10⁻⁸",
+          "qa": true
         },
         {
           "type": "text",
@@ -1530,14 +1531,16 @@
           "text": "L2 regularization loss'a λ·‖x‖² ekliyor, bu da gradient'e λ·x ekliyor. Bu g Adam'a girince v'ye de karışıyor — adaptive rate weight decay'i de etkiliyor. Büyük weight'in decay'i zayıflıyor, küçük weight'in decay'i güçleniyor. İstediğin uniform decay, ama elde ettiğin bozuk decay.\n\nAdamW çözümü: weight decay'i gradient'ten tamamen ayır, direkt weight'e uygula. İki terim tamamen bağımsız. Adaptive rate sadece task loss'a bakıyor, weight decay her weight'e uniform uygulanıyor.\n\nTransformer'larda weight decay kritik — milyarlarca parametre var, regularization olmadan overfitting kaçınılmaz. GPT-2'den itibaren neredeyse tüm LLM'ler AdamW kullanıyor."
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "AdamW Formülü",
-          "text": "g = ∇task_loss + λ·x          ← Adam'da decay gradient'e karışıyor (bozuk)\n\nm = β₁·m + (1-β₁)·g          ← AdamW: sadece task gradient\nv = β₂·v + (1-β₂)·g²         ← AdamW: sadece task gradient\n\nx = x - α · m̂/(√v̂+ε) - α·λ·x    ← decay ayrı, adaptive rate etkilemiyor"
+          "text": "g = ∇task_loss + λ·x          ← Adam'da decay gradient'e karışıyor (bozuk)\n\nm = β₁·m + (1-β₁)·g          ← AdamW: sadece task gradient\nv = β₂·v + (1-β₂)·g²         ← AdamW: sadece task gradient\n\nx = x - α · m̂/(√v̂+ε) - α·λ·x    ← decay ayrı, adaptive rate etkilemiyor",
+          "qa": true
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "Özet Zinciri",
-          "text": "Vanilla GD:      sabit α, gradient direkt → zigzag, uniform adım\nSGD+Momentum:    gradient ortalaması → zigzag söner, hala uniform adım\nAdam:            gradient ort. + adaptive rate → zigzag söner + per-weight adım\nAdamW:           Adam + weight decay düzeltmesi → transformer'lar için ideal\n\nGradient sallanıyor → Momentum ekle (m)\nHer weight farklı hız istiyor → Adaptive rate ekle (v)\nm + v = Adam\nWeight decay bozuluyor → Gradient'ten ayır = AdamW"
+          "text": "Vanilla GD:      sabit α, gradient direkt → zigzag, uniform adım\nSGD+Momentum:    gradient ortalaması → zigzag söner, hala uniform adım\nAdam:            gradient ort. + adaptive rate → zigzag söner + per-weight adım\nAdamW:           Adam + weight decay düzeltmesi → transformer'lar için ideal\n\nGradient sallanıyor → Momentum ekle (m)\nHer weight farklı hız istiyor → Adaptive rate ekle (v)\nm + v = Adam\nWeight decay bozuluyor → Gradient'ten ayır = AdamW",
+          "qa": true
         },
         {
           "type": "table",
@@ -1694,9 +1697,10 @@
           "text": "w, 32 örneğin hepsinde kullanıldı. Backprop başlayınca computational graph üzerinden her örnek kendi dalına gidiyor, kendi saklanan aktivasyonları üzerinden w'ya kadar chain rule ile ilerliyor. Her örnek kendi aktivasyon yolundan geçiyor, birbirinden bağımsız. Sonuçta w için tek bir gradient çıkıyor."
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "Gradient Hesabı",
-          "text": "∂L_avg/∂w = (1/32) · ∂L₁/∂w   ← a₁ aktivasyonları üzerinden\n           + (1/32) · ∂L₂/∂w   ← a₂ aktivasyonları üzerinden\n           + ...\n           + (1/32) · ∂L₃₂/∂w  ← a₃₂ aktivasyonları üzerinden"
+          "text": "∂L_avg/∂w = (1/32) · ∂L₁/∂w   ← a₁ aktivasyonları üzerinden\n           + (1/32) · ∂L₂/∂w   ← a₂ aktivasyonları üzerinden\n           + ...\n           + (1/32) · ∂L₃₂/∂w  ← a₃₂ aktivasyonları üzerinden",
+          "qa": true
         },
         {
           "type": "text",
@@ -2322,9 +2326,10 @@
           "qa": true
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "Genel Formül",
-          "text": "h_t = RNN(y_{t-1}, h_{t-1}, c_t)\n          ↑          ↑         ↑\n     önceki      önceki    o ana özel\n     output      hidden    context\n                 state     vector\n\nHer adımda 3 şey giriyor decoder'a: önceki kelime, önceki hidden state, o adıma özel context."
+          "text": "h_t = RNN(y_{t-1}, h_{t-1}, c_t)\n          ↑          ↑         ↑\n     önceki      önceki    o ana özel\n     output      hidden    context\n                 state     vector\n\nHer adımda 3 şey giriyor decoder'a: önceki kelime, önceki hidden state, o adıma özel context.",
+          "qa": true
         },
         {
           "type": "text",
@@ -2410,9 +2415,10 @@
           "qa": true
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "Attention — Decoder t=1",
-          "text": "DECODER t=1 — \"Kedi\" üretecek\n\nAttention: h₀_dec ile tüm encoder state'lerine bak\n  e₁ = f_att(h₀_dec, z₁)   ← \"The\" ne kadar ilgili?\n  e₂ = f_att(h₀_dec, z₂)   ← \"cat\" ne kadar ilgili?\n  e₃ = f_att(h₀_dec, z₃)   ← \"sat\" ne kadar ilgili?\n\n  a = softmax([e₁, e₂, e₃])  →  [0.1, 0.8, 0.1]\n                                   ↑ \"cat\" e yüksek ağırlık\n\n  c₁ = 0.1×z₁ + 0.8×z₂ + 0.1×z₃   ← bu adıma özel context\n\nh₁_dec = RNN([START], h₀_dec, c₁)\ny₁ = softmax(W × h₁_dec)   → \"Kedi\""
+          "text": "DECODER t=1 — \"Kedi\" üretecek\n\nAttention: h₀_dec ile tüm encoder state'lerine bak\n  e₁ = f_att(h₀_dec, z₁)   ← \"The\" ne kadar ilgili?\n  e₂ = f_att(h₀_dec, z₂)   ← \"cat\" ne kadar ilgili?\n  e₃ = f_att(h₀_dec, z₃)   ← \"sat\" ne kadar ilgili?\n\n  a = softmax([e₁, e₂, e₃])  →  [0.1, 0.8, 0.1]\n                                   ↑ \"cat\" e yüksek ağırlık\n\n  c₁ = 0.1×z₁ + 0.8×z₂ + 0.1×z₃   ← bu adıma özel context\n\nh₁_dec = RNN([START], h₀_dec, c₁)\ny₁ = softmax(W × h₁_dec)   → \"Kedi\"",
+          "qa": true
         },
         {
           "type": "text",
@@ -2750,19 +2756,22 @@
           "qa": true
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "Adım 5 — Key ve Value Ayrımı",
-          "text": "x hem alignment'ta hem output'ta kullanılıyor — bunları ayır:\n\nk = x × Wₖ    ← Key:   alignment için\nv = x × Wᵥ    ← Value: output için\n\ne_{i,j} = qᵢ · kⱼ / √D\na       = softmax(e)\nyᵢ      = Σⱼ a_{i,j} vⱼ    ← artık v kullanılıyor\n\nWₖ ve Wᵥ öğrenilen weight matrix'ler.\nInput/output boyutları artık bağımsız."
+          "text": "x hem alignment'ta hem output'ta kullanılıyor — bunları ayır:\n\nk = x × Wₖ    ← Key:   alignment için\nv = x × Wᵥ    ← Value: output için\n\ne_{i,j} = qᵢ · kⱼ / √D\na       = softmax(e)\nyᵢ      = Σⱼ a_{i,j} vⱼ    ← artık v kullanılıyor\n\nWₖ ve Wᵥ öğrenilen weight matrix'ler.\nInput/output boyutları artık bağımsız.",
+          "qa": true
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "Adım 6 — Self-Attention",
-          "text": "Query de dışarıdan gelmiyor — input'tan üretiliyor:\n\nk = x × Wₖ\nv = x × Wᵥ\nq = x × Wq    ← query de input'tan\n\ne_{i,j} = qᵢ · kⱼ / √D\na       = softmax(e)\nyᵢ      = Σⱼ a_{i,j} vⱼ\n\nInput:  sadece x (N×D)   — dışarıdan query yok\nOutput: y (N×D)"
+          "text": "Query de dışarıdan gelmiyor — input'tan üretiliyor:\n\nk = x × Wₖ\nv = x × Wᵥ\nq = x × Wq    ← query de input'tan\n\ne_{i,j} = qᵢ · kⱼ / √D\na       = softmax(e)\nyᵢ      = Σⱼ a_{i,j} vⱼ\n\nInput:  sadece x (N×D)   — dışarıdan query yok\nOutput: y (N×D)",
+          "qa": true
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "Tam Evrim",
-          "text": "Image Captioning Attention\n  → f_att(h, z)   MLP, tek query, spatial grid\n\nAdım 1: Flatten      z(H×W×D) → x(N×D)\nAdım 2: Dot product  f_att → h·x\nAdım 3: Scale        h·x / √D\nAdım 4: Multi-query  q(M×D), e_{i,j} = qᵢ·xⱼ/√D\nAdım 5: Key/Value    k=xWₖ, v=xWᵥ — align on k, output from v\nAdım 6: Self-Attn    q=xWq → no external query\n\n= Scaled Dot-Product Self-Attention"
+          "text": "Image Captioning Attention\n  → f_att(h, z)   MLP, tek query, spatial grid\n\nAdım 1: Flatten      z(H×W×D) → x(N×D)\nAdım 2: Dot product  f_att → h·x\nAdım 3: Scale        h·x / √D\nAdım 4: Multi-query  q(M×D), e_{i,j} = qᵢ·xⱼ/√D\nAdım 5: Key/Value    k=xWₖ, v=xWᵥ — align on k, output from v\nAdım 6: Self-Attn    q=xWq → no external query\n\n= Scaled Dot-Product Self-Attention",
+          "qa": true
         }
       ],
       "id": "ch12-general-attention-layer-image-captioning-den-self-attention"
@@ -2780,9 +2789,10 @@
           "qa": true
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "Somut senaryo: \"The cat sat on the mat\"",
-          "text": "\"sat\" kelimesi şunu soruyor:\n\"Benim öznemi kim? Hangi token benim subject'im?\"\n\nQuery (q_sat): \"subject arıyorum\" bilgisini encode eden vektör.\n\n---\n\n\"cat\" tokenının iki ayrı vektörü var:\n\nKey (k_cat):\n  \"Ben bir isim/noun'um, cümlenin başındayım,\n   büyük ihtimalle subject'im.\"\n  → q_sat ile dot product yapılınca yüksek skor verecek\n    şekilde optimize edilmiş\n\nValue (v_cat):\n  \"Hayvan, canlı, tekil, dişi olabilir,\n   'kedi' anlamı, semantik bilgi...\"\n  → bulununca sat'a aktarılacak gerçek içerik\n\n---\n\nAlignment:  q_sat · k_cat = yüksek  ← \"evet, cat benim subject'im\"\nOutput:     y_sat += a × v_cat      ← cat'in semantic bilgisini al"
+          "text": "\"sat\" kelimesi şunu soruyor:\n\"Benim öznemi kim? Hangi token benim subject'im?\"\n\nQuery (q_sat): \"subject arıyorum\" bilgisini encode eden vektör.\n\n---\n\n\"cat\" tokenının iki ayrı vektörü var:\n\nKey (k_cat):\n  \"Ben bir isim/noun'um, cümlenin başındayım,\n   büyük ihtimalle subject'im.\"\n  → q_sat ile dot product yapılınca yüksek skor verecek\n    şekilde optimize edilmiş\n\nValue (v_cat):\n  \"Hayvan, canlı, tekil, dişi olabilir,\n   'kedi' anlamı, semantik bilgi...\"\n  → bulununca sat'a aktarılacak gerçek içerik\n\n---\n\nAlignment:  q_sat · k_cat = yüksek  ← \"evet, cat benim subject'im\"\nOutput:     y_sat += a × v_cat      ← cat'in semantic bilgisini al",
+          "qa": true
         },
         {
           "type": "text",
@@ -3090,9 +3100,10 @@
           "text": "Attention mekanizması token sırasını bilmiyor — hangi token nerede sorusunu PE cevaplıyor. Her pozisyona özgü sinüs/kosinüs vektörü eklenir."
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "3. Multi-Head Attention — Projeksiyonlar",
-          "text": "W_Q: (d_model, d_k)    d_k = d_model / h = 64\nW_K: (d_model, d_k)\nW_V: (d_model, d_v)    d_v = 64\n\nQ = X @ W_Q            shape: (N, d_k)\nK = X @ W_K            shape: (N, d_k)\nV = X @ W_V            shape: (N, d_v)"
+          "text": "W_Q: (d_model, d_k)    d_k = d_model / h = 64\nW_K: (d_model, d_k)\nW_V: (d_model, d_v)    d_v = 64\n\nQ = X @ W_Q            shape: (N, d_k)\nK = X @ W_K            shape: (N, d_k)\nV = X @ W_V            shape: (N, d_v)",
+          "qa": true
         },
         {
           "type": "text",
@@ -3667,9 +3678,10 @@
           "qa": true
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "S2. MLP nasıl eğitilir? Hangi bileşenler değişir? Hata nasıl hesaplanır?",
-          "text": "Ağırlıklar başta rastgele. Bir örnek verirsin, ağ tahmin üretir.\nBu tahmini doğru cevapla karşılaştırırsın — bu fark loss.\nSınıflandırma için cross-entropy, sayı tahmini için MSE.\n\nSonra backprop devreye girer:\n'Bu hataya hangi ağırlık ne kadar katkıda bulundu?'\nsorusunu zincir kuralıyla geriye doğru hesaplarsın.\nHer ağırlık için bir gradyan çıkar.\nGradient descent ile ağırlıkları güncellersin.\n\nSadece ağırlıklar ve bias'lar değişir.\nKaç katman, kaç nöron var — bunlar sabit kalır."
+          "text": "Ağırlıklar başta rastgele. Bir örnek verirsin, ağ tahmin üretir.\nBu tahmini doğru cevapla karşılaştırırsın — bu fark loss.\nSınıflandırma için cross-entropy, sayı tahmini için MSE.\n\nSonra backprop devreye girer:\n'Bu hataya hangi ağırlık ne kadar katkıda bulundu?'\nsorusunu zincir kuralıyla geriye doğru hesaplarsın.\nHer ağırlık için bir gradyan çıkar.\nGradient descent ile ağırlıkları güncellersin.\n\nSadece ağırlıklar ve bias'lar değişir.\nKaç katman, kaç nöron var — bunlar sabit kalır.",
+          "qa": true
         },
         {
           "type": "text",
@@ -4840,9 +4852,10 @@
           "qa": true
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "4. Transformer Decoder (6 katman)",
-          "text": "100 adet learnable object query: (100×256)  ← random başlar, eğitimle öğrenir\n\nHer decoder katmanında 3 adım:\n\n  1. Self-attention (query'ler arası):\n     (100×100) — query'ler birbirinden haberdar oluyor\n     \"sen sol üstteki nesneye bak, ben sağ alttakine\"\n     → duplicate tahminleri önlüyor\n\n  2. Cross-attention (query → encoder çıktısı):\n     Q: query'lerden  → (100×256) × W_Q → (100×64)\n     K: encoder'dan   → (850×256) × W_K → (850×64)\n     V: encoder'dan   → (850×256) × W_V → (850×64)\n     Attention: (100×64) × (64×850) = (100×850)\n       ← her query tüm spatial pozisyonlara bakıyor\n     Çıktı: (100×256)\n\n  3. FFN + Add&Norm\n\n6 katman sonunda: (100×256)  ← her query bir nesne adayı"
+          "text": "100 adet learnable object query: (100×256)  ← random başlar, eğitimle öğrenir\n\nHer decoder katmanında 3 adım:\n\n  1. Self-attention (query'ler arası):\n     (100×100) — query'ler birbirinden haberdar oluyor\n     \"sen sol üstteki nesneye bak, ben sağ alttakine\"\n     → duplicate tahminleri önlüyor\n\n  2. Cross-attention (query → encoder çıktısı):\n     Q: query'lerden  → (100×256) × W_Q → (100×64)\n     K: encoder'dan   → (850×256) × W_K → (850×64)\n     V: encoder'dan   → (850×256) × W_V → (850×64)\n     Attention: (100×64) × (64×850) = (100×850)\n       ← her query tüm spatial pozisyonlara bakıyor\n     Çıktı: (100×256)\n\n  3. FFN + Add&Norm\n\n6 katman sonunda: (100×256)  ← her query bir nesne adayı",
+          "qa": true
         },
         {
           "type": "text",
@@ -4969,9 +4982,10 @@
           "qa": true
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "Neden Hiyerarşi Önemli?",
-          "text": "ViT:   tek çözünürlük çıktısı → classification için yeterli\n                               → detection/segmentation için yetersiz\n\nSwin:  4 farklı ölçekte feature map → FPN'e bağlanabilir\n         (56×56), (28×28), (14×14), (7×7)\n       CNN backbone gibi kullanılabiliyor"
+          "text": "ViT:   tek çözünürlük çıktısı → classification için yeterli\n                               → detection/segmentation için yetersiz\n\nSwin:  4 farklı ölçekte feature map → FPN'e bağlanabilir\n         (56×56), (28×28), (14×14), (7×7)\n       CNN backbone gibi kullanılabiliyor",
+          "qa": true
         },
         {
           "type": "table",
@@ -5013,39 +5027,46 @@
       "context": "Lecture 08 — Image Analysis with Transformers",
       "sections": [
         {
-          "type": "code",
+          "type": "text",
           "heading": "Giriş + Patch Sayısı",
-          "text": "                    ViT                              Swin\n                    ───                              ────\n\nGİRİŞ          (224×224×3)                      (224×224×3)\n\n\nPATCH          224 / 16 = 14                    224 / 4 = 56\nSAYISI         14×14 = 196 patch                56×56 = 3136 patch\n\nViT büyük patch (16×16) çünkü global attention yapacak — az token lazım.\nSwin küçük patch (4×4) çünkü lokal attention var, çok token afford edilebiliyor,\ndetection/segmentation için ince granularite gerekiyor."
+          "text": "                    ViT                              Swin\n                    ───                              ────\n\nGİRİŞ          (224×224×3)                      (224×224×3)\n\n\nPATCH          224 / 16 = 14                    224 / 4 = 56\nSAYISI         14×14 = 196 patch                56×56 = 3136 patch\n\nViT büyük patch (16×16) çünkü global attention yapacak — az token lazım.\nSwin küçük patch (4×4) çünkü lokal attention var, çok token afford edilebiliyor,\ndetection/segmentation için ince granularite gerekiyor.",
+          "qa": true
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "Patch Flatten + Linear Projection",
-          "text": "                    ViT                              Swin\n                    ───                              ────\n\nPATCH          her patch: 16×16×3 piksel        her patch: 4×4×3 piksel\nFLATTEN        16×16×3 = 768 sayı               4×4×3 = 48 sayı\n               → (196×768)                      → (3136×48)\n\n\nLINEAR         W_E ∈ (768×768)                  W_E ∈ (48×96)\nPROJECTION     (196×768) × (768×768)            (3136×48) × (48×96)\n               → (196×768)                      → (3136×96)\n\nViT'te size değişmiyor (768→768) çünkü flat patch zaten 768, d_model de 768\nseçilmiş — tesadüfen denk geldi. ViT-Large'da d_model=1024 olduğu için\n768→1024 olurdu. Amaç: ham piksel değerlerini anlamlı feature space'e çevirmek.\nSwin'de 48→96 çünkü flat patch 48, ama d_model=96 seçilmiş —\nboyut hizalamak için projeksiyon şart."
+          "text": "                    ViT                              Swin\n                    ───                              ────\n\nPATCH          her patch: 16×16×3 piksel        her patch: 4×4×3 piksel\nFLATTEN        16×16×3 = 768 sayı               4×4×3 = 48 sayı\n               → (196×768)                      → (3136×48)\n\n\nLINEAR         W_E ∈ (768×768)                  W_E ∈ (48×96)\nPROJECTION     (196×768) × (768×768)            (3136×48) × (48×96)\n               → (196×768)                      → (3136×96)\n\nViT'te size değişmiyor (768→768) çünkü flat patch zaten 768, d_model de 768\nseçilmiş — tesadüfen denk geldi. ViT-Large'da d_model=1024 olduğu için\n768→1024 olurdu. Amaç: ham piksel değerlerini anlamlı feature space'e çevirmek.\nSwin'de 48→96 çünkü flat patch 48, ama d_model=96 seçilmiş —\nboyut hizalamak için projeksiyon şart.",
+          "qa": true
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "CLS Token + Positional Encoding",
-          "text": "                    ViT                              Swin\n                    ───                              ────\n\nCLS TOKEN      learnable vektör (1×768)         yok\n               başa ekle:\n               (196×768) → (197×768)\n\nViT'te CLS lazım çünkü attention permutation invariant — hangi token\nclassification sonucunu temsil etsin belli değil. CLS \"sen bu görüntüyü\nözetle\" rolüne baştan atanıyor, diğer patch'lere attend ederek özet üretiyor.\nSwin'de CLS yok çünkü hiyerarşik çıktı var, en sonda Global Avg Pool\ntüm (7×7×768) token'ları ortalaması tek vektör üretiyor — CLS'e gerek kalmıyor.\n\n\nPOS.           learnable P ∈ (197×768)          learnable P ∈ (3136×96)\nENCODING       X = X + P                        X = X + P\n               → (197×768)                      → (3136×96)\n\nAttention permutation invariant — sıra bilgisi yoksa \"sol üstteki patch\nsağ alttakiyle ilişkili mi?\" sorusu cevapsız kalır. PE patch'in\ngörüntüdeki konumunu token'a ekliyor.\nSwin'de ayrıca relative position bias var: pencere içinde her token çiftinin\ngöreli mesafesi attention score'a ekleniyor — absolut pozisyon değil,\n\"sen benden kaç adım uzaktasın?\" bilgisi."
+          "text": "                    ViT                              Swin\n                    ───                              ────\n\nCLS TOKEN      learnable vektör (1×768)         yok\n               başa ekle:\n               (196×768) → (197×768)\n\nViT'te CLS lazım çünkü attention permutation invariant — hangi token\nclassification sonucunu temsil etsin belli değil. CLS \"sen bu görüntüyü\nözetle\" rolüne baştan atanıyor, diğer patch'lere attend ederek özet üretiyor.\nSwin'de CLS yok çünkü hiyerarşik çıktı var, en sonda Global Avg Pool\ntüm (7×7×768) token'ları ortalaması tek vektör üretiyor — CLS'e gerek kalmıyor.\n\n\nPOS.           learnable P ∈ (197×768)          learnable P ∈ (3136×96)\nENCODING       X = X + P                        X = X + P\n               → (197×768)                      → (3136×96)\n\nAttention permutation invariant — sıra bilgisi yoksa \"sol üstteki patch\nsağ alttakiyle ilişkili mi?\" sorusu cevapsız kalır. PE patch'in\ngörüntüdeki konumunu token'a ekliyor.\nSwin'de ayrıca relative position bias var: pencere içinde her token çiftinin\ngöreli mesafesi attention score'a ekleniyor — absolut pozisyon değil,\n\"sen benden kaç adım uzaktasın?\" bilgisi.",
+          "qa": true
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "Attention",
-          "text": "                    ViT                              Swin\n                    ───                              ────\n\nATTENTION      H=12 head, d_k=768/12=64         Window partition:\n               W_Q,W_K,W_V ∈ (768×64)           (3136×96) token'lar\n               her head için:                   (56×56) grid halinde\n               Q = X×W_Q → (197×64)             → 7×7'lik pencerelere böl\n               K = X×W_K → (197×64)             56/7 = 8 pencere/kenar\n               V = X×W_V → (197×64)             8×8 = 64 pencere toplam\n                                                her pencere: 7×7 = 49 token\n               Q×K^T:                           yani 3136 → 64 grup × 49\n               (197×64)×(64×197)\n               → (197×197)                      H=3 head, d_k=96/3=32\n                                                W_Q,W_K,W_V ∈ (96×32)\n               ÷√64, softmax                    her pencere, her head için:\n               → (197×197)                      Q = w×W_Q → (49×32)\n                                                K = w×W_K → (49×32)\n               ×V:                              V = w×W_V → (49×32)\n               (197×197)×(197×64)\n               → (197×64)  1 head               Q×K^T:\n                                                (49×32)×(32×49)\n               12 head concat:                  → (49×49)\n               → (197×768)\n               ×W_O(768×768)                    ÷√32, softmax\n               → (197×768)                      → (49×49)\n\n                                                ×V:\n                                                (49×49)×(49×32)\n                                                → (49×32)  1 head\n\n                                                3 head concat:\n                                                → (49×96) 1 pencere\n                                                ×W_O(96×96)\n                                                → (49×96)\n\n                                                64 pencere paralel:\n                                                64 × (49×96)\n                                                → (3136×96)\n\n                                                SW-MSA: aynı işlem,\n                                                pencereler (3,3) kaydırılmış\n                                                → (3136×96)\n\nViT global: her token her tokena bakıyor → 197×197 matrix, O(N²).\nSwin lokal: 3136 token önce 64 pencereye bölünüyor (her pencere 49 token),\nattention sadece pencere içinde yapılıyor → 49×49 matrix.\n3136×3136 yerine 64×(49×49) — 65× daha az hesaplama.\nShift ile bir sonraki katmanda pencereler kayıyor, sınır token'ları\nfarklı pencerede buluşuyor → cross-window iletişim sağlanıyor."
+          "text": "                    ViT                              Swin\n                    ───                              ────\n\nATTENTION      H=12 head, d_k=768/12=64         Window partition:\n               W_Q,W_K,W_V ∈ (768×64)           (3136×96) token'lar\n               her head için:                   (56×56) grid halinde\n               Q = X×W_Q → (197×64)             → 7×7'lik pencerelere böl\n               K = X×W_K → (197×64)             56/7 = 8 pencere/kenar\n               V = X×W_V → (197×64)             8×8 = 64 pencere toplam\n                                                her pencere: 7×7 = 49 token\n               Q×K^T:                           yani 3136 → 64 grup × 49\n               (197×64)×(64×197)\n               → (197×197)                      H=3 head, d_k=96/3=32\n                                                W_Q,W_K,W_V ∈ (96×32)\n               ÷√64, softmax                    her pencere, her head için:\n               → (197×197)                      Q = w×W_Q → (49×32)\n                                                K = w×W_K → (49×32)\n               ×V:                              V = w×W_V → (49×32)\n               (197×197)×(197×64)\n               → (197×64)  1 head               Q×K^T:\n                                                (49×32)×(32×49)\n               12 head concat:                  → (49×49)\n               → (197×768)\n               ×W_O(768×768)                    ÷√32, softmax\n               → (197×768)                      → (49×49)\n\n                                                ×V:\n                                                (49×49)×(49×32)\n                                                → (49×32)  1 head\n\n                                                3 head concat:\n                                                → (49×96) 1 pencere\n                                                ×W_O(96×96)\n                                                → (49×96)\n\n                                                64 pencere paralel:\n                                                64 × (49×96)\n                                                → (3136×96)\n\n                                                SW-MSA: aynı işlem,\n                                                pencereler (3,3) kaydırılmış\n                                                → (3136×96)\n\nViT global: her token her tokena bakıyor → 197×197 matrix, O(N²).\nSwin lokal: 3136 token önce 64 pencereye bölünüyor (her pencere 49 token),\nattention sadece pencere içinde yapılıyor → 49×49 matrix.\n3136×3136 yerine 64×(49×49) — 65× daha az hesaplama.\nShift ile bir sonraki katmanda pencereler kayıyor, sınır token'ları\nfarklı pencerede buluşuyor → cross-window iletişim sağlanıyor.",
+          "qa": true
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "FFN + Add&Norm",
-          "text": "                    ViT                              Swin\n                    ───                              ────\n\nFFN +          LayerNorm(X + Attention(X))      LayerNorm(X + Attention(X))\nADD&NORM       Linear(768→3072) → ReLU          Linear(96→384) → ReLU\n               → Linear(3072→768)              → Linear(384→96)\n               LayerNorm(X + FFN(X))            LayerNorm(X + FFN(X))\n               → (197×768)                      → (3136×96)\n\n               L=12 kez tekrar                  2 kez tekrar (stage 1)\n               → (197×768)                      → (3136×96) = (56×56×96)\n\nFFN hidden dim = 4×d_model (standart Transformer kuralı).\nViT: 768×4 = 3072. Swin stage1: 96×4 = 384.\nHer token bağımsız işleniyor — pozisyonlar arası etkileşim yok,\no iş attention'ın görevi. FFN \"bu token'ın bilgisini işle\" yapıyor."
+          "text": "                    ViT                              Swin\n                    ───                              ────\n\nFFN +          LayerNorm(X + Attention(X))      LayerNorm(X + Attention(X))\nADD&NORM       Linear(768→3072) → ReLU          Linear(96→384) → ReLU\n               → Linear(3072→768)              → Linear(384→96)\n               LayerNorm(X + FFN(X))            LayerNorm(X + FFN(X))\n               → (197×768)                      → (3136×96)\n\n               L=12 kez tekrar                  2 kez tekrar (stage 1)\n               → (197×768)                      → (3136×96) = (56×56×96)\n\nFFN hidden dim = 4×d_model (standart Transformer kuralı).\nViT: 768×4 = 3072. Swin stage1: 96×4 = 384.\nHer token bağımsız işleniyor — pozisyonlar arası etkileşim yok,\no iş attention'ın görevi. FFN \"bu token'ın bilgisini işle\" yapıyor.",
+          "qa": true
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "Patch Merging + Çıkış",
-          "text": "                    ViT                              Swin\n                    ───                              ────\n\nPATCH          yok                              2×2 komşu token concat:\nMERGING                                         her 2×2 blok → 1 token\n                                                56/2=28 → 28×28=784 token\n                                                her token: 96×4=384 dim\n                                                → (784×384)\n                                                × Linear(384×192)\n                                                → (784×192) = (28×28×192)\n\n                                                Stage 2: (28×28×192)\n                                                → 2 Swin blok\n                                                → Patch Merging\n                                                → (14×14×384)\n\n                                                Stage 3: (14×14×384)\n                                                → 6 Swin blok\n                                                → Patch Merging\n                                                → (7×7×768)\n\n                                                Stage 4: (7×7×768)\n                                                → 2 Swin blok\n                                                → (7×7×768)\n\nHer stage'de spatial boyut yarıya iner, kanal ikiye katlar.\nCNN max pooling sabit kural — en büyüğü al. Patch merging Linear layer\nile \"bu 4 token'dan ne saklamalıyım?\" öğreniyor.\nSwin başta 96 dim ile başlıyor, merging ile 192→384→768 büyüyor —\nson stage'de ViT'in 768'iyle aynı kapasiteye ulaşıyor.\n\n\nÇIKIŞ         (197×768)                        (56×56×96)\n               CLS token: (1×768)               (28×28×192)\n                                                (14×14×384)\n                                                (7×7×768)\n\nViT tek ölçek → sadece classification.\nSwin 4 ölçek → FPN'e bağlanıp detection/segmentation backbone'u olabiliyor."
+          "text": "                    ViT                              Swin\n                    ───                              ────\n\nPATCH          yok                              2×2 komşu token concat:\nMERGING                                         her 2×2 blok → 1 token\n                                                56/2=28 → 28×28=784 token\n                                                her token: 96×4=384 dim\n                                                → (784×384)\n                                                × Linear(384×192)\n                                                → (784×192) = (28×28×192)\n\n                                                Stage 2: (28×28×192)\n                                                → 2 Swin blok\n                                                → Patch Merging\n                                                → (14×14×384)\n\n                                                Stage 3: (14×14×384)\n                                                → 6 Swin blok\n                                                → Patch Merging\n                                                → (7×7×768)\n\n                                                Stage 4: (7×7×768)\n                                                → 2 Swin blok\n                                                → (7×7×768)\n\nHer stage'de spatial boyut yarıya iner, kanal ikiye katlar.\nCNN max pooling sabit kural — en büyüğü al. Patch merging Linear layer\nile \"bu 4 token'dan ne saklamalıyım?\" öğreniyor.\nSwin başta 96 dim ile başlıyor, merging ile 192→384→768 büyüyor —\nson stage'de ViT'in 768'iyle aynı kapasiteye ulaşıyor.\n\n\nÇIKIŞ         (197×768)                        (56×56×96)\n               CLS token: (1×768)               (28×28×192)\n                                                (14×14×384)\n                                                (7×7×768)\n\nViT tek ölçek → sadece classification.\nSwin 4 ölçek → FPN'e bağlanıp detection/segmentation backbone'u olabiliyor.",
+          "qa": true
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "Classification",
-          "text": "                    ViT                              Swin\n                    ───                              ────\n\nCLASSİF.       CLS (1×768)                      Global Avg Pool:\n               → Linear(768→C)                  7×7=49 token ortala\n               → softmax                        → (768,)\n                                                → Linear(768→C)\n                                                → softmax"
+          "text": "                    ViT                              Swin\n                    ───                              ────\n\nCLASSİF.       CLS (1×768)                      Global Avg Pool:\n               → Linear(768→C)                  7×7=49 token ortala\n               → softmax                        → (768,)\n                                                → Linear(768→C)\n                                                → softmax",
+          "qa": true
         }
       ],
       "id": "ida08-vit-vs-swin-tam-karsilastirma"
@@ -5321,9 +5342,10 @@
           "qa": true
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "S9. CycleGAN'ın yararı ve çalışma mantığı nedir? Mimarisi ve kayıp fonksiyonları?",
-          "text": "CycleGAN'ın sunduğu temel avantaj şudur: eşleştirilmiş veri olmadan iki domain arasında çeviri yapabilir. At fotoğrafları ve zebra fotoğrafları gibi iki ayrı koleksiyon yeterli — hangi atın hangi zebranın karşılığı olduğunu bilmen gerekmiyor.\n\nMimari iki Generator ve iki Discriminator içerir:\n  G: X domain'inden Y domain'ine çevirir (at → zebra)\n  F: Y domain'inden X domain'ine çevirir (zebra → at)\n  D_Y: gerçek Y görüntülerini G'nin ürettiklerinden ayırt etmeye çalışır\n  D_X: gerçek X görüntülerini F'nin ürettiklerinden ayırt etmeye çalışır\n\nEğitim sırasında her iki discriminator da ayrı ayrı güncellenir, Generator'lar ise hem discriminator'ı kandırmak hem de cycle-consistency sağlamak için eğitilir.\n\nKayıp fonksiyonları üç bileşenden oluşur:\n\nAdversarial loss (her iki yön için): G'nin ürettiği görüntüler D_Y'yi, F'nin ürettikleri D_X'i kandırmalı.\n\nCycle-consistency loss: X → Y → X geri dönünce orijinal X çıkmalı; Y → X → Y geri dönünce orijinal Y çıkmalı. Yani F(G(x)) ≈ x ve G(F(y)) ≈ y. Bu en kritik kısıt.\n\nIdentity loss (opsiyonel): G'ye zaten Y domain'inden bir görüntü verirsen onu değiştirmemeli — G(y) ≈ y. Bu renk tutarlılığını korumaya yardımcı olur."
+          "text": "CycleGAN'ın sunduğu temel avantaj şudur: eşleştirilmiş veri olmadan iki domain arasında çeviri yapabilir. At fotoğrafları ve zebra fotoğrafları gibi iki ayrı koleksiyon yeterli — hangi atın hangi zebranın karşılığı olduğunu bilmen gerekmiyor.\n\nMimari iki Generator ve iki Discriminator içerir:\n  G: X domain'inden Y domain'ine çevirir (at → zebra)\n  F: Y domain'inden X domain'ine çevirir (zebra → at)\n  D_Y: gerçek Y görüntülerini G'nin ürettiklerinden ayırt etmeye çalışır\n  D_X: gerçek X görüntülerini F'nin ürettiklerinden ayırt etmeye çalışır\n\nEğitim sırasında her iki discriminator da ayrı ayrı güncellenir, Generator'lar ise hem discriminator'ı kandırmak hem de cycle-consistency sağlamak için eğitilir.\n\nKayıp fonksiyonları üç bileşenden oluşur:\n\nAdversarial loss (her iki yön için): G'nin ürettiği görüntüler D_Y'yi, F'nin ürettikleri D_X'i kandırmalı.\n\nCycle-consistency loss: X → Y → X geri dönünce orijinal X çıkmalı; Y → X → Y geri dönünce orijinal Y çıkmalı. Yani F(G(x)) ≈ x ve G(F(y)) ≈ y. Bu en kritik kısıt.\n\nIdentity loss (opsiyonel): G'ye zaten Y domain'inden bir görüntü verirsen onu değiştirmemeli — G(y) ≈ y. Bu renk tutarlılığını korumaya yardımcı olur.",
+          "qa": true
         },
         {
           "type": "text",
@@ -5383,14 +5405,16 @@
           "qa": true
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "\"Hepsi N(0,1)'e çekilirse farklı görüntüler nasıl ayırt edilebilir?\"",
-          "text": "Bu çok iyi bir soru. Eğer KL loss her şeyi gerçekten N(0,1)'e tam olarak iterek kazansaydı, haklısın — her görüntü aynı yere yığılırdı, hiçbir şey öğrenilemezdi.\n\nAma KL bir soft constraint — reconstruction loss ile yarışıyor. İkisi arasında bir denge var:\n\nLoss = Reconstruction + λ · KL\n          ↑                ↑\n    \"farklı görüntüleri    \"hepsini N(0,1)'e\n     farklı yerlere koy\"   doğru çek\"\n\nReconstruction loss şunu söylüyor: \"kedi görüntüsünü köpek görüntüsünden farklı bir yere kodlamazsan ikisini de reconstruct edemezsin, loss büyür.\" Bu baskı, farklı görüntülerin farklı μ değerlerine sahip olmasını zorunlu kılıyor.\n\nKL loss ise şunu söylüyor: \"ama çok uzağa da gitme, 0'ın etrafında kal.\"\n\nSonuç olarak μ değerleri hepsi N(0,1) olmaz ama hepsi sıfırın makul bir çevresinde, birbirinden ayrı noktalara oturur:\n\nKedi:    μ = (0.8, -0.3,  1.2, -0.5, ...)\nKöpek:   μ = (-0.6, 0.9, -0.2,  1.1, ...)\nAraba:   μ = (1.3, -1.1,  0.4, -0.8, ...)\n\nBunlar birbirinden farklı ama hepsi 0 civarında. Hiçbiri μ=500 ya da μ=−300 değil. Latent space sıkışık ama organize. Ve σ değerleri 1'e yakın olduğu için bulutlar birbiriyle örtüşüyor — aralarındaki bölgeler de dolu, generation çalışıyor.\n\nDaha da somut düşünmek istersen: 128 boyutlu bir latent space'de her boyut farklı bir özelliği kodluyor olabilir. Kedi kulağının şekli bir boyutta, tüy dokusu başka bir boyutta. Her görüntü bu 128 boyutun her birinde farklı bir μ üretiyor. KL bunların hepsini 0'a çekiyor ama reconstruction bunların doğru değerleri öğrenmesini zorluyor. İkisi dengelenince anlamlı, ayrışmış ama kompakt bir latent space ortaya çıkıyor."
+          "text": "Bu çok iyi bir soru. Eğer KL loss her şeyi gerçekten N(0,1)'e tam olarak iterek kazansaydı, haklısın — her görüntü aynı yere yığılırdı, hiçbir şey öğrenilemezdi.\n\nAma KL bir soft constraint — reconstruction loss ile yarışıyor. İkisi arasında bir denge var:\n\nLoss = Reconstruction + λ · KL\n          ↑                ↑\n    \"farklı görüntüleri    \"hepsini N(0,1)'e\n     farklı yerlere koy\"   doğru çek\"\n\nReconstruction loss şunu söylüyor: \"kedi görüntüsünü köpek görüntüsünden farklı bir yere kodlamazsan ikisini de reconstruct edemezsin, loss büyür.\" Bu baskı, farklı görüntülerin farklı μ değerlerine sahip olmasını zorunlu kılıyor.\n\nKL loss ise şunu söylüyor: \"ama çok uzağa da gitme, 0'ın etrafında kal.\"\n\nSonuç olarak μ değerleri hepsi N(0,1) olmaz ama hepsi sıfırın makul bir çevresinde, birbirinden ayrı noktalara oturur:\n\nKedi:    μ = (0.8, -0.3,  1.2, -0.5, ...)\nKöpek:   μ = (-0.6, 0.9, -0.2,  1.1, ...)\nAraba:   μ = (1.3, -1.1,  0.4, -0.8, ...)\n\nBunlar birbirinden farklı ama hepsi 0 civarında. Hiçbiri μ=500 ya da μ=−300 değil. Latent space sıkışık ama organize. Ve σ değerleri 1'e yakın olduğu için bulutlar birbiriyle örtüşüyor — aralarındaki bölgeler de dolu, generation çalışıyor.\n\nDaha da somut düşünmek istersen: 128 boyutlu bir latent space'de her boyut farklı bir özelliği kodluyor olabilir. Kedi kulağının şekli bir boyutta, tüy dokusu başka bir boyutta. Her görüntü bu 128 boyutun her birinde farklı bir μ üretiyor. KL bunların hepsini 0'a çekiyor ama reconstruction bunların doğru değerleri öğrenmesini zorluyor. İkisi dengelenince anlamlı, ayrışmış ama kompakt bir latent space ortaya çıkıyor.",
+          "qa": true
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "ELBO Loss: İki Hedef Aynı Anda",
-          "text": "Loss = Reconstruction Loss + KL Divergence\n\n     = ||x - x̂||²    +    KL( N(μ,σ²) || N(0,1) )\n         ↑                        ↑\n     \"görüntüyü          \"encoder'ın dağılımı\n      iyi geri ver\"       N(0,1)'e yakın kalsın\"\n\nBu ikisi birbiriyle çelişiyor biraz:\n- Reconstruction isterse encoder her görüntüyü çok dar, birbirinden uzak yerlere koyar → iyi reconstruct, ama generation çalışmaz\n- KL zorlarsa encoder her şeyi aynı yere yığar → generation güzel, ama reconstruct kötü\n\nİyi bir VAE bu gerilimi dengeler."
+          "text": "Loss = Reconstruction Loss + KL Divergence\n\n     = ||x - x̂||²    +    KL( N(μ,σ²) || N(0,1) )\n         ↑                        ↑\n     \"görüntüyü          \"encoder'ın dağılımı\n      iyi geri ver\"       N(0,1)'e yakın kalsın\"\n\nBu ikisi birbiriyle çelişiyor biraz:\n- Reconstruction isterse encoder her görüntüyü çok dar, birbirinden uzak yerlere koyar → iyi reconstruct, ama generation çalışmaz\n- KL zorlarsa encoder her şeyi aynı yere yığar → generation güzel, ama reconstruct kötü\n\nİyi bir VAE bu gerilimi dengeler.",
+          "qa": true
         },
         {
           "type": "text",
@@ -5722,9 +5746,10 @@
           "text": "Model geriye gitmeyi öğreniyor — gürültüden görüntüye:\n\np_θ(x_{t-1} | x_t) = N(μ_θ(x_t, t),  Σ_θ)\n\nVAE'de decoder p_θ(x|z) tek adımda üretiyordu; burada T adımda aşamalı."
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "6. ELBO — aynı Jensen trick",
-          "text": "VAE'de q_φ(z|x) çarpıp böldük. Burada q(x_{1:T}|x_0) ile aynı trick:\n\nlog p_θ(x_0) ≥ E_q[ log p_θ(x_{0:T}) / q(x_{1:T}|x_0) ] = ELBO\n\nAçılınca:\n\nELBO = E_q[log p_θ(x_0|x_1)]                                 ← L_0: reconstruction\n     - KL(q(x_T|x_0) || p(x_T))                              ← L_T: prior matching\n     - Σ KL(q(x_{t-1}|x_t,x_0) || p_θ(x_{t-1}|x_t))        ← L_{t-1}: denoising\n\nVAE ELBO ile karşılaştır:\n\nELBO_VAE = E_z[log p_θ(x|z)]  -  KL(q_φ(z|x) || p(z))\n            reconstruction         prior matching\n\nYapı aynı — DDPM'de araya T tane denoising KL terimi giriyor."
+          "text": "VAE'de q_φ(z|x) çarpıp böldük. Burada q(x_{1:T}|x_0) ile aynı trick:\n\nlog p_θ(x_0) ≥ E_q[ log p_θ(x_{0:T}) / q(x_{1:T}|x_0) ] = ELBO\n\nAçılınca:\n\nELBO = E_q[log p_θ(x_0|x_1)]                                 ← L_0: reconstruction\n     - KL(q(x_T|x_0) || p(x_T))                              ← L_T: prior matching\n     - Σ KL(q(x_{t-1}|x_t,x_0) || p_θ(x_{t-1}|x_t))        ← L_{t-1}: denoising\n\nVAE ELBO ile karşılaştır:\n\nELBO_VAE = E_z[log p_θ(x|z)]  -  KL(q_φ(z|x) || p(z))\n            reconstruction         prior matching\n\nYapı aynı — DDPM'de araya T tane denoising KL terimi giriyor.",
+          "qa": true
         },
         {
           "type": "text",
@@ -5784,9 +5809,10 @@
           "qa": true
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "2. Bayes adımı — payı ikiye ayır",
-          "text": "VAE:\np_θ(x,z) = p_θ(x|z) · p(z)        ← chain rule\n\n→ log p_θ(x) = log [ p_θ(x|z)·p(z) / p_θ(z|x) ]\n                     ─────────────────\n                     likelihood × prior\n\nDDPM:\np_θ(x_{0:T}) = p_θ(x_{1:T}|x_0) · p_θ(x_0)  ← chain rule: P(A,B)=P(B|A)·P(A)\n\n→ log p_θ(x_0) = log [ p_θ(x_{0:T}) / p_θ(x_{1:T}|x_0) ]\n                       ──────────────────────────────────\n                       full joint / true reverse"
+          "text": "VAE:\np_θ(x,z) = p_θ(x|z) · p(z)        ← chain rule\n\n→ log p_θ(x) = log [ p_θ(x|z)·p(z) / p_θ(z|x) ]\n                     ─────────────────\n                     likelihood × prior\n\nDDPM:\np_θ(x_{0:T}) = p_θ(x_{1:T}|x_0) · p_θ(x_0)  ← chain rule: P(A,B)=P(B|A)·P(A)\n\n→ log p_θ(x_0) = log [ p_θ(x_{0:T}) / p_θ(x_{1:T}|x_0) ]\n                       ──────────────────────────────────\n                       full joint / true reverse",
+          "qa": true
         },
         {
           "type": "text",
@@ -5918,14 +5944,16 @@
           "text": "Görüntüden gerçekçi yeni görüntüler üret. Ama direkt üretmek zor — distribution çok karmaşık. Fikir: önce görüntüyü adım adım noise'a çevir (basit, bilinen), sonra bu süreci tersine öğren."
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "0. Schedule — Precomputed",
-          "text": "T = 1000 adım\n\nβ_t : 0.0001 → 0.02         shape (T,)   her adım ne kadar noise ekleneceği\nα_t = 1 - β_t                shape (T,)\nᾱ_t = α_1 · α_2 · ... · α_t shape (T,)   kümülatif çarpım\nσ_t = sqrt(β_t)              shape (T,)   sampling için"
+          "text": "T = 1000 adım\n\nβ_t : 0.0001 → 0.02         shape (T,)   her adım ne kadar noise ekleneceği\nα_t = 1 - β_t                shape (T,)\nᾱ_t = α_1 · α_2 · ... · α_t shape (T,)   kümülatif çarpım\nσ_t = sqrt(β_t)              shape (T,)   sampling için",
+          "qa": true
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "1. Forward Process — Noise Ekleme",
-          "text": "x_0         (B, C, H, W)   gerçek görüntü\n\nt ~ Uniform(1, T)  (B,)    her görüntü için random adım\nε ~ N(0, I)        (B, C, H, W)   Gaussian noise\n\nx_t = sqrt(ᾱ_t) · x_0 + sqrt(1 - ᾱ_t) · ε     (B, C, H, W)\n\nReparameterization trick: t=500'deki x_t'yi hesaplamak için 500 kez adım atmak gerekmez\n— tek formülle direkt hesaplanır. ᾱ_t küçükse noise baskın, büyükse görüntü baskın."
+          "text": "x_0         (B, C, H, W)   gerçek görüntü\n\nt ~ Uniform(1, T)  (B,)    her görüntü için random adım\nε ~ N(0, I)        (B, C, H, W)   Gaussian noise\n\nx_t = sqrt(ᾱ_t) · x_0 + sqrt(1 - ᾱ_t) · ε     (B, C, H, W)\n\nReparameterization trick: t=500'deki x_t'yi hesaplamak için 500 kez adım atmak gerekmez\n— tek formülle direkt hesaplanır. ᾱ_t küçükse noise baskın, büyükse görüntü baskın.",
+          "qa": true
         },
         {
           "type": "text",
@@ -5945,9 +5973,10 @@
           "qa": true
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "3. Training",
-          "text": "1. x_0 ~ dataset          (B, C, H, W)\n2. t ~ Uniform(1, T)      (B,)\n3. ε ~ N(0, I)            (B, C, H, W)\n4. x_t = sqrt(ᾱ_t)·x_0 + sqrt(1-ᾱ_t)·ε   (B, C, H, W)\n5. ε_θ = U-Net(x_t, t)   (B, C, H, W)\n6. Loss = MSE(ε, ε_θ)    scalar\n\nModel görüntüyü değil, noise'u tahmin ediyor.\nÇünkü ε her zaman N(0,I) — tahmin etmesi daha kolay, stabil."
+          "text": "1. x_0 ~ dataset          (B, C, H, W)\n2. t ~ Uniform(1, T)      (B,)\n3. ε ~ N(0, I)            (B, C, H, W)\n4. x_t = sqrt(ᾱ_t)·x_0 + sqrt(1-ᾱ_t)·ε   (B, C, H, W)\n5. ε_θ = U-Net(x_t, t)   (B, C, H, W)\n6. Loss = MSE(ε, ε_θ)    scalar\n\nModel görüntüyü değil, noise'u tahmin ediyor.\nÇünkü ε her zaman N(0,I) — tahmin etmesi daha kolay, stabil.",
+          "qa": true
         },
         {
           "type": "code",
@@ -5955,9 +5984,10 @@
           "text": "x_T ~ N(0, I)   (B, C, H, W)   saf noise'dan başla\n\nfor t = T, T-1, ..., 1:\n\n    ε_θ = U-Net(x_t, t)        (B, C, H, W)   noise tahmini\n\n    μ_θ = (1/sqrt(α_t))        (B, C, H, W)   x_{t-1} beklentisi\n        · (x_t - β_t/sqrt(1-ᾱ_t) · ε_θ)\n\n    z = N(0,I) if t > 1        stochasticity için\n    z = 0      if t = 1        son adımda noise ekleme\n\n    x_{t-1} = μ_θ + σ_t · z   (B, C, H, W)\n\nreturn x_0"
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "Genel Akış",
-          "text": "Gerçek görüntü x_0\n      ↓ forward (tek adım, kapalı form)\nNoisy x_t  +  timestep t\n      ↓ U-Net\npredicted noise ε_θ  →  Loss = MSE(ε, ε_θ)\n\n─── Inference ───\n\nSaf noise x_T\n      ↓ T adım U-Net (her adım biraz temizle)\nÜretilen x_0"
+          "text": "Gerçek görüntü x_0\n      ↓ forward (tek adım, kapalı form)\nNoisy x_t  +  timestep t\n      ↓ U-Net\npredicted noise ε_θ  →  Loss = MSE(ε, ε_θ)\n\n─── Inference ───\n\nSaf noise x_T\n      ↓ T adım U-Net (her adım biraz temizle)\nÜretilen x_0",
+          "qa": true
         }
       ],
       "id": "ida11-ddpm-unet-dahil-bastan-sona"
@@ -5975,9 +6005,10 @@
           "qa": true
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "Training",
-          "text": "1. x_0 ~ dataset              (B, C, H, W)   gerçek image\n\n2. t ~ Uniform(1, T)          (B,)            her image için random adım\n\n3. ε ~ N(0, I)                (B, C, H, W)   ground truth noise\n\n4. x_t = sqrt(ᾱ_t)·x_0       (B, C, H, W)   noisy image\n       + sqrt(1-ᾱ_t)·ε                       (closed-form, tek adım)\n\n5. ε_θ = U-Net(x_t, t)        (B, C, H, W)   predicted noise\n         input:  x_t  (B, C, H, W)\n                 t    (B,) → sinusoidal embedding → her residual block'a eklenir\n         output: ε_θ  (B, C, H, W)\n\n6. Loss = ||ε - ε_θ||²        scalar"
+          "text": "1. x_0 ~ dataset              (B, C, H, W)   gerçek image\n\n2. t ~ Uniform(1, T)          (B,)            her image için random adım\n\n3. ε ~ N(0, I)                (B, C, H, W)   ground truth noise\n\n4. x_t = sqrt(ᾱ_t)·x_0       (B, C, H, W)   noisy image\n       + sqrt(1-ᾱ_t)·ε                       (closed-form, tek adım)\n\n5. ε_θ = U-Net(x_t, t)        (B, C, H, W)   predicted noise\n         input:  x_t  (B, C, H, W)\n                 t    (B,) → sinusoidal embedding → her residual block'a eklenir\n         output: ε_θ  (B, C, H, W)\n\n6. Loss = ||ε - ε_θ||²        scalar",
+          "qa": true
         },
         {
           "type": "code",
@@ -6097,9 +6128,10 @@
           "qa": true
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "S11. Stokastik üretim sürecinin potansiyel faydası nedir? Neden birden fazla makul şekil üretmek faydalı?",
-          "text": "Deterministik bir model (mesela düz bir encoder-decoder) bir girdi için hep aynı tek çıktıyı verir. Bu durum şöyle bir problem yaratır: gerçek dünyada genellikle tek bir \"doğru\" cevap yoktur. Eksik bir kafatasına girecek implant için birden fazla anatomiyle uyumlu tasarım olabilir, ya da tamamlanması gereken 3B şeklin birden fazla makul yorumu olabilir.\n\nStokastik DDPM bu belirsizliği doğal olarak modeller. Her sampling çalıştırışında gürültüden farklı bir yol izlenerek farklı ama hepsi eğitim dağılımına uygun bir çıktı elde edilir. Bu birkaç açıdan faydalıdır:\n\nDiğerlerine göre konsensüs almak açısından: birden fazla öneri üret, hepsinin ortalamasını veya medianını al. Bu, tek bir gürültülü tahminden çok daha kararlı ve güvenilir bir sonuç verir.\n\nKlinik karar desteği açısından: cerrah tek bir öneride kalmak yerine birkaç farklı implant tasarımı arasından en uygununu seçebilir. Bu hem daha esnek hem de klinisyene kontrol tanır.\n\nBelirsiizliği görselleştirmek açısından: eğer tüm öneriler birbirine çok benziyorsa güven yüksektir. Ama çok farklı önerilerin çıkması o bölgede anatomik belirsizlik olduğuna işaret eder — bu başlı başına klinisyen için değerli bilgidir."
+          "text": "Deterministik bir model (mesela düz bir encoder-decoder) bir girdi için hep aynı tek çıktıyı verir. Bu durum şöyle bir problem yaratır: gerçek dünyada genellikle tek bir \"doğru\" cevap yoktur. Eksik bir kafatasına girecek implant için birden fazla anatomiyle uyumlu tasarım olabilir, ya da tamamlanması gereken 3B şeklin birden fazla makul yorumu olabilir.\n\nStokastik DDPM bu belirsizliği doğal olarak modeller. Her sampling çalıştırışında gürültüden farklı bir yol izlenerek farklı ama hepsi eğitim dağılımına uygun bir çıktı elde edilir. Bu birkaç açıdan faydalıdır:\n\nDiğerlerine göre konsensüs almak açısından: birden fazla öneri üret, hepsinin ortalamasını veya medianını al. Bu, tek bir gürültülü tahminden çok daha kararlı ve güvenilir bir sonuç verir.\n\nKlinik karar desteği açısından: cerrah tek bir öneride kalmak yerine birkaç farklı implant tasarımı arasından en uygununu seçebilir. Bu hem daha esnek hem de klinisyene kontrol tanır.\n\nBelirsiizliği görselleştirmek açısından: eğer tüm öneriler birbirine çok benziyorsa güven yüksektir. Ama çok farklı önerilerin çıkması o bölgede anatomik belirsizlik olduğuna işaret eder — bu başlı başına klinisyen için değerli bilgidir.",
+          "qa": true
         }
       ],
       "id": "ida12-lecture-12-q-a"
@@ -6739,9 +6771,10 @@
           "text": "Özet tablo:"
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "",
-          "text": "                    full column rank?\n                    (rank = n, null = {0})\n\nfull row rank?       EVET                   HAYIR\n(rank = m,     EVET: tek çözüm        EVET: sonsuz çözüm\ncolumn space        A kare + invertible      fat matrix durumu\n= R^m)\n               HAYIR: çözüm yok veya   HAYIR: ya yok ya sonsuz\n                    sonsuz çözüm            (genel durum)"
+          "text": "                    full column rank?\n                    (rank = n, null = {0})\n\nfull row rank?       EVET                   HAYIR\n(rank = m,     EVET: tek çözüm        EVET: sonsuz çözüm\ncolumn space        A kare + invertible      fat matrix durumu\n= R^m)\n               HAYIR: çözüm yok veya   HAYIR: ya yok ya sonsuz\n                    sonsuz çözüm            (genel durum)",
+          "qa": true
         },
         {
           "type": "text",
@@ -7009,9 +7042,10 @@
           "qa": true
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "Konvolüsyon matrisi — SP'nin en önemli lineer operatörü",
-          "text": "SP'de en sık karşılaşılan lineer operatör LTI filtre:\n  y[n] = x[n] * h[n]   (konvolüsyon)\n  x ∈ ℂᴺ (giriş), h ∈ ℂᴷ (filtre), y ∈ ℂᴹ (çıkış, M = N+K-1)\n\nBunu matris formuna getir: y = H·x\n\nH'nin yapısı (her sütun h'nin kaydırılmış versiyonu, Toeplitz):\n  H = [h[0]    0       0    ...  0      ]\n      [h[1]  h[0]      0    ...  0      ]\n      [h[2]  h[1]    h[0]   ...  0      ]\n      [ ...   ...     ...   ... ...     ]\n      [h[K-1) h[K-2) h[K-3)... h[0]    ]\n      [  0   h[K-1) h[K-2) ... h[1]    ]\n      [ ...   ...     ...   ... ...     ]\n      [  0     0       0    ... h[K-1)  ]\n\nNeden bu önemli?\n  Artık konvolüsyon = matris-vektör çarpımı: y = H·x.\n  y bilinen, x bilinmiyor → ters problem teorisi uygulanabilir.\n\nSP'deki ters problemler bu formata giriyor:\n  Dekonvolüsyon:      y, H biliniyor → x bul (orijinal sinyal)\n  Görüntü deblurring: y bulanık görüntü, H blur matrisi → x orijinal\n  CT rekonstrüksiyon: y projektörler, H Radon matrisi → x görüntü\n  Kanal denkleme:     y alınan sinyal, H kanal → x gönderilen sinyal\n\nHepsi y = Hx formunda. Artık aynı teorik çerçeve uygulanabiliyor."
+          "text": "SP'de en sık karşılaşılan lineer operatör LTI filtre:\n  y[n] = x[n] * h[n]   (konvolüsyon)\n  x ∈ ℂᴺ (giriş), h ∈ ℂᴷ (filtre), y ∈ ℂᴹ (çıkış, M = N+K-1)\n\nBunu matris formuna getir: y = H·x\n\nH'nin yapısı (her sütun h'nin kaydırılmış versiyonu, Toeplitz):\n  H = [h[0]    0       0    ...  0      ]\n      [h[1]  h[0]      0    ...  0      ]\n      [h[2]  h[1]    h[0]   ...  0      ]\n      [ ...   ...     ...   ... ...     ]\n      [h[K-1) h[K-2) h[K-3)... h[0]    ]\n      [  0   h[K-1) h[K-2) ... h[1]    ]\n      [ ...   ...     ...   ... ...     ]\n      [  0     0       0    ... h[K-1)  ]\n\nNeden bu önemli?\n  Artık konvolüsyon = matris-vektör çarpımı: y = H·x.\n  y bilinen, x bilinmiyor → ters problem teorisi uygulanabilir.\n\nSP'deki ters problemler bu formata giriyor:\n  Dekonvolüsyon:      y, H biliniyor → x bul (orijinal sinyal)\n  Görüntü deblurring: y bulanık görüntü, H blur matrisi → x orijinal\n  CT rekonstrüksiyon: y projektörler, H Radon matrisi → x görüntü\n  Kanal denkleme:     y alınan sinyal, H kanal → x gönderilen sinyal\n\nHepsi y = Hx formunda. Artık aynı teorik çerçeve uygulanabiliyor.",
+          "qa": true
         }
       ],
       "id": "vs02-lineer-operator-ve-matris-gosterimi-sistemi-yaziya-dokmek"
@@ -7236,9 +7270,10 @@
           "qa": true
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "R_y α = r_xy — normal denklem ve projeksiyon bağlantısı",
-          "text": "E[e·yₖ] = 0 koşulunu açalım:\n  E[(x - Σᵢ αᵢyᵢ)·yₖ] = 0\n  E[x·yₖ] = Σᵢ αᵢ E[yᵢ·yₖ]\n\nMatris formuna getirelim:\n  ⎡E[y₁²]   E[y₁y₂] ...⎤ ⎡α₁⎤   ⎡E[xy₁]⎤\n  ⎢E[y₂y₁] E[y₂²]  ...⎥ ⎢α₂⎥ = ⎢E[xy₂]⎥\n  ⎣...      ...     ...⎦ ⎣αₙ⎦   ⎣E[xyₙ]⎦\n\n  R_y · α = r_xy\n  ──────────────────────────────────\n  R_y = E[yyᵀ]:  oto-korelasyon (Gram matrisi!)\n  r_xy = E[xy]:  çapraz korelasyon vektörü\n  ──────────────────────────────────\n\nR_y terslenebilirse: α_opt = R_y⁻¹ r_xy\n→ x̂_LMMSE = (R_y⁻¹ r_xy)ᵀ y\n\nProjektion bağlantısı — bu çok önemli:\n  Chapter 1'deki projeksiyon problemi: Gram matrisi G, G·c = d\n  Buradaki LMMSE: R_y · α = r_xy\n  Tamamen aynı yapı! LMMSE = x'i span{y₁,...,yₙ}'ye proje etmek.\n\nNeden?\n  Projeksiyon teoreminde: hata e = x - x̂, alt uzay span{y}'ye ⊥\n  Burada: E[e·yₖ] = 0 ↔ e ⊥ yₖ (bu uzaydaki diklik)\n  İkisi de aynı koşul → LMMSE = projeksiyon.\n\nMSE formülü:\n  E[e²] = E[x²] - αᵀ_opt r_xy = σ_x² - r_xy^ᵀ R_y⁻¹ r_xy"
+          "text": "E[e·yₖ] = 0 koşulunu açalım:\n  E[(x - Σᵢ αᵢyᵢ)·yₖ] = 0\n  E[x·yₖ] = Σᵢ αᵢ E[yᵢ·yₖ]\n\nMatris formuna getirelim:\n  ⎡E[y₁²]   E[y₁y₂] ...⎤ ⎡α₁⎤   ⎡E[xy₁]⎤\n  ⎢E[y₂y₁] E[y₂²]  ...⎥ ⎢α₂⎥ = ⎢E[xy₂]⎥\n  ⎣...      ...     ...⎦ ⎣αₙ⎦   ⎣E[xyₙ]⎦\n\n  R_y · α = r_xy\n  ──────────────────────────────────\n  R_y = E[yyᵀ]:  oto-korelasyon (Gram matrisi!)\n  r_xy = E[xy]:  çapraz korelasyon vektörü\n  ──────────────────────────────────\n\nR_y terslenebilirse: α_opt = R_y⁻¹ r_xy\n→ x̂_LMMSE = (R_y⁻¹ r_xy)ᵀ y\n\nProjektion bağlantısı — bu çok önemli:\n  Chapter 1'deki projeksiyon problemi: Gram matrisi G, G·c = d\n  Buradaki LMMSE: R_y · α = r_xy\n  Tamamen aynı yapı! LMMSE = x'i span{y₁,...,yₙ}'ye proje etmek.\n\nNeden?\n  Projeksiyon teoreminde: hata e = x - x̂, alt uzay span{y}'ye ⊥\n  Burada: E[e·yₖ] = 0 ↔ e ⊥ yₖ (bu uzaydaki diklik)\n  İkisi de aynı koşul → LMMSE = projeksiyon.\n\nMSE formülü:\n  E[e²] = E[x²] - αᵀ_opt r_xy = σ_x² - r_xy^ᵀ R_y⁻¹ r_xy",
+          "qa": true
         },
         {
           "type": "text",
@@ -7262,9 +7297,10 @@
           "qa": true
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "Vektör LMMSE ve Wiener-Hopf denklemi",
-          "text": "Skaler durumda tek x tahmin ediyorduk: x̂ = αᵀy\nVektör durumunda birden fazla bilinmeyen: x ∈ ℝᵐ\n\nLineer tahmin edici: x̂ = Ky, K ∈ ℝ^{m×n}\n  K'nın her satırı kᵢᵀ: x̂ᵢ = kᵢᵀy\n\nHedef: min_K E[||e||²] = min_K trace(R_e)\nGüzel: Problem satır satır ayrışıyor!\nHer kᵢ bağımsız optimize edilebilir: R_y kᵢ = r_{xᵢy}  ∀i\n\nTüm satırlar matris olarak:\n  K R_y = R_xy    ← Wiener-Hopf Denklemi\n  ──────────────────────────────────\n  R_x  = E[xxᵀ]  (m×m, x oto-korelasyon)\n  R_y  = E[yyᵀ]  (n×n, y oto-korelasyon)\n  R_xy = E[xyᵀ]  (m×n, çapraz korelasyon)\n  ──────────────────────────────────\n\nR_y terslenebilirse:\n  K_opt = R_xy R_y⁻¹\n  x̂_LMMSE = R_xy R_y⁻¹ y\n\nHata kovaryansı:\n  R_e = R_x - K_opt R_yx = R_x - R_xy R_y⁻¹ R_yx"
+          "text": "Skaler durumda tek x tahmin ediyorduk: x̂ = αᵀy\nVektör durumunda birden fazla bilinmeyen: x ∈ ℝᵐ\n\nLineer tahmin edici: x̂ = Ky, K ∈ ℝ^{m×n}\n  K'nın her satırı kᵢᵀ: x̂ᵢ = kᵢᵀy\n\nHedef: min_K E[||e||²] = min_K trace(R_e)\nGüzel: Problem satır satır ayrışıyor!\nHer kᵢ bağımsız optimize edilebilir: R_y kᵢ = r_{xᵢy}  ∀i\n\nTüm satırlar matris olarak:\n  K R_y = R_xy    ← Wiener-Hopf Denklemi\n  ──────────────────────────────────\n  R_x  = E[xxᵀ]  (m×m, x oto-korelasyon)\n  R_y  = E[yyᵀ]  (n×n, y oto-korelasyon)\n  R_xy = E[xyᵀ]  (m×n, çapraz korelasyon)\n  ──────────────────────────────────\n\nR_y terslenebilirse:\n  K_opt = R_xy R_y⁻¹\n  x̂_LMMSE = R_xy R_y⁻¹ y\n\nHata kovaryansı:\n  R_e = R_x - K_opt R_yx = R_x - R_xy R_y⁻¹ R_yx",
+          "qa": true
         },
         {
           "type": "text",
@@ -7288,9 +7324,10 @@
           "qa": true
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "Ortak mantık — her ikisinde de aynı soru",
-          "text": "Her ikisinde de:\n\n  1. Bir 'bilinmeyen' var (deterministik, sabit).\n  2. Bir 'gözlem' var (rastgele, gürültülü).\n  3. p(gözlem | bilinmeyen) yazıyorsun.\n  4. Bu fonksiyonu bilinmeyene göre maximize ediyorsun.\n\nSoru her iki durumda da aynı:\n  'Elindeki gözlemleri en olası kılan bilinmeyen nedir?'\n\n─────────────────────────────────────────────────────\nML kursu:  theta_ML = argmax_theta  prod_i  p(x_i | theta)\nEE499:         x_ML = argmax_x              p(y | x)\n─────────────────────────────────────────────────────\n\nFormül yapısı birebir aynı.\nSadece 'bilinmeyen' değişti: theta yerine x."
+          "text": "Her ikisinde de:\n\n  1. Bir 'bilinmeyen' var (deterministik, sabit).\n  2. Bir 'gözlem' var (rastgele, gürültülü).\n  3. p(gözlem | bilinmeyen) yazıyorsun.\n  4. Bu fonksiyonu bilinmeyene göre maximize ediyorsun.\n\nSoru her iki durumda da aynı:\n  'Elindeki gözlemleri en olası kılan bilinmeyen nedir?'\n\n─────────────────────────────────────────────────────\nML kursu:  theta_ML = argmax_theta  prod_i  p(x_i | theta)\nEE499:         x_ML = argmax_x              p(y | x)\n─────────────────────────────────────────────────────\n\nFormül yapısı birebir aynı.\nSadece 'bilinmeyen' değişti: theta yerine x.",
+          "qa": true
         },
         {
           "type": "code",
@@ -7330,9 +7367,10 @@
           "qa": true
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "p(z) prior'u var — neden MAP değil?",
-          "text": "Kritik soru: prior kimin üzerinde?\n\nMLE:  theta deterministik unknown, p(theta) YOK  → MLE\nMAP:  theta rastgele,              p(theta) VAR  → MAP\n\nPrior, TAHMİN ETTİĞİN ŞEYİN üzerinde olmalı.\n\nVAE'de tahmin edilen:  theta, phi  (network ağırlıkları)\np(theta) var mı?       HAYIR  → MLE\n\nz'de prior var:  p(z) = N(0,I)\nAma z tahmin edilmiyor — z integrate ediliyor.\nz'nin prior'u, theta/phi için MAP yapmıyor.\n\nEğer theta'ya prior koysaydın:\n  p(theta) ~ N(0,I)  →  log p(theta) ∝ -||theta||²\n  loss = reconstruction loss + ||theta||²\n                               ──────────\n                               L2 weight decay\n\n  Bu tam olarak neural network'teki weight decay!\n  Yani: L2 regularization = Gaussian prior ile MAP on theta."
+          "text": "Kritik soru: prior kimin üzerinde?\n\nMLE:  theta deterministik unknown, p(theta) YOK  → MLE\nMAP:  theta rastgele,              p(theta) VAR  → MAP\n\nPrior, TAHMİN ETTİĞİN ŞEYİN üzerinde olmalı.\n\nVAE'de tahmin edilen:  theta, phi  (network ağırlıkları)\np(theta) var mı?       HAYIR  → MLE\n\nz'de prior var:  p(z) = N(0,I)\nAma z tahmin edilmiyor — z integrate ediliyor.\nz'nin prior'u, theta/phi için MAP yapmıyor.\n\nEğer theta'ya prior koysaydın:\n  p(theta) ~ N(0,I)  →  log p(theta) ∝ -||theta||²\n  loss = reconstruction loss + ||theta||²\n                               ──────────\n                               L2 weight decay\n\n  Bu tam olarak neural network'teki weight decay!\n  Yani: L2 regularization = Gaussian prior ile MAP on theta.",
+          "qa": true
         },
         {
           "type": "table",
@@ -7399,9 +7437,10 @@
       "context": "EE499 · MAP Estimation",
       "sections": [
         {
-          "type": "code",
+          "type": "text",
           "heading": "MLE'den MAP'e — paradigma kayışı",
-          "text": "MLE:  x deterministik — bilinmeyen ama sabit bir sayı.\n      Prior yok. Sadece 'bu y'yi en olası kılan x nedir?'\n\nMAP:  x artık rastgele — hakkında istatistiksel bilgimiz var.\n      Prior var: p(x) — x'in olası değerleri hakkında önceden bilgi.\n\nMLE'de:\n  x_ML = argmax_x  p(y|x)\n\nMAP'te Bayes kuralı devreye giriyor:\n  p(x|y) = p(y|x) * p(x) / p(y)\n            ────────  ─────\n           likelihood  prior   (p(y) x'e bağlı değil, sabit)\n\n  x_MAP = argmax_x  p(x|y)\n        = argmax_x  p(y|x) * p(x)\n        = argmax_x  log p(y|x) + log p(x)\n        = argmin_x  -log p(y|x) - log p(x)\n                    ───────────  ──────────\n                    data fidelity  regularization"
+          "text": "MLE:  x deterministik — bilinmeyen ama sabit bir sayı.\n      Prior yok. Sadece 'bu y'yi en olası kılan x nedir?'\n\nMAP:  x artık rastgele — hakkında istatistiksel bilgimiz var.\n      Prior var: p(x) — x'in olası değerleri hakkında önceden bilgi.\n\nMLE'de:\n  x_ML = argmax_x  p(y|x)\n\nMAP'te Bayes kuralı devreye giriyor:\n  p(x|y) = p(y|x) * p(x) / p(y)\n            ────────  ─────\n           likelihood  prior   (p(y) x'e bağlı değil, sabit)\n\n  x_MAP = argmax_x  p(x|y)\n        = argmax_x  p(y|x) * p(x)\n        = argmax_x  log p(y|x) + log p(x)\n        = argmin_x  -log p(y|x) - log p(x)\n                    ───────────  ──────────\n                    data fidelity  regularization",
+          "qa": true
         },
         {
           "type": "text",
@@ -7410,14 +7449,16 @@
           "qa": true
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "Gaussian olunca somutlaşıyor",
-          "text": "y = Ax + n,  n ~ N(0, σ_n²I)\nx ~ N(0, R_x)   ← Gaussian prior\n\n-log p(y|x) ∝ ||y - Ax||²        (Gaussian gürültüden)\n-log p(x)   ∝ xᵀ R_x⁻¹ x        (Gaussian prior'dan)\n\nx_MAP = argmin  ||y - Ax||² + xᵀ R_x⁻¹ x\n                ────────────   ───────────\n                data fidelity   regularization\n\nKapalı form çözüm:\n  x_MAP = (AᵀA + R_x⁻¹)⁻¹ Aᵀy\n\nChapter 2'deki Tikhonov regularization:\n  x_Tikhonov = (AᵀA + λI)⁻¹ Aᵀy\n\nBirebir aynı formül! Fark şu:\n  Tikhonov: λ keyfi seçiliyordu (deneme-yanılma)\n  MAP:      R_x⁻¹ = x'in prior istatistiğinden geliyor\n\nArtık regularization'ın nereden geldiğini biliyoruz: prior!"
+          "text": "y = Ax + n,  n ~ N(0, σ_n²I)\nx ~ N(0, R_x)   ← Gaussian prior\n\n-log p(y|x) ∝ ||y - Ax||²        (Gaussian gürültüden)\n-log p(x)   ∝ xᵀ R_x⁻¹ x        (Gaussian prior'dan)\n\nx_MAP = argmin  ||y - Ax||² + xᵀ R_x⁻¹ x\n                ────────────   ───────────\n                data fidelity   regularization\n\nKapalı form çözüm:\n  x_MAP = (AᵀA + R_x⁻¹)⁻¹ Aᵀy\n\nChapter 2'deki Tikhonov regularization:\n  x_Tikhonov = (AᵀA + λI)⁻¹ Aᵀy\n\nBirebir aynı formül! Fark şu:\n  Tikhonov: λ keyfi seçiliyordu (deneme-yanılma)\n  MAP:      R_x⁻¹ = x'in prior istatistiğinden geliyor\n\nArtık regularization'ın nereden geldiğini biliyoruz: prior!",
+          "qa": true
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "Prior seçimi regularization şeklini belirliyor",
-          "text": "Farklı prior'lar farklı regularization veriyor:\n\nGaussian prior:  p(x) ∝ exp(-||x||²)\n  -log p(x) ∝ ||x||²   → L2 regularization (Tikhonov/Ridge)\n  Küçük ama sıfır olmayan bileşenler\n\nLaplace prior:   p(x) ∝ exp(-||x||_1)\n  -log p(x) ∝ ||x||_1  → L1 regularization (LASSO)\n  Bazı bileşenler tam sıfır → sparse çözüm\n  Compressed sensing'in temeli bu\n\nGenel:\n  x_MAP = argmin  -log p(y|x) - log p(x)\n                  ───────────  ──────────\n          gürültü dağılımı    prior dağılımı\n          belirliyor          belirliyor\n\nYani Chapter 2'de 'hangi normu kullanalım?' sorusu aslında\n'x hakkında ne inanıyoruz?' sorusuydu."
+          "text": "Farklı prior'lar farklı regularization veriyor:\n\nGaussian prior:  p(x) ∝ exp(-||x||²)\n  -log p(x) ∝ ||x||²   → L2 regularization (Tikhonov/Ridge)\n  Küçük ama sıfır olmayan bileşenler\n\nLaplace prior:   p(x) ∝ exp(-||x||_1)\n  -log p(x) ∝ ||x||_1  → L1 regularization (LASSO)\n  Bazı bileşenler tam sıfır → sparse çözüm\n  Compressed sensing'in temeli bu\n\nGenel:\n  x_MAP = argmin  -log p(y|x) - log p(x)\n                  ───────────  ──────────\n          gürültü dağılımı    prior dağılımı\n          belirliyor          belirliyor\n\nYani Chapter 2'de 'hangi normu kullanalım?' sorusu aslında\n'x hakkında ne inanıyoruz?' sorusuydu.",
+          "qa": true
         }
       ],
       "id": "vs03-mle-map-x-deterministik-ten-rastgele-ye-prior-devreye-giriyo"
@@ -7429,14 +7470,16 @@
       "context": "EE499 · General Estimation Framework",
       "sections": [
         {
-          "type": "code",
+          "type": "text",
           "heading": "Hangi bilgiyle hangi yöntemi seçersiniz?",
-          "text": "Tahmin problemi: y gözlemlendi, x'i tahmin et.\nAma 'x ne kadar rassal?' sorusuna göre yaklaşım değişiyor.\n\nBilgi durumu:\n─────────────────────────────────────────────────────────\nx deterministik (bilmediğimiz sabit bir değer)\ny rassal (gürültülü gözlem)\n→ Maximum Likelihood (ML) tahmini\n─────────────────────────────────────────────────────────\nx rassal (hakkında istatistiksel bilgimiz var)\ny rassal (gözlem)\n→ Bayesian yaklaşım:\n   MMSE  = E[x|y]  — optimal ama hesabı zor\n   LMMSE = lineer kısıtlı MMSE — pratik, kapalı form\n   MAP   = argmax p(x|y) — posterior mod, optimize edilebilir\n─────────────────────────────────────────────────────────\n\nML (Maximum Likelihood):\n  x̂_ML = argmax_x p(y|x) = argmax_x log p(y|x)\n\n  Model: y = Ax + n, n ~ N(0, σ²I) (i.i.d. Gaussian gürültü)\n  log p(y|x) = sabit - 1/(2σ²) ||y-Ax||₂²\n  Argmax → argmin ||y-Ax||₂² = x_LS\n\n  Yani Gaussian gürültü altında ML = Least Squares!\n  LS'nin stokastik temeli bu — keyfi bir seçim değil.\n\nFarklı gürültüler farklı maliyet fonksiyonu veriyor:\n  Korelasyonlu Gaussian: Mahalanobis norm (ağırlıklı LS)\n  Laplace:               L1 norm (seyrek çözümler)\n  Poisson (foton sayımı): KL-divergence (iteratif çözüm)"
+          "text": "Tahmin problemi: y gözlemlendi, x'i tahmin et.\nAma 'x ne kadar rassal?' sorusuna göre yaklaşım değişiyor.\n\nBilgi durumu:\n─────────────────────────────────────────────────────────\nx deterministik (bilmediğimiz sabit bir değer)\ny rassal (gürültülü gözlem)\n→ Maximum Likelihood (ML) tahmini\n─────────────────────────────────────────────────────────\nx rassal (hakkında istatistiksel bilgimiz var)\ny rassal (gözlem)\n→ Bayesian yaklaşım:\n   MMSE  = E[x|y]  — optimal ama hesabı zor\n   LMMSE = lineer kısıtlı MMSE — pratik, kapalı form\n   MAP   = argmax p(x|y) — posterior mod, optimize edilebilir\n─────────────────────────────────────────────────────────\n\nML (Maximum Likelihood):\n  x̂_ML = argmax_x p(y|x) = argmax_x log p(y|x)\n\n  Model: y = Ax + n, n ~ N(0, σ²I) (i.i.d. Gaussian gürültü)\n  log p(y|x) = sabit - 1/(2σ²) ||y-Ax||₂²\n  Argmax → argmin ||y-Ax||₂² = x_LS\n\n  Yani Gaussian gürültü altında ML = Least Squares!\n  LS'nin stokastik temeli bu — keyfi bir seçim değil.\n\nFarklı gürültüler farklı maliyet fonksiyonu veriyor:\n  Korelasyonlu Gaussian: Mahalanobis norm (ağırlıklı LS)\n  Laplace:               L1 norm (seyrek çözümler)\n  Poisson (foton sayımı): KL-divergence (iteratif çözüm)",
+          "qa": true
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "MMSE ve MAP — Bayesian dünyasında tahmin",
-          "text": "Bayesian yaklaşımda x de rassal ve hakkında bir prior bilgimiz var: p(x)\n\nBayes kuralı:\n  p(x|y) = p(y|x)·p(x) / p(y)\n            ────────  ─────\n           likelihood  prior   (p(y) normalizer, x'e bağımsız)\n\nMMSE = posterior mean:\n  Maliyet: E[(x-x̂)²] minimize et → x̂_MMSE = E[x|y] = ∫ x·p(x|y) dx\n  Bu optimal Bayesian tahmin — MSE'yi minimum yapan.\n  Sorun: ∫p(y|x)p(x)dx entegrali genellikle analitik çözülemiyor.\n  → Monte Carlo (örnekleme) gerekiyor → yavaş, karmaşık.\n\nLMMSE = lineer kısıt:\n  Sadece 2. dereceden momentler lazım: E[x], E[y], E[xy], E[yyᵀ]\n  Kapalı form çözüm var.\n  Gaussian'da MMSE = LMMSE (!): posterior Gaussian olunca ortalaması lineer fonksiyon.\n\nMAP = posterior mod:\n  x̂_MAP = argmax_x p(x|y) = argmax_x [log p(y|x) + log p(x)]\n         = argmin_x [-log p(y|x) - log p(x)]\n           ─────────────────  ──────────────\n           data fidelity terimi   regularization terimi\n\nBu son form çok önemli:\n  MAP = data fidelity + regularization minimizasyonu!\n  Chapter 2'de keyfi seçtiğiniz regularization terimi,\n  aslında bir prior dağılımına karşılık geliyor."
+          "text": "Bayesian yaklaşımda x de rassal ve hakkında bir prior bilgimiz var: p(x)\n\nBayes kuralı:\n  p(x|y) = p(y|x)·p(x) / p(y)\n            ────────  ─────\n           likelihood  prior   (p(y) normalizer, x'e bağımsız)\n\nMMSE = posterior mean:\n  Maliyet: E[(x-x̂)²] minimize et → x̂_MMSE = E[x|y] = ∫ x·p(x|y) dx\n  Bu optimal Bayesian tahmin — MSE'yi minimum yapan.\n  Sorun: ∫p(y|x)p(x)dx entegrali genellikle analitik çözülemiyor.\n  → Monte Carlo (örnekleme) gerekiyor → yavaş, karmaşık.\n\nLMMSE = lineer kısıt:\n  Sadece 2. dereceden momentler lazım: E[x], E[y], E[xy], E[yyᵀ]\n  Kapalı form çözüm var.\n  Gaussian'da MMSE = LMMSE (!): posterior Gaussian olunca ortalaması lineer fonksiyon.\n\nMAP = posterior mod:\n  x̂_MAP = argmax_x p(x|y) = argmax_x [log p(y|x) + log p(x)]\n         = argmin_x [-log p(y|x) - log p(x)]\n           ─────────────────  ──────────────\n           data fidelity terimi   regularization terimi\n\nBu son form çok önemli:\n  MAP = data fidelity + regularization minimizasyonu!\n  Chapter 2'de keyfi seçtiğiniz regularization terimi,\n  aslında bir prior dağılımına karşılık geliyor.",
+          "qa": true
         }
       ],
       "id": "vs03-ml-mmse-ve-map-uc-tahmin-cercevesi"
@@ -7857,9 +7900,10 @@
       "context": "Practice · Estimation",
       "sections": [
         {
-          "type": "code",
+          "type": "text",
           "heading": "",
-          "text": "              MLE          MAP          Bayesian\nOutput:       tek θ        tek θ        dağılım\nPrior:        yok          var          var\nReg:          yok          var          —\nUncertainty:  yok          yok          var"
+          "text": "              MLE          MAP          Bayesian\nOutput:       tek θ        tek θ        dağılım\nPrior:        yok          var          var\nReg:          yok          var          —\nUncertainty:  yok          yok          var",
+          "qa": true
         },
         {
           "type": "text",
@@ -8258,9 +8302,10 @@
       "context": "Practice · ML",
       "sections": [
         {
-          "type": "code",
+          "type": "text",
           "heading": "Tanı Tablosu",
-          "text": "Train↓  Val↓   → iyi, devam\nTrain↓  Val↑   → overfitting\nTrain↑  Val↑   → underfitting (model çok basit)\nTrain↓  Val==  → val seti çok küçük veya leak var"
+          "text": "Train↓  Val↓   → iyi, devam\nTrain↓  Val↑   → overfitting\nTrain↑  Val↑   → underfitting (model çok basit)\nTrain↓  Val==  → val seti çok küçük veya leak var",
+          "qa": true
         },
         {
           "type": "list",
@@ -8741,9 +8786,10 @@
       "context": "Practice · ML",
       "sections": [
         {
-          "type": "code",
+          "type": "text",
           "heading": "",
-          "text": "Bagging:   D1,D2,...,Dk  bootstrap sample\n           M1,M2,...,Mk  bağımsız eğit\n           tahmin: majority vote / average\n\nBoosting:  M1 eğit → hatalarına ağırlık ver\n           M2 hataları düzelt → M3... → topla"
+          "text": "Bagging:   D1,D2,...,Dk  bootstrap sample\n           M1,M2,...,Mk  bağımsız eğit\n           tahmin: majority vote / average\n\nBoosting:  M1 eğit → hatalarına ağırlık ver\n           M2 hataları düzelt → M3... → topla",
+          "qa": true
         },
         {
           "type": "list",
@@ -8769,9 +8815,10 @@
       "context": "Practice · Deep Learning",
       "sections": [
         {
-          "type": "code",
+          "type": "text",
           "heading": "",
-          "text": "ReLU:      max(0, x)              gradient: 0 veya 1\nLeakyReLU: max(αx, x), α=0.01    gradient: α veya 1\nGELU:      x · Φ(x)              smooth, differentiable everywhere\nSigmoid:   1/(1+e^-x)            gradient: max 0.25, saturating\ntanh:      (e^x-e^-x)/(e^x+e^-x) gradient: max 1, saturating"
+          "text": "ReLU:      max(0, x)              gradient: 0 veya 1\nLeakyReLU: max(αx, x), α=0.01    gradient: α veya 1\nGELU:      x · Φ(x)              smooth, differentiable everywhere\nSigmoid:   1/(1+e^-x)            gradient: max 0.25, saturating\ntanh:      (e^x-e^-x)/(e^x+e^-x) gradient: max 1, saturating",
+          "qa": true
         },
         {
           "type": "text",
@@ -12427,9 +12474,10 @@
           "text": "Bayes ile q(x_{t-1}|x_t, x_0) türetilebiliyor — ama x_0'a koşullu:\n\nq(x_{t-1}|x_t, x_0) = N(μ̃_t, β̃_t·I)\n\nμ̃_t ve β̃_t, forward parametrelerinden (α_t, ᾱ_t, β_t) analitik olarak türetiliyor. x_0 bilinince bu dağılım tamamen biliniyor."
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "Reparametrization → ε Prediction",
-          "text": "μ̃_t x_0 cinsinden:\n\n  μ̃_t = (√ᾱ_{t-1}·β_t)/(1-ᾱ_t)·x_0  +  (√α_t·(1-ᾱ_{t-1}))/(1-ᾱ_t)·x_t\n\nAma p_θ(x_{t-1}|x_t) inference'da x_0'ı bilmiyor —\namacımız x_0'dan bağımsız approximation.\n\nx_0'ı ε cinsinden yaz:\n\n  x_0 = (x_t - √(1-ᾱ_t)·ε) / √ᾱ_t\n\nYerine koyunca μ̃_t yalnızca x_t ve ε'ya bağlı hale geliyor:\n\n  μ̃_t = (1/√α_t) · (x_t - β_t/√(1-ᾱ_t) · ε)\n\nNetwork μ_θ yerine ε_θ predict ediyor.\nVariance sabit seçilince KL sadece mean farkına indirgenip:\n\n  L_simple = E[||ε - ε_θ(x_t, t)||²]"
+          "text": "μ̃_t x_0 cinsinden:\n\n  μ̃_t = (√ᾱ_{t-1}·β_t)/(1-ᾱ_t)·x_0  +  (√α_t·(1-ᾱ_{t-1}))/(1-ᾱ_t)·x_t\n\nAma p_θ(x_{t-1}|x_t) inference'da x_0'ı bilmiyor —\namacımız x_0'dan bağımsız approximation.\n\nx_0'ı ε cinsinden yaz:\n\n  x_0 = (x_t - √(1-ᾱ_t)·ε) / √ᾱ_t\n\nYerine koyunca μ̃_t yalnızca x_t ve ε'ya bağlı hale geliyor:\n\n  μ̃_t = (1/√α_t) · (x_t - β_t/√(1-ᾱ_t) · ε)\n\nNetwork μ_θ yerine ε_θ predict ediyor.\nVariance sabit seçilince KL sadece mean farkına indirgenip:\n\n  L_simple = E[||ε - ε_θ(x_t, t)||²]",
+          "qa": true
         },
         {
           "type": "code",
@@ -16351,9 +16399,10 @@
           "qa": true
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "Tüm Dataset İçin",
-          "text": "x₁ → encoder → z₁ → decoder → μ₁ ≈ x₁\nx₂ → encoder → z₂ → decoder → μ₂ ≈ x₂\nx₃ → encoder → z₃ → decoder → μ₃ ≈ x₃\n\nHer x için ayrı z, ayrı μ, ayrı loss. Encoder da aynı anda öğrendiği için z'ler değişiyor → joint training."
+          "text": "x₁ → encoder → z₁ → decoder → μ₁ ≈ x₁\nx₂ → encoder → z₂ → decoder → μ₂ ≈ x₂\nx₃ → encoder → z₃ → decoder → μ₃ ≈ x₃\n\nHer x için ayrı z, ayrı μ, ayrı loss. Encoder da aynı anda öğrendiği için z'ler değişiyor → joint training.",
+          "qa": true
         },
         {
           "type": "text",
@@ -16583,9 +16632,10 @@
           "text": "Model geriye gitmeyi öğreniyor — gürültüden görüntüye:\n\np_θ(x_{t-1} | x_t) = N(μ_θ(x_t, t),  Σ_θ)\n\nVAE'de decoder p_θ(x|z) tek adımda üretiyordu; burada T adımda aşamalı."
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "6. ELBO — aynı Jensen trick",
-          "text": "VAE'de q_φ(z|x) çarpıp böldük. Burada q(x_{1:T}|x_0) ile aynı trick:\n\nlog p_θ(x_0) ≥ E_q[ log p_θ(x_{0:T}) / q(x_{1:T}|x_0) ] = ELBO\n\nAçılınca:\n\nELBO = E_q[log p_θ(x_0|x_1)]                                 ← L_0: reconstruction\n     - KL(q(x_T|x_0) || p(x_T))                              ← L_T: prior matching\n     - Σ KL(q(x_{t-1}|x_t,x_0) || p_θ(x_{t-1}|x_t))        ← L_{t-1}: denoising\n\nVAE ELBO ile karşılaştır:\n\nELBO_VAE = E_z[log p_θ(x|z)]  -  KL(q_φ(z|x) || p(z))\n            reconstruction         prior matching\n\nYapı aynı — DDPM'de araya T tane denoising KL terimi giriyor."
+          "text": "VAE'de q_φ(z|x) çarpıp böldük. Burada q(x_{1:T}|x_0) ile aynı trick:\n\nlog p_θ(x_0) ≥ E_q[ log p_θ(x_{0:T}) / q(x_{1:T}|x_0) ] = ELBO\n\nAçılınca:\n\nELBO = E_q[log p_θ(x_0|x_1)]                                 ← L_0: reconstruction\n     - KL(q(x_T|x_0) || p(x_T))                              ← L_T: prior matching\n     - Σ KL(q(x_{t-1}|x_t,x_0) || p_θ(x_{t-1}|x_t))        ← L_{t-1}: denoising\n\nVAE ELBO ile karşılaştır:\n\nELBO_VAE = E_z[log p_θ(x|z)]  -  KL(q_φ(z|x) || p(z))\n            reconstruction         prior matching\n\nYapı aynı — DDPM'de araya T tane denoising KL terimi giriyor.",
+          "qa": true
         },
         {
           "type": "text",
@@ -16634,19 +16684,22 @@
       "context": "CS231n · Generative Models",
       "sections": [
         {
-          "type": "code",
+          "type": "text",
           "heading": "Senaryo: p(x) iki modlu, q(x) ile yaklaştırıyoruz",
-          "text": "p(x) gerçek dağılım — iki ayrı tepe var:\n\n  p(x):  ___     ___\n        /   \\   /   \\\n  ─────/─────\\─/─────\\─────\n      sol    sağ\n      mod    mod\n\nq(x) bizim modelimiz — tek parametreli Gaussian.\nİki modun ikisini aynı anda yakalayamaz.\n\nSoru: hangi KL yönünü minimize edersek ne olur?"
+          "text": "p(x) gerçek dağılım — iki ayrı tepe var:\n\n  p(x):  ___     ___\n        /   \\   /   \\\n  ─────/─────\\─/─────\\─────\n      sol    sağ\n      mod    mod\n\nq(x) bizim modelimiz — tek parametreli Gaussian.\nİki modun ikisini aynı anda yakalayamaz.\n\nSoru: hangi KL yönünü minimize edersek ne olur?",
+          "qa": true
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "D_KL(P||Q) — 'P'yi başa yaz' — Mass-Covering",
-          "text": "D_KL(P||Q) = E_{x~P}[log P(x)/Q(x)]\n\nÖrnekler P'den çekiliyor.\n\nP yüksekken Q sıfıra yaklaşırsa:\n  log(P/Q) → log(P/0) → ∞  ← sonsuz ceza\n\nQ mecburen P'nin yüksek olduğu her yerde kitle bulundurmalı.\nHiçbir modu 'atlayamaz' — atlarsa sonsuz ceza yer.\n\nSonuç: q iki modun arasından geçiyor, ikisini de kapsıyor:\n\n  q(x):      _______\n            /       \\\n  ─────────/─────────\\─────\n      iki mod arası bulanık\n\n'P neredeyse Q da orada olsun'\n→ Yanlış yerlere de kitle koyabilir ama eksik bırakamaz.\n→ Geniş, yayvan, her yeri kaplayan q."
+          "text": "D_KL(P||Q) = E_{x~P}[log P(x)/Q(x)]\n\nÖrnekler P'den çekiliyor.\n\nP yüksekken Q sıfıra yaklaşırsa:\n  log(P/Q) → log(P/0) → ∞  ← sonsuz ceza\n\nQ mecburen P'nin yüksek olduğu her yerde kitle bulundurmalı.\nHiçbir modu 'atlayamaz' — atlarsa sonsuz ceza yer.\n\nSonuç: q iki modun arasından geçiyor, ikisini de kapsıyor:\n\n  q(x):      _______\n            /       \\\n  ─────────/─────────\\─────\n      iki mod arası bulanık\n\n'P neredeyse Q da orada olsun'\n→ Yanlış yerlere de kitle koyabilir ama eksik bırakamaz.\n→ Geniş, yayvan, her yeri kaplayan q.",
+          "qa": true
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "D_KL(Q||P) — 'Q'yu başa yaz' — Mode-Seeking",
-          "text": "D_KL(Q||P) = E_{x~Q}[log Q(x)/P(x)]\n\nÖrnekler Q'dan çekiliyor.\n\nQ yüksekken P sıfıra yaklaşırsa:\n  log(Q/P) → log(Q/0) → ∞  ← sonsuz ceza\n\nQ mecburen P'nin sıfır olduğu bölgelerden kaçmalı.\nİki mod arasındaki çukurda P≈0 → Q oraya kitle koyamaz.\n\nSonuç: q iki moddan birini seçiyor, diğerini ignore ediyor:\n\n  q(x):  ___\n        /   \\\n  ─────/─────\\───────────────\n     sol mod seçildi, sağ yok\n\n'Q neredeyse P de orada olsun'\n→ P'nin güvenli, yoğun bölgelerine sıkışıyor.\n→ Dar, keskin, tek moda odaklanan q."
+          "text": "D_KL(Q||P) = E_{x~Q}[log Q(x)/P(x)]\n\nÖrnekler Q'dan çekiliyor.\n\nQ yüksekken P sıfıra yaklaşırsa:\n  log(Q/P) → log(Q/0) → ∞  ← sonsuz ceza\n\nQ mecburen P'nin sıfır olduğu bölgelerden kaçmalı.\nİki mod arasındaki çukurda P≈0 → Q oraya kitle koyamaz.\n\nSonuç: q iki moddan birini seçiyor, diğerini ignore ediyor:\n\n  q(x):  ___\n        /   \\\n  ─────/─────\\───────────────\n     sol mod seçildi, sağ yok\n\n'Q neredeyse P de orada olsun'\n→ P'nin güvenli, yoğun bölgelerine sıkışıyor.\n→ Dar, keskin, tek moda odaklanan q.",
+          "qa": true
         },
         {
           "type": "compare",
@@ -16726,9 +16779,10 @@
           "qa": true
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "p(z) prior'u var — neden MAP değil?",
-          "text": "Kritik soru: prior kimin üzerinde?\n\nMLE:  theta deterministik unknown, p(theta) YOK  → MLE\nMAP:  theta rastgele,              p(theta) VAR  → MAP\n\nPrior, TAHMİN ETTİĞİN ŞEYİN üzerinde olmalı.\n\nVAE'de tahmin edilen:  theta, phi  (network ağırlıkları)\np(theta) var mı?       HAYIR  → MLE\n\nz'de prior var:  p(z) = N(0,I)\nAma z tahmin edilmiyor — z integrate ediliyor.\nz'nin prior'u, theta/phi için MAP yapmıyor.\n\nEğer theta'ya prior koysaydın:\n  p(theta) ~ N(0,I)  →  log p(theta) ∝ -||theta||²\n  loss = reconstruction loss + ||theta||²\n                               ──────────\n                               L2 weight decay\n\n  Bu tam olarak neural network'teki weight decay!\n  Yani: L2 regularization = Gaussian prior ile MAP on theta."
+          "text": "Kritik soru: prior kimin üzerinde?\n\nMLE:  theta deterministik unknown, p(theta) YOK  → MLE\nMAP:  theta rastgele,              p(theta) VAR  → MAP\n\nPrior, TAHMİN ETTİĞİN ŞEYİN üzerinde olmalı.\n\nVAE'de tahmin edilen:  theta, phi  (network ağırlıkları)\np(theta) var mı?       HAYIR  → MLE\n\nz'de prior var:  p(z) = N(0,I)\nAma z tahmin edilmiyor — z integrate ediliyor.\nz'nin prior'u, theta/phi için MAP yapmıyor.\n\nEğer theta'ya prior koysaydın:\n  p(theta) ~ N(0,I)  →  log p(theta) ∝ -||theta||²\n  loss = reconstruction loss + ||theta||²\n                               ──────────\n                               L2 weight decay\n\n  Bu tam olarak neural network'teki weight decay!\n  Yani: L2 regularization = Gaussian prior ile MAP on theta.",
+          "qa": true
         },
         {
           "type": "table",
@@ -16806,9 +16860,10 @@
           "qa": true
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "2. Bayes adımı — payı ikiye ayır",
-          "text": "VAE:\np_θ(x,z) = p_θ(x|z) · p(z)        ← chain rule\n\n→ log p_θ(x) = log [ p_θ(x|z)·p(z) / p_θ(z|x) ]\n                     ─────────────────\n                     likelihood × prior\n\nDDPM:\np_θ(x_{0:T}) = p_θ(x_{1:T}|x_0) · p_θ(x_0)  ← chain rule: P(A,B)=P(B|A)·P(A)\n\n→ log p_θ(x_0) = log [ p_θ(x_{0:T}) / p_θ(x_{1:T}|x_0) ]\n                       ──────────────────────────────────\n                       full joint / true reverse"
+          "text": "VAE:\np_θ(x,z) = p_θ(x|z) · p(z)        ← chain rule\n\n→ log p_θ(x) = log [ p_θ(x|z)·p(z) / p_θ(z|x) ]\n                     ─────────────────\n                     likelihood × prior\n\nDDPM:\np_θ(x_{0:T}) = p_θ(x_{1:T}|x_0) · p_θ(x_0)  ← chain rule: P(A,B)=P(B|A)·P(A)\n\n→ log p_θ(x_0) = log [ p_θ(x_{0:T}) / p_θ(x_{1:T}|x_0) ]\n                       ──────────────────────────────────\n                       full joint / true reverse",
+          "qa": true
         },
         {
           "type": "text",
@@ -17116,9 +17171,10 @@
       "context": "CS231n · Lecture 14 · May 20, 2025 · Peebles and Xie ICCV 2023",
       "sections": [
         {
-          "type": "code",
+          "type": "text",
           "heading": "DiT Overall Architecture",
-          "text": "Input: Noised Latent (32×32×4)   ← latent from LDM VAE\n  ↓  Patchify + Linear Embed      ← split into 2×2 patches → tokens\n  ↓  + positional embedding\n  ↓  Conditioning: Timestep t, Label y  ← via MLP → scale/shift vectors\n  ↓  N × DiT Block                ← standard Transformer blocks\n  ↓  LayerNorm\n  ↓  Linear + Reshape             ← back to spatial layout\nOutput: Predicted noise Σ (32×32×4)"
+          "text": "Input: Noised Latent (32×32×4)   ← latent from LDM VAE\n  ↓  Patchify + Linear Embed      ← split into 2×2 patches → tokens\n  ↓  + positional embedding\n  ↓  Conditioning: Timestep t, Label y  ← via MLP → scale/shift vectors\n  ↓  N × DiT Block                ← standard Transformer blocks\n  ↓  LayerNorm\n  ↓  Linear + Reshape             ← back to spatial layout\nOutput: Predicted noise Σ (32×32×4)",
+          "qa": true
         },
         {
           "type": "text",
@@ -18031,9 +18087,10 @@
           "text": "Immutable, sıralı koleksiyon. List gibi ama değiştirilemez. Heterogeneous (farklı tipler) olabilir."
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "Örnek",
-          "text": "t = (1, 'hello', 3.14)  # heterojen\nt[0]                    # 1  (indexing\nt[-1]                   # 3.14\nx, y, z = t             # unpacking\na, b = b, a             # swap (tuple ile)\n\n# Tek elemanlı tuple — virgül şart!\ntek = (3,)              # tuple\ntek = (3)               # int! (parantez)\n\n# Tuple vs List:\ntuple([1,2,3])          # list → tuple\nlist((1,2,3))           # tuple → list"
+          "text": "t = (1, 'hello', 3.14)  # heterojen\nt[0]                    # 1  (indexing\nt[-1]                   # 3.14\nx, y, z = t             # unpacking\na, b = b, a             # swap (tuple ile)\n\n# Tek elemanlı tuple — virgül şart!\ntek = (3,)              # tuple\ntek = (3)               # int! (parantez)\n\n# Tuple vs List:\ntuple([1,2,3])          # list → tuple\nlist((1,2,3))           # tuple → list",
+          "qa": true
         },
         {
           "type": "note",
@@ -19036,9 +19093,10 @@
       "context": "Python · OOP · PyTorch",
       "sections": [
         {
-          "type": "code",
+          "type": "text",
           "heading": "Temel fikir",
-          "text": "Class = veri + o veriye ait fonksiyonların paketi.\nNormal variable sadece veri tutar, class'tan üretilen obje ise\nveriyi ve o veriyle ne yapabileceğini birlikte tutar.\n\n\"Bu class bir X'tir\"    → inheritance\n\"Bu class bir X içerir\" → instance olarak tut"
+          "text": "Class = veri + o veriye ait fonksiyonların paketi.\nNormal variable sadece veri tutar, class'tan üretilen obje ise\nveriyi ve o veriyle ne yapabileceğini birlikte tutar.\n\n\"Bu class bir X'tir\"    → inheritance\n\"Bu class bir X içerir\" → instance olarak tut",
+          "qa": true
         },
         {
           "type": "code",
@@ -22176,7 +22234,29 @@
     "mlo02": "Bir modelin 'emin olmadığını' söyleyebilmesi için olasılık dili gerekiyor. Bu bölüm o dili kuruyor: koşullu olasılık, Bayes kuralı ve üç büyüklük — prior, likelihood, posterior.\n\nAsıl mesele şu: veriyi gördükten sonra hangi sınıfa inanmalıyım? Bayes kuralı bunu 'veriyi görmeden ne düşünüyordum' ile 'bu sınıf olsaydı bu veriyi görme ihtimalim neydi'nin çarpımına indiriyor. Gaussian dağılımı da burada tanıştığın, sonra her yerde karşına çıkacak temel araç. Sonraki bölüm bu üç büyüklükten hangisini maksimize edeceğimizi soruyor, ve o seçim her şeyi belirliyor.",
     "mlo03": "Bir önceki bölümde üç büyüklük vardı; şimdi soru şu: parametreyi bulmak için hangisini maksimize ederim? Sadece likelihood'a bakarsan MLE. Prior'ı da çarparsan MAP. MAP'i açınca ceza terimi çıkıyor, yani regularization. Ve kodda yazdığın cross-entropy ya da MSE aslında MLE'nin kılık değiştirmiş hali.\n\nBu bölüm koleksiyonun omurgası. VAE'nin loss'u, diffusion'ın ELBO'su, hatta klasik regresyon — hepsi buradaki tek fikre dönüyor: veriyi en iyi açıklayan parametreyi seç, gerekirse önceden inandığını da hesaba kat. Bölümde aynı fikir üç kaynaktan anlatılıyor (ML dersi, EE499, mülakat pratiği); farklı harflerle yazılmış aynı şeyi görmek için bilerek yan yana kondu.",
     "mlo04": "Model veriyi ezberlerse yeni veride çuvallar; çok basitse veriyi bile öğrenemez. Bu ikisi arasındaki denge bias-variance. Bölüm bu dengeyi hem sezgisel hem matematiksel olarak kuruyor, sonra teşhis araçlarını veriyor: train/val/test ayrımı, cross-validation, ve düzeltme araçlarını: L1, L2, weight decay.\n\nBir önceki bölümle bağı doğrudan: regularization terimi MAP'teki prior'dan geliyor. Yani 'modeli cezalandırmak' keyfi bir hile değil, 'parametrenin küçük olduğuna önceden inanmak' demek.",
-    "mlo05": "Loss'u yazdık; şimdi onu küçültmek lazım. Bu bölüm tek bir hareketin varyasyonları: eğimin tersine adım at. Tam veri ile (batch), tek örnekle (SGD), ya da arada (mini-batch). Sonra adımın hızını ve yönünü akıllandıran yöntemler: momentum, Adam, AdamW.\n\nBuradaki sezgi şu: optimizer bir 'daha iyi loss' bulmuyor, aynı loss'un minimumuna daha güvenilir ve daha hızlı gidiyor. Learning rate ve batch size bu yolculuğun iki ana düğmesi; ikisinin etkileşimi ayrı bir kartta anlatılıyor."
+    "mlo05": "Loss'u yazdık; şimdi onu küçültmek lazım. Bu bölüm tek bir hareketin varyasyonları: eğimin tersine adım at. Tam veri ile (batch), tek örnekle (SGD), ya da arada (mini-batch). Sonra adımın hızını ve yönünü akıllandıran yöntemler: momentum, Adam, AdamW.\n\nBuradaki sezgi şu: optimizer bir 'daha iyi loss' bulmuyor, aynı loss'un minimumuna daha güvenilir ve daha hızlı gidiyor. Learning rate ve batch size bu yolculuğun iki ana düğmesi; ikisinin etkileşimi ayrı bir kartta anlatılıyor.",
+    "mlo06": "Sınıflandırmanın en sade hali: bir doğru çiz, iki tarafı ayır. Bu bölüm o doğrunun nasıl bulunduğunu üç dilde anlatıyor: geometrik (discriminant), en küçük kareler (least squares), ve olasılıksal (logistic). Üçü aynı çizgiyi farklı gerekçelerle buluyor.\n\nBir önceki bölümlerle bağı doğrudan: logistic regression'ın loss'u cross-entropy, o da MLE. 'Bayes'ten logistic'e köprü' kartı bu geçişi adım adım kuruyor. Least squares'in matris tarafı (tall matrix, pseudo-inverse) EE499 notlarından geliyor; aynı problemin lineer cebir görünümü.",
+    "mlo07": "Doğruyu çizerken 'hangi doğru' sorusuna SVM net bir cevap veriyor: iki sınıfa en uzak olan. Bu bölüm margin fikrinden başlıyor, hard margin'in neden yetmediğini gösterip soft margin'e geçiyor, sonra kernel trick ile doğrusal olmayan ayrımı aynı makineyle yapıyor.\n\nKernel'in sezgisi şu: veriyi daha yüksek boyuta taşımadan, sanki taşımışsın gibi iç çarpım hesaplamak. Lab kartı scikit-learn ile bunun pratiğini gösteriyor.",
+    "mlo08": "Tek model yetmiyorsa çok model. Bagging aynı tip modeli farklı veri alt kümeleriyle eğitip ortalıyor, varyansı düşürüyor. Boosting ise ardışık: her yeni model bir öncekinin hatalarına odaklanıyor.\n\nAdaBoost'un güzel tarafı, bu sezgisel prosedürün aslında exponential loss'u minimize eden bir gradient yöntemi olması. Yani 'hataya ağırlık ver' fikrinin altında yine bir loss fonksiyonu var.",
+    "mlo09": "Bir modeli seçmeden önce problemi ve ölçüyü seçmek gerekiyor. Bu bölüm CS231n'in giriş dersinden geliyor: görüntü sınıflandırma neden zor, en basit yöntem (kNN) neden yetmiyor, hiperparametre ne demek ve neden test setinde ayarlanmaz.\n\nYanına mülakat pratiğinden ölçü kartları eklendi: ROC ve AUC, class imbalance, feature scaling. Bunlar hangi modeli seçersen seç karşına çıkacak sorular.",
+    "mlo10": "Etiket yoksa ne öğrenilir? Yapı. Bu bölüm 'veri birkaç kümeden gelmiş olsun' varsayımıyla başlıyor: k-means en sade hali, GMM her kümeyi bir Gaussian yapıp olasılık veriyor. EM algoritması GMM'i eğitmenin yolu, ve MLE'nin gizli değişkenli hali.\n\nEM'in sezgisi iki adımın dönüşümü: 'her nokta hangi kümeden' (E) ve 'kümeler nerede' (M). Biri diğerini düzeltiyor.",
+    "mlo11": "Yüksek boyutlu veriyi anlamak için önce hangi yönlerin önemli olduğunu bulmak lazım. PCA bunu varyansı en çok taşıyan yönleri seçerek yapıyor, ve o yönler kovaryans matrisinin eigenvektörleri. Bu bölüm eigendecomposition'dan PCA türetimine, oradan lab uygulamasına gidiyor.\n\nt-SNE farklı bir soruya cevap: iki boyuta indirirken komşuluk yapısını korumak. Doğrusal değil, görselleştirme için.",
+    "mlo12": "Doğrusal modeller bir doğru çizebiliyor, başka bir şey çizemiyor. Aralarına doğrusal olmayan bir fonksiyon koyup katmanları üst üste dizince her şeyi çizebilen bir makine çıkıyor. Bu bölüm perceptron'dan MLP'ye tarihi, sonra asıl mekanizmayı anlatıyor: backpropagation, yani zincir kuralının verimli uygulanması.\n\n'0'dan anlat' kartı aktivasyon, gradient ve backprop'u tek akışta kuruyor. Lab kartı ise zincir kuralını kodda gösteriyor.",
+    "mlo13": "Ağı kurmak ayrı, eğitebilmek ayrı. Derin ağlar sebepsiz yere eğitilmiyor: gradient'ler patlıyor ya da sönüyor, aktivasyonlar kayıyor, model ezberliyor. Bu bölüm o sorunların her birine karşı bulunan araçları topluyor: normalization katmanları, ağırlık başlatma, dropout, augmentation, transfer learning.\n\nHer aracın 'neden var' sorusunu ayrı kartlar cevaplıyor, BatchNorm için lab notu dahil.",
+    "mlo14": "Görüntüde her piksele ayrı ağırlık vermek hem çok parametre hem de anlamsız: bir kenar sol üstte de kenar, sağ altta da. Konvolüsyon aynı filtreyi her yere uyguluyor, bu yüzden hem küçük hem de konumdan bağımsız. Pooling ölçek kazandırıyor. Bu bölüm konvolüsyondan mimarilere, oradan ResNet'in skip connection fikrine gidiyor.\n\nLab kartları boyut matematiğini somutlaştırıyor: stride, padding, kanal sayısı nasıl değişiyor.",
+    "mlo15": "Kelimeleri sayıya çevirmeden dil modeli olmaz. N-gram sayarak yapıyordu, sınırı bariz. Word2vec kelimeyi bağlamından tahmin etmeyi öğrenirken yan ürün olarak anlamlı vektörler üretiyor: kral eksi erkek artı kadın, kraliçe. Bu bölüm o geçişi anlatıyor.",
+    "mlo16": "Diziler sabit boyutlu değil; RNN aynı ağırlıkları her adımda tekrar kullanarak bunu çözüyor. Ama uzun dizilerde gradient sönüyor, LSTM ve GRU kapılarla bunu tamir ediyor. Attention ise başka bir cevap: geçmişin tamamına bak, hangisi önemliyse ona ağırlık ver.\n\nBu bölümdeki 'adım adım' kartlar attention'ı boyutlarıyla kuruyor; bir sonraki bölümde bu mekanizma RNN'den tamamen kopup Transformer oluyor.",
+    "mlo17": "Attention işe yarıyorsa RNN'e ne gerek var? Transformer'ın çıkış noktası bu. Bu bölüm en çok kartı olan bölümlerden biri, çünkü aynı mekanizma dört kaynakta anlatılmış ve her biri farklı bir açıdan bakıyor: neden üç ayrı vektör (Q, K, V), neden çok kafa, key varken pozisyon bilgisi neden gerekli, encoder ile decoder ne zaman gerekir.\n\nSezgi kartlarından başla, boyutlu akış kartlarına referans olarak bak, lab kartı da implementasyonu gösteriyor.",
+    "mlo18": "Transformer görüntüye nasıl uygulanır? Görüntüyü parçalara böl, her parçayı bir kelime say: ViT. Sonra detection (DETR), hiyerarşik pencereler (Swin), medikal 3D (UNETR). Bu bölümün ikinci yarısı etiketsiz öğrenmeye geçiyor: MAE, DINO, contrastive yöntemler, ve oradan foundation modellere: CLIP, SAM, vision-language modeller.\n\nIDA'daki 'adım adım boyutlarla' kartlar bu bölümün en değerli parçası, silinmesin.",
+    "mlo19": "Üretici modellerin başlangıç noktası: veriyi sıkıştırıp geri açan bir ağ (autoencoder). VAE buna olasılık ekliyor: latent uzay bir dağılım olsun ki oradan örnekleyip yeni veri üretebilelim. Bunun için likelihood'u doğrudan hesaplayamıyoruz, ELBO diye bir alt sınır türetiyoruz; o türetim bu bölümün kalbi.\n\nBu bölümdeki 'VAE — Tam Tablo' ve 'Neden Böyle Çalışır' kartları Erdem'in kendi anlama anını kaydediyor. KL yönü kartları da 'neden q||p' sorusunu kapatıyor.",
+    "mlo20": "VAE olasılıkla üretiyor, GAN yarışla. Bir ağ üretiyor, diğeri sahte mi gerçek mi diye ayırt ediyor; ikisi birbirini iterek gelişiyor. Bu bölüm minimax hedefinden optimal discriminator'ın teorik türetimine, oradan pratik sorunlara (mode collapse) ve mimarilere (DCGAN, WGAN, CycleGAN, pix2pix, StyleGAN) gidiyor. Lab kartları tam implementasyon.",
+    "mlo21": "Görüntüyü adım adım gürültüye boğ, sonra geri almayı öğren. Diffusion'ın fikri bu kadar sade, matematiği ise VAE'nin çok adımlı hali: aynı ELBO, T kere. Bu bölüm forward/reverse süreçten training objective'e, noise schedule'dan guidance'a, oradan latent diffusion ve DiT'e gidiyor.\n\nVAE ile paralel kuran kartlar önce okunmalı; 'DDPM — Training & Inference: Tam Parametreler' ise referans. Lab kartları sıfırdan implementasyon.",
+    "mlo22": "Derin öğrenmeden önce görüntünün kendisi: piksel, histogram, komşuluk. Sonra klasik araçlar: konvolüsyon (filtre olarak), morfoloji, Fourier. Bu bölüm IDA'nın ilk iki dersi; CNN'in neden konvolüsyon kullandığını anlamak için buradaki konvolüsyon kartı temel.",
+    "mlo23": "Görüntüde ne var ve nerede? Detection sınıflandırmaya konum ekliyor. Bu bölüm klasik yöntemlerden R-CNN ailesine (bölge öner, sınıflandır), oradan tek geçişli YOLO'ya, sonra çok ölçekli FPN ve focal loss'a gidiyor. Transformer tabanlı DETR bir önceki gruptaki ViT bölümünde.",
+    "mlo24": "Her piksele etiket: segmentation. Semantic (hangi sınıf) ile instance (hangi nesne) ayrımı, sonra mimariler: FCN, U-Net, Mask R-CNN, biyolojiye özel Cellpose. Lab kartları FCN ve U-Net'i sıfırdan kuruyor, transposed convolution ve checkerboard artifact dahil. Metrikler: IoU, Dice.",
+    "mlo25": "Zaman ekleyince iki soru doğuyor: nesneyi kareler arasında nasıl takip ederim (Kalman, Hungarian, optical flow) ve videoyu bir bütün olarak nasıl anlarım (3D CNN, two-stream, I3D, video transformer). Bu bölüm IDA'nın tracking dersiyle CS231n'in video dersini yan yana koyuyor.",
+    "mlo26": "Görüntü ızgara, nokta bulutu değil. Sıralama yok, komşuluk sabit değil. PointNet permütasyona dayanıklı bir ağla bunu çözüyor, PointNet++ hiyerarşi ekliyor, DGCNN komşuluğu dinamik grafikle kuruyor. NeRF ise 3D'yi bambaşka temsil ediyor: sahneyi bir fonksiyon olarak.",
+    "mlo27": "Model doğru cevap veriyor, ama neye bakarak? Bu bölüm kararı görünür kılan araçları topluyor: bag of visual words (klasik), CNN filtre ve aktivasyon görselleştirme, GradCAM. Sonunda CLIP ile zero-shot anomaly detection lab'i var; o da 'model neye bakıyor' sorusunun uygulamalı hali."
   },
   "summary": {
     "title": "ML Dersi — Baştan Sona Motivasyon Zinciri",
@@ -22983,8 +23063,6 @@
     {
       "key": "mlo01",
       "title": "Öğrenme Problemi",
-      "group": "Temeller",
-      "icon": "🧭",
       "cards": [
         "ch01-what-is-machine-learning",
         "ch01-types-of-learning",
@@ -22995,8 +23073,6 @@
     {
       "key": "mlo02",
       "title": "Olasılık ve Bayes",
-      "group": "Temeller",
-      "icon": "🎲",
       "cards": [
         "ch01-probability-theory-essentials",
         "math04-conditional-probability-bayes-rule",
@@ -23013,8 +23089,6 @@
     {
       "key": "mlo03",
       "title": "MLE, MAP ve Loss Fonksiyonları",
-      "group": "Temeller",
-      "icon": "🎯",
       "cards": [
         "ch03-maximum-likelihood-estimation-mle",
         "vs04-mle-maximum-likelihood-estimation",
@@ -23034,9 +23108,7 @@
     },
     {
       "key": "mlo04",
-      "title": "Bias-Variance, Overfitting ve Regularization",
-      "group": "Temeller",
-      "icon": "⚖️",
+      "title": "Bias-Variance ve Regularization",
       "cards": [
         "vs04-bias-variance-tradeoff",
         "math06-bias-variance-of-estimators",
@@ -23045,6 +23117,8 @@
         "vs04-l1-vs-l2-regularization",
         "ch08-regularization-ve-weight-decay",
         "ch08-regularisation-and-initialisation",
+        "cs01-regularization",
+        "cs02-regularization-l1-l2-elastic-net",
         "vs04-train-val-test-data-leakage",
         "vs04-cross-validation",
         "vs04-az-veri-ile-calismak"
@@ -23053,17 +23127,447 @@
     {
       "key": "mlo05",
       "title": "Optimization ve Gradient Descent",
-      "group": "Temeller",
-      "icon": "⚙️",
       "cards": [
         "vs04-gradient-descent",
+        "cs02-optimization-finding-the-minimum",
+        "cs02-numeric-vs-analytic-gradient",
         "ch08-batch-vs-sgd-vs-mini-batch-somut-ornek",
         "ch08-gradient-descent-variants",
+        "cs02-gradient-descent-and-sgd",
         "ch08-mini-batch-gradient-hesabi",
         "ch08-momentum-and-adaptive-optimisers",
         "ch08-adam-sgd-momentum-ve-adamw-tam-aciklama",
         "vs04-sgd-vs-momentum-vs-adam",
         "vs04-learning-rate-batch-size"
+      ]
+    },
+    {
+      "key": "mlo06",
+      "title": "Linear ve Logistic Regression",
+      "cards": [
+        "ch04-discriminant-functions-and-decision-surfaces",
+        "ch04-least-squares-classification",
+        "ch04-logistic-regression",
+        "ch04-from-bayes-to-logistic-the-bridge",
+        "ch04-0-dan-anlat-linear-discriminant-glm-logistic-regression",
+        "cs01-linear-classifier-f-x-w-wx-b",
+        "cs01-loss-functions-svm-and-softmax",
+        "vs02-least-squares-tall-matrix-sorunu-ve-normal-denklem",
+        "vs02-minimum-norm-ve-pseudo-inverse-fat-matrix-ve-genel-cozum"
+      ]
+    },
+    {
+      "key": "mlo07",
+      "title": "SVM ve Kernel Trick",
+      "cards": [
+        "ch05-error-functions-and-motivation-for-svms",
+        "ch05-hard-margin-svm-formulation",
+        "ch05-soft-margin-svm",
+        "ch05-kernel-trick",
+        "vs04-svm-support-vector-machine",
+        "lab01-svm-support-vector-machine"
+      ]
+    },
+    {
+      "key": "mlo08",
+      "title": "Ensembles ve AdaBoost",
+      "cards": [
+        "ch06-ensemble-methods-and-bagging",
+        "ch06-adaboost-algorithm",
+        "ch06-adaboost-as-exponential-loss-minimisation",
+        "vs04-ensemble-bagging-vs-boosting"
+      ]
+    },
+    {
+      "key": "mlo09",
+      "title": "kNN, Hiperparametreler ve Model Seçimi",
+      "cards": [
+        "cs01-image-classification-the-problem",
+        "cs01-k-nearest-neighbors-knn",
+        "cs01-hyperparameters-and-model-selection",
+        "vs04-hyperparameter-tuning",
+        "vs04-roc-curve-auc",
+        "vs04-class-imbalance",
+        "vs04-feature-scaling"
+      ]
+    },
+    {
+      "key": "mlo10",
+      "title": "GMM, EM ve Clustering",
+      "cards": [
+        "ch03-em-algorithm-and-gaussian-mixture-models",
+        "vs04-gaussian-mixture-model-gmm",
+        "lab01-k-means-clustering",
+        "lab01-gmm-gaussian-mixture-model"
+      ]
+    },
+    {
+      "key": "mlo11",
+      "title": "PCA, Eigen ve Boyut İndirgeme",
+      "cards": [
+        "vs01-eigendecomposition-a-qqt-ve-eigenvektor-bazi",
+        "vs01-pca-teori-turetme-ve-eigenvektor-baglantisi",
+        "vs04-pca-principal-component-analysis",
+        "lab01-pca-principal-component-analysis",
+        "ida13-t-sne-visualising-high-dimensional-data"
+      ]
+    },
+    {
+      "key": "mlo12",
+      "title": "Neural Networks ve Backprop",
+      "cards": [
+        "ch07-from-perceptron-to-mlp-history",
+        "ch07-multi-layer-perceptron-mlp",
+        "ch07-backpropagation",
+        "ch07-loss-functions-for-neural-networks",
+        "ch07-0-dan-anlat-activation-gradient-backprop-training-loop",
+        "cs03-neural-networks-beyond-linear",
+        "cs03-activation-functions",
+        "cs03-backpropagation",
+        "cs03-neural-network-architecture",
+        "ida03-perceptron-mlp-and-backpropagation",
+        "vs04-backpropagation-sezgisel",
+        "vs04-activation-functions",
+        "vs04-sigmoid-softplus",
+        "lab03-backprop-zincir-kurali-intuition"
+      ]
+    },
+    {
+      "key": "mlo13",
+      "title": "Training Dynamics",
+      "cards": [
+        "cs05-cnn-components-the-full-picture",
+        "cs05-normalization-layers",
+        "cs05-dropout",
+        "cs05-weight-initialization",
+        "cs05-data-augmentation-and-transfer-learning",
+        "ch08-batch-normalisation",
+        "ch08-weight-initialization-ve-batch-normalization",
+        "cs02-problems-with-sgd",
+        "cs02-optimizers-momentum-rmsprop-adam",
+        "vs04-batch-normalization",
+        "vs04-normalization-bn-vs-ln-vs-in-vs-gn",
+        "vs04-dropout-train-vs-inference",
+        "vs04-weight-initialization",
+        "vs04-gradient-problemleri",
+        "lab04-batchnorm-neden-var-intuition",
+        "lab04-dropout-inverted-vs-standard"
+      ]
+    },
+    {
+      "key": "mlo14",
+      "title": "CNN",
+      "cards": [
+        "ch09-motivation-for-cnns",
+        "ch09-convolution-and-pooling",
+        "ch09-cnn-architectures",
+        "cs04-from-image-features-to-cnns",
+        "cs04-convolutional-layer",
+        "cs04-pooling-and-cnn-architecture",
+        "cs04-cnn-history-from-lenet-to-vit",
+        "ida03-convolutional-neural-networks-cnns",
+        "vs04-convolution-intuition",
+        "vs04-pooling-skip-connections",
+        "lab04-conv2d-matematiksel-operasyon",
+        "lab04-vggblock-mimarisi",
+        "lab04-resnet-skip-connection",
+        "lab04-resnet-18-tam-mimari-ve-channel2-size2-prensibi",
+        "lab04-resnet-boyut-matematigi-stride-padding-kernel"
+      ]
+    },
+    {
+      "key": "mlo15",
+      "title": "Word Embeddings ve Dil Modelleri",
+      "cards": [
+        "ch10-from-n-grams-to-neural-language-models",
+        "ch10-word2vec-cbow-and-skip-gram",
+        "ch10-word-embedding-properties"
+      ]
+    },
+    {
+      "key": "mlo16",
+      "title": "RNN, LSTM ve Attention",
+      "cards": [
+        "ch11-sequence-modelling-and-rnn-architecture",
+        "ch11-backpropagation-through-time-and-vanishing-gradients",
+        "ch11-lstm-gated-memory",
+        "ch11-attention-mechanism-adim-adim-tam-akis",
+        "ch11-attention-image-captioning-adim-adim",
+        "ch11-vanilla-rnn-vs-attention-adim-adim-karsilastirma",
+        "ch11-gru-and-seq2seq-with-attention",
+        "cs06-sequence-modeling-and-rnn-motivation",
+        "cs06-vanilla-rnn",
+        "cs06-lstm-long-short-term-memory",
+        "cs06-gru-and-relation-to-transformers"
+      ]
+    },
+    {
+      "key": "mlo17",
+      "title": "Transformer",
+      "cards": [
+        "ch12-rnn-attention-dan-self-attention-a-h-i-neden-kaldirdik",
+        "ch12-multi-head-attention-mantik-ve-matematik",
+        "ch12-general-attention-layer-image-captioning-den-self-attention",
+        "ch12-query-key-value-neden-uc-ayri-vektor",
+        "ch12-self-attention-the-core-mechanism",
+        "ch12-positional-encoding",
+        "ch12-key-varken-positional-encoding-neden-gerekli",
+        "ch12-multi-head-attention-and-positional-encoding",
+        "ch12-transformer-architecture",
+        "ch12-encoder-dan-decoder-a-tam-mimari-ve-boyutlar",
+        "ch12-transformer-llm-bastan-sona",
+        "ch12-bert-and-gpt-pre-trained-transformers",
+        "cs07-attention-mechanism",
+        "cs07-multi-head-attention",
+        "cs07-transformer-architecture",
+        "ida07-from-rnns-to-self-attention-in-vision",
+        "vs04-self-attention-q-k-v",
+        "vs04-positional-encoding",
+        "vs04-multi-head-attention",
+        "labtc-stanford-a3-transformer-captioning-genel-cerceve",
+        "labtc-multiheadattention-implementasyon",
+        "labtc-positionalencoding-implementasyon",
+        "labtc-transformerdecoderlayer-cross-attention-ffn-bloklari",
+        "labtc-captioningtransformer-forward-image-captioning-pipeline",
+        "labtc-vision-transformer-vit-patchembedding-transformerencoderlaye",
+        "labtc-inline-sorular-tasarim-kararlari"
+      ]
+    },
+    {
+      "key": "mlo18",
+      "title": "ViT, DETR, Swin ve Foundation Models",
+      "cards": [
+        "ida07-vision-transformer-vit",
+        "cs07-vision-transformer-vit",
+        "ida07-detr-detection-with-transformers",
+        "ida07-swin-transformer-hierarchical-window-attention",
+        "ida08-lecture-8-q-a",
+        "ida08-encoder-ve-decoder-ne-zaman-ne-gerekir",
+        "ida08-detr-adim-adim-boyutlarla",
+        "ida08-unetr-adim-adim-boyutlarla",
+        "ida08-swin-transformer-adim-adim",
+        "ida08-vit-vs-swin-tam-karsilastirma",
+        "ida08-unetr-transformers-for-medical-image-segmentation",
+        "ida08-sam-segment-anything-model",
+        "ida08-self-supervised-pretraining-mae-and-dino",
+        "cs11-lecture-12-self-supervised-learning",
+        "cs11-ssl-framework-ve-pretext-tasks",
+        "cs11-video-colorization-ile-attention",
+        "cs11-mae-masked-autoencoders",
+        "cs11-infonce-loss-ve-contrastive-framework",
+        "cs11-simclr-simple-contrastive-learning",
+        "cs11-moco-momentum-contrastive-learning",
+        "cs11-cpc-contrastive-predictive-coding",
+        "cs11-dino-self-distillation-with-no-labels",
+        "cs11-ssl-yontemleri-karsilastirmasi",
+        "cs15-foundation-model-nedir",
+        "cs15-simclr-clip-contrastive-pre-training-in-evrimi",
+        "cs15-clip-architecture-zero-shot-ve-prompt-engineering",
+        "cs15-clip-avantajlar-dezavantajlar-ve-sinirlar",
+        "cs15-coca-clip-captioning-loss",
+        "cs15-llava-vision-language-model-vlm",
+        "cs15-flamingo-gated-cross-attention-ile-vlm",
+        "cs15-molmo-kaliteli-veri-acik-agirlikli-vlm",
+        "cs15-sam-segment-anything-model",
+        "cs15-model-zincirleme-cupl-ve-visprog",
+        "cs15-foundation-model-uyarlama-stratejileri"
+      ]
+    },
+    {
+      "key": "mlo19",
+      "title": "Autoencoder ve VAE",
+      "cards": [
+        "ida10-autoencoder-ve-vae-mimari-ve-mantik",
+        "ida10-autoencoders-and-variational-autoencoders",
+        "cs12-supervised-vs-unsupervised-learning",
+        "cs12-discriminative-vs-generative-the-density-competition",
+        "cs12-taxonomy-of-generative-models-goodfellow-2017",
+        "cs12-maximum-likelihood-estimation-for-generative-models",
+        "cs12-autoregressive-models-chain-rule-of-probability",
+        "cs12-autoencoders-unsupervised-feature-learning",
+        "cs12-vae-setup-latent-space-and-bayesian-formulation",
+        "cs12-vae-decoder-predicted-mean-l2-ve-z-integral-sorunu",
+        "cs12-vae-elbo-evidence-lower-bound-derivation",
+        "cs12-vae-training-reparameterization-trick-and-two-term-loss",
+        "cs12-vae-tam-tablo",
+        "cs12-vae-neden-boyle-calisir-anlama-zinciri",
+        "cs12-vae-sampling-and-disentanglement",
+        "cs12-ddpm-vae-paraleli-ile-tam-matematiksel-akis",
+        "cs12-kl-divergence-yonu-p-q-mass-covering-q-p-mode-seeking",
+        "cs12-vae-de-kl-yonu-neden-d-kl-q-p-kullaniliyor",
+        "cs12-mle-map-vae-aradigim-sey-ne-prior-kimin-uzerinde",
+        "cs12-vae-vs-ddpm-elbo-derivation-tam-karsilastirmasi",
+        "vs04-vae-vs-autoencoder",
+        "vs04-vae-loss-turetimi"
+      ]
+    },
+    {
+      "key": "mlo20",
+      "title": "GAN",
+      "cards": [
+        "ida10-gan-fundamentals-minimax-training",
+        "ida10-conditional-gans-and-image-to-image-translation",
+        "cs13-gan-setup-minimax-objective-and-gradient-fix",
+        "cs13-gan-theory-optimal-discriminator-and-convergence-analysis",
+        "cs13-gan-architectures-dc-gan-and-stylegan",
+        "vs04-gan-nasil-calisir",
+        "lab06-session-6-genel-cerceve",
+        "lab06-gan-temelleri-generator-ve-discriminator",
+        "lab06-gan-loss-minimax-hedefi",
+        "lab06-gan-training-loop-donusumlu-guncelleme",
+        "lab06-optimal-discriminator-d-teorik-cikarim",
+        "lab06-mode-collapse-gan-larin-temel-problemi",
+        "lab06-dcgan-convolutional-gan-mimarisi",
+        "lab06-wasserstein-gan-w-mesafesi-ve-daha-stabil-egitim",
+        "lab06-cyclegan-eslesmemis-goruntu-cevirisi",
+        "lab06-pix2pix-sartli-gan-ile-eslesmis-ceviri",
+        "lab06-stylegan-mapping-network-ve-adain",
+        "lab06-dcgan-vs-vanilla-gan-pratik-karsilastirma",
+        "lab06-lab-6-implementation-gorevleri-ozeti"
+      ]
+    },
+    {
+      "key": "mlo21",
+      "title": "Diffusion",
+      "cards": [
+        "vs04-diffusion-model-sezgisel",
+        "ida11-lecture-11-q-a",
+        "ida11-denoising-diffusion-probabilistic-models-overview",
+        "ida11-forward-diffusion-markov-chain-and-reparameterisation",
+        "ida11-reverse-diffusion-and-training",
+        "ida11-conditional-diffusion-and-text-to-image-generation",
+        "ida11-vae-vs-ddpm-loss-goruntu-kalitesi-ve-training",
+        "ida11-ddpm-vae-paraleli-ile-tam-matematiksel-akis",
+        "ida11-vae-vs-ddpm-elbo-derivation-tam-karsilastirmasi",
+        "ida11-ddpm-matematiksel-ozet-forward-reverse-prediction-ve-l-simpl",
+        "ida11-ddpm-unet-dahil-bastan-sona",
+        "ida11-ddpm-training-inference-tam-parametreler-ve-dimensionlar",
+        "cs13-diffusion-models-intuition-and-rectified-flow",
+        "cs13-conditional-generation-and-classifier-free-guidance-cfg",
+        "cs13-noise-schedules-optimal-prediction-analysis",
+        "cs13-latent-diffusion-models-ldms-vae-gan-diffusion",
+        "cs13-diffusion-transformer-dit-architecture-and-conditioning",
+        "cs13-text-to-image-and-text-to-video-pipelines",
+        "cs13-generalized-diffusion-vp-ve-score-functions-and-sdes",
+        "lab07-session-7-genel-cerceve",
+        "lab07-task-1-corruption-process",
+        "lab07-task-2-3-training-loop",
+        "lab07-basicunet-minimal-unet-implementasyonu",
+        "lab07-task-4-sampling-toy",
+        "lab07-task-5-ddpm-noise-schedule",
+        "lab07-task-6-7-ddpm-algoritmalar",
+        "lab07-toy-vs-ddpm-training-objective-farki",
+        "lab07-huggingface-diffusers-ddpmscheduler-unet2dmodel",
+        "lab07-ddpm-matematiksel-ozet-forward-reverse-prediction-ve-l-simpl",
+        "lab07-ddpm-training-inference-tam-parametreler-ve-dimensionlar"
+      ]
+    },
+    {
+      "key": "mlo22",
+      "title": "Görüntü İşleme Temelleri",
+      "cards": [
+        "ida01-lecture-1-q-a",
+        "ida01-image-representation-and-digitization",
+        "ida01-histograms-and-histogram-equalization",
+        "ida01-image-connectivity-and-morphological-basics",
+        "ida02-lecture-2-q-a",
+        "ida02-convolution-and-linear-filtering",
+        "ida02-morphological-operations",
+        "ida02-fourier-transform-and-frequency-domain-analysis"
+      ]
+    },
+    {
+      "key": "mlo23",
+      "title": "Object Detection",
+      "cards": [
+        "ida04-lecture-4-q-a",
+        "ida04-classical-object-detection-template-matching-and-hough-trans",
+        "ida04-region-based-detection-r-cnn-family",
+        "ida04-yolo-and-single-stage-detection",
+        "ida04-fast-r-cnn-vs-faster-r-cnn-roi-pooling-derinlemesine",
+        "ida04-feature-pyramid-networks-and-focal-loss",
+        "ch09-object-detection",
+        "cs08-object-detection"
+      ]
+    },
+    {
+      "key": "mlo24",
+      "title": "Segmentation",
+      "cards": [
+        "ida05-lecture-5-q-a",
+        "ida05-semantic-vs-instance-segmentation",
+        "ida05-u-net-encoder-decoder-for-biomedical-segmentation",
+        "ida05-mask-r-cnn-and-instance-segmentation",
+        "ida05-cellpose-and-stardist-biology-inspired-segmentation",
+        "cs08-semantic-and-instance-segmentation",
+        "vs04-u-net",
+        "lab05-session-5-genel-cerceve",
+        "lab05-semantic-segmentation-tanim-ve-veri",
+        "lab05-fcn-vgg-yi-segmentasyon-modeline-donusturme",
+        "lab05-segmenter-11-conv-implementasyonu",
+        "lab05-transposed-convolution-upsampling",
+        "lab05-segmenter-convtranspose2d-tam-implementasyon",
+        "lab05-checkerboard-artifact",
+        "lab05-pixel-wise-cross-entropy-loss",
+        "lab05-upsampling-weight-init-bilinear-interpolation",
+        "lab05-fcn-8s-skip-connections-ile-ince-detay",
+        "lab05-u-net-mimarisi",
+        "lab05-segmentation-metrikleri-iou-ve-miou"
+      ]
+    },
+    {
+      "key": "mlo25",
+      "title": "Tracking ve Video",
+      "cards": [
+        "ida06-lecture-6-q-a",
+        "ida06-kalman-filter-for-object-tracking",
+        "ida06-hungarian-algorithm-and-multi-object-tracking",
+        "ida06-optical-flow-and-deep-learning-trackers",
+        "cs09-video-as-data-representation-scale-problem",
+        "cs09-temporal-fusion-strategies-single-frame-early-late-3d",
+        "cs09-c3d-the-vgg-of-3d-cnns",
+        "cs09-optical-flow-two-stream-networks",
+        "cs09-long-term-temporal-structure-cnn-lstm-recurrent-cnn",
+        "cs09-spatio-temporal-self-attention-nonlocal-block",
+        "cs09-i3d-inflating-2d-networks-to-3d",
+        "cs09-vision-transformers-for-video-vivit-mvit-videomae-slowfast",
+        "cs09-temporal-action-localization-spatio-temporal-detection",
+        "cs09-audio-visual-video-understanding"
+      ]
+    },
+    {
+      "key": "mlo26",
+      "title": "Point Clouds ve 3D",
+      "cards": [
+        "ida09-lecture-9-q-a",
+        "ida09-point-cloud-representation-and-preprocessing",
+        "ida09-pointnet-permutation-invariant-learning",
+        "ida09-pointnet-hierarchical-feature-learning",
+        "ida12-lecture-12-q-a",
+        "ida12-fully-convolutional-point-network-fcpn",
+        "ida12-dynamic-graph-cnn-and-edgeconv",
+        "ida12-foldingnet-and-ddpms-for-point-clouds",
+        "cs14-lecture-15-3d-vision",
+        "cs14-3d-gosterimler",
+        "cs14-nerf-neural-radiance-fields"
+      ]
+    },
+    {
+      "key": "mlo27",
+      "title": "Görselleştirme ve Yorumlanabilirlik",
+      "cards": [
+        "ida13-bag-of-visual-words",
+        "ida13-cnn-visualization-understanding-what-networks-learn",
+        "cs08-network-visualization-and-interpretation",
+        "cs08-architecture-comparison-rnn-vs-cnn-vs-attention",
+        "vs04-gradcam-model-kararini-gorsellestirme",
+        "lab08-session-8-lab-8-genel-cerceve",
+        "lab08-mvtec-ad-dataset-task-0-1",
+        "lab08-clip-yukleme-task-3",
+        "lab08-modified-image-encoder-task-4-qq-kk-attention",
+        "lab08-text-classifier-task-5",
+        "lab08-anomaly-heatmap-task-6",
+        "lab08-zero-shot-anomaly-detection-genel-bakis"
       ]
     }
   ]

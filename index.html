@@ -50,47 +50,15 @@
   --count-text:#8a95b0;
 }
 [data-theme="light"]{
-  --bg:#ffffff;
-  --panel:#f4f5f8;
-  --sidebar:#f0f1f7;
-  --card:#eef0f6;
-  --border:#d0d4e0;
-  --border-hover:#4f46e5;
-  --accent:#4f46e5;
-  --accent-bg:#e0e7ff;
-  --accent-light:#3730a3;
-  --text:#1a1c2e;
-  --muted:#555a72;
-  --code-bg:#eaecf5;
-  --sec-text:#2a2d3e;
-  --sec-formula-bg:#eaecf5;
-  --sec-formula-border:#c8cbda;
-  --sec-formula-text:#1a1c2e;
-  --sec-cmp-bg:#eef0f6;
-  --sec-note-bg:#fffbeb;
-  --sec-note-border:#fde68a;
-  --sec-note-text:#92400e;
-  --sec-insight-bg:#f0fdf4;
-  --sec-insight-border:#16a34a;
-  --sec-insight-text:#166534;
-  --sec-code-text:#1a1c2e;
-  --popup-bg:#ffffff;
-  --popup-tbl-head:#eef0f6;
-  --overview-bg:#f4f5f8;
-  --overview-text:#2a2d3e;
-  --hdr-bg:rgba(244,245,248,.96);
-  --chain-next-col:#16a34a;
-  --chain-next-bg:rgba(22,163,74,.07);
-  --chain-next-border:#16a34a;
-  --chain-prob-col:#dc2626;
-  --chain-prob-bg:rgba(220,38,38,.07);
-  --chain-prob-border:#dc2626;
-  --nav-hover-bg:#dce0f0;
-  --nav-hover-text:#000000;
-  --nav-active-text:#3730a3;
-  --count-bg:#c8ccde;
-  --count-text:#3a3d55;
-  --text:#000000;
+  --bg:#faf7f1; --panel:#f4f0e8; --sidebar:#f6f2ea; --card:#f4f0e8; --border:#e4ddd0; --border-hover:#8a5a2b;
+  --accent:#8a5a2b; --accent-bg:#efe6d8; --accent-light:#4a3520; --text:#1d1a16; --muted:#6f685c;
+  --code-bg:#f1ede4; --sec-text:#26221c; --sec-formula-bg:transparent; --sec-formula-border:transparent; --sec-formula-text:#1d1a16;
+  --sec-cmp-bg:#f4f0e8; --sec-note-bg:#f7f2e8; --sec-note-border:#e6dcc8; --sec-note-text:#5a4a2a;
+  --sec-insight-bg:#f4f0e7; --sec-insight-border:#8a5a2b; --sec-insight-text:#26221c; --sec-code-text:#1d1a16;
+  --popup-bg:#fbf9f4; --popup-tbl-head:#f1ede4; --overview-bg:transparent; --overview-text:#33302a; --hdr-bg:rgba(250,247,241,.96);
+  --chain-next-col:#3d7a4a; --chain-next-bg:rgba(61,122,74,.06); --chain-next-border:#3d7a4a;
+  --chain-prob-col:#a3442f; --chain-prob-bg:rgba(163,68,47,.06); --chain-prob-border:#a3442f;
+  --nav-hover-bg:#eee8dd; --nav-hover-text:#1d1a16; --nav-active-text:#1d1a16; --count-bg:transparent; --count-text:#6f685c;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh}
@@ -458,6 +426,54 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .nav-group-items.open{display:block}
 .mlo-badge{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--count-bg);color:var(--accent-light);cursor:pointer;opacity:.85;white-space:nowrap}
 .mlo-badge:hover{opacity:1}
+
+/* ── KAĞIT görünümü: sade, krem, düz metin (ml-150 esinli) ── */
+[data-theme="light"] body{font-family:-apple-system,BlinkMacSystemFont,"Inter","Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+[data-theme="light"] .wiki-article{border-left:none;padding:30px 44px}
+[data-theme="light"] .wiki-article[class*="card-cat-"]{--cc:var(--muted)!important;border-left:none}
+[data-theme="light"] .cat-heading{border-left:none;border-bottom:1px solid var(--border);color:var(--muted)!important;background:transparent;padding:28px 44px 8px;letter-spacing:1.2px}
+[data-theme="light"] .card-tag{background:transparent;padding:0;font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted)!important;font-weight:600}
+[data-theme="light"] .wiki-article-lead{background:transparent;border-left:2px solid var(--border);color:#5c554a}
+[data-theme="light"] .wiki-article-title{font-weight:800;letter-spacing:-.2px}
+[data-theme="light"] .sec-heading{color:var(--muted);opacity:1;letter-spacing:.9px}
+[data-theme="light"] .sec-formula,[data-theme="light"] .popup-formula{background:transparent;border:none;padding:4px 0 4px 18px;font-family:inherit;color:var(--text);font-size:17px}
+[data-theme="light"] .sec-formula .katex{font-size:1.12em}
+[data-theme="light"] .katex-display>.katex{text-align:center!important;padding-left:0}
+[data-theme="light"] .sec-block .sec-formula{margin-top:2px}
+[data-theme="light"] .sec-code{background:#f1ede4;border-color:#e3ddd0}
+[data-theme="light"] .sec-block-qa{border-left-color:#d9cfbf}
+[data-theme="light"] .qa-mark{color:#8a5a2b}
+[data-theme="light"] .sec-insight-box{background:#f4f0e7;border-left-color:#8a5a2b}
+[data-theme="light"] .sec-note-box{background:#f7f2e8;border-color:#e6dcc8}
+[data-theme="light"] .sec-table th{background:transparent;color:var(--text);border-bottom:2px solid var(--text)}
+[data-theme="light"] .sec-cmp-box{background:transparent}
+[data-theme="light"] #sidebar{border-right:1px solid var(--border)}
+[data-theme="light"] .sidebar-hdr h2{color:var(--text);font-weight:800}
+[data-theme="light"] .nav-icon{display:none}
+[data-theme="light"] .nav-count{background:transparent;color:var(--muted);padding:0;font-size:10.5px}
+[data-theme="light"] .nav-btn{font-size:12.5px;padding:6px 16px;color:#4d4739}
+[data-theme="light"] .nav-btn:hover{background:transparent;color:var(--text)}
+[data-theme="light"] .nav-btn.active{background:transparent;border-left-color:var(--text);color:var(--text);font-weight:700}
+[data-theme="light"] .nav-group-toggle,[data-theme="light"] .math-group-toggle{color:var(--muted)}
+[data-theme="light"] .pill{display:none}
+[data-theme="light"] .section-header{padding-left:44px;padding-right:44px}
+[data-theme="light"] .hdr-title{color:var(--text);font-size:24px;font-weight:800;letter-spacing:-.3px}
+[data-theme="light"] .hdr-sub{font-size:13px;color:var(--muted)}
+[data-theme="light"] .mlo-badge{background:transparent;padding:0;color:var(--accent);text-decoration:underline dotted;font-size:11.5px}
+[data-theme="light"] #theme-toggle button{background:transparent;border:none;color:var(--muted);font-weight:600;letter-spacing:0}
+[data-theme="light"] #theme-toggle button.active{background:transparent;color:var(--text);text-decoration:underline;border:none}
+[data-theme="light"] .sidebar-foot button{background:transparent}
+[data-theme="light"] .ch-overview-panel{background:transparent;border-bottom:1px solid var(--border);padding:24px 44px 18px}
+[data-theme="light"] .ch-ov-body p{color:#33302a}
+.nav-group-label{padding:14px 16px 2px;font-size:9px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--muted);opacity:.7}
+.controls select{display:none}
+.controls input[type=search]{background:transparent;border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--text);font-size:12px;min-width:200px}
+.wiki-article{scroll-margin-top:96px}
+/* sidebar TOC */
+.toc{display:none;padding:2px 0 8px 22px;margin:0 0 4px 24px;border-left:1px solid var(--border)}
+.toc.open{display:block}
+.toc-item{display:block;font-size:11.5px;line-height:1.4;color:var(--muted);text-decoration:none;padding:3px 8px 3px 0}
+.toc-item:hover{color:var(--text)}
 
 /* Math cards — Notion-like flow, no boxes */
 .wiki-article[class*=" math"] .sec-formula,
@@ -865,8 +881,8 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 <button id="hamburger" onclick="openSidebar()">&#9776;</button>
 
 <div id="theme-toggle">
-  <button id="btn-light" onclick="setTheme('light')">☀ Light</button>
-  <button id="btn-dark" onclick="setTheme('dark')" class="active">◑ Dark</button>
+  <button id="btn-light" onclick="setTheme('light')" class="active">Kağıt</button>
+  <button id="btn-dark" onclick="setTheme('dark')">Koyu</button>
 </div>
 
 <div id="main">
@@ -1579,13 +1595,35 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 <script>
 /* ==================== STATE ==================== */
 const MLO_NAV = [
- {key:'mlo01',num:'01',icon:'🧭',title:'Öğrenme Problemi',sub:'Ne öğreniyoruz, neyle ölçüyoruz, model ne kadar esnek olmalı'},
- {key:'mlo02',num:'02',icon:'🎲',title:'Olasılık ve Bayes',sub:'Koşullu olasılık · Bayes · prior, likelihood, posterior · Gaussian'},
- {key:'mlo03',num:'03',icon:'🎯',title:'MLE, MAP ve Loss Fonksiyonları',sub:'Likelihood → MAP → regularization · CE ve MSE aslında MLE · KL'},
- {key:'mlo04',num:'04',icon:'⚖️',title:'Bias-Variance ve Regularization',sub:'Overfitting teşhisi · train/val/test · L1, L2, weight decay'},
- {key:'mlo05',num:'05',icon:'⚙️',title:'Optimization ve Gradient Descent',sub:'Batch/SGD/mini-batch · momentum · Adam, AdamW · LR ve batch size'},
+ {key:'mlo01',num:'01',group:'Temeller',title:'Öğrenme Problemi',sub:'Ne öğreniyoruz, neyle ölçüyoruz, model ne kadar esnek olmalı'},
+ {key:'mlo02',num:'02',group:'Temeller',title:'Olasılık ve Bayes',sub:'Koşullu olasılık · Bayes · prior, likelihood, posterior · Gaussian'},
+ {key:'mlo03',num:'03',group:'Temeller',title:'MLE, MAP ve Loss Fonksiyonları',sub:'Likelihood → MAP → regularization · CE ve MSE aslında MLE · KL'},
+ {key:'mlo04',num:'04',group:'Temeller',title:'Bias-Variance ve Regularization',sub:'Overfitting teşhisi · train/val/test · L1, L2, weight decay'},
+ {key:'mlo05',num:'05',group:'Temeller',title:'Optimization ve Gradient Descent',sub:'Batch/SGD/mini-batch · momentum · Adam, AdamW · LR ve batch size'},
+ {key:'mlo06',num:'06',group:'Klasik Denetimli',title:'Linear ve Logistic Regression',sub:'Discriminant · least squares · logistic · Bayes→logistic köprüsü · pseudo-inverse'},
+ {key:'mlo07',num:'07',group:'Klasik Denetimli',title:'SVM ve Kernel Trick',sub:'Margin · hard/soft margin · kernel · lab uygulaması'},
+ {key:'mlo08',num:'08',group:'Klasik Denetimli',title:'Ensembles ve AdaBoost',sub:'Bagging · boosting · AdaBoost = exponential loss'},
+ {key:'mlo09',num:'09',group:'Klasik Denetimli',title:'kNN, Hiperparametreler ve Model Seçimi',sub:'Görüntü sınıflandırma problemi · kNN · hiperparametre arama'},
+ {key:'mlo10',num:'10',group:'Denetimsiz',title:'GMM, EM ve Clustering',sub:'Karışım modelleri · EM · k-means · lab'},
+ {key:'mlo11',num:'11',group:'Denetimsiz',title:'PCA, Eigen ve Boyut İndirgeme',sub:'Eigendecomposition · PCA türetimi · t-SNE'},
+ {key:'mlo12',num:'12',group:'Derin Öğrenme',title:'Neural Networks ve Backprop',sub:'Perceptron → MLP · aktivasyonlar · zincir kuralı · loss'},
+ {key:'mlo13',num:'13',group:'Derin Öğrenme',title:'Training Dynamics',sub:'Normalization · initialization · dropout · SGD sorunları · augmentation'},
+ {key:'mlo14',num:'14',group:'Derin Öğrenme',title:'CNN',sub:'Konvolüsyon · pooling · mimariler · ResNet · lab'},
+ {key:'mlo15',num:'15',group:'Diziler ve Transformer',title:'Word Embeddings ve Dil Modelleri',sub:'N-gram → nöral LM · word2vec · embedding özellikleri'},
+ {key:'mlo16',num:'16',group:'Diziler ve Transformer',title:'RNN, LSTM ve Attention',sub:'Sequence modelleme · BPTT · LSTM/GRU · attention adım adım'},
+ {key:'mlo17',num:'17',group:'Diziler ve Transformer',title:'Transformer',sub:'QKV · self-attention · multi-head · positional encoding · encoder/decoder · BERT/GPT'},
+ {key:'mlo18',num:'18',group:'Diziler ve Transformer',title:'ViT, DETR, Swin ve Foundation Models',sub:'Görüntüde transformer · self-supervised · CLIP · SAM · VLM'},
+ {key:'mlo19',num:'19',group:'Üretici Modeller',title:'Autoencoder ve VAE',sub:'Latent uzay · ELBO · reparameterization · KL yönü'},
+ {key:'mlo20',num:'20',group:'Üretici Modeller',title:'GAN',sub:'Minimax · optimal discriminator · mode collapse · DCGAN, WGAN, CycleGAN, StyleGAN'},
+ {key:'mlo21',num:'21',group:'Üretici Modeller',title:'Diffusion',sub:'Forward/reverse · ELBO · noise schedule · guidance · LDM, DiT · lab'},
+ {key:'mlo22',num:'22',group:'Görüntü Uygulamaları',title:'Görüntü İşleme Temelleri',sub:'Histogram · konvolüsyon · morfoloji · Fourier'},
+ {key:'mlo23',num:'23',group:'Görüntü Uygulamaları',title:'Object Detection',sub:'R-CNN ailesi · YOLO · FPN · focal loss'},
+ {key:'mlo24',num:'24',group:'Görüntü Uygulamaları',title:'Segmentation',sub:'Semantic vs instance · U-Net · FCN · Mask R-CNN · metrikler'},
+ {key:'mlo25',num:'25',group:'Görüntü Uygulamaları',title:'Tracking ve Video',sub:'Kalman · Hungarian · optical flow · video mimarileri'},
+ {key:'mlo26',num:'26',group:'Görüntü Uygulamaları',title:'Point Clouds ve 3D',sub:'PointNet · DGCNN · FoldingNet · NeRF'},
+ {key:'mlo27',num:'27',group:'Görüntü Uygulamaları',title:'Görselleştirme ve Yorumlanabilirlik',sub:'BoVW · CNN görselleştirme · GradCAM · anomaly detection'},
 ];
-const CHAPTERS = ['mlo01','mlo02','mlo03','mlo04','mlo05','ch01','ch02','ch03','ch04','ch05','ch06','ch07','ch08','ch09','ch10','ch11','ch12',
+const CHAPTERS = ['mlo01','mlo02','mlo03','mlo04','mlo05','mlo06','mlo07','mlo08','mlo09','mlo10','mlo11','mlo12','mlo13','mlo14','mlo15','mlo16','mlo17','mlo18','mlo19','mlo20','mlo21','mlo22','mlo23','mlo24','mlo25','mlo26','mlo27','ch01','ch02','ch03','ch04','ch05','ch06','ch07','ch08','ch09','ch10','ch11','ch12',
                    'ida01','ida02','ida03','ida04','ida05','ida06','ida07','ida08','ida09','ida10','ida11','ida12','ida13',
                    'py01','py02','py03','py04','py05','py06','py07',
                    'vs01','vs02','vs03','vs04',
@@ -1604,7 +1642,7 @@ let VIEW_MODE = 'wiki';
 CHAPTERS.forEach(c => F[c] = {cat:'', q:''});
 
 const CH_CTX = {
-  mlo01:'mlo01',mlo02:'mlo02',mlo03:'mlo03',mlo04:'mlo04',mlo05:'mlo05',
+  mlo01:'mlo01',mlo02:'mlo02',mlo03:'mlo03',mlo04:'mlo04',mlo05:'mlo05',mlo06:'mlo06',mlo07:'mlo07',mlo08:'mlo08',mlo09:'mlo09',mlo10:'mlo10',mlo11:'mlo11',mlo12:'mlo12',mlo13:'mlo13',mlo14:'mlo14',mlo15:'mlo15',mlo16:'mlo16',mlo17:'mlo17',mlo18:'mlo18',mlo19:'mlo19',mlo20:'mlo20',mlo21:'mlo21',mlo22:'mlo22',mlo23:'mlo23',mlo24:'mlo24',mlo25:'mlo25',mlo26:'mlo26',mlo27:'mlo27',
   ch01:'ch01',ch02:'ch02',ch03:'ch03',ch04:'ch04',ch05:'ch05',ch06:'ch06',
   ch07:'ch07',ch08:'ch08',ch09:'ch09',ch10:'ch10',ch11:'ch11',ch12:'ch12',
   ida01:'ida01',ida02:'ida02',ida03:'ida03',ida04:'ida04',ida05:'ida05',ida06:'ida06',
@@ -1650,8 +1688,8 @@ function setTheme(t){
   if(bd) bd.classList.toggle('active', t==='dark');
 }
 (function(){
-  let t = 'dark';
-  try{ t = localStorage.getItem('ml-theme') || 'dark'; }catch(e){}
+  let t = 'light';
+  try{ t = localStorage.getItem('ml-theme') || 'light'; }catch(e){}
   setTheme(t);
 })();
 
@@ -1676,6 +1714,8 @@ function switchSection(sec){
   document.querySelectorAll('.nav-btn[data-sec]').forEach(b => b.classList.toggle('active', b.dataset.sec === sec));
   document.querySelectorAll('.section-header').forEach(h => h.classList.remove('active'));
   $('hdr-'+sec).classList.add('active');
+  document.querySelectorAll('.toc.open').forEach(t => t.classList.remove('open'));
+  const tc = $('toc-'+sec); if(tc) tc.classList.add('open');
   showOverview(sec);
   render();
   const isSummary = sec === 'summary';
@@ -1824,6 +1864,7 @@ function renderCards(sec){
       const icc = catClass(item.cat, item._home || sec);
       const article = document.createElement('div');
       article.className = 'wiki-article card-cat-' + icc;
+      if(item.id) article.id = 'card-' + item.id;
 
       // Title — click opens focused popup view
       const titleEl = document.createElement('div');
@@ -1914,6 +1955,7 @@ function renderGridCards(sec){
     const cc = catClass(item.cat, item._home || sec);
     const card = document.createElement('div');
     card.className = 'compact-card card-cat-' + cc;
+    if(item.id) card.id = 'card-' + item.id;
     card.onclick = () => showPopup(item, cc);
     const titleEl = document.createElement('div');
     titleEl.className = 'compact-card-title';
@@ -2129,28 +2171,50 @@ function showTxPopup(node){
 /* ==================== ML-OVERALL NAV (veriden uretilir) ==================== */
 function buildMloNav(){
   const sb = $('sidebar'); const shdr = sb.querySelector('.sidebar-hdr');
-  const tog = document.createElement('div'); tog.className='nav-group-toggle open'; tog.id='mlo-group-toggle';
-  tog.innerHTML = '<span class="math-group-arrow">▶</span><span>ML-OVERALL · Temeller</span>';
-  tog.onclick = () => { const it=$('mlo-group-items'); const o=it.classList.toggle('open'); tog.classList.toggle('open',o); };
-  const wrap = document.createElement('div'); wrap.className='nav-group-items open'; wrap.id='mlo-group-items';
-  MLO_NAV.forEach((m,i) => {
-    const b = document.createElement('button'); b.className='nav-btn'+(i===0?' active':''); b.dataset.sec=m.key;
-    b.onclick = () => { switchSection(m.key); closeSidebar(); };
-    b.innerHTML = `<span class="nav-icon">${m.icon}</span><span class="nav-num">${m.num}</span><span class="nav-label">${esc(m.title)}</span><span class="nav-count" id="cnt-${m.key}">0</span>`;
-    wrap.appendChild(b);
+  const groups = []; MLO_NAV.forEach(m => { if(!groups.includes(m.group)) groups.push(m.group); });
+  const frag = document.createDocumentFragment();
+  groups.forEach((g, gi) => {
+    const gid = 'mlo-g'+gi;
+    const tog = document.createElement('div'); tog.className = 'nav-group-toggle' + (gi===0?' open':''); tog.id = gid+'-toggle';
+    tog.innerHTML = '<span class="math-group-arrow">▶</span><span>' + esc(g) + '</span>';
+    const wrap = document.createElement('div'); wrap.className = 'nav-group-items' + (gi===0?' open':''); wrap.id = gid+'-items';
+    tog.onclick = () => { const o = wrap.classList.toggle('open'); tog.classList.toggle('open', o); };
+    MLO_NAV.filter(m => m.group===g).forEach(m => {
+      const b = document.createElement('button'); b.className = 'nav-btn' + (m.key===SEC?' active':''); b.dataset.sec = m.key;
+      b.onclick = () => { switchSection(m.key); closeSidebar(); };
+      b.innerHTML = `<span class="nav-icon">◆</span><span class="nav-num">${m.num}</span><span class="nav-label">${esc(m.title)}</span><span class="nav-count" id="cnt-${m.key}">0</span>`;
+      wrap.appendChild(b);
+    });
+    frag.appendChild(tog); frag.appendChild(wrap);
   });
-  shdr.insertAdjacentElement('afterend', wrap);
-  shdr.insertAdjacentElement('afterend', tog);
+  const lab = document.createElement('div'); lab.className = 'nav-group-label'; lab.textContent = 'ML-OVERALL'; frag.prepend(lab);
+  shdr.insertAdjacentElement('afterend', document.createElement('div')).replaceWith(frag);
   const root = $('hdr-root');
-  MLO_NAV.forEach((m,i) => {
-    const h = document.createElement('div'); h.id='hdr-'+m.key; h.className='section-header'+(i===0?' active':'');
-    h.innerHTML = `<div class="hdr-title">ML-OVERALL ${m.num} · ${esc(m.title)}</div><div class="hdr-sub">${esc(m.sub)}</div>
+  MLO_NAV.forEach(m => {
+    const h = document.createElement('div'); h.id = 'hdr-'+m.key; h.className = 'section-header' + (m.key===SEC?' active':'');
+    h.innerHTML = `<div class="hdr-title">${m.num} · ${esc(m.title)}</div><div class="hdr-sub">${esc(m.group)} — ${esc(m.sub)}</div>
       <div class="controls"><select id="flt-${m.key}"><option value="">All categories</option></select>
-      <input type="search" id="q-${m.key}" placeholder="Search..."><span class="pill" id="pill-${m.key}">0 cards</span></div>`;
+      <input type="search" id="q-${m.key}" placeholder="Bu bölümde ara..."><span class="pill" id="pill-${m.key}">0 cards</span></div>`;
     root.appendChild(h);
   });
 }
 buildMloNav();
+
+/* ==================== SIDEBAR TOC (her chapter'in kart basliklari) ==================== */
+function buildToc(){
+  document.querySelectorAll('.toc').forEach(t => t.remove());
+  document.querySelectorAll('.nav-btn[data-sec]').forEach(btn => {
+    const sec = btn.dataset.sec; const cards = DATA[sec]; if(!cards || !cards.length) return;
+    const box = document.createElement('div'); box.className = 'toc' + (sec===SEC?' open':''); box.id = 'toc-'+sec;
+    cards.forEach(c => {
+      const a = document.createElement('a'); a.className = 'toc-item'; a.href = '#'; a.textContent = c.title;
+      a.onclick = (e) => { e.preventDefault(); if(SEC!==sec) switchSection(sec); closeSidebar();
+        const el = document.getElementById('card-'+c.id); if(el) el.scrollIntoView({block:'start'}); };
+      box.appendChild(a);
+    });
+    btn.insertAdjacentElement('afterend', box);
+  });
+}
 
 /* ==================== FILTERS ==================== */
 CHAPTERS.forEach(sec => {
@@ -2188,6 +2252,7 @@ function applyData(d){
   if(d.vs_summary) VS_SUMMARY = d.vs_summary;
   if(d.tx_tree) TX_TREE = d.tx_tree;
   CHAPTERS.forEach(c => buildDropdown('flt-'+c, DATA[c]));
+  buildToc();
   updateCounts();
   showOverview(SEC);
   render();
