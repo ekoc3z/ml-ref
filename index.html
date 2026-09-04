@@ -419,7 +419,7 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .math-group-items.open{ display:block }
 
 /* ── ML-OVERALL group + iki yonlu rozet ── */
-.nav-group-toggle{display:flex;align-items:center;gap:6px;padding:12px 16px 4px;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:1.8px;color:var(--accent-light);opacity:.85;cursor:pointer;user-select:none}
+.nav-group-toggle{display:flex;align-items:center;gap:6px;padding:14px 16px 4px;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:1.8px;color:var(--accent-light);opacity:.85;cursor:default;user-select:none}
 .nav-group-toggle:hover{opacity:1}
 .nav-group-toggle.open .math-group-arrow{transform:rotate(90deg)}
 .nav-group-items{display:none;border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:4px}
@@ -1706,6 +1706,7 @@ function toggleMathGroup(){
 }
 
 function switchSection(sec){
+  if(sec === SEC){ const tc = $('toc-'+sec); if(tc) tc.classList.toggle('open'); return; }
   SEC = sec;
   if(sec.startsWith('math')){
     $('math-group-items').classList.add('open');
@@ -2175,10 +2176,9 @@ function buildMloNav(){
   const frag = document.createDocumentFragment();
   groups.forEach((g, gi) => {
     const gid = 'mlo-g'+gi;
-    const tog = document.createElement('div'); tog.className = 'nav-group-toggle' + (gi===0?' open':''); tog.id = gid+'-toggle';
-    tog.innerHTML = '<span class="math-group-arrow">▶</span><span>' + esc(g) + '</span>';
-    const wrap = document.createElement('div'); wrap.className = 'nav-group-items' + (gi===0?' open':''); wrap.id = gid+'-items';
-    tog.onclick = () => { const o = wrap.classList.toggle('open'); tog.classList.toggle('open', o); };
+    const tog = document.createElement('div'); tog.className = 'nav-group-toggle open'; tog.id = gid+'-toggle';
+    tog.textContent = g;
+    const wrap = document.createElement('div'); wrap.className = 'nav-group-items open'; wrap.id = gid+'-items';
     MLO_NAV.filter(m => m.group===g).forEach(m => {
       const b = document.createElement('button'); b.className = 'nav-btn' + (m.key===SEC?' active':''); b.dataset.sec = m.key;
       b.onclick = () => { switchSection(m.key); closeSidebar(); };
