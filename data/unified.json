@@ -23070,8 +23070,7 @@
       "cards": [
         "ch01-what-is-machine-learning",
         "ch01-types-of-learning",
-        "ch01-model-complexity-and-generalisation",
-        "ch01-course-roadmap"
+        "ch01-model-complexity-and-generalisation"
       ]
     },
     {
@@ -23328,7 +23327,6 @@
         "vs04-self-attention-q-k-v",
         "vs04-positional-encoding",
         "vs04-multi-head-attention",
-        "labtc-stanford-a3-transformer-captioning-genel-cerceve",
         "labtc-multiheadattention-implementasyon",
         "labtc-positionalencoding-implementasyon",
         "labtc-transformerdecoderlayer-cross-attention-ffn-bloklari",
@@ -23354,7 +23352,6 @@
         "ida08-unetr-transformers-for-medical-image-segmentation",
         "ida08-sam-segment-anything-model",
         "ida08-self-supervised-pretraining-mae-and-dino",
-        "cs11-lecture-12-self-supervised-learning",
         "cs11-ssl-framework-ve-pretext-tasks",
         "cs11-video-colorization-ile-attention",
         "cs11-mae-masked-autoencoders",
@@ -23415,7 +23412,6 @@
         "cs13-gan-theory-optimal-discriminator-and-convergence-analysis",
         "cs13-gan-architectures-dc-gan-and-stylegan",
         "vs04-gan-nasil-calisir",
-        "lab06-session-6-genel-cerceve",
         "lab06-gan-temelleri-generator-ve-discriminator",
         "lab06-gan-loss-minimax-hedefi",
         "lab06-gan-training-loop-donusumlu-guncelleme",
@@ -23426,8 +23422,7 @@
         "lab06-cyclegan-eslesmemis-goruntu-cevirisi",
         "lab06-pix2pix-sartli-gan-ile-eslesmis-ceviri",
         "lab06-stylegan-mapping-network-ve-adain",
-        "lab06-dcgan-vs-vanilla-gan-pratik-karsilastirma",
-        "lab06-lab-6-implementation-gorevleri-ozeti"
+        "lab06-dcgan-vs-vanilla-gan-pratik-karsilastirma"
       ]
     },
     {
@@ -23453,7 +23448,6 @@
         "cs13-diffusion-transformer-dit-architecture-and-conditioning",
         "cs13-text-to-image-and-text-to-video-pipelines",
         "cs13-generalized-diffusion-vp-ve-score-functions-and-sdes",
-        "lab07-session-7-genel-cerceve",
         "lab07-task-1-corruption-process",
         "lab07-task-2-3-training-loop",
         "lab07-basicunet-minimal-unet-implementasyonu",
@@ -23505,7 +23499,6 @@
         "ida05-cellpose-and-stardist-biology-inspired-segmentation",
         "cs08-semantic-and-instance-segmentation",
         "vs04-u-net",
-        "lab05-session-5-genel-cerceve",
         "lab05-semantic-segmentation-tanim-ve-veri",
         "lab05-fcn-vgg-yi-segmentasyon-modeline-donusturme",
         "lab05-segmenter-11-conv-implementasyonu",
@@ -23551,7 +23544,6 @@
         "ida12-fully-convolutional-point-network-fcpn",
         "ida12-dynamic-graph-cnn-and-edgeconv",
         "ida12-foldingnet-and-ddpms-for-point-clouds",
-        "cs14-lecture-15-3d-vision",
         "cs14-3d-gosterimler",
         "cs14-nerf-neural-radiance-fields"
       ]
@@ -23565,7 +23557,6 @@
         "cs08-network-visualization-and-interpretation",
         "cs08-architecture-comparison-rnn-vs-cnn-vs-attention",
         "vs04-gradcam-model-kararini-gorsellestirme",
-        "lab08-session-8-lab-8-genel-cerceve",
         "lab08-mvtec-ad-dataset-task-0-1",
         "lab08-clip-yukleme-task-3",
         "lab08-modified-image-encoder-task-4-qq-kk-attention",
