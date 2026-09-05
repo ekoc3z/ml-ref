@@ -2605,7 +2605,7 @@
     {
       "title": "Multi-Head Attention — Mantık ve Matematik",
       "cat": "Attention",
-      "summary": "Multi-head attention, D boyutunu H parçaya bölerek her head'in farklı bir ilişki türü öğrenmesini sağlar. Her head X'ten kendi Q, K, V'sini üretir; scaled dot-product attention hesaplar; sonuçlar concat edilip W_O ile birleştirilir.",
+      "summary": "Multi-head attention, D boyutunu H parçaya bölerek her head'in farklı bir ilişki türü öğrenmesini sağlar. Her head X'ten kendi $Q, K$, V'sini üretir; scaled dot-product attention hesaplar; sonuçlar concat edilip $W_O$ ile birleştirilir.",
       "context": "Lecture 21 — Multi-Head Attention (Slide 32–38)",
       "sections": [
         {
@@ -2818,7 +2818,7 @@
     {
       "title": "Self-Attention: The Core Mechanism",
       "cat": "Attention",
-      "summary": "Self-attention allows every position in a sequence to directly attend to every other position, computing a weighted sum of value vectors. This gives O(1) dependency path length (vs O(n) for RNNs) and full parallelisation — at the cost of O(n²) attention computation.",
+      "summary": "Self-attention allows every position in a sequence to directly attend to every other position, computing a weighted sum of value vectors. This gives $O(1)$ dependency path length (vs $O(n)$ for RNNs) and full parallelisation — at the cost of $O(n^{2})$ attention computation.",
       "context": "Lecture 21 — The key Transformer idea",
       "sections": [
         {
@@ -2902,7 +2902,7 @@
     {
       "title": "Key Varken Positional Encoding Neden Gerekli?",
       "cat": "Attention",
-      "summary": "Key semantiği biliyor — 'ben noun'um, canlıyım'. Ama pozisyonu bilmiyor. 'cat bites dog' ve 'dog bites cat'te x_cat embedding'i aynı, k_cat aynı. Model kim subject kim object ayırt edemiyor. PE pozisyonu Key'e yansıtıyor.",
+      "summary": "Key semantiği biliyor — 'ben noun'um, canlıyım'. Ama pozisyonu bilmiyor. 'cat bites dog' ve 'dog bites cat'te $x_{\\text{cat}}$ embedding'i aynı, $k_{\\text{cat}}$ aynı. Model kim subject kim object ayırt edemiyor. PE pozisyonu Key'e yansıtıyor.",
       "context": "Lecture 21 — Positional Encoding motivasyonu",
       "sections": [
         {
@@ -2999,7 +2999,7 @@
     {
       "title": "Encoder'dan Decoder'a: Tam Mimari ve Boyutlar",
       "cat": "Architecture",
-      "summary": "Transformer mimarisinin encoder girişinden decoder çıkışına tam akışı, IDA notasyonu ve boyutlarıyla. n = kaynak uzunluğu, m = hedef uzunluğu, d_model=512, H=8, d_k=d_v=64, N=6.",
+      "summary": "Transformer mimarisinin encoder girişinden decoder çıkışına tam akışı, IDA notasyonu ve boyutlarıyla. n = kaynak uzunluğu, m = hedef uzunluğu, $d_{\\text{model}}=512, H=8, d_k=d_v=64, N=6$.",
       "context": "Lecture 21 — Full Transformer Architecture",
       "sections": [
         {
@@ -4695,7 +4695,7 @@
     {
       "title": "Swin Transformer: Hierarchical Window Attention",
       "cat": "Transformers",
-      "summary": "Swin Transformer (Liu et al. 2021) restores the hierarchical multi-scale feature maps of CNNs while using self-attention. It computes attention within local windows (not globally), reducing complexity from O(N²) to O(N), and shifts windows between layers for cross-window communication.",
+      "summary": "Swin Transformer (Liu et al. 2021) restores the hierarchical multi-scale feature maps of CNNs while using self-attention. It computes attention within local windows (not globally), reducing complexity from $O(N^{2})$ to $O(N)$, and shifts windows between layers for cross-window communication.",
       "context": "Lecture 07 — Efficient vision transformers",
       "sections": [
         {
@@ -4937,7 +4937,7 @@
     {
       "title": "Swin Transformer — Adım Adım",
       "cat": "Foundation",
-      "summary": "Swin Transformer (Liu et al. 2021) ViT'in O(N²) attention ve tek ölçek sorunlarını çözer. Windowed local attention + shifted windows + patch merging ile hiyerarşik feature map üretir. Sadece encoder.",
+      "summary": "Swin Transformer (Liu et al. 2021) ViT'in $O(N^{2})$ attention ve tek ölçek sorunlarını çözer. Windowed local attention + shifted windows + patch merging ile hiyerarşik feature map üretir. Sadece encoder.",
       "context": "Lecture 08 — Image Analysis with Transformers",
       "sections": [
         {
@@ -5419,7 +5419,7 @@
         {
           "type": "text",
           "heading": "Reparameterization Trick — Neden Gerekli?",
-          "text": "Örnekleme adımı (z ~ $\\mathcal{N}(\\mu , \\sigma ^{2})$) normalde gradyanı bloklar — rastgele bir işlem, backprop geçemez.\n\nÇözüm: örneklemeyi dışarı çıkar.\n\n$z = \\mu + \\sigma \\cdot \\varepsilon , \\qquad \\varepsilon \\sim \\mathcal{N}(0,1)$  ← bu sabit, gradyan geçmez\n↳ gradyan μ ve σ'dan geçer ✓\n\nRastgelelik $\\varepsilon$'da, $\\varepsilon$'ya gradyan geçmek zorunda değil. $\\mu$ ve $\\sigma$ öğreniliyor.",
+          "text": "Örnekleme adımı (z ~ $\\mathcal{N}(\\mu , \\sigma ^{2})$) normalde gradyanı bloklar — rastgele bir işlem, backprop geçemez.\n\nÇözüm: örneklemeyi dışarı çıkar.\n\n$z = \\mu + \\sigma \\cdot \\varepsilon , \\qquad \\varepsilon \\sim \\mathcal{N}(0,1)$  ← bu sabit, gradyan geçmez\n↳ gradyan $\\mu$ ve $\\sigma$'dan geçer ✓\n\nRastgelelik $\\varepsilon$'da, $\\varepsilon$'ya gradyan geçmek zorunda değil. $\\mu$ ve $\\sigma$ öğreniliyor.",
           "qa": true
         }
       ],
@@ -5606,7 +5606,7 @@
     {
       "title": "Forward Diffusion: Markov Chain and Reparameterisation",
       "cat": "Theory",
-      "summary": "The forward process is a fixed Markov chain that adds Gaussian noise with variance β_t at each step. The reparameterisation trick collapses this to a closed-form expression, allowing direct sampling of x_t at any timestep from x_0 without running T sequential steps.",
+      "summary": "The forward process is a fixed Markov chain that adds Gaussian noise with variance $\\beta _t$ at each step. The reparameterisation trick collapses this to a closed-form expression, allowing direct sampling of $x_t$ at any timestep from $x_0$ without running T sequential steps.",
       "context": "Lecture 11 — Forward diffusion process",
       "sections": [
         {
@@ -5907,7 +5907,7 @@
     {
       "title": "DDPM — Matematiksel Özet: Forward, Reverse, ε Prediction ve L_simple",
       "cat": "Generative",
-      "summary": "DDPM'in tüm matematiksel yapısı: forward process, Bayes ile türetilen reverse posterior, x_0'dan bağımsız ε reparametrizasyonu ve neden L_simple + ε en iyi çalıştığı (Table 2 ablation).",
+      "summary": "DDPM'in tüm matematiksel yapısı: forward process, Bayes ile türetilen reverse posterior, $x_0$'dan bağımsız $\\varepsilon$ reparametrizasyonu ve neden $L_{\\text{simple}} + \\varepsilon$ en iyi çalıştığı (Table 2 ablation).",
       "context": "Lecture 11 · DDPM Paper (Ho et al. 2020) — Unified Derivation",
       "sections": [
         {
@@ -5927,9 +5927,10 @@
           "qa": true
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "Neden $\\varepsilon + L_{\\text{simple}}$ En İyi? (DDPM Table 2)",
-          "text": "Full ELBO'da her parameterizasyon için timestep katsayısı var:\n\n  SNR(t) = ᾱ_t / (1-ᾱ_t)\n\n  x_0 prediction: λ_x0 = (1/2)(SNR(t-1) - SNR(t))\n  ε prediction:   λ_ε  = (1-α_t)² / (2σ_q²(t)·α_t·(1-ᾱ_t))\n  μ prediction:   λ_μ  = 1/(2σ_t²) · (türetilmiş μ̃_t farkı)\n\nt büyüdükçe SNR azalıyor → katsayılar küçülüyor.\n\nFull ELBO vs L_simple (CIFAR10, Table 2):\n\n                    Full ELBO      L_simple\n  x_0 prediction:  kötü*          —\n  μ prediction:    FID 13.22      unstable\n  ε prediction:    FID 13.51      FID 3.17  ← en iyi\n\n* \"predicting x_0 led to worse sample quality\" (DDPM paper)\n\nFull ELBO'da μ ≈ ε — aynı KL, parameterizasyon fark etmiyor.\nL_simple ile katsayı drop edilince μ unstable oluyor.\nε + L_simple'ın reweighting'i küçük t'yi down-weight ediyor\n→ network büyük t'deki zor görevlere odaklanıyor → daha iyi sample quality.\n\n\"it is just another parameterization of p_θ(x_{t-1}|x_t)\"\n— ε teorik üstünlük değil, L_simple ile kombinasyonu iyi çalışıyor.\n\n───────────────────────────────────────────────\nε ve x_0 katsayıları arasındaki SNR ilişkisi:\n───────────────────────────────────────────────\n\n  λ_x0 = SNR(t) · λ_ε\n\nYani x_0 katsayısı, ε katsayısından SNR(t) kat daha büyük.\nBu şu anlama geliyor:\n\n  L_simple(ε) = SNR(t) · L_simple(x_0)   ← saf MSE olarak\n\nDolayısıyla ε L_simple kullanmak = x_0 MSE'yi SNR ile ağırlıklandırmak.\nKodda tam bu var:\n\n  loss_weight = ones  if pred_noise   → weight = 1\n  loss_weight = snr   if pred_x_start → weight = SNR(t)\n\nx_0 predict edip SNR weight kullanmak = ε predict edip uniform weight —\nmatematiksel olarak eşdeğer.\n\nNeden yine de ε tercih edilir (empirik):\n  - ε her zaman N(0,I)'dan — sabit scale, tutarlı hedef\n  - x_0 prediction yüksek t'de çok belirsiz: neredeyse saf\n    gürültüden x_0 tahmin etmek, gradyan sinyali zayıf\n  - SNR weight ekleyince x_0 düzeltilebilir ama\n    optimizasyon dinamikleri yine de farklı\n  - Tam teorik açıklama yok — EDM (Karras 2022) en kapsamlı\n    analizi yapıyor, sonucun schedule'a bağlı olduğunu gösteriyor"
+          "text": "Full ELBO'da her parameterizasyon için timestep katsayısı var:\n\n  $\\mathrm{SNR}(t) = \\bar{\\alpha }_t / (1-\\bar{\\alpha }_t)$\n\n  $x_0$ prediction: $\\lambda _{x0}$ = (1/2)(SNR(t-1) - SNR(t))\n  $\\varepsilon$ prediction:   $\\lambda _\\varepsilon \\quad = (1-\\alpha _t)^{2} / (2\\sigma _q^{2}(t)\\cdot \\alpha _t\\cdot (1-\\bar{\\alpha }_t))$\n  $\\mu$ prediction:   $\\lambda _\\mu \\quad = 1/(2\\sigma _t^{2})$ · (türetilmiş $\\tilde{\\mu }_t$ farkı)\n\nt büyüdükçe SNR azalıyor → katsayılar küçülüyor.\n\nFull ELBO vs $L_{\\text{simple}}$ (CIFAR10, Table 2):\n\n                    Full ELBO      L_simple\n  x_0 prediction:  kötü*          —\n  μ prediction:    FID 13.22      unstable\n  ε prediction:    FID 13.51      FID 3.17  ← en iyi\n\n* \"predicting $x_0$ led to worse sample quality\" (DDPM paper)\n\nFull ELBO'da $\\mu \\approx \\varepsilon$ — aynı KL, parameterizasyon fark etmiyor.\n$L_{\\text{simple}}$ ile katsayı drop edilince $\\mu$ unstable oluyor.\n$\\varepsilon + L_{\\text{simple}}$'ın reweighting'i küçük t'yi down-weight ediyor\n→ network büyük t'deki zor görevlere odaklanıyor → daha iyi sample quality.\n\n\"it is just another parameterization of p_θ(x_{t-1}|x_t)\"\n— $\\varepsilon$ teorik üstünlük değil, $L_{\\text{simple}}$ ile kombinasyonu iyi çalışıyor.\n\n───────────────────────────────────────────────\n$\\varepsilon$ ve $x_0$ katsayıları arasındaki SNR ilişkisi:\n───────────────────────────────────────────────\n\n  $\\lambda _{x0} = \\mathrm{SNR}(t) \\cdot \\lambda _\\varepsilon$\n\nYani $x_0$ katsayısı, $\\varepsilon$ katsayısından SNR(t) kat daha büyük.\nBu şu anlama geliyor:\n\n  $L_{\\text{simple}}(\\varepsilon )$ = SNR(t) · $L_{\\text{simple}}(x_0)$   ← saf MSE olarak\n\nDolayısıyla $\\varepsilon L_{\\text{simple}}$ kullanmak = $x_0$ MSE'yi SNR ile ağırlıklandırmak.\nKodda tam bu var:\n\n  loss_weight = ones  if pred_noise   → weight = 1\n  loss_weight = snr   if pred_x_start → weight = SNR(t)\n\n$x_0$ predict edip SNR weight kullanmak = $\\varepsilon$ predict edip uniform weight —\nmatematiksel olarak eşdeğer.\n\nNeden yine de $\\varepsilon$ tercih edilir (empirik):\n  - $\\varepsilon$ her zaman N(0,I)'dan — sabit scale, tutarlı hedef\n  - $x_0$ prediction yüksek t'de çok belirsiz: neredeyse saf\n    gürültüden $x_0$ tahmin etmek, gradyan sinyali zayıf\n  - SNR weight ekleyince $x_0$ düzeltilebilir ama\n    optimizasyon dinamikleri yine de farklı\n  - Tam teorik açıklama yok — EDM (Karras 2022) en kapsamlı\n    analizi yapıyor, sonucun schedule'a bağlı olduğunu gösteriyor",
+          "qa": true
         }
       ],
       "id": "ida11-ddpm-matematiksel-ozet-forward-reverse-prediction-ve-l-simpl"
@@ -6491,7 +6492,7 @@
     {
       "title": "Eigendecomposition: A = QΛQᵀ ve Eigenvektör Bazı",
       "cat": "Applications",
-      "summary": "Eigenvektör: A altında yönü değişmeyen vektör (Av=λv). Bu bazda A köşegen — her yönü bağımsız scale ediyor, yönler karışmıyor. Üç adımlı boru hattı: Qᵀx (baz değişimi) → Λ (scale) → Q (geri dön). A^k ve A⁻¹ trivial hale geliyor.",
+      "summary": "Eigenvektör: A altında yönü değişmeyen vektör $(Av=\\lambda v)$. Bu bazda A köşegen — her yönü bağımsız scale ediyor, yönler karışmıyor. Üç adımlı boru hattı: $Q^{\\top}x$ (baz değişimi) → $\\Lambda$ (scale) → Q (geri dön). $A^k$ ve $A^{-1}$ trivial hale geliyor.",
       "context": "EE499 · Eigendecomposition",
       "sections": [
         {
@@ -6575,7 +6576,7 @@
     {
       "title": "PCA — Teori, Türetme ve Eigenvektör Bağlantısı",
       "cat": "Applications",
-      "summary": "PCA: veriyi en az bilgi kaybıyla düşük boyuta indirgeme. Reconstruction error minimize etmek, variance maximize etmeye dönüşüyor. Optimal yönler XᵀX'in eigenvektörleri. Xv₁ iç çarpım kanıtının matris formu — her noktanın v₁ koordinatı.",
+      "summary": "PCA: veriyi en az bilgi kaybıyla düşük boyuta indirgeme. Reconstruction error minimize etmek, variance maximize etmeye dönüşüyor. Optimal yönler $X^{\\top}X$'in eigenvektörleri. $Xv_1$ iç çarpım kanıtının matris formu — her noktanın $v_1$ koordinatı.",
       "context": "EE499 · PCA",
       "sections": [
         {
@@ -7143,7 +7144,7 @@
     {
       "title": "Least Squares — Tall Matrix Sorunu ve Normal Denklem",
       "cat": "Applications",
-      "summary": "Case 1 (tall, M>N, full column rank): Çoğu y için Ax=y çözümsüz. Çözüm: ||y-Ax||² minimize et. Geometrik anlam: y'yi R(A)'ya proje et. Normal denklem AᴴAx=Aᴴy iki yoldan türetiliyor: matris türevi ve projeksiyon dikliği — ikisi aynı sonucu veriyor.",
+      "summary": "Case 1 (tall, M>N, full column rank): Çoğu y için $Ax=y$ çözümsüz. Çözüm: ||y-Ax||² minimize et. Geometrik anlam: y'yi R(A)'ya proje et. Normal denklem AᴴAx=Aᴴy iki yoldan türetiliyor: matris türevi ve projeksiyon dikliği — ikisi aynı sonucu veriyor.",
       "context": "EE499 · Least Squares",
       "sections": [
         {
@@ -7164,7 +7165,7 @@
     {
       "title": "Minimum Norm ve Pseudo-Inverse — Fat Matrix ve Genel Çözüm",
       "cat": "Applications",
-      "summary": "Case 2 (fat, M<N): sonsuz çözüm var, hepsi T = {xₚ} + N(A) kümesinde. Minimum norm = orijine en yakın = N(A)'ya dik: x_MN = Aᴴ(AAᴴ)⁻¹y (sağ pseudo-inverse). Moore-Penrose A† tüm 4 durumu birleştiriyor — her zaman minimum norm LS çözümü.",
+      "summary": "Case 2 (fat, M<N): sonsuz çözüm var, hepsi $T = {x_p} + \\mathcal{N}(A)$ kümesinde. Minimum norm = orijine en yakın = N(A)'ya dik: x_MN = Aᴴ(AAᴴ)⁻¹y (sağ pseudo-inverse). Moore-Penrose A† tüm 4 durumu birleştiriyor — her zaman minimum norm LS çözümü.",
       "context": "EE499 · Minimum Norm and Pseudo-Inverse",
       "sections": [
         {
@@ -7316,7 +7317,7 @@
     {
       "title": "MLE: İki Kullanım, Aynı Fikir — Parametre Tahmini vs Sinyal Tahmini",
       "cat": "Estimation",
-      "summary": "MLE her zaman aynı soruyu sorar: 'Gözlemleri en olası kılan bilinmeyen nedir?' ML kursunda bilinmeyen = dağılım parametresi (mu, sigma). EE499'da bilinmeyen = sinyal (x in y=Ax+n). İkisi de p(gözlem|bilinmeyen) maximize ediyor. Gaussian olunca her ikisi de kareler toplamını minimize etmeye dönüşüyor.",
+      "summary": "MLE her zaman aynı soruyu sorar: 'Gözlemleri en olası kılan bilinmeyen nedir?' ML kursunda bilinmeyen = dağılım parametresi $(\\mu , \\sigma )$. EE499'da bilinmeyen = sinyal (x in $y=Ax+n$). İkisi de p(gözlem|bilinmeyen) maximize ediyor. Gaussian olunca her ikisi de kareler toplamını minimize etmeye dönüşüyor.",
       "context": "EE499 · Maximum Likelihood Estimation",
       "sections": [
         {
@@ -7353,7 +7354,7 @@
     {
       "title": "MLE, MAP, VAE — Aradığım Şey Ne? Prior Kimin Üzerinde?",
       "cat": "Estimation",
-      "summary": "MLE her zaman aynı soruyu sorar: gördüğümü en olası kılan aradığım nedir? ML kursunda aranan mu, EE499'da sinyal x, VAE'de network ağırlıkları theta/phi. z VAE'de hiç 'bulunmuyor' — integrate ediliyor. MAP için prior, tahmin ettiğin şeyin üzerinde olmalı: p(theta). p(z) olması MAP yapmıyor. Weight decay = Gaussian prior ile MAP.",
+      "summary": "MLE her zaman aynı soruyu sorar: gördüğümü en olası kılan aradığım nedir? ML kursunda aranan mu, EE499'da sinyal x, VAE'de network ağırlıkları theta/phi. z VAE'de hiç 'bulunmuyor' — integrate ediliyor. MAP için prior, tahmin ettiğin şeyin üzerinde olmalı: p(theta). $p(z)$ olması MAP yapmıyor. Weight decay = Gaussian prior ile MAP.",
       "context": "EE499 · MLE, MAP ve VAE Karşılaştırması",
       "sections": [
         {
@@ -7435,7 +7436,7 @@
     {
       "title": "MLE → MAP: x Deterministik'ten Rastgele'ye — Prior Devreye Giriyor",
       "cat": "Estimation",
-      "summary": "MLE'de x deterministik — prior yok, sadece likelihood. MAP'te x rastgele — Bayes kuralıyla likelihood * prior maximize edilir. Gaussian prior → Tikhonov regularization, ama λ artık keyfi değil prior istatistiğinden geliyor. Prior zayıflayınca MAP → MLE.",
+      "summary": "MLE'de x deterministik — prior yok, sadece likelihood. MAP'te x rastgele — Bayes kuralıyla likelihood * prior maximize edilir. Gaussian prior → Tikhonov regularization, ama $\\lambda$ artık keyfi değil prior istatistiğinden geliyor. Prior zayıflayınca $\\mathrm{MAP} \\to \\mathrm{MLE}$.",
       "context": "EE499 · MAP Estimation",
       "sections": [
         {
@@ -7489,7 +7490,7 @@
     {
       "title": "MAP = Regularizasyon — Prior Seçimi Ceza Terimini Belirliyor",
       "cat": "Estimation",
-      "summary": "MAP: x̂ = argmin[-log p(y|x) - log p(x)]. Prior seçimi R(x)'i, gürültü seçimi Δ(y,Ax)'i belirliyor. Gaussian prior → Tikhonov (L2). Laplace prior → LASSO (L1, seyrek). Gaussian istatistiklerde MAP=MMSE=LMMSE — regularization rastgele değil, prior'dan türüyor.",
+      "summary": "MAP: x̂ = argmin[-log p(y|x) - log p(x)]. Prior seçimi R(x)'i, gürültü seçimi $\\Delta (y,Ax)$'i belirliyor. Gaussian prior → Tikhonov (L2). Laplace prior → LASSO (L1, seyrek). Gaussian istatistiklerde $\\mathrm{MAP}=\\mathrm{MMSE}=\\mathrm{LMMSE}$ — regularization rastgele değil, prior'dan türüyor.",
       "context": "EE499 · MAP and Regularization",
       "sections": [
         {
@@ -7512,28 +7513,28 @@
     {
       "title": "Column Space, Row Space, Null Space",
       "cat": "Linear Algebra",
-      "summary": "A ∈ R^(m×n). Column space: sütunların span'ı, R^m içinde yaşar — y = Ax çözülebilirliğini belirler. Row space: satırların span'ı, R^n içinde. Null space: Ax=0'ı sağlayan x'ler, R^n içinde, boyutu n-rank.",
+      "summary": "A ∈ R^(m×n). Column space: sütunların span'ı, $R^m$ içinde yaşar — y = Ax çözülebilirliğini belirler. Row space: satırların span'ı, $R^n$ içinde. Null space: $Ax=0$'ı sağlayan x'ler, $R^n$ içinde, boyutu n-rank.",
       "context": "Practice · Linear Algebra",
       "sections": [
         {
           "type": "text",
           "heading": "Column Space",
-          "text": "A'nın sütunlarının tüm lineer kombinasyonları. R^m içinde bir alt uzay. y = Ax'in çözümü var ancak ve ancak y column space'te. rank(A) = m ise column space = R^m (full row rank) — her y için çözüm var."
+          "text": "A'nın sütunlarının tüm lineer kombinasyonları. $R^m$ içinde bir alt uzay. y = Ax'in çözümü var ancak ve ancak y column space'te. $\\operatorname{rank}(A) = m$ ise column space = $R^m$ (full row rank) — her y için çözüm var."
         },
         {
           "type": "text",
           "heading": "Row Space",
-          "text": "A'nın satırlarının tüm lineer kombinasyonları. R^n içinde, boyutu = rank(A). A'nın 'gördüğü' input yönleri buradan geliyor."
+          "text": "A'nın satırlarının tüm lineer kombinasyonları. $R^n$ içinde, boyutu = $\\operatorname{rank}(A)$. A'nın 'gördüğü' input yönleri buradan geliyor."
         },
         {
           "type": "text",
           "heading": "Null Space",
-          "text": "Ax = 0'ı sağlayan tüm x'ler. R^n içinde, boyutu = n - rank(A). Row space ⊥ null space, ikisi R^n'i tamamen bölüyor. A null space'i sıfıra gönderiyor — bu yönler kaybolup gidiyor."
+          "text": "Ax = 0'ı sağlayan tüm x'ler. $R^n$ içinde, boyutu = $n - \\operatorname{rank}(A)$. Row space ⊥ null space, ikisi $R^n$'i tamamen bölüyor. A null space'i sıfıra gönderiyor — bu yönler kaybolup gidiyor."
         },
         {
           "type": "text",
           "heading": "",
-          "text": "R^n = row space ⊕ null space\n       (rank)      (n-rank)\n\nAx = A(x_row + x_null) = A·x_row + 0 = A·x_row\n→ A yalnızca row space bileşenini görüyor",
+          "text": "$R^n$ = row space ⊕ null space\n       (rank)      (n-rank)\n\nAx = $A(x_{\\text{row}} + x_{\\text{null}}) = A\\cdot x_{\\text{row}} + 0 = A\\cdot x_{\\text{row}}$\n→ A yalnızca row space bileşenini görüyor",
           "qa": true
         }
       ],
@@ -7542,26 +7543,26 @@
     {
       "title": "Ax = b: Çözüm Var mı, Unique mi?",
       "cat": "Linear Algebra",
-      "summary": "Çözüm var mı ↔ b column space'te ↔ rank(A) = m. Çözüm unique mi ↔ null space = {0} ↔ rank(A) = n. m > n genelde çözümsüz, m < n sonsuz çözüm.",
+      "summary": "Çözüm var mı ↔ b column space'te ↔ $\\operatorname{rank}(A) = m$. Çözüm unique mi ↔ null space = {0} ↔ $\\operatorname{rank}(A) = n$. m > n genelde çözümsüz, m < n sonsuz çözüm.",
       "context": "Practice · Linear Algebra",
       "sections": [
         {
           "type": "text",
           "heading": "Existence",
-          "text": "b column space'te mi? rank(A) = m ise evet (full row rank) — her b için çözüm var. Değilse sadece bazı b'ler için var."
+          "text": "b column space'te mi? $\\operatorname{rank}(A) = m$ ise evet (full row rank) — her b için çözüm var. Değilse sadece bazı b'ler için var."
         },
         {
           "type": "text",
           "heading": "Uniqueness",
-          "text": "Null space = {0} ise çözüm unique. rank(A) = n ise bu sağlanır (full column rank). Null space boş değilse: bir çözüm x₀ bulsan, x₀ + z de çözüm (z ∈ null space) — sonsuz çözüm."
+          "text": "Null space = {0} ise çözüm unique. $\\operatorname{rank}(A) = n$ ise bu sağlanır (full column rank). Null space boş değilse: bir çözüm $x_0$ bulsan, $x_0 + z$ de çözüm (z ∈ null space) — sonsuz çözüm."
         },
         {
           "type": "list",
           "heading": "Üç Durum",
           "items": [
-            "m > n (overdetermined): rank ≤ n < m → column space R^m'yi kapsamaz → genelde çözüm yok → least squares: x = A⁺b",
-            "m < n (underdetermined): null space trivial değil → çözüm varsa sonsuz → min norm: x = A⁺b",
-            "m = n, full rank: tek çözüm, x = A⁻¹b"
+            "m > n (overdetermined): rank ≤ n < m → column space $R^m$'yi kapsamaz → genelde çözüm yok → least squares: $x = A^{+}b$",
+            "m < n (underdetermined): null space trivial değil → çözüm varsa sonsuz → min norm: $x = A^{+}b$",
+            "$m = n$, full rank: tek çözüm, $x = A^{-1}b$"
           ]
         }
       ],
@@ -7570,24 +7571,24 @@
     {
       "title": "SVD: A = UDVᵀ",
       "cat": "Linear Algebra",
-      "summary": "Her A için geçerli en genel ayrışım. A'nın etkisini üçe böler: rotate (Vᵀ), scale (D), rotate (U). rank = sıfır olmayan singular value sayısı.",
+      "summary": "Her A için geçerli en genel ayrışım. A'nın etkisini üçe böler: rotate $(V^{\\top})$, scale $(D)$, rotate $(U)$. rank = sıfır olmayan singular value sayısı.",
       "context": "Practice · Linear Algebra",
       "sections": [
         {
           "type": "text",
           "heading": "",
-          "text": "A = U  ·  D  ·  Vᵀ\n    m×m   m×n   n×n\n\nU: column space'in yönleri (orthogonal)\nD: singular values σ₁ ≥ σ₂ ≥ ... ≥ 0 (ölçek)\nV: row space'in yönleri (orthogonal)",
+          "text": "$A = U \\quad \\cdot \\quad D \\quad \\cdot \\quad V^{\\top}$\n    $m\\times m$   $m\\times n$   $n\\times n$\n\nU: column space'in yönleri (orthogonal)\nD: singular values $\\sigma _1 \\ge \\sigma _2 \\ge \\ldots \\ge 0$ (ölçek)\nV: row space'in yönleri (orthogonal)",
           "qa": true
         },
         {
           "type": "text",
           "heading": "",
-          "text": "Sezgi: Vᵀ ile input'u rotate et, D ile her ekseni ölçekle (bazıları sıfıra gider = null space), U ile output'a rotate et. rank = sıfır olmayan σ sayısı. σᵢ = 0 → o V sütunu null space'te."
+          "text": "Sezgi: $V^{\\top}$ ile input'u rotate et, D ile her ekseni ölçekle (bazıları sıfıra gider = null space), U ile output'a rotate et. rank = sıfır olmayan $\\sigma$ sayısı. $\\sigma _i = 0$ → o V sütunu null space'te."
         },
         {
           "type": "text",
           "heading": "Pseudoinverse",
-          "text": "A⁺ = VD⁺Uᵀ. D⁺'da sıfır olmayan σᵢ'leri 1/σᵢ yap. Tall A (m>n) → least squares çözümü. Fat A (m<n) → minimum norm çözümü."
+          "text": "$A^{+} = VD^{+}U^{\\top}$. $D^{+}$'da sıfır olmayan $\\sigma _i$'leri $1/\\sigma _i$ yap. Tall A (m>n) → least squares çözümü. Fat A (m<n) → minimum norm çözümü."
         }
       ],
       "id": "vs04-svd-a-udvt"
@@ -7595,25 +7596,25 @@
     {
       "title": "Eigenvalue / Eigenvector",
       "cat": "Linear Algebra",
-      "summary": "Av = λv. A matrisini uyguladığında yönü değişmeyen vektörler. λ ölçek faktörü. Symmetric matrisin tüm eigenvalue'ları reel, eigenvektörleri dik.",
+      "summary": "Av = $\\lambda v$. A matrisini uyguladığında yönü değişmeyen vektörler. $\\lambda$ ölçek faktörü. Symmetric matrisin tüm eigenvalue'ları reel, eigenvektörleri dik.",
       "context": "Practice · Linear Algebra",
       "sections": [
         {
           "type": "text",
           "heading": "",
-          "text": "Av = λv. A'yı v'ye uyguladığında sadece uzunluk λ kadar değişiyor, yön aynı kalıyor. v: eigenvektör, λ: eigenvalue."
+          "text": "Av = $\\lambda v$. A'yı v'ye uyguladığında sadece uzunluk $\\lambda$ kadar değişiyor, yön aynı kalıyor. v: eigenvektör, $\\lambda$: eigenvalue."
         },
         {
           "type": "text",
           "heading": "Symmetric A",
-          "text": "A = Aᵀ ise: tüm λ reel, eigenvektörler birbirine dik. A = QΛQᵀ (Q orthogonal, Λ diagonal). Covariance matrisi her zaman symmetric — PCA tam bu ayrışım."
+          "text": "$A = A^{\\top}$ ise: tüm $\\lambda$ reel, eigenvektörler birbirine dik. A = QΛQᵀ (Q orthogonal, $\\Lambda$ diagonal). Covariance matrisi her zaman symmetric — PCA tam bu ayrışım."
         },
         {
           "type": "list",
           "heading": "Özel Durumlar",
           "items": [
-            "Singular matris: en az bir λ = 0 (o yönü sıfıra gönderiyor)",
-            "Positive definite: tüm λ > 0 ↔ xᵀAx > 0 for all x ≠ 0",
+            "Singular matris: en az bir $\\lambda = 0$ (o yönü sıfıra gönderiyor)",
+            "Positive definite: tüm $\\lambda$ > 0 ↔ $x^{\\top}Ax$ > 0 for all $x \\quad \\ne \\quad 0$",
             "Orthogonal matris: tüm |λ| = 1 (uzunluk koruyor)"
           ]
         }
@@ -7675,7 +7676,7 @@
     {
       "title": "Gaussian Mixture Model (GMM)",
       "cat": "Probability",
-      "summary": "Birden fazla Gaussian'ı karıştırarak kompleks dağılımlar modellenir. P(x) = Σ P(c=i)·P(x|c=i). Her bileşenin kendi mean ve covariance'ı var. Universal approximator: yeterli bileşenle her smooth dağılım yaklaşılabilir.",
+      "summary": "Birden fazla Gaussian'ı karıştırarak kompleks dağılımlar modellenir. $P(x) = \\sum P(c=i)\\cdot P(x|c=i)$. Her bileşenin kendi mean ve covariance'ı var. Universal approximator: yeterli bileşenle her smooth dağılım yaklaşılabilir.",
       "context": "Practice · Probability",
       "sections": [
         {
@@ -7705,7 +7706,7 @@
     {
       "title": "Bayes Teoremi",
       "cat": "Probability",
-      "summary": "P(A|B) = P(B|A)·P(A) / P(B). Prior + likelihood → posterior. Test pozitif çıksa bile nadir hastalıkta hasta olma ihtimali düşük — prior baskın.",
+      "summary": "$P(A|B) = P(B|A)\\cdot P(A) / P(B)$. Prior + likelihood → posterior. Test pozitif çıksa bile nadir hastalıkta hasta olma ihtimali düşük — prior baskın.",
       "context": "Practice · Probability",
       "sections": [
         {
@@ -7730,7 +7731,7 @@
     {
       "title": "Bağımsız Olaylar & Koşullu Olasılık",
       "cat": "Probability",
-      "summary": "Bağımsız: A'nın olup olmaması B'yi etkilemiyor. P(A∩B) = P(A)·P(B) sadece bağımsızda. Genel: P(A∩B) = P(A|B)·P(B). P(test+|hasta) ≠ P(hasta|test+).",
+      "summary": "Bağımsız: A'nın olup olmaması B'yi etkilemiyor. $P(A\\cap B) = P(A)\\cdot P(B)$ sadece bağımsızda. Genel: $P(A\\cap B) = P(A|B)\\cdot P(B)$. $P(\\mathrm{test}+|\\mathrm{hasta}) \\quad \\ne \\quad P(\\mathrm{hasta}|\\mathrm{test}+)$.",
       "context": "Practice · Probability",
       "sections": [
         {
@@ -7786,29 +7787,29 @@
     {
       "title": "Expectation & Variance",
       "cat": "Probability",
-      "summary": "E[X]: dağılım altında ortalama. Var[X] = E[(X-E[X])^2] = E[X^2] - (E[X])^2. Linearity: E[aX+b] = aE[X]+b. Var[aX+b] = a^2 Var[X].",
+      "summary": "E[X]: dağılım altında ortalama. $\\operatorname{Var}[X] = \\mathbb{E}[(X-\\mathbb{E}[X])^2] = \\mathbb{E}[X^2] - (\\mathbb{E}[X])^2$. Linearity: $\\mathbb{E}[aX+b] = aE[X]+b$. $\\operatorname{Var}[aX+b] = a^2 \\operatorname{Var}[X]$.",
       "context": "Practice · Probability",
       "sections": [
         {
           "type": "text",
           "heading": "Formüller",
-          "text": "Discrete:   E[X] = Σ x · P(x)\nContinuous: E[X] = ∫ x · p(x) dx\n\nVar[X] = E[(X - E[X])^2]\n       = E[X^2] - (E[X])^2   ← hesapta bu daha kullanışlı\n\nStd dev: σ = sqrt(Var[X])",
+          "text": "Discrete:   $\\mathbb{E}[X] = \\sum x \\cdot P(x)$\nContinuous: $\\mathbb{E}[X] = \\int x \\cdot p(x) dx$\n\n$\\operatorname{Var}[X] = \\mathbb{E}[(X - \\mathbb{E}[X])^2]$\n       $= \\mathbb{E}[X^2] - (\\mathbb{E}[X])^2$   ← hesapta bu daha kullanışlı\n\nStd dev: $\\sigma = \\sqrt{Var[X]}$",
           "qa": true
         },
         {
           "type": "list",
           "heading": "Linearity",
           "items": [
-            "E[aX + b] = a·E[X] + b",
-            "E[X + Y] = E[X] + E[Y]  ← her zaman, bağımsızlık gerekmez",
-            "Var[aX + b] = a^2 · Var[X]  ← b kaybolur",
-            "Var[X + Y] = Var[X] + Var[Y]  ← sadece X,Y bağımsızsa"
+            "$\\mathbb{E}[aX + b] = a\\cdot \\mathbb{E}[X] + b$",
+            "$\\mathbb{E}[X + Y] = \\mathbb{E}[X] + \\mathbb{E}[Y]$  ← her zaman, bağımsızlık gerekmez",
+            "Var[aX + b] = $a^2 \\cdot \\operatorname{Var}[X]$  ← b kaybolur",
+            "$\\operatorname{Var}[X + Y] = \\operatorname{Var}[X] + \\operatorname{Var}[Y]$  ← sadece X,Y bağımsızsa"
           ]
         },
         {
           "type": "text",
           "heading": "Bernoulli Örneği",
-          "text": "X ~ Bernoulli(p): P(X=1)=p, P(X=0)=1-p. E[X] = p. Var[X] = p(1-p). Maksimum p=0.5'te, Var = 0.25."
+          "text": "X ~ Bernoulli(p): $P(X=1)=p, P(X=0)=1-p$. $\\mathbb{E}[X] = p$. $\\operatorname{Var}[X] = p(1-p)$. Maksimum $p=0.5$'te, Var = 0.25."
         }
       ],
       "id": "vs04-expectation-variance"
@@ -7816,24 +7817,24 @@
     {
       "title": "Covariance & Correlation",
       "cat": "Probability",
-      "summary": "Cov(x,y) = E[(x-E[x])(y-E[y])]: iki değişkenin birlikte ne kadar değiştiği. Bağımsız → Cov=0, ama Cov=0 bağımsızlık garantisi vermez.",
+      "summary": "$\\operatorname{Cov}(x,y) = \\mathbb{E}[(x-\\mathbb{E}[x])(y-\\mathbb{E}[y])]$: iki değişkenin birlikte ne kadar değiştiği. Bağımsız → $\\operatorname{Cov}=0$, ama $\\operatorname{Cov}=0$ bağımsızlık garantisi vermez.",
       "context": "Practice · Probability",
       "sections": [
         {
           "type": "text",
           "heading": "Formüller",
-          "text": "Cov(x,y) = E[(x - E[x])(y - E[y])]\n\nCorrelation: ρ = Cov(x,y) / (σ_x · σ_y)   ← [-1, 1] aralığında\n\nCov(x,x) = Var(x)",
+          "text": "$\\operatorname{Cov}(x,y) = \\mathbb{E}[(x - \\mathbb{E}[x])(y - \\mathbb{E}[y])]$\n\nCorrelation: $\\rho = \\operatorname{Cov}(x,y) / (\\sigma _x \\cdot \\sigma _y)$   ← $[-1, 1]$ aralığında\n\n$\\operatorname{Cov}(x,x) = \\operatorname{Var}(x)$",
           "qa": true
         },
         {
           "type": "text",
           "heading": "Covariance Matrix",
-          "text": "x ∈ R^n için Cov(x)_{i,j} = Cov(x_i, x_j). Diagonal elementler variances. Gaussian dağılımı bu matrisle tamamen tanımlanır: N(μ, Σ)."
+          "text": "$x \\in R^n$ için $\\operatorname{Cov}(x)_{i,j} = \\operatorname{Cov}(x_i, x_j)$. Diagonal elementler variances. Gaussian dağılımı bu matrisle tamamen tanımlanır: $\\mathcal{N}(\\mu , \\Sigma )$."
         },
         {
           "type": "text",
           "heading": "Bağımsızlık vs Sıfır Covariance",
-          "text": "Bağımsız → Cov=0. Ama Cov=0 → bağımsız DEĞİL. Cov sadece lineer ilişkiyi ölçüyor. y = x^2 örneği: x uniform [-1,1], Cov(x,y)=0 ama y tamamen x'e bağlı."
+          "text": "Bağımsız → $\\operatorname{Cov}=0$. Ama $\\operatorname{Cov}=0$ → bağımsız DEĞİL. Cov sadece lineer ilişkiyi ölçüyor. $y = x^2$ örneği: x uniform [-1,1], $\\operatorname{Cov}(x,y)=0$ ama y tamamen x'e bağlı."
         }
       ],
       "id": "vs04-covariance-correlation"
@@ -7898,7 +7899,7 @@
     {
       "title": "MLE vs MAP — Karşılaştırma",
       "cat": "Estimation",
-      "summary": "MLE: sadece veri. MAP: veri + prior = regularization. Bayesian: tüm posterior. Az veride MAP > MLE, çok veride MAP → MLE.",
+      "summary": "MLE: sadece veri. MAP: veri + prior = regularization. Bayesian: tüm posterior. Az veride MAP > MLE, çok veride $\\mathrm{MAP} \\to \\mathrm{MLE}$.",
       "context": "Practice · Estimation",
       "sections": [
         {
@@ -7923,7 +7924,7 @@
     {
       "title": "MLE → MSE Türetimi",
       "cat": "Estimation",
-      "summary": "Gaussian noise varsay → MLE → MSE. Kayıp fonksiyonu seçimi aslında noise modelini seçmek.",
+      "summary": "Gaussian noise varsay → $\\mathrm{MLE} \\to \\mathrm{MSE}$. Kayıp fonksiyonu seçimi aslında noise modelini seçmek.",
       "context": "Practice · Estimation",
       "sections": [
         {
@@ -7938,7 +7939,7 @@
     {
       "title": "MLE → BCE Türetimi",
       "cat": "Estimation",
-      "summary": "Binary sınıflandırmada Bernoulli noise varsay → MLE → BCE. Çok sınıflıda softmax + cross-entropy = MLE.",
+      "summary": "Binary sınıflandırmada Bernoulli noise varsay → $\\mathrm{MLE} \\to \\mathrm{BCE}$. Çok sınıflıda softmax + cross-entropy = MLE.",
       "context": "Practice · Estimation",
       "sections": [
         {
@@ -8046,7 +8047,7 @@
     {
       "title": "Bias-Variance Tradeoff",
       "cat": "ML",
-      "summary": "E[hata] = Bias² + Variance + Noise. Model karmaşıklığı artınca bias ↓ variance ↑. Regularization variance'ı düşürür, bias biraz artar.",
+      "summary": "E[hata] = $\\mathrm{Bias}^{2}$ + Variance + Noise. Model karmaşıklığı artınca bias ↓ variance ↑. Regularization variance'ı düşürür, bias biraz artar.",
       "context": "Practice · ML",
       "sections": [
         {
@@ -8091,7 +8092,7 @@
     {
       "title": "Gradient Descent",
       "cat": "ML",
-      "summary": "Loss'un negatif gradyanı yönünde küçük adımlar at. θ ← θ - η·∇L. Mini-batch pratikte standart. Adam adaptif learning rate + momentum ile genellikle en iyi.",
+      "summary": "Loss'un negatif gradyanı yönünde küçük adımlar at. $\\theta$ ← $\\theta - \\eta \\cdot \\nabla L$. Mini-batch pratikte standart. Adam adaptif learning rate + momentum ile genellikle en iyi.",
       "context": "Practice · ML",
       "sections": [
         {
@@ -8142,7 +8143,7 @@
     {
       "title": "VAE vs Autoencoder",
       "cat": "Deep Learning",
-      "summary": "AE: x → z → x̂, z deterministik, latent space düzensiz. VAE: z dağılım öğreniyor (μ,σ), KL loss latent space'i N(0,I)'a yaklaştırıyor → samplelanabilir.",
+      "summary": "AE: $x \\to z$ → x̂, z deterministik, latent space düzensiz. VAE: z dağılım öğreniyor $(\\mu ,\\sigma )$, KL loss latent space'i N(0,I)'a yaklaştırıyor → samplelanabilir.",
       "context": "Practice · Deep Learning",
       "sections": [
         {
@@ -8196,7 +8197,7 @@
     {
       "title": "Batch Normalization",
       "cat": "ML",
-      "summary": "Her mini-batch'te aktivasyonları normalize et (mean 0, std 1), sonra γ,β ile yeniden ölçekle. Internal covariate shift azalıyor, yüksek LR kullanılabiliyor.",
+      "summary": "Her mini-batch'te aktivasyonları normalize et (mean 0, std 1), sonra $\\gamma ,\\beta$ ile yeniden ölçekle. Internal covariate shift azalıyor, yüksek LR kullanılabiliyor.",
       "context": "Practice · ML",
       "sections": [
         {
@@ -8221,7 +8222,7 @@
     {
       "title": "Sigmoid & Softplus",
       "cat": "Deep Learning",
-      "summary": "Sigmoid: σ(x) = 1/(1+exp(-x)), çıktı (0,1). Türevi temiz: σ'(x) = σ(x)(1-σ(x)). Büyük |x|'de gradient sıfıra yaklaşır — saturating activation. Softplus: ζ(x) = log(1+exp(x)), ReLU'nun smooth versiyonu.",
+      "summary": "Sigmoid: $\\sigma (x) = 1/(1+\\exp(-x))$, çıktı (0,1). Türevi temiz: σ'(x) = $\\sigma (x)(1-\\sigma (x))$. Büyük |x|'de gradient sıfıra yaklaşır — saturating activation. Softplus: $\\zeta (x) = \\log(1+\\exp(x))$, ReLU'nun smooth versiyonu.",
       "context": "Practice · Deep Learning",
       "sections": [
         {
@@ -8265,7 +8266,7 @@
         {
           "type": "text",
           "heading": "Loss Seçimi",
-          "text": "MSE:   L = Σ (y - ŷ)²        ← outlier'a çok duyarlı\nMAE:   L = Σ |y - ŷ|         ← robust, türev süreksiz\nHuber: L = MSE (|e|<δ)        ← ikisinin ortası\n           MAE (|e|≥δ)",
+          "text": "MSE:   $L = \\Sigma$ (y - ŷ)²        ← outlier'a çok duyarlı\nMAE:   $L = \\sum |y - \\hat{y}|$         ← robust, türev süreksiz\nHuber: $L = \\mathrm{MSE} (|e|<\\delta )$        ← ikisinin ortası\n           $\\mathrm{MAE} (|e|\\ge \\delta )$",
           "qa": true
         },
         {
@@ -8276,22 +8277,22 @@
         {
           "type": "text",
           "heading": "Classification'da MSE Sorunu",
-          "text": "Binary sınıflandırmada raw output (logit) kullanılırsa MSE doğru tahminleri de cezalandırır. y=5, t=1 → çok confident doğru tahmin, ama (5-1)²=16 büyük ceza. Model bu cezayı azaltmak için y=5 olan noktaya doğru sınırı çekiyor — karar sınırı bozuluyor. Doğru tarafta çok uzak bir outlier kümesi tek başına sınırı tamamen ters çevirebilir."
+          "text": "Binary sınıflandırmada raw output (logit) kullanılırsa MSE doğru tahminleri de cezalandırır. $y=5, t=1$ → çok confident doğru tahmin, ama $(5-1)^{2}=16$ büyük ceza. Model bu cezayı azaltmak için $y=5$ olan noktaya doğru sınırı çekiyor — karar sınırı bozuluyor. Doğru tarafta çok uzak bir outlier kümesi tek başına sınırı tamamen ters çevirebilir."
         },
         {
           "type": "text",
           "heading": "Sigmoid Kısmi Çözüm Getiriyor",
-          "text": "Output'u sigmoid'den geçirince (0,1) aralığına sıkışıyor — y=5 yerine σ(5)≈1 oluyor. MSE: (1-1)²≈0, artık ceza yok. Outlier sınırı çekmiyor."
+          "text": "Output'u sigmoid'den geçirince (0,1) aralığına sıkışıyor — $y=5$ yerine $\\sigma (5)\\approx 1$ oluyor. MSE: $(1-1)^{2}\\approx 0$, artık ceza yok. Outlier sınırı çekmiyor."
         },
         {
           "type": "text",
           "heading": "Ama Sigmoid+MSE Yeni Sorun Getiriyor",
-          "text": "Sigmoid saturate edince gradient σ(z)(1-σ(z))→0. MSE'nin türevinde bu terim kalıyor: dL/dz = (σ(z)-y)·σ(z)(1-σ(z)). Model çok yanlış olsa bile gradient sıfıra yakın — öğrenme durur."
+          "text": "Sigmoid saturate edince gradient $\\sigma (z)(1-\\sigma (z))\\to 0$. MSE'nin türevinde bu terim kalıyor: dL/dz = $(\\sigma (z)-y)\\cdot \\sigma (z)(1-\\sigma (z))$. Model çok yanlış olsa bile gradient sıfıra yakın — öğrenme durur."
         },
         {
           "type": "text",
           "heading": "CE+Sigmoid Her İkisini Çözüyor",
-          "text": "CE loss türevi: dL/dz = σ(z) - y\n\nSigmoid terimi türevde iptal oluyor.\nConfident doğru tahmin → σ(z)≈1, t=1 → gradient≈0  (outlier sınırı çekmiyor)\nYanlış tahmin       → σ(z)≈0, t=1 → gradient≈-1  (güçlü sinyal)",
+          "text": "CE loss türevi: dL/dz = $\\sigma (z) - y$\n\nSigmoid terimi türevde iptal oluyor.\nConfident doğru tahmin → $\\sigma (z)\\approx 1, t=1 \\to \\mathrm{gradient}\\approx 0$  (outlier sınırı çekmiyor)\nYanlış tahmin       → $\\sigma (z)\\approx 0, t=1 \\to \\mathrm{gradient}\\approx -1$  (güçlü sinyal)",
           "qa": true
         }
       ],
@@ -8454,7 +8455,7 @@
     {
       "title": "ROC Curve & AUC",
       "cat": "ML",
-      "summary": "Binary sınıflandırmada threshold'dan bağımsız performans ölçütü. TPR vs FPR eğrisi. AUC=1 mükemmel, AUC=0.5 random. Class imbalance'da accuracy yetersizken AUC güvenilir.",
+      "summary": "Binary sınıflandırmada threshold'dan bağımsız performans ölçütü. TPR vs FPR eğrisi. $\\mathrm{AUC}=1$ mükemmel, $\\mathrm{AUC}=0.5$ random. Class imbalance'da accuracy yetersizken AUC güvenilir.",
       "context": "Practice · ML",
       "sections": [
         {
@@ -8672,13 +8673,13 @@
     {
       "title": "Self-Attention: Q, K, V",
       "cat": "Deep Learning",
-      "summary": "Her token tüm diğer tokenlarla ilişkisini hesaplar — uzun mesafe bağımlılık. Q (sorgu), K (anahtar), V (değer). Attention weight: Q·K^T / sqrt(d), sonra softmax. Çıktı: weighted sum of V.",
+      "summary": "Her token tüm diğer tokenlarla ilişkisini hesaplar — uzun mesafe bağımlılık. Q (sorgu), K (anahtar), V (değer). Attention weight: $Q\\cdot K^{\\top} / \\sqrt{d}$, sonra softmax. Çıktı: weighted sum of V.",
       "context": "Practice · Deep Learning",
       "sections": [
         {
           "type": "text",
           "heading": "",
-          "text": "$Q = X\\cdot Wq, \\quad K = X\\cdot Wk, \\quad V = X\\cdot Wv$\n\nAttention(Q,K,V) = $\\operatorname{softmax}(Q\\cdot K^{\\top} / \\sqrt{d}) \\cdot V$\n\nsqrt(d): dot product büyüyünce softmax saturate eder → scale",
+          "text": "$Q = X\\cdot Wq, \\quad K = X\\cdot Wk, \\quad V = X\\cdot Wv$\n\nAttention(Q,K,V) = $\\operatorname{softmax}(Q\\cdot K^{\\top} / \\sqrt{d}) \\cdot V$\n\n$\\sqrt{d}$: dot product büyüyünce softmax saturate eder → scale",
           "qa": true
         },
         {
@@ -8701,7 +8702,7 @@
     {
       "title": "PCA — Principal Component Analysis",
       "cat": "ML",
-      "summary": "Veriyi en az bilgi kaybıyla düşük boyuta indir. Encode: c = Dᵀx. Optimal D = XᵀX'in en büyük eigenvalue'larının eigenvektörleri. Projeksiyon: Z = X·V_k.",
+      "summary": "Veriyi en az bilgi kaybıyla düşük boyuta indir. Encode: $c = D^{\\top}x$. Optimal $D = X^{\\top}X$'in en büyük eigenvalue'larının eigenvektörleri. Projeksiyon: $Z = X\\cdot V_k$.",
       "context": "Practice · ML",
       "sections": [
         {
@@ -8878,7 +8879,7 @@
     {
       "title": "Positional Encoding",
       "cat": "Deep Learning",
-      "summary": "Self-attention position bilmez — Q·Kᵀ token sırasına duyarsız. Pozisyon bilgisini embedding'e ekle. Sinüzoidal (sabit) veya learned (eğitilebilir). Olmadan 'kedi köpeği ısırdı' ile 'köpek kediyi ısırdı' aynı.",
+      "summary": "Self-attention position bilmez — $Q\\cdot K^{\\top}$ token sırasına duyarsız. Pozisyon bilgisini embedding'e ekle. Sinüzoidal (sabit) veya learned (eğitilebilir). Olmadan 'kedi köpeği ısırdı' ile 'köpek kediyi ısırdı' aynı.",
       "context": "Practice · Deep Learning",
       "sections": [
         {
@@ -8948,7 +8949,7 @@
     {
       "title": "Diffusion Model Sezgisel",
       "cat": "Deep Learning",
-      "summary": "VAE'de tek z latent; diffusion'da T tane: x_1,...,x_T gürültülenmiş versiyonlar. Forward process sabit, reverse process öğreniliyor. Model ε_θ adımda eklenen gürültüyü tahmin ediyor. Loss: MSE.",
+      "summary": "VAE'de tek z latent; diffusion'da T tane: $x_1,\\ldots ,x_T$ gürültülenmiş versiyonlar. Forward process sabit, reverse process öğreniliyor. Model $\\varepsilon _\\theta$ adımda eklenen gürültüyü tahmin ediyor. Loss: MSE.",
       "context": "Practice · Deep Learning",
       "sections": [
         {
@@ -8996,7 +8997,7 @@
     {
       "title": "VAE Loss Türetimi",
       "cat": "Deep Learning",
-      "summary": "ELBO: log p(x) alt sınırı. Reconstruction term + KL term. KL: latent space'i prior'a yaklaştır. Reconstruction: decoder çıktısının veriyi açıklaması. İkisi arasında tradeoff β parametresiyle ayarlanır.",
+      "summary": "ELBO: log $p(x)$ alt sınırı. Reconstruction term + KL term. KL: latent space'i prior'a yaklaştır. Reconstruction: decoder çıktısının veriyi açıklaması. İkisi arasında tradeoff $\\beta$ parametresiyle ayarlanır.",
       "context": "Practice · Deep Learning",
       "sections": [
         {
@@ -9117,7 +9118,7 @@
         {
           "type": "text",
           "heading": "Loss",
-          "text": "GAN loss:   G_AB gerçekçi B üretsin\n            D_B ayırt edemesin\n\nCycle loss: x → G_AB(x) → G_BA(G_AB(x)) ≈ x\n            y → G_BA(y) → G_AB(G_BA(y)) ≈ y\n\nL_total = L_GAN(G_AB) + L_GAN(G_BA) + λ·L_cycle",
+          "text": "GAN loss:   $G_{\\text{AB}}$ gerçekçi B üretsin\n            $D_B$ ayırt edemesin\n\nCycle loss: $x \\to G_{\\text{AB}}(x) \\to G_{\\text{BA}}(G_{\\text{AB}}(x)) \\approx x$\n            $y \\to G_{\\text{BA}}(y) \\to G_{\\text{AB}}(G_{\\text{BA}}(y)) \\approx y$\n\n$L_{\\text{total}} = L_{\\text{GAN}}(G_{\\text{AB}}) + L_{\\text{GAN}}(G_{\\text{BA}}) + \\lambda \\cdot L_{\\text{cycle}}$",
           "qa": true
         },
         {
@@ -9130,7 +9131,7 @@
           "heading": "Örnek Uygulamalar",
           "items": [
             "At → zebra, yaz → kış fotoğraf dönüşümü",
-            "MRI → CT, T1 → T2 medikal modalite dönüşümü",
+            "$\\mathrm{MRI} \\to CT$, T1 → T2 medikal modalite dönüşümü",
             "Boyama → fotoğraf, gündüz → gece"
           ]
         }
@@ -9146,7 +9147,7 @@
         {
           "type": "text",
           "heading": "FedAvg Algoritması",
-          "text": "1. Sunucu global θ'yı gönderir\n2. Her site k: lokal veriyle birkaç adım eğit → θ_k\n3. Sunucu: θ_global = Σ (n_k/n) · θ_k  (ağırlıklı ortalama)\n4. Tekrar et",
+          "text": "1. Sunucu global $\\theta$'yı gönderir\n2. Her site k: lokal veriyle birkaç adım eğit → $\\theta _k$\n3. Sunucu: $\\theta _{\\text{global}} = \\sum (n_k/n) \\cdot \\theta _k$  (ağırlıklı ortalama)\n4. Tekrar et",
           "qa": true
         },
         {
@@ -9170,13 +9171,13 @@
     {
       "title": "Autoregressive Model",
       "cat": "Deep Learning",
-      "summary": "Çıktıyı token token üret, her token önceki tokenlara koşullu. p(x) = Π p(x_i | x_1,...,x_{i-1}). GPT bu prensiple çalışır. Paralel üretim yok — sequential, ama eğitim paralel (teacher forcing).",
+      "summary": "Çıktıyı token token üret, her token önceki tokenlara koşullu. $p(x) = \\prod p(x_i | x_1,\\ldots ,x_{i-1})$. GPT bu prensiple çalışır. Paralel üretim yok — sequential, ama eğitim paralel (teacher forcing).",
       "context": "Practice · Deep Learning",
       "sections": [
         {
           "type": "text",
           "heading": "Temel Formül",
-          "text": "p(x_1, x_2, ..., x_n) = p(x_1) · p(x_2|x_1) · p(x_3|x_1,x_2) · ...\n                       = Π_i p(x_i | x_{<i})\n\nBu chain rule — tam faktörizasyon, varsayım yok.",
+          "text": "$p(x_1, x_2, \\ldots , x_n) = p(x_1) \\cdot p(x_2|x_1) \\cdot p(x_3|x_1,x_2) \\cdot \\ldots$\n                       $= \\prod _i p(x_i | x_{<i})$\n\nBu chain rule — tam faktörizasyon, varsayım yok.",
           "qa": true
         },
         {
@@ -10062,7 +10063,7 @@
     {
       "title": "Backprop — Zincir Kuralı Intuition",
       "cat": "Backprop Teorisi",
-      "summary": "Her operasyonun backward'ı: d_in = upstream * local. Local ne ise ona göre: matris çarpımı, element-wise çarpım veya toplama.",
+      "summary": "Her operasyonun backward'ı: $d_{\\text{in}}$ = upstream * local. Local ne ise ona göre: matris çarpımı, element-wise çarpım veya toplama.",
       "context": "ML Lab · Session 3",
       "sections": [
         {
@@ -10490,7 +10491,7 @@
     {
       "title": "VGGBlock Mimarisi",
       "cat": "VGG16",
-      "summary": "Her VGGBlock: N adet Conv-BN-ReLU + MaxPool. N=2 veya N=3. Derinlik arttıkça channel sayısı ikiye katlanır.",
+      "summary": "Her VGGBlock: N adet Conv-BN-ReLU + MaxPool. $N=2$ veya $N=3$. Derinlik arttıkça channel sayısı ikiye katlanır.",
       "context": "ML Lab · Session 4",
       "sections": [
         {
@@ -10667,7 +10668,7 @@
     {
       "title": "ResNet — Skip Connection",
       "cat": "ResNet18",
-      "summary": "Derin ağlarda gradient vanishing sorununu çözer. x + F(x) — katman değişimi öğrenir, sıfırdan öğrenmez.",
+      "summary": "Derin ağlarda gradient vanishing sorununu çözer. $x + F(x)$ — katman değişimi öğrenir, sıfırdan öğrenmez.",
       "context": "ML Lab · Session 4",
       "sections": [
         {
@@ -11038,7 +11039,7 @@
     {
       "title": "Dropout — Inverted vs Standard",
       "cat": "Regularization",
-      "summary": "Dropout training'de nöronları rastgele sıfırlar. PyTorch inverted dropout kullanır: training'de 1/(1-p) ile scale eder, test'te hiçbir şey yapmaz. model.eval() dropout'u tamamen kapatır.",
+      "summary": "Dropout training'de nöronları rastgele sıfırlar. PyTorch inverted dropout kullanır: training'de $1/(1-p)$ ile scale eder, test'te hiçbir şey yapmaz. model.eval() dropout'u tamamen kapatır.",
       "context": "ML Lab · Session 4",
       "sections": [
         {
@@ -11175,7 +11176,7 @@
     {
       "title": "FCN — VGG'yi Segmentasyon Modeline Dönüştürme",
       "cat": "FCN Mimarisi",
-      "summary": "FC katmanlar spatial bilgiyi yok eder. 1×1 Conv ile değiştirince spatial boyut korunur, herhangi input size çalışır.",
+      "summary": "FC katmanlar spatial bilgiyi yok eder. $1\\times 1$ Conv ile değiştirince spatial boyut korunur, herhangi input size çalışır.",
       "context": "ML Lab · Session 5",
       "sections": [
         {
@@ -11216,7 +11217,7 @@
     {
       "title": "Segmenter — 1×1 Conv İmplementasyonu",
       "cat": "FCN Mimarisi",
-      "summary": "VGG'nin FC katmanlarını 1×1 Conv ile değiştir. Spatial boyut korunur, her pozisyon bağımsız classify edilir.",
+      "summary": "VGG'nin FC katmanlarını $1\\times 1$ Conv ile değiştir. Spatial boyut korunur, her pozisyon bağımsız classify edilir.",
       "context": "ML Lab · Session 5",
       "sections": [
         {
@@ -11240,7 +11241,7 @@
     {
       "title": "Transposed Convolution — Upsampling",
       "cat": "Upsampling",
-      "summary": "Coarse 10×10 feature map'i 320×320'ye büyütme. Araya sıfır ekle + kenara padding + normal conv — learnable kernel ile.",
+      "summary": "Coarse $10\\times 10$ feature map'i $320\\times 320$'ye büyütme. Araya sıfır ekle + kenara padding + normal conv — learnable kernel ile.",
       "context": "ML Lab · Session 5",
       "sections": [
         {
@@ -11308,7 +11309,7 @@
     {
       "title": "Checkerboard Artifact",
       "cat": "Upsampling",
-      "summary": "Transposed conv kernel çok küçükse 10×10 grid pattern output'ta görünür. Kernel ≥ 2×stride olmalı — komşu hücreler örtüşsün.",
+      "summary": "Transposed conv kernel çok küçükse $10\\times 10$ grid pattern output'ta görünür. Kernel ≥ $2\\times \\mathrm{stride}$ olmalı — komşu hücreler örtüşsün.",
       "context": "ML Lab · Session 5",
       "sections": [
         {
@@ -12159,7 +12160,7 @@
     {
       "title": "Task 2 & 3 — Training Loop",
       "cat": "Eğitim",
-      "summary": "Model noisy görüntüden temiz görüntüyü tahmin eder. Loss: MSE(pred, clean_x). Input: bozulmuş görüntü. Output: temiz görüntü tahmini.",
+      "summary": "Model noisy görüntüden temiz görüntüyü tahmin eder. Loss: MSE(pred, $\\mathrm{clean}_x$). Input: bozulmuş görüntü. Output: temiz görüntü tahmini.",
       "context": "ML Lab · Session 7",
       "sections": [
         {
@@ -12188,7 +12189,7 @@
     {
       "title": "BasicUNet — Minimal UNet Implementasyonu",
       "cat": "Mimari",
-      "summary": "3 encoder katman (5×5 Conv + SiLU + MaxPool) + 3 decoder katman (5×5 Conv + SiLU + Upsample), skip connection'lar += ile. ~309K parametre. Timestep conditioning yok.",
+      "summary": "3 encoder katman ($5\\times 5$ Conv + SiLU + MaxPool) + 3 decoder katman ($5\\times 5$ Conv + SiLU + Upsample), skip connection'lar $+=$ ile. $\\sim 309K$ parametre. Timestep conditioning yok.",
       "context": "ML Lab · Session 7",
       "sections": [
         {
@@ -12243,7 +12244,7 @@
     {
       "title": "Task 4 — Sampling (Toy)",
       "cat": "Sampling",
-      "summary": "Saf gürültüden başla, modelin tahminini kullanarak iteratif olarak temizleştir. Her adımda mevcut x ile tahmin arasında mix_factor kadar adım at.",
+      "summary": "Saf gürültüden başla, modelin tahminini kullanarak iteratif olarak temizleştir. Her adımda mevcut x ile tahmin arasında $\\mathrm{mix}_{\\text{factor}}$ kadar adım at.",
       "context": "ML Lab · Session 7",
       "sections": [
         {
@@ -12279,7 +12280,7 @@
     {
       "title": "Task 5 — DDPM Noise Schedule",
       "cat": "DDPM",
-      "summary": "beta_t (1e-4 → 0.02) lineer schedule. alpha_t = 1-beta_t. alphabar_t = kümülatif çarpım. sqrtab ve sqrtmab forward process'te x_t hesaplamak için kullanılır.",
+      "summary": "$\\beta _t$ (1e-4 → 0.02) lineer schedule. $\\alpha _t = 1-\\beta _t. \\mathrm{alphabar}_t$ = kümülatif çarpım. sqrtab ve sqrtmab forward process'te $x_t$ hesaplamak için kullanılır.",
       "context": "ML Lab · Session 7",
       "sections": [
         {
@@ -12426,7 +12427,7 @@
     {
       "title": "HuggingFace diffusers — DDPMScheduler & UNet2DModel",
       "cat": "Kütüphane",
-      "summary": "diffusers kütüphanesi DDPM scheduler ve gelişmiş UNet2DModel sağlıyor. ~1.7M parametre, GroupNorm, Dropout, Attention, learnable up/downsampling, timestep conditioning.",
+      "summary": "diffusers kütüphanesi DDPM scheduler ve gelişmiş UNet2DModel sağlıyor. $\\sim 1.7M$ parametre, GroupNorm, Dropout, Attention, learnable up/downsampling, timestep conditioning.",
       "context": "ML Lab · Session 7",
       "sections": [
         {
@@ -12462,7 +12463,7 @@
     {
       "title": "DDPM — Matematiksel Özet: Forward, Reverse, ε Prediction ve L_simple",
       "cat": "Diffusion",
-      "summary": "DDPM'in tüm matematiksel yapısı: forward process, Bayes ile türetilen reverse posterior, x_0'dan bağımsız ε reparametrizasyonu ve neden L_simple + ε en iyi çalıştığı (Table 2 ablation).",
+      "summary": "DDPM'in tüm matematiksel yapısı: forward process, Bayes ile türetilen reverse posterior, $x_0$'dan bağımsız $\\varepsilon$ reparametrizasyonu ve neden $L_{\\text{simple}} + \\varepsilon$ en iyi çalıştığı (Table 2 ablation).",
       "context": "ML Lab · Session 7 — DDPM Paper (Ho et al. 2020) Unified Derivation",
       "sections": [
         {
@@ -12482,9 +12483,10 @@
           "qa": true
         },
         {
-          "type": "code",
+          "type": "text",
           "heading": "Neden $\\varepsilon + L_{\\text{simple}}$ En İyi? (DDPM Table 2)",
-          "text": "Full ELBO'da her parameterizasyon için timestep katsayısı var:\n\n  SNR(t) = ᾱ_t / (1-ᾱ_t)\n\n  x_0 prediction: λ_x0 = (1/2)(SNR(t-1) - SNR(t))\n  ε prediction:   λ_ε  = (1-α_t)² / (2σ_q²(t)·α_t·(1-ᾱ_t))\n  μ prediction:   λ_μ  = 1/(2σ_t²) · (türetilmiş μ̃_t farkı)\n\nt büyüdükçe SNR azalıyor → katsayılar küçülüyor.\n\nFull ELBO vs L_simple (CIFAR10, Table 2):\n\n                    Full ELBO      L_simple\n  x_0 prediction:  kötü*          —\n  μ prediction:    FID 13.22      unstable\n  ε prediction:    FID 13.51      FID 3.17  ← en iyi\n\n* \"predicting x_0 led to worse sample quality\" (DDPM paper)\n\nFull ELBO'da μ ≈ ε — aynı KL, parameterizasyon fark etmiyor.\nL_simple ile katsayı drop edilince μ unstable oluyor.\nε + L_simple'ın reweighting'i küçük t'yi down-weight ediyor\n→ network büyük t'deki zor görevlere odaklanıyor → daha iyi sample quality.\n\n\"it is just another parameterization of p_θ(x_{t-1}|x_t)\"\n— ε teorik üstünlük değil, L_simple ile kombinasyonu iyi çalışıyor."
+          "text": "Full ELBO'da her parameterizasyon için timestep katsayısı var:\n\n  $\\mathrm{SNR}(t) = \\bar{\\alpha }_t / (1-\\bar{\\alpha }_t)$\n\n  $x_0$ prediction: $\\lambda _{x0}$ = (1/2)(SNR(t-1) - SNR(t))\n  $\\varepsilon$ prediction:   $\\lambda _\\varepsilon \\quad = (1-\\alpha _t)^{2} / (2\\sigma _q^{2}(t)\\cdot \\alpha _t\\cdot (1-\\bar{\\alpha }_t))$\n  $\\mu$ prediction:   $\\lambda _\\mu \\quad = 1/(2\\sigma _t^{2})$ · (türetilmiş $\\tilde{\\mu }_t$ farkı)\n\nt büyüdükçe SNR azalıyor → katsayılar küçülüyor.\n\nFull ELBO vs $L_{\\text{simple}}$ (CIFAR10, Table 2):\n\n                    Full ELBO      L_simple\n  x_0 prediction:  kötü*          —\n  μ prediction:    FID 13.22      unstable\n  ε prediction:    FID 13.51      FID 3.17  ← en iyi\n\n* \"predicting $x_0$ led to worse sample quality\" (DDPM paper)\n\nFull ELBO'da $\\mu \\approx \\varepsilon$ — aynı KL, parameterizasyon fark etmiyor.\n$L_{\\text{simple}}$ ile katsayı drop edilince $\\mu$ unstable oluyor.\n$\\varepsilon + L_{\\text{simple}}$'ın reweighting'i küçük t'yi down-weight ediyor\n→ network büyük t'deki zor görevlere odaklanıyor → daha iyi sample quality.\n\n\"it is just another parameterization of p_θ(x_{t-1}|x_t)\"\n— $\\varepsilon$ teorik üstünlük değil, $L_{\\text{simple}}$ ile kombinasyonu iyi çalışıyor.",
+          "qa": true
         }
       ],
       "id": "lab07-ddpm-matematiksel-ozet-forward-reverse-prediction-ve-l-simpl"
@@ -12627,7 +12629,7 @@
     {
       "title": "CLIP Yükleme — Task 3",
       "cat": "CLIP",
-      "summary": "open_clip kütüphanesi ile ViT-B-16 backbone, laion400m_e32 pretrained weights. model.visual → image encoder (ViT), model.encode_text → text encoder. Tokenizer ayrıca yükleniyor.",
+      "summary": "open_clip kütüphanesi ile ViT-B-16 backbone, $\\mathrm{laion}400m_{e32}$ pretrained weights. model.visual → image encoder (ViT), $\\mathrm{model}.\\mathrm{encode}_{\\text{text}}$ → text encoder. Tokenizer ayrıca yükleniyor.",
       "context": "ML Lab · Session 8 (Lab 8)",
       "sections": [
         {
@@ -12846,7 +12848,7 @@
     {
       "title": "MultiHeadAttention — Implementasyon",
       "cat": "Attention",
-      "summary": "h head paralel scaled dot-product attention. (N,S,E) → h head'e böl → (N,h,S,E/h) → QKᵀ/√(E/h) → softmax → dropout → V ile çarp → concat → project.",
+      "summary": "h head paralel scaled dot-product attention. (N,S,E) → h head'e böl → (N,h,S,E/h) → $QK^{\\top}/\\sqrt{E/h}$ → softmax → dropout → V ile çarp → concat → project.",
       "context": "Stanford CS231n · A3 · transformer_layers.py",
       "sections": [
         {
@@ -12957,7 +12959,7 @@
     {
       "title": "Vision Transformer (ViT) — PatchEmbedding + TransformerEncoderLayer",
       "cat": "ViT",
-      "summary": "Görüntüyü 16×16 patch'lere böl, her patch'i linear projection ile embed et, Transformer encoder'dan geçir, average pool ile sınıflandır. CNN inductive bias yok — tüm ilişkiler self-attention ile öğrenilir.",
+      "summary": "Görüntüyü $16\\times 16$ patch'lere böl, her patch'i linear projection ile embed et, Transformer encoder'dan geçir, average pool ile sınıflandır. CNN inductive bias yok — tüm ilişkiler self-attention ile öğrenilir.",
       "context": "Stanford CS231n · A3 · transformer_layers.py",
       "sections": [
         {
@@ -13003,7 +13005,7 @@
     {
       "title": "Inline Sorular — Tasarım Kararları",
       "cat": "Theory",
-      "summary": "Neden birden fazla head? Neden √(d/h) ile scale? ViT neden küçük veriyle zayıf? Self-attention computational cost nasıl ölçeklenir?",
+      "summary": "Neden birden fazla head? Neden $\\sqrt{d/h}$ ile scale? ViT neden küçük veriyle zayıf? Self-attention computational cost nasıl ölçeklenir?",
       "context": "Stanford CS231n · A3 · Transformer_Captioning.ipynb",
       "sections": [
         {
@@ -13263,7 +13265,7 @@
     {
       "title": "Regularization",
       "cat": "CS231n",
-      "summary": "Regularization penalizes model complexity to prevent overfitting. The full loss L = data_loss + lambda * R(W) balances fit to training data with generalization.",
+      "summary": "Regularization penalizes model complexity to prevent overfitting. The full loss L = data_loss + $\\lambda \\cdot R(W)$ balances fit to training data with generalization.",
       "context": "CS231n Lecture 3 · Stanford",
       "sections": [
         {
@@ -14116,7 +14118,7 @@
     {
       "title": "LSTM — Long Short-Term Memory",
       "cat": "CS231n",
-      "summary": "LSTM adds a separate cell state c_t with additive updates. Three gates (forget, input, output) control information flow. The cell state creates a gradient highway enabling learning of very long-range dependencies.",
+      "summary": "LSTM adds a separate cell state $c_t$ with additive updates. Three gates (forget, input, output) control information flow. The cell state creates a gradient highway enabling learning of very long-range dependencies.",
       "context": "CS231n Lecture 7 · Stanford",
       "sections": [
         {
@@ -14543,7 +14545,7 @@
     {
       "title": "Video as Data — Representation & Scale Problem",
       "cat": "Video Understanding",
-      "summary": "Video = 4D tensor T×3×H×W. Temporal dimension eklenince veri boyutu patlıyor: SD=1.5GB/min, HD=10GB/min. Çözüm: kısa clip'lerde train et.",
+      "summary": "Video = 4D tensor $T\\times 3\\times H\\times W$. Temporal dimension eklenince veri boyutu patlıyor: $SD=1.5GB/\\min, HD=10GB/\\min$. Çözüm: kısa clip'lerde train et.",
       "context": "CS231n · Lecture 10",
       "sections": [
         {
@@ -14657,7 +14659,7 @@
     {
       "title": "C3D — The VGG of 3D CNNs",
       "cat": "Video Understanding",
-      "summary": "C3D: VGG'nin 3D video versiyonu. Tüm 3×3×3 conv, 2×2×2 pooling. Sports-1M pretrain ile güçlü feature extractor. Problem: 39.5 GFLOP (VGG'nin 2.9 katı).",
+      "summary": "C3D: VGG'nin 3D video versiyonu. Tüm $3\\times 3\\times 3$ conv, $2\\times 2\\times 2$ pooling. Sports-1M pretrain ile güçlü feature extractor. Problem: 39.5 GFLOP (VGG'nin 2.9 katı).",
       "context": "CS231n · Lecture 10",
       "sections": [
         {
@@ -14754,7 +14756,7 @@
     {
       "title": "Long-Term Temporal Structure — CNN+LSTM & Recurrent CNN",
       "cat": "Video Understanding",
-      "summary": "3D CNN ve Two-Stream sadece ~5 saniyelik yerel hareketi görüyor. Uzun vadeli yapı için: CNN per-clip feature extraction + LSTM temporal integration.",
+      "summary": "3D CNN ve Two-Stream sadece $\\sim 5$ saniyelik yerel hareketi görüyor. Uzun vadeli yapı için: CNN per-clip feature extraction + LSTM temporal integration.",
       "context": "CS231n · Lecture 10",
       "sections": [
         {
@@ -14808,7 +14810,7 @@
     {
       "title": "Spatio-Temporal Self-Attention — Nonlocal Block",
       "cat": "Video Understanding",
-      "summary": "3D CNN içine self-attention ekleme. Nonlocal Block: T×H×W'daki her konum her diğer konuma attend edebilir. Uzun mesafeli spatio-temporal bağımlılık.",
+      "summary": "3D CNN içine self-attention ekleme. Nonlocal Block: $T\\times H\\times W$'daki her konum her diğer konuma attend edebilir. Uzun mesafeli spatio-temporal bağımlılık.",
       "context": "CS231n · Lecture 10",
       "sections": [
         {
@@ -14832,7 +14834,7 @@
     {
       "title": "I3D — Inflating 2D Networks to 3D",
       "cat": "Video Understanding",
-      "summary": "ImageNet için optimize edilmiş 2D mimarileri 3D'ye 'şişir'. Her K_h×K_w katmanı K_t×K_h×K_w yapılır. 2D ağırlıkları başlangıç noktası olarak kullanılabilir.",
+      "summary": "ImageNet için optimize edilmiş 2D mimarileri 3D'ye 'şişir'. Her $K_h\\times K_w$ katmanı $K_t\\times K_h\\times K_w$ yapılır. 2D ağırlıkları başlangıç noktası olarak kullanılabilir.",
       "context": "CS231n · Lecture 10",
       "sections": [
         {
@@ -15788,7 +15790,7 @@
     {
       "title": "SimCLR — Simple Contrastive Learning",
       "cat": "Self-Supervised",
-      "summary": "Chen et al. 2020. Encoder f → representation h → projection g → contrastive space z. 2N örneklik mini-batch, 2N×2N affinity matrisi. Büyük batch (8192), güçlü augmentation, non-linear projection head.",
+      "summary": "Chen et al. 2020. Encoder f → representation h → projection g → contrastive space z. 2N örneklik mini-batch, $2N\\times 2N$ affinity matrisi. Büyük batch (8192), güçlü augmentation, non-linear projection head.",
       "context": "CS231n · Lecture 12",
       "sections": [
         {
@@ -15866,7 +15868,7 @@
     {
       "title": "MoCo — Momentum Contrastive Learning",
       "cat": "Self-Supervised",
-      "summary": "He et al. 2020. Query encoder + momentum encoder. FIFO queue: çok sayıda negative örnek, batch size'dan bağımsız. θ_k ← mθ_k + (1-m)θ_q. MoCo v2: SimCLR fikirlerini dahil et.",
+      "summary": "He et al. 2020. Query encoder + momentum encoder. FIFO queue: çok sayıda negative örnek, batch size'dan bağımsız. $\\theta _k$ ← $m\\theta _k + (1-m)\\theta _q$. MoCo v2: SimCLR fikirlerini dahil et.",
       "context": "CS231n · Lecture 12",
       "sections": [
         {
@@ -16139,7 +16141,7 @@
     {
       "title": "Supervised vs Unsupervised Learning",
       "cat": "Generative Models",
-      "summary": "Supervised learning maps inputs to labels; unsupervised learning discovers hidden structure in raw data without labels. Generative models are the core of unsupervised learning — they model the data distribution p(x) itself.",
+      "summary": "Supervised learning maps inputs to labels; unsupervised learning discovers hidden structure in raw data without labels. Generative models are the core of unsupervised learning — they model the data distribution $p(x)$ itself.",
       "context": "CS231n · Lecture 13 · May 15, 2025",
       "sections": [
         {
@@ -16270,7 +16272,7 @@
     {
       "title": "Autoregressive Models: Chain Rule of Probability",
       "cat": "Generative Models",
-      "summary": "Autoregressive models factorize p(x) as a product of conditionals using the chain rule. Each element is predicted given all previous ones — forming a tractable explicit density model.",
+      "summary": "Autoregressive models factorize $p(x)$ as a product of conditionals using the chain rule. Each element is predicted given all previous ones — forming a tractable explicit density model.",
       "context": "CS231n · Lecture 13 · May 15, 2025",
       "sections": [
         {
@@ -16352,7 +16354,7 @@
     {
       "title": "VAE: Setup, Latent Space, and Bayesian Formulation",
       "cat": "Generative Models",
-      "summary": "VAEs put a probabilistic prior on the latent space, enabling both learning and sampling. The key insight is to train an encoder network q_φ(z|x) to approximate the intractable true posterior p_θ(z|x).",
+      "summary": "VAEs put a probabilistic prior on the latent space, enabling both learning and sampling. The key insight is to train an encoder network $q_\\phi (z|x)$ to approximate the intractable true posterior $p_\\theta (z|x)$.",
       "context": "CS231n · Lecture 13 · May 15, 2025 · Kingma and Welling, ICLR 2014",
       "sections": [
         {
@@ -16386,7 +16388,7 @@
     {
       "title": "VAE Decoder: Predicted Mean, L2 ve z İntegral Sorunu",
       "cat": "Generative Models",
-      "summary": "Decoder bir Gaussian'ın ortalamasını (predicted mean) üretir — direkt x değil. Her x için ayrı z ve μ hesaplanır, L2 loss tüm pixeller üzerinden tek scalar'a indirilir. Integral alınamaz çünkü z tıpkı bir network'e girebilecek sonsuz olası input gibidir.",
+      "summary": "Decoder bir Gaussian'ın ortalamasını (predicted mean) üretir — direkt x değil. Her x için ayrı z ve $\\mu$ hesaplanır, L2 loss tüm pixeller üzerinden tek scalar'a indirilir. Integral alınamaz çünkü z tıpkı bir network'e girebilecek sonsuz olası input gibidir.",
       "context": "CS231n · Lecture 13 · May 15, 2025",
       "sections": [
         {
@@ -16422,7 +16424,7 @@
     {
       "title": "VAE ELBO: Evidence Lower Bound Derivation",
       "cat": "Generative Models",
-      "summary": "The ELBO (Evidence Lower BOund) is derived by introducing the encoder distribution q_φ(z|x), multiplying by 1, taking expectations, and dropping a non-negative KL term. It decomposes into reconstruction quality minus prior regularization.",
+      "summary": "The ELBO (Evidence Lower BOund) is derived by introducing the encoder distribution $q_\\phi (z|x)$, multiplying by 1, taking expectations, and dropping a non-negative KL term. It decomposes into reconstruction quality minus prior regularization.",
       "context": "CS231n · Lecture 13 · May 15, 2025",
       "sections": [
         {
@@ -16450,7 +16452,7 @@
     {
       "title": "VAE Training: Reparameterization Trick and Two-Term Loss",
       "cat": "Generative Models",
-      "summary": "VAE training involves encoding x to a distribution, sampling z via the reparameterization trick (ε ~ N(0,I), z = ε⊙σ + μ), decoding z, and balancing reconstruction loss against KL prior regularization.",
+      "summary": "VAE training involves encoding x to a distribution, sampling z via the reparameterization trick $(\\varepsilon \\sim \\mathcal{N}(0,I), z = \\varepsilon \\odot \\sigma + \\mu )$, decoding z, and balancing reconstruction loss against KL prior regularization.",
       "context": "CS231n · Lecture 13 · May 15, 2025",
       "sections": [
         {
@@ -16682,7 +16684,7 @@
     {
       "title": "KL Divergence Yönü — P||Q Mass-Covering, Q||P Mode-Seeking",
       "cat": "Generative Models",
-      "summary": "D_KL(P||Q) ve D_KL(Q||P) farklı davranış üretiyor. P||Q: Q, P'nin her yerini kapsamak zorunda — geniş, yayvan. Q||P: Q, P'nin sıfır olduğu yerlerden kaçmak zorunda — dar, bir modu seçiyor. İki Gaussian örneğiyle somutlaşıyor.",
+      "summary": "$D_{\\text{KL}}(P\\|Q)$ ve $D_{\\text{KL}}(Q\\|P)$ farklı davranış üretiyor. $P\\|Q: Q$, P'nin her yerini kapsamak zorunda — geniş, yayvan. $Q\\|P: Q$, P'nin sıfır olduğu yerlerden kaçmak zorunda — dar, bir modu seçiyor. İki Gaussian örneğiyle somutlaşıyor.",
       "context": "CS231n · Generative Models",
       "sections": [
         {
@@ -16733,7 +16735,7 @@
     {
       "title": "VAE'de KL Yönü — Neden D_KL(q||p) Kullanılıyor?",
       "cat": "Generative Models",
-      "summary": "VAE ELBO'daki KL terimi D_KL(q(z|x)||p(z)) — encoder başa yazılıyor. Mode-seeking davranış üretiyor: encoder prior'ın desteklediği bölgelere sıkışmak zorunda. P||Q kullansaydık prior'ın tüm alanını kapsamaya çalışırdı — bu istenmeyen bir davranış.",
+      "summary": "VAE ELBO'daki KL terimi $D_{\\text{KL}}(q(z|x)\\|p(z))$ — encoder başa yazılıyor. Mode-seeking davranış üretiyor: encoder prior'ın desteklediği bölgelere sıkışmak zorunda. P||Q kullansaydık prior'ın tüm alanını kapsamaya çalışırdı — bu istenmeyen bir davranış.",
       "context": "CS231n · Generative Models",
       "sections": [
         {
@@ -16765,7 +16767,7 @@
     {
       "title": "MLE, MAP, VAE — Aradığım Şey Ne? Prior Kimin Üzerinde?",
       "cat": "Generative Models",
-      "summary": "MLE her zaman aynı soruyu sorar: gördüğümü en olası kılan aradığım nedir? ML kursunda aranan mu, EE499'da sinyal x, VAE'de network ağırlıkları theta/phi. z VAE'de hiç 'bulunmuyor' — integrate ediliyor. MAP için prior, tahmin ettiğin şeyin üzerinde olmalı: p(theta). p(z) olması MAP yapmıyor. Weight decay = Gaussian prior ile MAP.",
+      "summary": "MLE her zaman aynı soruyu sorar: gördüğümü en olası kılan aradığım nedir? ML kursunda aranan mu, EE499'da sinyal x, VAE'de network ağırlıkları theta/phi. z VAE'de hiç 'bulunmuyor' — integrate ediliyor. MAP için prior, tahmin ettiğin şeyin üzerinde olmalı: p(theta). $p(z)$ olması MAP yapmıyor. Weight decay = Gaussian prior ile MAP.",
       "context": "CS231n · Generative Models",
       "sections": [
         {
@@ -16986,7 +16988,7 @@
     {
       "title": "GAN Theory: Optimal Discriminator and Convergence Analysis",
       "cat": "Generative Models",
-      "summary": "At any fixed G, the optimal discriminator D* is the density ratio p_data/(p_data + p_G). Plugging D* into the objective reveals the generator minimizes Jensen-Shannon divergence — but only with caveats.",
+      "summary": "At any fixed G, the optimal discriminator D* is the density ratio $p_{\\text{data}}/(p_{\\text{data}} + p_G)$. Plugging D* into the objective reveals the generator minimizes Jensen-Shannon divergence — but only with caveats.",
       "context": "CS231n · Lecture 14 · May 20, 2025",
       "sections": [
         {
@@ -17112,7 +17114,7 @@
     {
       "title": "Noise Schedules: Optimal Prediction Analysis",
       "cat": "Generative Models",
-      "summary": "Uniform sampling over t gives equal weight to all noise levels, but middle noise levels (t≈0.5) are the hardest to predict. Logit-normal sampling concentrates training effort on the difficult middle region, improving model quality.",
+      "summary": "Uniform sampling over t gives equal weight to all noise levels, but middle noise levels $(t\\approx 0.5)$ are the hardest to predict. Logit-normal sampling concentrates training effort on the difficult middle region, improving model quality.",
       "context": "CS231n · Lecture 14 · May 20, 2025 · Esser et al. arXiv 2024",
       "sections": [
         {
@@ -17229,7 +17231,7 @@
     {
       "title": "Generalized Diffusion: VP, VE, Score Functions, and SDEs",
       "cat": "Generative Models",
-      "summary": "Rectified Flow is a special case of a generalized diffusion framework parameterized by schedule functions a(t), b(t). Different choices give Variance-Preserving (VP-diffusion), Variance-Exploding (VE-diffusion), or Rectified Flow. All three perspectives — latent variable model, score function, and SDE — describe the same process.",
+      "summary": "Rectified Flow is a special case of a generalized diffusion framework parameterized by schedule functions $a(t), b(t)$. Different choices give Variance-Preserving (VP-diffusion), Variance-Exploding (VE-diffusion), or Rectified Flow. All three perspectives — latent variable model, score function, and SDE — describe the same process.",
       "context": "CS231n · Lecture 14 · May 20, 2025 · Song et al. ICLR 2021; Ho et al. NeurIPS 2020",
       "sections": [
         {
@@ -17319,7 +17321,7 @@
     {
       "title": "NeRF — Neural Radiance Fields",
       "cat": "3D Vision",
-      "summary": "Sahneyi implicit neural function olarak temsil et. (x,y,z,θ,φ) → (RGB, density). Novel view synthesis.",
+      "summary": "Sahneyi implicit neural function olarak temsil et. $(x,y,z,\\theta ,\\phi )$ → (RGB, density). Novel view synthesis.",
       "context": "CS231n · Lecture 15",
       "sections": [
         {
@@ -21801,7 +21803,7 @@
     {
       "title": "Conditional Probability & Bayes Rule",
       "cat": "Conditional Probability",
-      "summary": "Conditional probability updates beliefs after observing evidence. Bayes rule reverses the conditioning — from P(B|A) to P(A|B). P(A) is the prior, P(A|B) is the posterior.",
+      "summary": "Conditional probability updates beliefs after observing evidence. Bayes rule reverses the conditioning — from $P(B|A)$ to $P(A|B)$. $P(A)$ is the prior, $P(A|B)$ is the posterior.",
       "context": "Math · Probability & Statistics",
       "sections": [
         {
@@ -22084,7 +22086,7 @@
     {
       "title": "MLE Çalışılmış Örnekler — Bernoulli, Exponential, Uniform",
       "cat": "Statistics",
-      "summary": "Pick the parameter θ that makes the observed data most probable. Log-likelihood trick turns products into sums. MLE of Bernoulli = sample frequency, MLE of Exponential = 1/sample mean.",
+      "summary": "Pick the parameter $\\theta$ that makes the observed data most probable. Log-likelihood trick turns products into sums. MLE of Bernoulli = sample frequency, MLE of Exponential = 1/sample mean.",
       "context": "Math · Probability & Statistics",
       "sections": [
         {
@@ -22118,7 +22120,7 @@
     {
       "title": "Bias & Variance of Estimators",
       "cat": "Statistics",
-      "summary": "An estimator θ̂ is a function of random data, so it's itself an RV. Bias = E[θ̂] − θ. Variance = how much θ̂ depends on which data was drawn. MSE = Bias² + Variance.",
+      "summary": "An estimator $\\hat{\\theta }$ is a function of random data, so it's itself an RV. Bias = $\\mathbb{E}[\\hat{\\theta }]$ − $\\theta$. Variance = how much $\\hat{\\theta }$ depends on which data was drawn. $\\mathrm{MSE} = \\mathrm{Bias}^{2}$ + Variance.",
       "context": "Math · Probability & Statistics",
       "sections": [
         {

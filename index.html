@@ -2014,10 +2014,8 @@ function showPopup(item, cc){
     </div>
     ${item.summary ? `<p class="popup-summary">${esc(item.summary)}</p>` : ''}
     <hr class="popup-divider">
-    ${body}
-    <button class="popup-close-btn" id="pc-close">Close</button>`;
+    ${body}`;
   $('popupOverlay').classList.add('show');
-  $('pc-close').onclick = hidePopup;
   if(typeof renderMathInElement === 'function'){
     renderMathInElement($('popupBox'),{
       delimiters:[
