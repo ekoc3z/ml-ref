@@ -480,6 +480,10 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .sec-text{line-height:1.95}
 .sec-block-qa .sec-text{line-height:2.05}
 .sec-text .katex-display{margin:.6em 0}
+/* tek basina duran formul satiri: ortali, biraz buyuk */
+.eq-line{display:block;text-align:center;margin:.55em 0}
+.eq-line+.eq-line{margin-top:.15em}
+.eq-line .katex{margin:0;font-size:1.18em}
 [data-theme="light"] .sec-text .katex{font-size:1.1em}
 
 /* Math cards — Notion-like flow, no boxes */
@@ -1987,8 +1991,15 @@ function renderGridCards(sec){
 /* ==================== RENDER SECTIONS ==================== */
 /* Duzyazi: \n\n -> yeni paragraf, tek \n -> satir sonu. */
 function paras(txt){
-  return String(txt||'').split(/\n\s*\n/).map(p=>p.trim()).filter(Boolean)
-    .map(p=>`<p class="sec-text">${esc(p).replace(/\n/g,'<br>')}</p>`).join('');
+  return String(txt||'').split(/\n\s*\n/).map(p=>p.trim()).filter(Boolean).map(p=>{
+    let html = '', prevEq = false;
+    p.split('\n').forEach((ln,i)=>{
+      const lone = /^\s*\$\$?[^$]+\$\$?\s*$/.test(ln);   // satir SADECE formulse -> ortala
+      if(lone){ html += `<span class="eq-line">${esc(ln.trim())}</span>`; prevEq = true; }
+      else { if(i>0 && !prevEq) html += '<br>'; html += esc(ln); prevEq = false; }
+    });
+    return `<p class="sec-text">${html}</p>`;
+  }).join('');
 }
 function renderSection(s){
   const h = s.heading ? `<div class="sec-heading">${esc(s.heading)}</div>` : '';
