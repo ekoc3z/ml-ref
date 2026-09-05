@@ -519,9 +519,10 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
     <button id="sidebar-close" onclick="closeSidebar()">&#10005;</button>
   </div>
 
+  <div class="course-divider">ML · Machine Learning</div>
   <button class="nav-btn" data-sec="summary" onclick="switchSection('summary');closeSidebar()" style="border-left:3px solid var(--accent);margin-bottom:8px">
     <span class="nav-icon">📖</span><span class="nav-num" style="font-size:.6rem">ÖZT</span>
-    <span class="nav-label">Ders Özeti</span>
+    <span class="nav-label">ML Özeti</span>
   </button>
 
   <button class="nav-btn" data-sec="ch01" onclick="switchSection('ch01');closeSidebar()">
@@ -1733,7 +1734,6 @@ function switchSection(sec){
   document.querySelectorAll('.section-header').forEach(h => h.classList.remove('active'));
   $('hdr-'+sec).classList.add('active');
   document.querySelectorAll('.toc.open').forEach(t => t.classList.remove('open'));
-  const tc = $('toc-'+sec); if(tc) tc.classList.add('open');
   showOverview(sec);
   render();
   const isSummary = sec === 'summary';
@@ -2229,7 +2229,7 @@ function buildToc(){
   document.querySelectorAll('.toc').forEach(t => t.remove());
   document.querySelectorAll('.nav-btn[data-sec]').forEach(btn => {
     const sec = btn.dataset.sec; const cards = DATA[sec]; if(!cards || !cards.length) return;
-    const box = document.createElement('div'); box.className = 'toc' + (sec===SEC?' open':''); box.id = 'toc-'+sec;
+    const box = document.createElement('div'); box.className = 'toc'; box.id = 'toc-'+sec;
     cards.forEach(c => {
       const a = document.createElement('a'); a.className = 'toc-item'; a.href = '#'; a.textContent = c.title;
       a.onclick = (e) => { e.preventDefault(); if(SEC!==sec) switchSection(sec); closeSidebar();
