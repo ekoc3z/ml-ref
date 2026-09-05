@@ -23091,7 +23091,10 @@
         "ch02-loss-functions-and-the-reject-option",
         "ch02-three-approaches-to-classification",
         "ch03-the-gaussian-distribution",
-        "vs04-gaussian-dagilim-neden-her-yerde"
+        "vs04-gaussian-dagilim-neden-her-yerde",
+        "vs04-random-variable",
+        "vs04-expectation-variance",
+        "vs04-covariance-correlation"
       ]
     },
     {
@@ -23122,6 +23125,7 @@
         "math06-bias-variance-of-estimators",
         "vs04-overfitting-regularization",
         "vs04-overfitting-underfitting-teshisi",
+        "vs04-outlier-lara-karsi-robustness",
         "vs04-l1-vs-l2-regularization",
         "ch08-regularization-ve-weight-decay",
         "ch08-regularisation-and-initialisation",
@@ -23213,6 +23217,10 @@
       "key": "mlo11",
       "title": "PCA, Eigendecomposition & Dimensionality Reduction",
       "cards": [
+        "vs04-column-space-row-space-null-space",
+        "vs04-ax-b-cozum-var-mi-unique-mi",
+        "vs04-eigenvalue-eigenvector",
+        "vs04-svd-a-udvt",
         "vs01-eigendecomposition-a-qqt-ve-eigenvektor-bazi",
         "vs01-pca-teori-turetme-ve-eigenvektor-baglantisi",
         "vs04-pca-principal-component-analysis",
@@ -23258,6 +23266,7 @@
         "vs04-dropout-train-vs-inference",
         "vs04-weight-initialization",
         "vs04-gradient-problemleri",
+        "vs04-federated-learning",
         "lab04-batchnorm-neden-var-intuition",
         "lab04-dropout-inverted-vs-standard"
       ]
@@ -23417,6 +23426,7 @@
         "cs13-gan-theory-optimal-discriminator-and-convergence-analysis",
         "cs13-gan-architectures-dc-gan-and-stylegan",
         "vs04-gan-nasil-calisir",
+        "vs04-cycle-consistent-learning",
         "lab06-gan-temelleri-generator-ve-discriminator",
         "lab06-gan-loss-minimax-hedefi",
         "lab06-gan-training-loop-donusumlu-guncelleme",
@@ -23434,6 +23444,7 @@
       "key": "mlo21",
       "title": "Diffusion Models",
       "cards": [
+        "vs04-autoregressive-model",
         "vs04-diffusion-model-sezgisel",
         "ida11-lecture-11-q-a",
         "ida11-denoising-diffusion-probabilistic-models-overview",
