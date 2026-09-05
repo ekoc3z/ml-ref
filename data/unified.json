@@ -23066,7 +23066,7 @@
   "mlo": [
     {
       "key": "mlo01",
-      "title": "Öğrenme Problemi",
+      "title": "The Learning Problem",
       "cards": [
         "ch01-what-is-machine-learning",
         "ch01-types-of-learning",
@@ -23075,7 +23075,7 @@
     },
     {
       "key": "mlo02",
-      "title": "Olasılık ve Bayes",
+      "title": "Probability & Bayes",
       "cards": [
         "ch01-probability-theory-essentials",
         "math04-conditional-probability-bayes-rule",
@@ -23091,7 +23091,7 @@
     },
     {
       "key": "mlo03",
-      "title": "MLE, MAP ve Loss Fonksiyonları",
+      "title": "MLE, MAP & Loss Functions",
       "cards": [
         "ch03-maximum-likelihood-estimation-mle",
         "vs04-mle-maximum-likelihood-estimation",
@@ -23111,7 +23111,7 @@
     },
     {
       "key": "mlo04",
-      "title": "Bias-Variance ve Regularization",
+      "title": "Bias-Variance & Regularization",
       "cards": [
         "vs04-bias-variance-tradeoff",
         "math06-bias-variance-of-estimators",
@@ -23129,7 +23129,7 @@
     },
     {
       "key": "mlo05",
-      "title": "Optimization ve Gradient Descent",
+      "title": "Optimization & Gradient Descent",
       "cards": [
         "vs04-gradient-descent",
         "cs02-optimization-finding-the-minimum",
@@ -23146,7 +23146,7 @@
     },
     {
       "key": "mlo06",
-      "title": "Linear ve Logistic Regression",
+      "title": "Linear & Logistic Regression",
       "cards": [
         "ch04-discriminant-functions-and-decision-surfaces",
         "ch04-least-squares-classification",
@@ -23161,7 +23161,7 @@
     },
     {
       "key": "mlo07",
-      "title": "SVM ve Kernel Trick",
+      "title": "SVM & Kernel Trick",
       "cards": [
         "ch05-error-functions-and-motivation-for-svms",
         "ch05-hard-margin-svm-formulation",
@@ -23173,7 +23173,7 @@
     },
     {
       "key": "mlo08",
-      "title": "Ensembles ve AdaBoost",
+      "title": "Ensembles & AdaBoost",
       "cards": [
         "ch06-ensemble-methods-and-bagging",
         "ch06-adaboost-algorithm",
@@ -23183,7 +23183,7 @@
     },
     {
       "key": "mlo09",
-      "title": "kNN, Hiperparametreler ve Model Seçimi",
+      "title": "kNN, Hyperparameters & Model Selection",
       "cards": [
         "cs01-image-classification-the-problem",
         "cs01-k-nearest-neighbors-knn",
@@ -23196,7 +23196,7 @@
     },
     {
       "key": "mlo10",
-      "title": "GMM, EM ve Clustering",
+      "title": "GMM, EM & Clustering",
       "cards": [
         "ch03-em-algorithm-and-gaussian-mixture-models",
         "vs04-gaussian-mixture-model-gmm",
@@ -23206,7 +23206,7 @@
     },
     {
       "key": "mlo11",
-      "title": "PCA, Eigen ve Boyut İndirgeme",
+      "title": "PCA, Eigendecomposition & Dimensionality Reduction",
       "cards": [
         "vs01-eigendecomposition-a-qqt-ve-eigenvektor-bazi",
         "vs01-pca-teori-turetme-ve-eigenvektor-baglantisi",
@@ -23217,7 +23217,7 @@
     },
     {
       "key": "mlo12",
-      "title": "Neural Networks ve Backprop",
+      "title": "Neural Networks & Backpropagation",
       "cards": [
         "ch07-from-perceptron-to-mlp-history",
         "ch07-multi-layer-perceptron-mlp",
@@ -23259,7 +23259,7 @@
     },
     {
       "key": "mlo14",
-      "title": "CNN",
+      "title": "Convolutional Neural Networks",
       "cards": [
         "ch09-motivation-for-cnns",
         "ch09-convolution-and-pooling",
@@ -23280,7 +23280,7 @@
     },
     {
       "key": "mlo15",
-      "title": "Word Embeddings ve Dil Modelleri",
+      "title": "Word Embeddings & Language Models",
       "cards": [
         "ch10-from-n-grams-to-neural-language-models",
         "ch10-word2vec-cbow-and-skip-gram",
@@ -23289,7 +23289,7 @@
     },
     {
       "key": "mlo16",
-      "title": "RNN, LSTM ve Attention",
+      "title": "RNNs, LSTMs & Attention",
       "cards": [
         "ch11-sequence-modelling-and-rnn-architecture",
         "ch11-backpropagation-through-time-and-vanishing-gradients",
@@ -23306,7 +23306,7 @@
     },
     {
       "key": "mlo17",
-      "title": "Transformer",
+      "title": "Transformers",
       "cards": [
         "ch12-rnn-attention-dan-self-attention-a-h-i-neden-kaldirdik",
         "ch12-multi-head-attention-mantik-ve-matematik",
@@ -23337,7 +23337,7 @@
     },
     {
       "key": "mlo18",
-      "title": "ViT, DETR, Swin ve Foundation Models",
+      "title": "ViT, DETR, Swin & Foundation Models",
       "cards": [
         "ida07-vision-transformer-vit",
         "cs07-vision-transformer-vit",
@@ -23376,7 +23376,7 @@
     },
     {
       "key": "mlo19",
-      "title": "Autoencoder ve VAE",
+      "title": "Autoencoders & VAE",
       "cards": [
         "ida10-autoencoder-ve-vae-mimari-ve-mantik",
         "ida10-autoencoders-and-variational-autoencoders",
@@ -23404,7 +23404,7 @@
     },
     {
       "key": "mlo20",
-      "title": "GAN",
+      "title": "GANs",
       "cards": [
         "ida10-gan-fundamentals-minimax-training",
         "ida10-conditional-gans-and-image-to-image-translation",
@@ -23427,7 +23427,7 @@
     },
     {
       "key": "mlo21",
-      "title": "Diffusion",
+      "title": "Diffusion Models",
       "cards": [
         "vs04-diffusion-model-sezgisel",
         "ida11-lecture-11-q-a",
@@ -23462,7 +23462,7 @@
     },
     {
       "key": "mlo22",
-      "title": "Görüntü İşleme Temelleri",
+      "title": "Image Processing Fundamentals",
       "cards": [
         "ida01-lecture-1-q-a",
         "ida01-image-representation-and-digitization",
@@ -23514,7 +23514,7 @@
     },
     {
       "key": "mlo25",
-      "title": "Tracking ve Video",
+      "title": "Tracking & Video",
       "cards": [
         "ida06-lecture-6-q-a",
         "ida06-kalman-filter-for-object-tracking",
@@ -23534,7 +23534,7 @@
     },
     {
       "key": "mlo26",
-      "title": "Point Clouds ve 3D",
+      "title": "Point Clouds & 3D",
       "cards": [
         "ida09-lecture-9-q-a",
         "ida09-point-cloud-representation-and-preprocessing",
@@ -23550,7 +23550,7 @@
     },
     {
       "key": "mlo27",
-      "title": "Görselleştirme ve Yorumlanabilirlik",
+      "title": "Visualization & Interpretability",
       "cards": [
         "ida13-bag-of-visual-words",
         "ida13-cnn-visualization-understanding-what-networks-learn",

@@ -520,7 +520,6 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 <nav id="sidebar">
   <div class="sidebar-hdr">
     <h2>ML Reference</h2>
-    <p>RWTH · Machine Learning 2023</p>
     <button id="sidebar-close" onclick="closeSidebar()">&#10005;</button>
   </div>
 
@@ -894,11 +893,6 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
     </button>
   </div>
 
-  <div class="sidebar-foot">
-    <button id="btn-import">&#128194; JSON Yükle</button>
-    <input type="file" id="fileInput" accept=".json" hidden>
-    <div class="hint">/ → arama &bull; ESC → kapat<br>Kart → detay popup</div>
-  </div>
 </nav>
 
 <button id="hamburger" onclick="openSidebar()">&#9776;</button>
@@ -1618,33 +1612,33 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 <script>
 /* ==================== STATE ==================== */
 const MLO_NAV = [
- {key:'mlo01',num:'01',group:'Temeller',title:'Öğrenme Problemi',sub:'Ne öğreniyoruz, neyle ölçüyoruz, model ne kadar esnek olmalı'},
- {key:'mlo02',num:'02',group:'Temeller',title:'Olasılık ve Bayes',sub:'Koşullu olasılık · Bayes · prior, likelihood, posterior · Gaussian'},
- {key:'mlo03',num:'03',group:'Temeller',title:'MLE, MAP ve Loss Fonksiyonları',sub:'Likelihood → MAP → regularization · CE ve MSE aslında MLE · KL'},
- {key:'mlo04',num:'04',group:'Temeller',title:'Bias-Variance ve Regularization',sub:'Overfitting teşhisi · train/val/test · L1, L2, weight decay'},
- {key:'mlo05',num:'05',group:'Temeller',title:'Optimization ve Gradient Descent',sub:'Batch/SGD/mini-batch · momentum · Adam, AdamW · LR ve batch size'},
- {key:'mlo06',num:'06',group:'Klasik Denetimli',title:'Linear ve Logistic Regression',sub:'Discriminant · least squares · logistic · Bayes→logistic köprüsü · pseudo-inverse'},
- {key:'mlo07',num:'07',group:'Klasik Denetimli',title:'SVM ve Kernel Trick',sub:'Margin · hard/soft margin · kernel · lab uygulaması'},
- {key:'mlo08',num:'08',group:'Klasik Denetimli',title:'Ensembles ve AdaBoost',sub:'Bagging · boosting · AdaBoost = exponential loss'},
- {key:'mlo09',num:'09',group:'Klasik Denetimli',title:'kNN, Hiperparametreler ve Model Seçimi',sub:'Görüntü sınıflandırma problemi · kNN · hiperparametre arama'},
- {key:'mlo10',num:'10',group:'Denetimsiz',title:'GMM, EM ve Clustering',sub:'Karışım modelleri · EM · k-means · lab'},
- {key:'mlo11',num:'11',group:'Denetimsiz',title:'PCA, Eigen ve Boyut İndirgeme',sub:'Eigendecomposition · PCA türetimi · t-SNE'},
- {key:'mlo12',num:'12',group:'Derin Öğrenme',title:'Neural Networks ve Backprop',sub:'Perceptron → MLP · aktivasyonlar · zincir kuralı · loss'},
- {key:'mlo13',num:'13',group:'Derin Öğrenme',title:'Training Dynamics',sub:'Normalization · initialization · dropout · SGD sorunları · augmentation'},
- {key:'mlo14',num:'14',group:'Derin Öğrenme',title:'CNN',sub:'Konvolüsyon · pooling · mimariler · ResNet · lab'},
- {key:'mlo15',num:'15',group:'Diziler ve Transformer',title:'Word Embeddings ve Dil Modelleri',sub:'N-gram → nöral LM · word2vec · embedding özellikleri'},
- {key:'mlo16',num:'16',group:'Diziler ve Transformer',title:'RNN, LSTM ve Attention',sub:'Sequence modelleme · BPTT · LSTM/GRU · attention adım adım'},
- {key:'mlo17',num:'17',group:'Diziler ve Transformer',title:'Transformer',sub:'QKV · self-attention · multi-head · positional encoding · encoder/decoder · BERT/GPT'},
- {key:'mlo18',num:'18',group:'Diziler ve Transformer',title:'ViT, DETR, Swin ve Foundation Models',sub:'Görüntüde transformer · self-supervised · CLIP · SAM · VLM'},
- {key:'mlo19',num:'19',group:'Üretici Modeller',title:'Autoencoder ve VAE',sub:'Latent uzay · ELBO · reparameterization · KL yönü'},
- {key:'mlo20',num:'20',group:'Üretici Modeller',title:'GAN',sub:'Minimax · optimal discriminator · mode collapse · DCGAN, WGAN, CycleGAN, StyleGAN'},
- {key:'mlo21',num:'21',group:'Üretici Modeller',title:'Diffusion',sub:'Forward/reverse · ELBO · noise schedule · guidance · LDM, DiT · lab'},
- {key:'mlo22',num:'22',group:'Görüntü Uygulamaları',title:'Görüntü İşleme Temelleri',sub:'Histogram · konvolüsyon · morfoloji · Fourier'},
- {key:'mlo23',num:'23',group:'Görüntü Uygulamaları',title:'Object Detection',sub:'R-CNN ailesi · YOLO · FPN · focal loss'},
- {key:'mlo24',num:'24',group:'Görüntü Uygulamaları',title:'Segmentation',sub:'Semantic vs instance · U-Net · FCN · Mask R-CNN · metrikler'},
- {key:'mlo25',num:'25',group:'Görüntü Uygulamaları',title:'Tracking ve Video',sub:'Kalman · Hungarian · optical flow · video mimarileri'},
- {key:'mlo26',num:'26',group:'Görüntü Uygulamaları',title:'Point Clouds ve 3D',sub:'PointNet · DGCNN · FoldingNet · NeRF'},
- {key:'mlo27',num:'27',group:'Görüntü Uygulamaları',title:'Görselleştirme ve Yorumlanabilirlik',sub:'BoVW · CNN görselleştirme · GradCAM · anomaly detection'},
+ {key:'mlo01',num:'01',group:'Foundations',title:'The Learning Problem',sub:'Ne öğreniyoruz, neyle ölçüyoruz, model ne kadar esnek olmalı'},
+ {key:'mlo02',num:'02',group:'Foundations',title:'Probability & Bayes',sub:'Koşullu olasılık · Bayes · prior, likelihood, posterior · Gaussian'},
+ {key:'mlo03',num:'03',group:'Foundations',title:'MLE, MAP & Loss Functions',sub:'Likelihood → MAP → regularization · CE ve MSE aslında MLE · KL'},
+ {key:'mlo04',num:'04',group:'Foundations',title:'Bias-Variance & Regularization',sub:'Overfitting teşhisi · train/val/test · L1, L2, weight decay'},
+ {key:'mlo05',num:'05',group:'Foundations',title:'Optimization & Gradient Descent',sub:'Batch/SGD/mini-batch · momentum · Adam, AdamW · LR ve batch size'},
+ {key:'mlo06',num:'06',group:'Classical Supervised Learning',title:'Linear & Logistic Regression',sub:'Discriminant · least squares · logistic · Bayes→logistic köprüsü · pseudo-inverse'},
+ {key:'mlo07',num:'07',group:'Classical Supervised Learning',title:'SVM & Kernel Trick',sub:'Margin · hard/soft margin · kernel · lab uygulaması'},
+ {key:'mlo08',num:'08',group:'Classical Supervised Learning',title:'Ensembles & AdaBoost',sub:'Bagging · boosting · AdaBoost = exponential loss'},
+ {key:'mlo09',num:'09',group:'Classical Supervised Learning',title:'kNN, Hyperparameters & Model Selection',sub:'Görüntü sınıflandırma problemi · kNN · hiperparametre arama'},
+ {key:'mlo10',num:'10',group:'Unsupervised Learning',title:'GMM, EM & Clustering',sub:'Karışım modelleri · EM · k-means · lab'},
+ {key:'mlo11',num:'11',group:'Unsupervised Learning',title:'PCA, Eigendecomposition & Dimensionality Reduction',sub:'Eigendecomposition · PCA türetimi · t-SNE'},
+ {key:'mlo12',num:'12',group:'Deep Learning',title:'Neural Networks & Backpropagation',sub:'Perceptron → MLP · aktivasyonlar · zincir kuralı · loss'},
+ {key:'mlo13',num:'13',group:'Deep Learning',title:'Training Dynamics',sub:'Normalization · initialization · dropout · SGD sorunları · augmentation'},
+ {key:'mlo14',num:'14',group:'Deep Learning',title:'Convolutional Neural Networks',sub:'Konvolüsyon · pooling · mimariler · ResNet · lab'},
+ {key:'mlo15',num:'15',group:'Sequence Models & Transformers',title:'Word Embeddings & Language Models',sub:'N-gram → nöral LM · word2vec · embedding özellikleri'},
+ {key:'mlo16',num:'16',group:'Sequence Models & Transformers',title:'RNNs, LSTMs & Attention',sub:'Sequence modelleme · BPTT · LSTM/GRU · attention adım adım'},
+ {key:'mlo17',num:'17',group:'Sequence Models & Transformers',title:'Transformers',sub:'QKV · self-attention · multi-head · positional encoding · encoder/decoder · BERT/GPT'},
+ {key:'mlo18',num:'18',group:'Sequence Models & Transformers',title:'ViT, DETR, Swin & Foundation Models',sub:'Görüntüde transformer · self-supervised · CLIP · SAM · VLM'},
+ {key:'mlo19',num:'19',group:'Generative Models',title:'Autoencoders & VAE',sub:'Latent uzay · ELBO · reparameterization · KL yönü'},
+ {key:'mlo20',num:'20',group:'Generative Models',title:'GANs',sub:'Minimax · optimal discriminator · mode collapse · DCGAN, WGAN, CycleGAN, StyleGAN'},
+ {key:'mlo21',num:'21',group:'Generative Models',title:'Diffusion Models',sub:'Forward/reverse · ELBO · noise schedule · guidance · LDM, DiT · lab'},
+ {key:'mlo22',num:'22',group:'Computer Vision Applications',title:'Image Processing Fundamentals',sub:'Histogram · konvolüsyon · morfoloji · Fourier'},
+ {key:'mlo23',num:'23',group:'Computer Vision Applications',title:'Object Detection',sub:'R-CNN ailesi · YOLO · FPN · focal loss'},
+ {key:'mlo24',num:'24',group:'Computer Vision Applications',title:'Segmentation',sub:'Semantic vs instance · U-Net · FCN · Mask R-CNN · metrikler'},
+ {key:'mlo25',num:'25',group:'Computer Vision Applications',title:'Tracking & Video',sub:'Kalman · Hungarian · optical flow · video mimarileri'},
+ {key:'mlo26',num:'26',group:'Computer Vision Applications',title:'Point Clouds & 3D',sub:'PointNet · DGCNN · FoldingNet · NeRF'},
+ {key:'mlo27',num:'27',group:'Computer Vision Applications',title:'Visualization & Interpretability',sub:'BoVW · CNN görselleştirme · GradCAM · anomaly detection'},
 ];
 const CHAPTERS = ['mlo01','mlo02','mlo03','mlo04','mlo05','mlo06','mlo07','mlo08','mlo09','mlo10','mlo11','mlo12','mlo13','mlo14','mlo15','mlo16','mlo17','mlo18','mlo19','mlo20','mlo21','mlo22','mlo23','mlo24','mlo25','mlo26','mlo27','ch01','ch02','ch03','ch04','ch05','ch06','ch07','ch08','ch09','ch10','ch11','ch12',
                    'ida01','ida02','ida03','ida04','ida05','ida06','ida07','ida08','ida09','ida10','ida11','ida12','ida13',
@@ -2321,13 +2315,6 @@ function applyData(d){
   render();
 }
 
-$('btn-import').onclick = () => $('fileInput').click();
-$('fileInput').onchange = async function(){
-  const f = this.files[0]; if(!f) return;
-  try { applyData(JSON.parse(await f.text())); }
-  catch(e){ alert('JSON error: ' + e.message); }
-  this.value = '';
-};
 
 fetch('./data/unified.json')
   .then(r => { if(!r.ok) throw new Error(r.status); return r.json() })
@@ -2335,10 +2322,8 @@ fetch('./data/unified.json')
   .catch(() => {
     $('card-grid').innerHTML = `
       <div style="padding:28px;color:var(--muted);font-size:13px;line-height:2;grid-column:1/-1">
-        <div style="font-size:15px;font-weight:700;color:var(--accent-light);margin-bottom:8px">Veriyi yükle</div>
-        Sol alttaki <strong style="color:#fff">📂 JSON Yükle</strong> butonuna bas<br>
-        ve <code style="background:#1c2130;padding:2px 6px;border-radius:4px">data/unified.json</code> dosyasını seç.<br><br>
-        <span style="font-size:11px">Veya: <code>python3 merge_json.py</code> → local server ile aç.</span>
+        <div style="font-size:15px;font-weight:700;color:var(--accent-light);margin-bottom:8px">Veri yüklenemedi</div>
+        <code>data/unified.json</code> bulunamadı. Local için: <code>python3 merge_json.py</code> sonra <code>python3 -m http.server 8787</code>.
       </div>`;
     updateCounts();
   });
