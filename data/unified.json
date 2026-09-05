@@ -2378,7 +2378,7 @@
         {
           "type": "text",
           "heading": "Tam Akış",
-          "text": "ENCODER:\nResim → CNN → z₁, z₂, ..., z₄₉   (7×7 spatial features)\nh₀ = MLP(features)\n\nDECODER t=1:   \"person\" üretecek\ninput=[START], state=h₀\n$e_{1,l} = f_{\\text{att}}(h_0, z_l) \\mathrm{for} \\mathrm{all} l$\n$a_{1,l} = \\operatorname{softmax}(e_{1,l})$   ← insan olan bölgeye yüksek ağırlık\n$c_1 = \\sum a_{1,l} \\times z_l$\n$h_1 = \\mathrm{RNN}([\\mathrm{START}], h_0, c_1)$\ny₁ = \"person\"\n\nDECODER t=2:   \"wearing\" üretecek\ninput=y₁, state=h₁\nattention(h₁, z₁..z₄₉) → c₂  ← beden/kıyafet bölgesine odak\n$h_2 = \\mathrm{RNN}(y_1, h_1, c_2)$\ny₂ = \"wearing\"\n\nDECODER t=3:   \"hat\" üretecek\nattention → c₃   ← şapka bölgesine odak\n$y_3 = \"\\mathrm{hat}\"$",
+          "text": "ENCODER:\nResim → CNN → z₁, z₂, ..., z₄₉   (7×7 spatial features)\nh₀ = MLP(features)\n\nDECODER t=1:   \"person\" üretecek\ninput=[START], state=h₀\ne_{1,l} = f_att(h₀, z_l)  for all l\n$a_{1,l} = \\operatorname{softmax}(e_{1,l})$   ← insan olan bölgeye yüksek ağırlık\n$c_1 = \\sum a_{1,l} \\times z_l$\n$h_1 = \\mathrm{RNN}([\\mathrm{START}], h_0, c_1)$\ny₁ = \"person\"\n\nDECODER t=2:   \"wearing\" üretecek\ninput=y₁, state=h₁\nattention(h₁, z₁..z₄₉) → c₂  ← beden/kıyafet bölgesine odak\n$h_2 = \\mathrm{RNN}(y_1, h_1, c_2)$\ny₂ = \"wearing\"\n\nDECODER t=3:   \"hat\" üretecek\nattention → c₃   ← şapka bölgesine odak\ny₃ = \"hat\"",
           "qa": true
         },
         {
@@ -2399,31 +2399,31 @@
         {
           "type": "text",
           "heading": "Vanilla RNN (Seq2Seq) — Adım Adım",
-          "text": "ENCODER — \"The cat sat\" → Türkçeye çevir\n\n$x_1=\"\\mathrm{The}\" \\to h_1 = \\mathrm{RNN}(x_1, h_0)$\n$x_2=\"\\mathrm{cat}\" \\to h_2 = \\mathrm{RNN}(x_2, h_1)$\n$x_3=\"\\mathrm{sat}\" \\to h_3 = \\mathrm{RNN}(x_3, h_2)$\n\n$c = h_3$    ← TEK context vector, tüm sequence burada\n           ← \"The cat sat\" sıkıştırıldı",
+          "text": "ENCODER — \"The cat sat\" → Türkçeye çevir\n\nx₁=\"The\" → h₁ = RNN(x₁, h₀)\nx₂=\"cat\" → h₂ = RNN(x₂, h₁)\nx₃=\"sat\" → h₃ = RNN(x₃, h₂)\n\n$c = h_3$    ← TEK context vector, tüm sequence burada\n           ← \"The cat sat\" sıkıştırıldı",
           "qa": true
         },
         {
           "type": "text",
           "heading": "Vanilla RNN — Decoder",
-          "text": "DECODER — hepsi aynı c'ye bakıyor\n\n$t=1: h_1_{\\text{dec}} = \\mathrm{RNN}([\\mathrm{START}], h_3, c)$\n      y₁ = softmax(W × h₁_dec)    → \"Kedi\"\n\n$t=2: h_2_{\\text{dec}} = \\mathrm{RNN}(y_1, h_1_{\\text{dec}}, c)$\n      y₂ = softmax(W × h₂_dec)    → \"oturdu\"\n\nHer decoder adımı aynı c'ye bakıyor — tüm bilgi tek vektörde.",
+          "text": "DECODER — hepsi aynı c'ye bakıyor\n\n$t=1: h_{1,d}ec = \\mathrm{RNN}([\\mathrm{START}], h_3, c)$\n      y₁ = softmax(W × h₁_dec)    → \"Kedi\"\n\n$t=2: h_{2,d}ec = \\mathrm{RNN}(y_1, h_{1,d}ec, c)$\n      y₂ = softmax(W × h₂_dec)    → \"oturdu\"\n\nHer decoder adımı aynı c'ye bakıyor — tüm bilgi tek vektörde.",
           "qa": true
         },
         {
           "type": "text",
           "heading": "Attention — Encoder",
-          "text": "ENCODER — aynı, ama tüm hidden state'ler saklanıyor\n\n$x_1=\"\\mathrm{The}\" \\to z_1 = h_1$\n$x_2=\"\\mathrm{cat}\" \\to z_2 = h_2$\n$x_3=\"\\mathrm{sat}\" \\to z_3 = h_3$\n\n$h_0_{\\text{dec}} = \\mathrm{MLP}(z_3)$   ← decoder başlangıcı",
+          "text": "ENCODER — aynı, ama tüm hidden state'ler saklanıyor\n\nx₁=\"The\" → z₁ = h₁\nx₂=\"cat\" → z₂ = h₂\nx₃=\"sat\" → z₃ = h₃\n\n$h_{0,d}ec = \\mathrm{MLP}(z_3)$   ← decoder başlangıcı",
           "qa": true
         },
         {
           "type": "text",
           "heading": "Attention — Decoder t=1",
-          "text": "DECODER t=1 — \"Kedi\" üretecek\n\nAttention: h₀_dec ile tüm encoder state'lerine bak\n  $e_1 = f_{\\text{att}}(h_0_{\\text{dec}}, z_1)$   ← \"The\" ne kadar ilgili?\n  $e_2 = f_{\\text{att}}(h_0_{\\text{dec}}, z_2)$   ← \"cat\" ne kadar ilgili?\n  $e_3 = f_{\\text{att}}(h_0_{\\text{dec}}, z_3)$   ← \"sat\" ne kadar ilgili?\n\n  $a = \\operatorname{softmax}([e_1, e_2, e_3]) \\to [0.1, 0.8, 0.1]$\n                                   ↑ \"cat\" e yüksek ağırlık\n\n  $c_1 = 0.1\\times z_1 + 0.8\\times z_2 + 0.1\\times z_3$   ← bu adıma özel context\n\n$h_1_{\\text{dec}} = \\mathrm{RNN}([\\mathrm{START}], h_0_{\\text{dec}}, c_1)$\ny₁ = softmax(W × h₁_dec)   → \"Kedi\"",
+          "text": "$\\mathrm{DECODER} t=1$ — \"Kedi\" üretecek\n\nAttention: h₀_dec ile tüm encoder state'lerine bak\n  $e_1 = f_{\\text{att}}(h_{0,d}ec, z_1)$   ← \"The\" ne kadar ilgili?\n  $e_2 = f_{\\text{att}}(h_{0,d}ec, z_2)$   ← \"cat\" ne kadar ilgili?\n  $e_3 = f_{\\text{att}}(h_{0,d}ec, z_3)$   ← \"sat\" ne kadar ilgili?\n\n  $a = \\operatorname{softmax}([e_1, e_2, e_3]) \\to [0.1, 0.8, 0.1]$\n                                   ↑ \"cat\" e yüksek ağırlık\n\n  $c_1 = 0.1\\times z_1 + 0.8\\times z_2 + 0.1\\times z_3$   ← bu adıma özel context\n\n$h_{1,d}ec = \\mathrm{RNN}([\\mathrm{START}], h_{0,d}ec, c_1)$\ny₁ = softmax(W × h₁_dec)   → \"Kedi\"",
           "qa": true
         },
         {
           "type": "text",
           "heading": "Attention — Decoder t=2",
-          "text": "DECODER t=2 — \"oturdu\" üretecek\n\nAttention: bu sefer h₁_dec ile bakıyor\n  $a = \\operatorname{softmax}([\\ldots ]) \\qquad \\to [0.1, 0.1, 0.8]$\n                                        ↑ \"sat\" e yüksek ağırlık\n\n  $c_2 = 0.1\\times z_1 + 0.1\\times z_2 + 0.8\\times z_3$   ← farklı context\n\n$h_2_{\\text{dec}} = \\mathrm{RNN}(y_1, h_1_{\\text{dec}}, c_2)$\ny₂ = softmax(W × h₂_dec)   → \"oturdu\"",
+          "text": "$\\mathrm{DECODER} t=2$ — \"oturdu\" üretecek\n\nAttention: bu sefer h₁_dec ile bakıyor\n  $a = \\operatorname{softmax}([\\ldots ]) \\qquad \\to [0.1, 0.1, 0.8]$\n                                        ↑ \"sat\" e yüksek ağırlık\n\n  $c_2 = 0.1\\times z_1 + 0.1\\times z_2 + 0.8\\times z_3$   ← farklı context\n\n$h_{2,d}ec = \\mathrm{RNN}(y_1, h_{1,d}ec, c_2)$\ny₂ = softmax(W × h₂_dec)   → \"oturdu\"",
           "qa": true
         },
         {
@@ -2882,7 +2882,7 @@
         {
           "type": "text",
           "heading": "p nasıl üretilir? — İki seçenek",
-          "text": "1. Learned (öğrenilen):\n   Her pozisyon için bir vektör öğren\n   p₁, p₂, ..., pT  — T×D tablo\n   Basit ama maksimum uzunluk T'ye kadar çalışır.\n\n2. Sinusoidal (Transformer paper'ı):\n   $PE(\\mathrm{pos}, 2i) = \\sin(\\mathrm{pos} / 10000^(2i/D))$\n   $PE(\\mathrm{pos}, 2i+1) = \\cos(\\mathrm{pos} / 10000^(2i/D))$\n\n   Her dimension farklı frekansta sinüs/kosinüs dalgası.\n   Alçak frekanslı boyutlar yavaş değişir (global pozisyon)\n   Yüksek frekanslı boyutlar hızlı değişir (local pozisyon).",
+          "text": "1. Learned (öğrenilen):\n   Her pozisyon için bir vektör öğren\n   $p_1, p_2, \\ldots , pT$  — T×D tablo\n   Basit ama maksimum uzunluk T'ye kadar çalışır.\n\n2. Sinusoidal (Transformer paper'ı):\n   $PE(\\mathrm{pos}, 2i) = \\sin(\\mathrm{pos} / 10000^(2i/D))$\n   $PE(\\mathrm{pos}, 2i+1) = \\cos(\\mathrm{pos} / 10000^(2i/D))$\n\n   Her dimension farklı frekansta sinüs/kosinüs dalgası.\n   Alçak frekanslı boyutlar yavaş değişir (global pozisyon)\n   Yüksek frekanslı boyutlar hızlı değişir (local pozisyon).",
           "qa": true
         },
         {
@@ -4854,7 +4854,7 @@
         {
           "type": "text",
           "heading": "4. Transformer Decoder (6 katman)",
-          "text": "100 adet learnable object query: (100×256)  ← random başlar, eğitimle öğrenir\n\nHer decoder katmanında 3 adım:\n\n  1. Self-attention (query'ler arası):\n     (100×100) — query'ler birbirinden haberdar oluyor\n     \"sen sol üstteki nesneye bak, ben sağ alttakine\"\n     → duplicate tahminleri önlüyor\n\n  2. Cross-attention (query → encoder çıktısı):\n     Q: query'lerden  → (100×256) × W_Q → (100×64)\n     K: encoder'dan   → (850×256) × W_K → (850×64)\n     V: encoder'dan   → (850×256) × W_V → (850×64)\n     Attention: (100×64) × (64×850) = (100×850)\n       ← her query tüm spatial pozisyonlara bakıyor\n     Çıktı: (100×256)\n\n  3. FFN + Add&Norm\n\n6 katman sonunda: (100×256)  ← her query bir nesne adayı",
+          "text": "100 adet learnable object query: (100×256)  ← random başlar, eğitimle öğrenir\n\nHer decoder katmanında 3 adım:\n\n  1. Self-attention (query'ler arası):\n     $(100\\times 100)$ — query'ler birbirinden haberdar oluyor\n     \"sen sol üstteki nesneye bak, ben sağ alttakine\"\n     → duplicate tahminleri önlüyor\n\n  2. Cross-attention (query → encoder çıktısı):\n     Q: query'lerden  → (100×256) × W_Q → (100×64)\n     K: encoder'dan   → (850×256) × W_K → (850×64)\n     V: encoder'dan   → (850×256) × W_V → (850×64)\n     Attention: (100×64) × (64×850) = (100×850)\n       ← her query tüm spatial pozisyonlara bakıyor\n     Çıktı: (100×256)\n\n  3. FFN + Add&Norm\n\n6 katman sonunda: (100×256)  ← her query bir nesne adayı",
           "qa": true
         },
         {
@@ -5047,7 +5047,7 @@
         {
           "type": "text",
           "heading": "Attention",
-          "text": "                    ViT                              Swin\n                    ───                              ────\n\nATTENTION      H=12 head, d_k=768/12=64         Window partition:\n               W_Q,W_K,W_V ∈ (768×64)           (3136×96) token'lar\n               her head için:                   (56×56) grid halinde\n               Q = X×W_Q → (197×64)             → 7×7'lik pencerelere böl\n               K = X×W_K → (197×64)             56/7 = 8 pencere/kenar\n               V = X×W_V → (197×64)             8×8 = 64 pencere toplam\n                                                her pencere: 7×7 = 49 token\n               Q×K^T:                           yani 3136 → 64 grup × 49\n               $(197\\times 64)\\times (64\\times 197)$\n               → (197×197)                      H=3 head, d_k=96/3=32\n                                                $W_Q,W_K,W_V \\in (96\\times 32)$\n               ÷√64, softmax                    her pencere, her head için:\n               $\\to (197\\times 197) \\qquad Q = w\\times W_Q \\to (49\\times 32)$\n                                                $K = w\\times W_K \\to (49\\times 32)$\n               $\\times V: \\qquad V = w\\times W_V \\to (49\\times 32)$\n               $(197\\times 197)\\times (197\\times 64)$\n               → (197×64)  1 head               Q×K^T:\n                                                $(49\\times 32)\\times (32\\times 49)$\n               12 head concat:                  → (49×49)\n               $\\to (197\\times 768)$\n               $\\times W_O(768\\times 768) \\qquad ÷\\sqrt{32}, \\operatorname{softmax}$\n               $\\to (197\\times 768) \\qquad \\to (49\\times 49)$\n\n                                                $\\times V:$\n                                                $(49\\times 49)\\times (49\\times 32)$\n                                                → (49×32)  1 head\n\n                                                3 head concat:\n                                                → (49×96) 1 pencere\n                                                $\\times W_O(96\\times 96)$\n                                                $\\to (49\\times 96)$\n\n                                                64 pencere paralel:\n                                                $64 \\times (49\\times 96)$\n                                                $\\to (3136\\times 96)$\n\n                                                SW-MSA: aynı işlem,\n                                                pencereler (3,3) kaydırılmış\n                                                $\\to (3136\\times 96)$\n\nViT global: her token her tokena bakıyor → 197×197 matrix, O(N²).\nSwin lokal: 3136 token önce 64 pencereye bölünüyor (her pencere 49 token),\nattention sadece pencere içinde yapılıyor → 49×49 matrix.\n3136×3136 yerine 64×(49×49) — 65× daha az hesaplama.\nShift ile bir sonraki katmanda pencereler kayıyor, sınır token'ları\nfarklı pencerede buluşuyor → cross-window iletişim sağlanıyor.",
+          "text": "                    ViT                              Swin\n                    ───                              ────\n\nATTENTION      H=12 head, d_k=768/12=64         Window partition:\n               W_Q,W_K,W_V ∈ (768×64)           (3136×96) token'lar\n               her head için:                   (56×56) grid halinde\n               Q = X×W_Q → (197×64)             → 7×7'lik pencerelere böl\n               K = X×W_K → (197×64)             56/7 = 8 pencere/kenar\n               V = X×W_V → (197×64)             8×8 = 64 pencere toplam\n                                                her pencere: 7×7 = 49 token\n               Q×K^T:                           yani 3136 → 64 grup × 49\n               $(197\\times 64)\\times (64\\times 197)$\n               → (197×197)                      H=3 head, d_k=96/3=32\n                                                $W_Q,W_K,W_V \\in (96\\times 32)$\n               ÷√64, softmax                    her pencere, her head için:\n               $\\to (197\\times 197) \\qquad Q = w\\times W_Q \\to (49\\times 32)$\n                                                $K = w\\times W_K \\to (49\\times 32)$\n               $\\times V: \\qquad V = w\\times W_V \\to (49\\times 32)$\n               $(197\\times 197)\\times (197\\times 64)$\n               → (197×64)  1 head               Q×K^T:\n                                                $(49\\times 32)\\times (32\\times 49)$\n               12 head concat:                  → (49×49)\n               $\\to (197\\times 768)$\n               ×W_O(768×768)                    ÷√32, softmax\n               $\\to (197\\times 768) \\qquad \\to (49\\times 49)$\n\n                                                $\\times V:$\n                                                $(49\\times 49)\\times (49\\times 32)$\n                                                → (49×32)  1 head\n\n                                                3 head concat:\n                                                → (49×96) 1 pencere\n                                                $\\times W_O(96\\times 96)$\n                                                $\\to (49\\times 96)$\n\n                                                64 pencere paralel:\n                                                $64 \\times (49\\times 96)$\n                                                $\\to (3136\\times 96)$\n\n                                                SW-MSA: aynı işlem,\n                                                pencereler (3,3) kaydırılmış\n                                                $\\to (3136\\times 96)$\n\nViT global: her token her tokena bakıyor → 197×197 matrix, O(N²).\nSwin lokal: 3136 token önce 64 pencereye bölünüyor (her pencere 49 token),\nattention sadece pencere içinde yapılıyor → 49×49 matrix.\n3136×3136 yerine 64×(49×49) — 65× daha az hesaplama.\nShift ile bir sonraki katmanda pencereler kayıyor, sınır token'ları\nfarklı pencerede buluşuyor → cross-window iletişim sağlanıyor.",
           "qa": true
         },
         {
@@ -5401,7 +5401,7 @@
         {
           "type": "text",
           "heading": "KL Divergence: \"Bu Dağılım Ne Kadar Farklı?\"",
-          "text": "KL divergence iki dağılım arasındaki farkı ölçen bir sayı. \"P dağılımı Q'ya ne kadar benziyor?\" sorusunun cevabı.\n\nKL(P || Q) = 0    →  P ve Q tamamen aynı\nKL(P || Q) > 0    →  ne kadar büyükse o kadar farklı\n\nPeki VAE'de tam olarak ne ile ne karşılaştırılıyor?\n\nz'nin kendisi N(0,1) değil — z ~ N(μ, σ²). Ama biz bu dağılımı, yani N(μ, σ²)'yi, hedef olarak koyduğumuz N(0,1) ile karşılaştırıyoruz:\n\n$\\operatorname{KL}( \\mathcal{N}(\\mu , \\sigma ^{2}) \\| \\mathcal{N}(0, 1) )$\n     ↑                ↑\n  encoder'ın       istediğimiz\n  ürettiği         hedef dağılım\n  dağılım\n\nε zaten N(0,1) — o sabit, öğrenilmiyor. Öğrenilen şey μ ve σ. KL onları hedef olan 0 ve 1'e doğru itiyor. Yani şunu söylüyor: \"encoder, her görüntü için ürettiğin μ 0'a yakın olsun, σ da 1'e yakın olsun.\"\n\nNeden bu iki şeyi istiyoruz?\n\nμ'yü 0'a çek: eğer her görüntü latent space'de çok farklı yerlere dağılırsa (biri μ=100'de, diğeri μ=−200'de) aralarındaki boşluklar geri döner. Hepsini merkeze çekmek latent space'i kompakt tutar.\n\nσ'yı 1'e yakın tut (çok küçük olmasın): eğer KL terimi olmasaydı, encoder her görüntüyü σ≈0 olan çok ince bir iğne gibi kodlardı — bu klasik AE'ye döner, arası boş noktalara. σ'yı 1'e yakın zorlamak her görüntünün etrafında bir alan kalmasını sağlar ve bu alanlar birbirinin içine geçer.\n\nKL olmadan:    |  |    |  |    |  |   (ince çizgiler, arası boş)\nKL ile:       (~)(~)  (~)(~)  (~)(~)  (bulutlar, üst üste geliyor)\n\nFormülün kendisi:\n\n$\\operatorname{KL} = -½ \\cdot \\sum _j (1 + \\log \\sigma _j^{2} - \\mu _j^{2} - \\sigma _j^{2})$\n\nHer latent boyut j için hesaplanır, toplanır. Bu formül iki Gaussian arasındaki KL'nin analitik çözümü — örnekleme yapmadan, sadece μ ve σ'dan hesaplanıyor. μ=0 ve σ=1 olduğunda tam 0 verir. μ 0'dan uzaklaştıkça veya σ çok küçülüp 0'a yaklaştıkça değer büyür, loss artar, ağ geri itilir.",
+          "text": "KL divergence iki dağılım arasındaki farkı ölçen bir sayı. \"P dağılımı Q'ya ne kadar benziyor?\" sorusunun cevabı.\n\nKL(P || Q) = 0    →  P ve Q tamamen aynı\nKL(P || Q) > 0    →  ne kadar büyükse o kadar farklı\n\nPeki VAE'de tam olarak ne ile ne karşılaştırılıyor?\n\nz'nin kendisi N(0,1) değil — z ~ N(μ, σ²). Ama biz bu dağılımı, yani N(μ, σ²)'yi, hedef olarak koyduğumuz N(0,1) ile karşılaştırıyoruz:\n\n$\\operatorname{KL}( \\mathcal{N}(\\mu , \\sigma ^{2}) \\| \\mathcal{N}(0, 1) )$\n     ↑                ↑\n  encoder'ın       istediğimiz\n  ürettiği         hedef dağılım\n  dağılım\n\nε zaten N(0,1) — o sabit, öğrenilmiyor. Öğrenilen şey μ ve σ. KL onları hedef olan 0 ve 1'e doğru itiyor. Yani şunu söylüyor: \"encoder, her görüntü için ürettiğin μ 0'a yakın olsun, σ da 1'e yakın olsun.\"\n\nNeden bu iki şeyi istiyoruz?\n\nμ'yü 0'a çek: eğer her görüntü latent space'de çok farklı yerlere dağılırsa (biri μ=100'de, diğeri μ=−200'de) aralarındaki boşluklar geri döner. Hepsini merkeze çekmek latent space'i kompakt tutar.\n\nσ'yı 1'e yakın tut (çok küçük olmasın): eğer KL terimi olmasaydı, encoder her görüntüyü σ≈0 olan çok ince bir iğne gibi kodlardı — bu klasik AE'ye döner, arası boş noktalara. σ'yı 1'e yakın zorlamak her görüntünün etrafında bir alan kalmasını sağlar ve bu alanlar birbirinin içine geçer.\n\nKL olmadan:    |  |    |  |    |  |   (ince çizgiler, arası boş)\nKL ile:       (~)(~)  (~)(~)  (~)(~)  (bulutlar, üst üste geliyor)\n\nFormülün kendisi:\n\nKL = -½ · Σⱼ (1 + log σⱼ² - μⱼ² - σⱼ²)\n\nHer latent boyut j için hesaplanır, toplanır. Bu formül iki Gaussian arasındaki KL'nin analitik çözümü — örnekleme yapmadan, sadece μ ve σ'dan hesaplanıyor. μ=0 ve σ=1 olduğunda tam 0 verir. μ 0'dan uzaklaştıkça veya σ çok küçülüp 0'a yaklaştıkça değer büyür, loss artar, ağ geri itilir.",
           "qa": true
         },
         {
@@ -5728,7 +5728,7 @@
         {
           "type": "text",
           "heading": "2. Asıl hedef: MLE",
-          "text": "VAE'de olduğu gibi, elimizdeki training verisi x_0'ı en probable kılan θ'yı bul:\n\n$\\theta^* = \\operatorname{argmax} \\log p_\\theta (x_0)$"
+          "text": "VAE'de olduğu gibi, elimizdeki training verisi x_0'ı en probable kılan θ'yı bul:\n\nθ* = argmax log p_θ(x_0)"
         },
         {
           "type": "text",
@@ -5800,7 +5800,7 @@
         {
           "type": "text",
           "heading": "0. Ortak başlangıç: MLE hedefi",
-          "text": "Her iki modelin de aynı hedefi var: training verisi x'i en probable kılan θ'yı bul.\n\n$\\mathrm{VAE}: \\qquad \\theta^* = \\operatorname{argmax} \\log p_\\theta (x)$\n$\\mathrm{DDPM}: \\theta^* = \\operatorname{argmax} \\log p_\\theta (x_0)$\n\nAma latent space farklı tanımlanıyor:\n\nVAE:  z ~ N(0,I) → decoder → x  (tek adım)\nDDPM: x_0 → x_1 → ... → x_T ~ N(0,I) → ... → x_0  (T adım)"
+          "text": "Her iki modelin de aynı hedefi var: training verisi x'i en probable kılan θ'yı bul.\n\nVAE:   θ* = argmax log p_θ(x)\nDDPM:  θ* = argmax log p_θ(x_0)\n\nAma latent space farklı tanımlanıyor:\n\nVAE:  z ~ N(0,I) → decoder → x  (tek adım)\nDDPM: x_0 → x_1 → ... → x_T ~ N(0,I) → ... → x_0  (T adım)"
         },
         {
           "type": "text",
@@ -5844,7 +5844,7 @@
         {
           "type": "text",
           "heading": "9. L_T ignore — VAE'den kritik fark",
-          "text": "VAE Term 2: D_KL(q_φ(z|x) || p(z))\nφ VAR — encoder öğreniyor, bu KL onu regularize ediyor → optimize edilir, şart.\n\nDDPM L_T: D_KL(q(x_T|x_0) || p(x_T))\nφ YOK — forward process sabit, p(x_T)=N(0,I) sabit.\nT adım yeterince büyükse x_T zaten N(0,I)'ye yaklaşıyor, bu garanti.\n→ sabit kalır, ignore edilir.\n\nVAE'de prior KL encoder'ı latent space'e zorlar — öğrenmenin bir parçası.\nDDPM'de prior matching forward process tarafından otomatik sağlanıyor — öğrenilecek bir şey yok."
+          "text": "VAE Term 2: D_KL(q_φ(z|x) || p(z))\n$\\phi \\mathrm{VAR}$ — encoder öğreniyor, bu KL onu regularize ediyor → optimize edilir, şart.\n\nDDPM L_T: D_KL(q(x_T|x_0) || p(x_T))\n$\\phi \\mathrm{YOK}$ — forward process sabit, p(x_T)=N(0,I) sabit.\nT adım yeterince büyükse x_T zaten N(0,I)'ye yaklaşıyor, bu garanti.\n→ sabit kalır, ignore edilir.\n\nVAE'de prior KL encoder'ı latent space'e zorlar — öğrenmenin bir parçası.\nDDPM'de prior matching forward process tarafından otomatik sağlanıyor — öğrenilecek bir şey yok."
         },
         {
           "type": "text",
@@ -7147,13 +7147,13 @@
         {
           "type": "text",
           "heading": "LS problemi neden gerekli?",
-          "text": "Case 1 durumu: A ∈ ℂᴹˣᴺ, M > N, full column rank.\nR(A) ⊂ ℂᴹ, R(A) ≠ ℂᴹ → çoğu y için Ax=y'nin çözümü yok.\n\nNeden gürültülü ölçümde bu hep karşımıza çıkıyor?\n  Gerçekte: y₀ = Ax₀ ∈ R(A)  (temiz sinyal R(A)'da)\n  Ölçüm:   y = y₀ + n         (gürültü eklendi → R(A) dışına çıktı)\n  → y ∉ R(A) → tam çözüm yok.\n\nNe yapıyoruz?\nTam çözüm yerine en küçük hatayı veren x'i arıyoruz:\n  $x_{\\text{LS}} = \\operatorname{argmin}_{x} \\|y - Ax\\|_2^{2}$\n  ('y'ye en yakın olan Ax'i veren x')\n\nGeometrik sezgi:\n  ℝ²'deki örnek: y bir nokta, R(A) bir çizgi. y R(A)'da değil.\n  En yakın Ax = y'nin R(A)'ya dikeyinden indirilen iz = projeksiyon.\n  Hatayı minimize etmek = projeksiyon bulmak.\n\nProjektion koşulu:\n  e = y - Ax_LS (hata vektörü) ⊥ R(A) olmalı.\n  $e ⊥ a_k \\forall k \\to a_kᴴ(y - Ax_{\\text{LS}}) = 0 \\to Aᴴ(y - Ax_{\\text{LS}}) = 0$\n  $\\to AᴴAx_{\\text{LS}} = Aᴴy$  ← Normal Denklem (projeksiyon yoluyla)",
+          "text": "Case 1 durumu: A ∈ ℂᴹˣᴺ, M > N, full column rank.\nR(A) ⊂ ℂᴹ, R(A) ≠ ℂᴹ → çoğu y için Ax=y'nin çözümü yok.\n\nNeden gürültülü ölçümde bu hep karşımıza çıkıyor?\n  Gerçekte: y₀ = Ax₀ ∈ R(A)  (temiz sinyal R(A)'da)\n  Ölçüm:   y = y₀ + n         (gürültü eklendi → R(A) dışına çıktı)\n  → y ∉ R(A) → tam çözüm yok.\n\nNe yapıyoruz?\nTam çözüm yerine en küçük hatayı veren x'i arıyoruz:\n  $x_{\\text{LS}} = \\operatorname{argmin}_{x} \\|y - Ax\\|_2^{2}$\n  ('y'ye en yakın olan Ax'i veren x')\n\nGeometrik sezgi:\n  ℝ²'deki örnek: y bir nokta, R(A) bir çizgi. y R(A)'da değil.\n  En yakın Ax = y'nin R(A)'ya dikeyinden indirilen iz = projeksiyon.\n  Hatayı minimize etmek = projeksiyon bulmak.\n\nProjektion koşulu:\n  e = y - Ax_LS (hata vektörü) ⊥ R(A) olmalı.\n  e ⊥ aₖ ∀k  →  aₖᴴ(y - Ax_LS) = 0  →  Aᴴ(y - Ax_LS) = 0\n  → AᴴAx_LS = Aᴴy  ← Normal Denklem (projeksiyon yoluyla)",
           "qa": true
         },
         {
           "type": "text",
           "heading": "Normal denklem türetimi — matris kalkülüsü ve çözüm",
-          "text": "Aynı sonuca optimizasyon yoluyla da ulaşabiliriz.\n\nJ(x) = ||y - Ax||₂² genişlet (gerçel durumda):\n  $J(x) = (y-Ax)^{\\top}(y-Ax)$\n       $= y^{\\top}y - 2y^{\\top}Ax + x^{\\top}A^{\\top}Ax$\n       (çünkü xᵀAᵀy = (yᵀAx)ᵀ = yᵀAx skaler)\n\nGradyan kuralları:\n  $\\nabla _x(a^{\\top}x) = a$\n  ∇_x(xᵀBx) = 2Bx  (B simetrik ise)\n\n$\\nabla _x J = -2A^{\\top}y + 2A^{\\top}Ax = 0$\n  → AᵀAx_LS = Aᵀy  (gerçel, kompleks için Aᴴ)\n\nNeden AᴴA invertible?\n  A full column rank → N(A) = {0}\n  $AᴴAx = 0 \\to xᴴAᴴAx = 0 \\to \\|Ax\\|^{2} = 0 \\to Ax = 0 \\to x = 0$\n  N(AᴴA) = {0} → AᴴA invertible ✓\n\nÇözüm:\n  $x_{\\text{LS}} = (AᴴA)^{-1}Aᴴy$\n\nSol pseudo-inverse:\n  $A† = (AᴴA)^{-1}Aᴴ$\n  A†A = I_N ✓ (sol inverse)\n  AA† = A(AᴴA)⁻¹Aᴴ = P_{R(A)} ≠ I_M (projeksiyon matrisi)\n\n$\\hat{y}_{\\text{LS}} = Ax_{\\text{LS}} = P_{R(A)}\\cdot y$   ← y'nin R(A)'ya projeksiyonu\n\nİki farklı yol — optimizasyon ve projeksiyon — aynı formüle ulaştı.\nBu bir tesadüf değil: MSE minimize = R(A)'ya projeksiyon.\nChapter 1'in projeksiyon teoremi tam olarak buraya çıkıyor.",
+          "text": "Aynı sonuca optimizasyon yoluyla da ulaşabiliriz.\n\nJ(x) = ||y - Ax||₂² genişlet (gerçel durumda):\n  $J(x) = (y-Ax)^{\\top}(y-Ax)$\n       $= y^{\\top}y - 2y^{\\top}Ax + x^{\\top}A^{\\top}Ax$\n       (çünkü xᵀAᵀy = (yᵀAx)ᵀ = yᵀAx skaler)\n\nGradyan kuralları:\n  $\\nabla _x(a^{\\top}x) = a$\n  ∇_x(xᵀBx) = 2Bx  (B simetrik ise)\n\n$\\nabla _x J = -2A^{\\top}y + 2A^{\\top}Ax = 0$\n  → AᵀAx_LS = Aᵀy  (gerçel, kompleks için Aᴴ)\n\nNeden AᴴA invertible?\n  A full column rank → N(A) = {0}\n  AᴴAx = 0 → xᴴAᴴAx = 0 → ||Ax||² = 0 → Ax = 0 → x = 0\n  N(AᴴA) = {0} → AᴴA invertible ✓\n\nÇözüm:\n  x_LS = (AᴴA)⁻¹Aᴴy\n\nSol pseudo-inverse:\n  A† = (AᴴA)⁻¹Aᴴ\n  A†A = I_N ✓ (sol inverse)\n  AA† = A(AᴴA)⁻¹Aᴴ = P_{R(A)} ≠ I_M (projeksiyon matrisi)\n\n$\\hat{y}_{\\text{LS}} = Ax_{\\text{LS}} = P_{R(A)}\\cdot y$   ← y'nin R(A)'ya projeksiyonu\n\nİki farklı yol — optimizasyon ve projeksiyon — aynı formüle ulaştı.\nBu bir tesadüf değil: MSE minimize = R(A)'ya projeksiyon.\nChapter 1'in projeksiyon teoremi tam olarak buraya çıkıyor.",
           "qa": true
         }
       ],
@@ -7174,7 +7174,7 @@
         {
           "type": "text",
           "heading": "x_MN formülü ve pseudo-inverse birleşimi",
-          "text": "x_MN ⊥ N(A) → x_MN ∈ R(Aᴴ) (çünkü N(A)⊥ = R(Aᴴ))\n  → x_MN = Aᴴz için bazı z ∈ ℂᴹ\n\nBunu Ax = y'ye koy:\n  $A(Aᴴz) = y \\to (AAᴴ)z = y$\n  AAᴴ ∈ ℂᴹˣᴹ, full row rank → invertible\n  $z = (AAᴴ)^{-1}y$\n\nSonuç:\n  $x_{\\text{MN}} = Aᴴ(AAᴴ)^{-1}y$\n\nSağ pseudo-inverse: A† = Aᴴ(AAᴴ)⁻¹\n  AA† = I_M ✓ (sağ inverse)\n  A†A = P_{R(Aᴴ)} ≠ I_N (projeksiyon)\n\nKontrol: Ax_MN = AAᴴ(AAᴴ)⁻¹y = y ✓\n\nMoore-Penrose pseudo-inverse A† — tüm 4 durumu birleştiriyor:\n  Case 0: A† = A⁻¹\n  Case 1: A† = (AᴴA)⁻¹Aᴴ  (sol pseudo-inverse)\n  Case 2: A† = Aᴴ(AAᴴ)⁻¹  (sağ pseudo-inverse)\n  Case 3: A† = VΣ†Uᴴ       (SVD, Σ†: sıfır olmayan σᵢ'lerin tersi, 0'lar kalır)\n\nA†y her durumda ne veriyor?\n  Çözüm yoksa (Case 1): ||y-Ax||₂ minimize eden, bunlar içinde min ||x||\n  Sonsuz çözüm varsa (Case 2): ||x||₂ minimize eden tek çözüm\n  Tam çözüm varsa (Case 0): o çözüm\n\nSonuç: A†y sormak istediğiniz 'en iyi x' sorusunun cevabı — hangi durumda olursanız olun.",
+          "text": "x_MN ⊥ N(A) → x_MN ∈ R(Aᴴ) (çünkü N(A)⊥ = R(Aᴴ))\n  → x_MN = Aᴴz için bazı z ∈ ℂᴹ\n\nBunu Ax = y'ye koy:\n  A(Aᴴz) = y  →  (AAᴴ)z = y\n  AAᴴ ∈ ℂᴹˣᴹ, full row rank → invertible\n  z = (AAᴴ)⁻¹y\n\nSonuç:\n  x_MN = Aᴴ(AAᴴ)⁻¹y\n\nSağ pseudo-inverse: A† = Aᴴ(AAᴴ)⁻¹\n  AA† = I_M ✓ (sağ inverse)\n  A†A = P_{R(Aᴴ)} ≠ I_N (projeksiyon)\n\nKontrol: Ax_MN = AAᴴ(AAᴴ)⁻¹y = y ✓\n\nMoore-Penrose pseudo-inverse A† — tüm 4 durumu birleştiriyor:\n  Case 0: A† = A⁻¹\n  Case 1: A† = (AᴴA)⁻¹Aᴴ  (sol pseudo-inverse)\n  Case 2: A† = Aᴴ(AAᴴ)⁻¹  (sağ pseudo-inverse)\n  Case 3: A† = VΣ†Uᴴ       (SVD, Σ†: sıfır olmayan σᵢ'lerin tersi, 0'lar kalır)\n\nA†y her durumda ne veriyor?\n  Çözüm yoksa (Case 1): ||y-Ax||₂ minimize eden, bunlar içinde min ||x||\n  Sonsuz çözüm varsa (Case 2): ||x||₂ minimize eden tek çözüm\n  Tam çözüm varsa (Case 0): o çözüm\n\nSonuç: A†y sormak istediğiniz 'en iyi x' sorusunun cevabı — hangi durumda olursanız olun.",
           "qa": true
         }
       ],
@@ -14265,7 +14265,7 @@
         {
           "type": "text",
           "heading": "Transformer Encoder Block",
-          "text": "# One transformer encoder block:\n# x: (N, d_model) — sequence of token embeddings\n\n# Self-attention sub-layer\nx = x + MultiHeadAttention(LayerNorm(x))  # Pre-Norm variant\n\n# Feed-forward sub-layer\n$x = x + \\mathrm{FFN}(\\operatorname{LayerNorm}(x))$\n\n# FFN: two linear layers with GELU:\n$# \\mathrm{FFN}(x) = W2 \\cdot \\mathrm{GELU}(W1 \\cdot x + b1) + b2$\n# Typical expansion: d_model → 4*d_model → d_model",
+          "text": "# One transformer encoder block:\n# x: (N, d_model) — sequence of token embeddings\n\n# Self-attention sub-layer\nx = x + MultiHeadAttention(LayerNorm(x))  # Pre-Norm variant\n\n# Feed-forward sub-layer\n$x = x + \\mathrm{FFN}(\\operatorname{LayerNorm}(x))$\n\n# FFN: two linear layers with GELU:\n# FFN(x) = W2 * GELU(W1 * x + b1) + b2\n# Typical expansion: d_model → 4*d_model → d_model",
           "qa": true
         },
         {
@@ -16454,7 +16454,7 @@
         {
           "type": "text",
           "heading": "Training Procedure (5 Steps)",
-          "text": "Step 1: Run input x through encoder\n  $\\to \\mathrm{get} q_\\phi (z|x) = \\mathcal{N}(\\mu _{z|x}, \\Sigma _{z|x})$\n  (encoder outputs two vectors: mean μ and covariance Σ)\n\nStep 2: Compute prior KL loss\n  $L_{\\text{KL}} = D_{\\text{KL}}(q_\\phi (z|x), \\mathcal{N}(0,I))$\n  → encoder output should be unit Gaussian\n  → closed form for Gaussians\n\nStep 3: Sample z via reparameterization trick\n  $\\varepsilon \\sim \\mathcal{N}(0, I)$\n  $z = \\varepsilon ⊙ \\sum _{z|x} + \\mu _{z|x}$\n  (randomness in ε, not z → gradient flows through μ and Σ)\n\nStep 4: Run z through decoder\n  → get μ_{x|z}  (decoder output = predicted mean of x)\n\nStep 5: Compute reconstruction loss\n  L_recon = ||x - μ_{x|z}||²₂\n  → maximizing log p_θ(x|z) ≡ minimizing L2 distance\n\nTotal: maximize L_recon_term - L_KL",
+          "text": "Step 1: Run input x through encoder\n  $\\to \\mathrm{get} q_\\phi (z|x) = \\mathcal{N}(\\mu _{z|x}, \\Sigma _{z|x})$\n  (encoder outputs two vectors: mean μ and covariance Σ)\n\nStep 2: Compute prior KL loss\n  $L_{\\text{KL}} = D_{\\text{KL}}(q_\\phi (z|x), \\mathcal{N}(0,I))$\n  → encoder output should be unit Gaussian\n  → closed form for Gaussians\n\nStep 3: Sample z via reparameterization trick\n  $\\varepsilon \\sim \\mathcal{N}(0, I)$\n  $z = \\varepsilon \\odot \\sum _{z|x} + \\mu _{z|x}$\n  (randomness in ε, not z → gradient flows through μ and Σ)\n\nStep 4: Run z through decoder\n  → get μ_{x|z}  (decoder output = predicted mean of x)\n\nStep 5: Compute reconstruction loss\n  L_recon = ||x - μ_{x|z}||²₂\n  → maximizing log p_θ(x|z) ≡ minimizing L2 distance\n\nTotal: maximize L_recon_term - L_KL",
           "qa": true
         },
         {
@@ -16614,7 +16614,7 @@
         {
           "type": "text",
           "heading": "2. Asıl hedef: MLE",
-          "text": "VAE'de olduğu gibi, elimizdeki training verisi x_0'ı en probable kılan θ'yı bul:\n\n$\\theta^* = \\operatorname{argmax} \\log p_\\theta (x_0)$"
+          "text": "VAE'de olduğu gibi, elimizdeki training verisi x_0'ı en probable kılan θ'yı bul:\n\nθ* = argmax log p_θ(x_0)"
         },
         {
           "type": "text",
@@ -16749,7 +16749,7 @@
         {
           "type": "text",
           "heading": "P||Q kullansaydık ne olurdu?",
-          "text": "D_KL(p(z) || q_φ(z|x)) — prior başa yazılsaydı:\n\nÖrnekler prior'dan çekiliyor.\nPrior N(0,I) — çok geniş bir dağılım.\n\nPrior'ın yüksek olduğu her yerde encoder da kitle bulundurmalı:\n→ Encoder tüm N(0,I) uzayını kapsamaya çalışır\n→ Her x için encoder geniş, yayvan bir q üretir\n→ Latent space structured kalmaz, generation bozulur\n\nAyrıca pratik sorun:\n  Prior'dan z örnekleyip encoder'ı evaluate etmek gerekir\n  ama encoder x'e koşullu — prior'dan gelen z için anlamlı değil.",
+          "text": "$D_{\\text{KL}}(p(z) \\| q_\\phi (z|x))$ — prior başa yazılsaydı:\n\nÖrnekler prior'dan çekiliyor.\nPrior N(0,I) — çok geniş bir dağılım.\n\nPrior'ın yüksek olduğu her yerde encoder da kitle bulundurmalı:\n→ Encoder tüm N(0,I) uzayını kapsamaya çalışır\n→ Her x için encoder geniş, yayvan bir q üretir\n→ Latent space structured kalmaz, generation bozulur\n\nAyrıca pratik sorun:\n  Prior'dan z örnekleyip encoder'ı evaluate etmek gerekir\n  ama encoder x'e koşullu — prior'dan gelen z için anlamlı değil.",
           "qa": true
         },
         {
@@ -16851,7 +16851,7 @@
         {
           "type": "text",
           "heading": "0. Ortak başlangıç: MLE hedefi",
-          "text": "Her iki modelin de aynı hedefi var: training verisi x'i en probable kılan θ'yı bul.\n\n$\\mathrm{VAE}: \\qquad \\theta^* = \\operatorname{argmax} \\log p_\\theta (x)$\n$\\mathrm{DDPM}: \\theta^* = \\operatorname{argmax} \\log p_\\theta (x_0)$\n\nAma latent space farklı tanımlanıyor:\n\nVAE:  z ~ N(0,I) → decoder → x  (tek adım)\nDDPM: x_0 → x_1 → ... → x_T ~ N(0,I) → ... → x_0  (T adım)"
+          "text": "Her iki modelin de aynı hedefi var: training verisi x'i en probable kılan θ'yı bul.\n\nVAE:   θ* = argmax log p_θ(x)\nDDPM:  θ* = argmax log p_θ(x_0)\n\nAma latent space farklı tanımlanıyor:\n\nVAE:  z ~ N(0,I) → decoder → x  (tek adım)\nDDPM: x_0 → x_1 → ... → x_T ~ N(0,I) → ... → x_0  (T adım)"
         },
         {
           "type": "text",
@@ -16895,7 +16895,7 @@
         {
           "type": "text",
           "heading": "9. L_T ignore — VAE'den kritik fark",
-          "text": "VAE Term 2: D_KL(q_φ(z|x) || p(z))\nφ VAR — encoder öğreniyor, bu KL onu regularize ediyor → optimize edilir, şart.\n\nDDPM L_T: D_KL(q(x_T|x_0) || p(x_T))\nφ YOK — forward process sabit, p(x_T)=N(0,I) sabit.\nT adım yeterince büyükse x_T zaten N(0,I)'ye yaklaşıyor, bu garanti.\n→ sabit kalır, ignore edilir.\n\nVAE'de prior KL encoder'ı latent space'e zorlar — öğrenmenin bir parçası.\nDDPM'de prior matching forward process tarafından otomatik sağlanıyor — öğrenilecek bir şey yok."
+          "text": "VAE Term 2: D_KL(q_φ(z|x) || p(z))\n$\\phi \\mathrm{VAR}$ — encoder öğreniyor, bu KL onu regularize ediyor → optimize edilir, şart.\n\nDDPM L_T: D_KL(q(x_T|x_0) || p(x_T))\n$\\phi \\mathrm{YOK}$ — forward process sabit, p(x_T)=N(0,I) sabit.\nT adım yeterince büyükse x_T zaten N(0,I)'ye yaklaşıyor, bu garanti.\n→ sabit kalır, ignore edilir.\n\nVAE'de prior KL encoder'ı latent space'e zorlar — öğrenmenin bir parçası.\nDDPM'de prior matching forward process tarafından otomatik sağlanıyor — öğrenilecek bir şey yok."
         },
         {
           "type": "text",
@@ -17427,7 +17427,7 @@
         {
           "type": "text",
           "heading": "Zero-Shot Classification (Adım Adım)",
-          "text": "1. Elimde K sınıf var: {airplane, dog, bird, ...}\n\n2. Her sınıf için metin oluştur:\n   t_airplane = \"a photo of an airplane\"\n   t_dog     = \"a photo of a dog\"\n   ...\n\n3. Text encoder ile hepsini embed et:\n   $T = [f_T(t_1), f_T(t_2), \\ldots , f_T(t_K)] # (K, 512)$\n\n4. Yeni görüntüyü embed et:\n   v = f_I(image)                             # (512,)\n\n5. Cosine similarity hesapla:\n   scores = v @ T.T                          # (K,)\n\n6. Argmax → tahmin edilen sınıf\n\nYeni bir sınıf eklemek için sadece metin ekle — yeniden eğitim yok!",
+          "text": "1. Elimde K sınıf var: {airplane, dog, bird, ...}\n\n2. Her sınıf için metin oluştur:\n   t_airplane = \"a photo of an airplane\"\n   t_dog     = \"a photo of a dog\"\n   ...\n\n3. Text encoder ile hepsini embed et:\n   T = [f_T(t_1), f_T(t_2), ..., f_T(t_K)]  # (K, 512)\n\n4. Yeni görüntüyü embed et:\n   v = f_I(image)                             # (512,)\n\n5. Cosine similarity hesapla:\n   scores = v @ T.T                          # (K,)\n\n6. Argmax → tahmin edilen sınıf\n\nYeni bir sınıf eklemek için sadece metin ekle — yeniden eğitim yok!",
           "qa": true
         },
         {
