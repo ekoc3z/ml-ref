@@ -2328,7 +2328,7 @@
         {
           "type": "text",
           "heading": "Genel Formül",
-          "text": "$h_t = \\mathrm{RNN}(y_{t-1}, h_{t-1}, c_t)$\n          ↑          ↑         ↑\n     önceki      önceki    o ana özel\n     output      hidden    context\n                 state     vector\n\nHer adımda 3 şey giriyor decoder'a: önceki kelime, önceki hidden state, o adıma özel context.",
+          "text": "$$h_t = \\mathrm{RNN}(\\underbrace{y_{t-1}}_{\\substack{\\text{önceki}\\\\\\text{output}}}, \\underbrace{h_{t-1}}_{\\substack{\\text{önceki}\\\\\\text{hidden}\\\\\\text{state}}}, \\underbrace{c_t}_{\\substack{\\text{o ana özel}\\\\\\text{context}\\\\\\text{vector}}})$$\n\nHer adımda 3 şey giriyor decoder'a: önceki kelime, önceki hidden state, o adıma özel context.",
           "qa": true
         },
         {
@@ -5407,19 +5407,19 @@
         {
           "type": "text",
           "heading": "\"Hepsi N(0,1)'e çekilirse farklı görüntüler nasıl ayırt edilebilir?\"",
-          "text": "Bu çok iyi bir soru. Eğer KL loss her şeyi gerçekten N(0,1)'e tam olarak iterek kazansaydı, haklısın — her görüntü aynı yere yığılırdı, hiçbir şey öğrenilemezdi.\n\nAma KL bir soft constraint — reconstruction loss ile yarışıyor. İkisi arasında bir denge var:\n\nLoss = Reconstruction + $\\lambda$ · KL\n          ↑                ↑\n    \"farklı görüntüleri    \"hepsini N(0,1)'e\n     farklı yerlere koy\"   doğru çek\"\n\nReconstruction loss şunu söylüyor: \"kedi görüntüsünü köpek görüntüsünden farklı bir yere kodlamazsan ikisini de reconstruct edemezsin, loss büyür.\" Bu baskı, farklı görüntülerin farklı $\\mu$ değerlerine sahip olmasını zorunlu kılıyor.\n\nKL loss ise şunu söylüyor: \"ama çok uzağa da gitme, 0'ın etrafında kal.\"\n\nSonuç olarak $\\mu$ değerleri hepsi $\\mathcal{N}(0,1)$ olmaz ama hepsi sıfırın makul bir çevresinde, birbirinden ayrı noktalara oturur:\n\nKedi:    μ = (0.8, -0.3,  1.2, -0.5, ...)\nKöpek:   μ = (-0.6, 0.9, -0.2,  1.1, ...)\nAraba:   μ = (1.3, -1.1,  0.4, -0.8, ...)\n\nBunlar birbirinden farklı ama hepsi 0 civarında. Hiçbiri $\\mu =500$ ya da $\\mu =-300$ değil. Latent space sıkışık ama organize. Ve $\\sigma$ değerleri 1'e yakın olduğu için bulutlar birbiriyle örtüşüyor — aralarındaki bölgeler de dolu, generation çalışıyor.\n\nDaha da somut düşünmek istersen: 128 boyutlu bir latent space'de her boyut farklı bir özelliği kodluyor olabilir. Kedi kulağının şekli bir boyutta, tüy dokusu başka bir boyutta. Her görüntü bu 128 boyutun her birinde farklı bir $\\mu$ üretiyor. KL bunların hepsini 0'a çekiyor ama reconstruction bunların doğru değerleri öğrenmesini zorluyor. İkisi dengelenince anlamlı, ayrışmış ama kompakt bir latent space ortaya çıkıyor.",
+          "text": "Bu çok iyi bir soru. Eğer KL loss her şeyi gerçekten N(0,1)'e tam olarak iterek kazansaydı, haklısın — her görüntü aynı yere yığılırdı, hiçbir şey öğrenilemezdi.\n\nAma KL bir soft constraint — reconstruction loss ile yarışıyor. İkisi arasında bir denge var:\n\n$$\\mathrm{Loss} = \\underbrace{\\mathrm{Reconstruction}}_{\\substack{\\text{\"farklı görüntüleri}\\\\\\text{farklı yerlere koy\"}}} + \\underbrace{\\lambda \\cdot \\operatorname{KL}}_{\\substack{\\text{\"hepsini N(0,1)'e}\\\\\\text{doğru çek\"}}}$$\n\nReconstruction loss şunu söylüyor: \"kedi görüntüsünü köpek görüntüsünden farklı bir yere kodlamazsan ikisini de reconstruct edemezsin, loss büyür.\" Bu baskı, farklı görüntülerin farklı $\\mu$ değerlerine sahip olmasını zorunlu kılıyor.\n\nKL loss ise şunu söylüyor: \"ama çok uzağa da gitme, 0'ın etrafında kal.\"\n\nSonuç olarak $\\mu$ değerleri hepsi $\\mathcal{N}(0,1)$ olmaz ama hepsi sıfırın makul bir çevresinde, birbirinden ayrı noktalara oturur:\n\nKedi:    μ = (0.8, -0.3,  1.2, -0.5, ...)\nKöpek:   μ = (-0.6, 0.9, -0.2,  1.1, ...)\nAraba:   μ = (1.3, -1.1,  0.4, -0.8, ...)\n\nBunlar birbirinden farklı ama hepsi 0 civarında. Hiçbiri $\\mu =500$ ya da $\\mu =-300$ değil. Latent space sıkışık ama organize. Ve $\\sigma$ değerleri 1'e yakın olduğu için bulutlar birbiriyle örtüşüyor — aralarındaki bölgeler de dolu, generation çalışıyor.\n\nDaha da somut düşünmek istersen: 128 boyutlu bir latent space'de her boyut farklı bir özelliği kodluyor olabilir. Kedi kulağının şekli bir boyutta, tüy dokusu başka bir boyutta. Her görüntü bu 128 boyutun her birinde farklı bir $\\mu$ üretiyor. KL bunların hepsini 0'a çekiyor ama reconstruction bunların doğru değerleri öğrenmesini zorluyor. İkisi dengelenince anlamlı, ayrışmış ama kompakt bir latent space ortaya çıkıyor.",
           "qa": true
         },
         {
           "type": "text",
           "heading": "ELBO Loss: İki Hedef Aynı Anda",
-          "text": "Loss = Reconstruction Loss + KL Divergence\n\n     $= \\|x - \\hat{x}\\|^{2} \\qquad + \\qquad \\operatorname{KL}( \\mathcal{N}(\\mu ,\\sigma ^{2}) \\| \\mathcal{N}(0,1) )$\n         ↑                        ↑\n     \"görüntüyü          \"encoder'ın dağılımı\n      iyi geri ver\"       N(0,1)'e yakın kalsın\"\n\nBu ikisi birbiriyle çelişiyor biraz:\n- Reconstruction isterse encoder her görüntüyü çok dar, birbirinden uzak yerlere koyar → iyi reconstruct, ama generation çalışmaz\n- KL zorlarsa encoder her şeyi aynı yere yığar → generation güzel, ama reconstruct kötü\n\nİyi bir VAE bu gerilimi dengeler.",
+          "text": "Loss = Reconstruction Loss + KL Divergence\n\n     $$= \\underbrace{\\|x - \\hat{x}\\|^{2}}_{\\substack{\\text{\"görüntüyü}\\\\\\text{iyi geri ver\"}}} + \\underbrace{\\operatorname{KL}( \\mathcal{N}(\\mu ,\\sigma ^{2}) \\| \\mathcal{N}(0,1) )}_{\\substack{\\text{\"encoder'ın dağılımı}\\\\\\text{N(0,1)'e yakın kalsın\"}}}$$\n\nBu ikisi birbiriyle çelişiyor biraz:\n- Reconstruction isterse encoder her görüntüyü çok dar, birbirinden uzak yerlere koyar → iyi reconstruct, ama generation çalışmaz\n- KL zorlarsa encoder her şeyi aynı yere yığar → generation güzel, ama reconstruct kötü\n\nİyi bir VAE bu gerilimi dengeler.",
           "qa": true
         },
         {
           "type": "text",
           "heading": "Reparameterization Trick — Neden Gerekli?",
-          "text": "Örnekleme adımı (z ~ $\\mathcal{N}(\\mu , \\sigma ^{2})$) normalde gradyanı bloklar — rastgele bir işlem, backprop geçemez.\n\nÇözüm: örneklemeyi dışarı çıkar.\n\n$z = \\mu + \\sigma \\cdot \\varepsilon , \\qquad \\varepsilon \\sim \\mathcal{N}(0,1)$  ← bu sabit, gradyan geçmez\n                  ↑\n           gradyan $\\mu$ ve σ'dan geçer ✓\n\nRastgelelik ε'da, ε'ya gradyan geçmek zorunda değil. $\\mu$ ve $\\sigma$ öğreniliyor.",
+          "text": "Örnekleme adımı (z ~ $\\mathcal{N}(\\mu , \\sigma ^{2})$) normalde gradyanı bloklar — rastgele bir işlem, backprop geçemez.\n\nÇözüm: örneklemeyi dışarı çıkar.\n\n$z = \\mu + \\sigma \\cdot \\varepsilon , \\qquad \\varepsilon \\sim \\mathcal{N}(0,1)$  ← bu sabit, gradyan geçmez\n↳ gradyan μ ve σ'dan geçer ✓\n\nRastgelelik ε'da, ε'ya gradyan geçmek zorunda değil. $\\mu$ ve $\\sigma$ öğreniliyor.",
           "qa": true
         }
       ],
@@ -5823,14 +5823,13 @@
         {
           "type": "text",
           "heading": "4. Log rearrange → 3 terim",
-          "text": "VAE:\n$$= \\underbrace{\\log p_\\theta (x|z)}_{\\text{Term 1}} - \\underbrace{\\log q_\\phi (z|x)/p(z)}_{\\text{Term 2}} + \\underbrace{\\log q_\\phi (z|x)/p_\\theta (z|x)}_{\\text{Term 3}}$$\n\nDDPM:\n$$= \\underbrace{\\log p_\\theta (x_0|x_1)}_{\\text{Term 1}} - \\underbrace{\\log q(x_{1:T}|x_0)/p_\\theta (x_{1:T})}_{\\text{Term 2}} + \\underbrace{\\log q(x_{1:T}|x_0)/p_\\theta (x_{1:T}|x_0)}_{\\text{Term 3}}$$",
+          "text": "VAE:\n$$= \\underbrace{\\log p_\\theta (x|z)}_{\\text{Term 1}} - \\underbrace{\\log q_\\phi (z|x)/p(z)}_{\\text{Term 2}} + \\underbrace{\\log q_\\phi (z|x)/p_\\theta (z|x)}_{\\text{Term 3}}$$\n\nDDPM:\n$= \\log p_\\theta (x_0|x_1) \\quad - \\quad \\log q(x_{1:T}|x_0)/p_\\theta (x_{1:T}) \\quad + \\quad \\log q(x_{1:T}|x_0)/p_\\theta (x_{1:T}|x_0)$\n  ─────────────────     ──────────────────────────────────     ──────────────────────────────────────\n  Term 1                Term 2                                  Term 3",
           "qa": true
         },
         {
-          "type": "text",
+          "type": "code",
           "heading": "5-6. Expectation + KL olarak yaz",
-          "text": "VAE:\n$$\\log p_\\theta (x) = \\underbrace{\\mathbb{E}_z[\\log p_\\theta (x|z)]}_{\\substack{\\text{reconstruction}\\\\\\text{hesaplanabilir}}} - \\underbrace{D_{\\text{KL}}(q_\\phi (z|x) \\| p(z))}_{\\substack{\\text{prior KL}\\\\\\text{hesaplanabilir}}} + \\underbrace{D_{\\text{KL}}(q_\\phi (z|x) \\| p_\\theta (z|x))}_{\\substack{\\text{posterior KL}\\\\\\text{HESAPLANAMAZ}}}$$\n\nDDPM:\n$$\\log p_\\theta (x_0) = \\underbrace{\\mathbb{E}_q[\\log p_\\theta (x_0|x_1)]}_{\\substack{\\text{reconstruction}\\\\\\text{hesaplanabilir}}} - \\underbrace{D_{\\text{KL}}(q(x_{1:T}|x_0) \\| p_\\theta (x_{1:T}))}_{\\substack{\\text{prior KL}\\\\\\text{hesaplanabilir (açılır)}}} + \\underbrace{D_{\\text{KL}}(q(x_{1:T}|x_0) \\| p_\\theta (x_{1:T}|x_0))}_{\\substack{\\text{posterior KL}\\\\\\text{HESAPLANAMAZ}}}$$\n\nDropped term her ikisinde de aynı yapı, aynı yön:\nVAE:   D_KL( q_φ(z|x)       ||  p_θ(z|x)       )  ← ikisi de $x\\to z$\nDDPM:  D_KL( q(x_{1:T}|x_0) ||  p_θ(x_{1:T}|x_0) ) ← ikisi de $x_0\\to x_{1:T}$",
-          "qa": true
+          "text": "VAE:\nlog p_θ(x) = E_z[log p_θ(x|z)]  -  D_KL(q_φ(z|x) || p(z))  +  D_KL(q_φ(z|x) || p_θ(z|x))\n             ─────────────────     ──────────────────────────     ──────────────────────────\n             reconstruction        prior KL                       posterior KL\n             hesaplanabilir        hesaplanabilir                 HESAPLANAMAZ\n\nDDPM:\nlog p_θ(x_0) = E_q[log p_θ(x_0|x_1)]  -  D_KL(q(x_{1:T}|x_0) || p_θ(x_{1:T}))  +  D_KL(q(x_{1:T}|x_0) || p_θ(x_{1:T}|x_0))\n               ─────────────────────     ──────────────────────────────────────────    ─────────────────────────────────────────\n               reconstruction            prior KL                                       posterior KL\n               hesaplanabilir            hesaplanabilir (açılır)                        HESAPLANAMAZ\n\nDropped term her ikisinde de aynı yapı, aynı yön:\nVAE:   D_KL( q_φ(z|x)       ||  p_θ(z|x)       )  ← ikisi de x→z\nDDPM:  D_KL( q(x_{1:T}|x_0) ||  p_θ(x_{1:T}|x_0) ) ← ikisi de x_0→x_{1:T}"
         },
         {
           "type": "text",
@@ -7454,13 +7453,13 @@
         {
           "type": "text",
           "heading": "Gaussian olunca somutlaşıyor",
-          "text": "$y = Ax + n, \\quad n \\sim \\mathcal{N}(0, \\sigma _n^{2}I)$\n$x \\sim \\mathcal{N}(0, R_x)$   ← Gaussian prior\n\n-log $p(y|x) \\propto \\|y - Ax\\|^{2}$        (Gaussian gürültüden)\n-log $p(x) \\qquad \\propto x^{\\top} R_x^{-1}$ x        (Gaussian prior'dan)\n\n$x_{\\text{MAP}} = \\operatorname{argmin} \\quad \\|y - Ax\\|^{2} + x^{\\top} R_x^{-1} x$\n                ────────────   ───────────\n                data fidelity   regularization\n\nKapalı form çözüm:\n  $x_{\\text{MAP}} = (A^{\\top}A + R_x^{-1})^{-1} A^{\\top}y$\n\nChapter 2'deki Tikhonov regularization:\n  $x_{\\text{Tikhonov}} = (A^{\\top}A + \\lambda I)^{-1} A^{\\top}y$\n\nBirebir aynı formül! Fark şu:\n  Tikhonov: $\\lambda$ keyfi seçiliyordu (deneme-yanılma)\n  MAP:      $R_x^{-1}$ = x'in prior istatistiğinden geliyor\n\nArtık regularization'ın nereden geldiğini biliyoruz: prior!",
+          "text": "$y = Ax + n, \\quad n \\sim \\mathcal{N}(0, \\sigma _n^{2}I)$\n$x \\sim \\mathcal{N}(0, R_x)$   ← Gaussian prior\n\n-log $p(y|x) \\propto \\|y - Ax\\|^{2}$        (Gaussian gürültüden)\n-log $p(x) \\qquad \\propto x^{\\top} R_x^{-1}$ x        (Gaussian prior'dan)\n\n$$x_{\\text{MAP}} = \\underbrace{\\operatorname{argmin} \\quad \\|y - Ax\\|^{2}}_{\\text{data fidelity}} + \\underbrace{x^{\\top} R_x^{-1} x}_{\\text{regularization}}$$\n\nKapalı form çözüm:\n  $x_{\\text{MAP}} = (A^{\\top}A + R_x^{-1})^{-1} A^{\\top}y$\n\nChapter 2'deki Tikhonov regularization:\n  $x_{\\text{Tikhonov}} = (A^{\\top}A + \\lambda I)^{-1} A^{\\top}y$\n\nBirebir aynı formül! Fark şu:\n  Tikhonov: $\\lambda$ keyfi seçiliyordu (deneme-yanılma)\n  MAP:      $R_x^{-1}$ = x'in prior istatistiğinden geliyor\n\nArtık regularization'ın nereden geldiğini biliyoruz: prior!",
           "qa": true
         },
         {
           "type": "text",
           "heading": "Prior seçimi regularization şeklini belirliyor",
-          "text": "Farklı prior'lar farklı regularization veriyor:\n\nGaussian prior:  $p(x) \\propto \\exp(-\\|x\\|^{2})$\n  -log $p(x) \\propto \\|x\\|^{2}$   → L2 regularization (Tikhonov/Ridge)\n  Küçük ama sıfır olmayan bileşenler\n\nLaplace prior:   $p(x) \\propto \\exp(-\\|x\\|_1)$\n  -log $p(x) \\propto \\|x\\|_1$  → L1 regularization (LASSO)\n  Bazı bileşenler tam sıfır → sparse çözüm\n  Compressed sensing'in temeli bu\n\nGenel:\n  $$x_{\\text{MAP}} = \\underbrace{\\operatorname{argmin} \\quad -\\log p(y|x)}_{\\substack{\\text{dağılımı    p}\\\\\\text{or          b}}} - \\underbrace{\\log p(x)}_{\\substack{\\text{rior dağılımı}\\\\\\text{elirliyor}}}$$\n\nYani Chapter 2'de 'hangi normu kullanalım?' sorusu aslında\n'x hakkında ne inanıyoruz?' sorusuydu.",
+          "text": "Farklı prior'lar farklı regularization veriyor:\n\nGaussian prior:  $p(x) \\propto \\exp(-\\|x\\|^{2})$\n  -log $p(x) \\propto \\|x\\|^{2}$   → L2 regularization (Tikhonov/Ridge)\n  Küçük ama sıfır olmayan bileşenler\n\nLaplace prior:   $p(x) \\propto \\exp(-\\|x\\|_1)$\n  -log $p(x) \\propto \\|x\\|_1$  → L1 regularization (LASSO)\n  Bazı bileşenler tam sıfır → sparse çözüm\n  Compressed sensing'in temeli bu\n\nGenel:\n  $$x_{\\text{MAP}} = \\underbrace{\\operatorname{argmin} \\quad -\\log p(y|x)}_{\\substack{\\text{gürültü dağılımı}\\\\\\text{belirliyor}}} - \\underbrace{\\log p(x)}_{\\substack{\\text{prior dağılımı}\\\\\\text{belirliyor}}}$$\n\nYani Chapter 2'de 'hangi normu kullanalım?' sorusu aslında\n'x hakkında ne inanıyoruz?' sorusuydu.",
           "qa": true
         }
       ],
@@ -8245,7 +8244,7 @@
         {
           "type": "text",
           "heading": "Sigmoid + MSE Sorunu",
-          "text": "MSE loss: L = (y - σ(z))²\n$dL/dz = (\\sigma (z) - y) \\cdot \\sigma (z)(1 - \\sigma (z))$\n                        ↑\n               saturation buradan geliyor\n\nModel çok yanlış olsa bile $(\\sigma (z)\\approx 1, y=0)$\nsigmoid terimi → 0, gradient → 0\nöğrenme yavaşlar veya durur",
+          "text": "MSE loss: L = (y - σ(z))²\n$$dL/dz = \\underbrace{(\\sigma (z) - y) \\cdot \\sigma (z)(1 - \\sigma (z))}_{\\text{saturation buradan geliyor}}$$\n\nModel çok yanlış olsa bile $(\\sigma (z)\\approx 1, y=0)$\nsigmoid terimi → 0, gradient → 0\nöğrenme yavaşlar veya durur",
           "qa": true
         },
         {
@@ -9003,7 +9002,7 @@
         {
           "type": "text",
           "heading": "ELBO Türetimi",
-          "text": "$\\log p(x) = \\log \\int p(x|z)p(z)dz$\n         $\\ge \\mathbb{E}_q[\\log p(x|z)] - \\operatorname{KL}(q(z|x) \\| p(z))$\n              ↑                      ↑\n        reconstruction           regularization\n\n$q(z|x)$: encoder → $\\mu , \\sigma$\n$p(x|z)$: decoder\n$p(z) = \\mathcal{N}(0,I)$: prior",
+          "text": "$\\log p(x) = \\log \\int p(x|z)p(z)dz$\n         $$\\ge \\underbrace{\\mathbb{E}_q[\\log p(x|z)]}_{\\text{reconstruction}} - \\underbrace{\\operatorname{KL}(q(z|x) \\| p(z))}_{\\text{regularization}}$$\n\n$q(z|x)$: encoder → $\\mu , \\sigma$\n$p(x|z)$: decoder\n$p(z) = \\mathcal{N}(0,I)$: prior",
           "qa": true
         },
         {
@@ -16877,14 +16876,13 @@
         {
           "type": "text",
           "heading": "4. Log rearrange → 3 terim",
-          "text": "VAE:\n$$= \\underbrace{\\log p_\\theta (x|z)}_{\\text{Term 1}} - \\underbrace{\\log q_\\phi (z|x)/p(z)}_{\\text{Term 2}} + \\underbrace{\\log q_\\phi (z|x)/p_\\theta (z|x)}_{\\text{Term 3}}$$\n\nDDPM:\n$$= \\underbrace{\\log p_\\theta (x_0|x_1)}_{\\text{Term 1}} - \\underbrace{\\log q(x_{1:T}|x_0)/p_\\theta (x_{1:T})}_{\\text{Term 2}} + \\underbrace{\\log q(x_{1:T}|x_0)/p_\\theta (x_{1:T}|x_0)}_{\\text{Term 3}}$$",
+          "text": "VAE:\n$$= \\underbrace{\\log p_\\theta (x|z)}_{\\text{Term 1}} - \\underbrace{\\log q_\\phi (z|x)/p(z)}_{\\text{Term 2}} + \\underbrace{\\log q_\\phi (z|x)/p_\\theta (z|x)}_{\\text{Term 3}}$$\n\nDDPM:\n$= \\log p_\\theta (x_0|x_1) \\quad - \\quad \\log q(x_{1:T}|x_0)/p_\\theta (x_{1:T}) \\quad + \\quad \\log q(x_{1:T}|x_0)/p_\\theta (x_{1:T}|x_0)$\n  ─────────────────     ──────────────────────────────────     ──────────────────────────────────────\n  Term 1                Term 2                                  Term 3",
           "qa": true
         },
         {
-          "type": "text",
+          "type": "code",
           "heading": "5-6. Expectation + KL olarak yaz",
-          "text": "VAE:\n$$\\log p_\\theta (x) = \\underbrace{\\mathbb{E}_z[\\log p_\\theta (x|z)]}_{\\substack{\\text{reconstruction}\\\\\\text{hesaplanabilir}}} - \\underbrace{D_{\\text{KL}}(q_\\phi (z|x) \\| p(z))}_{\\substack{\\text{prior KL}\\\\\\text{hesaplanabilir}}} + \\underbrace{D_{\\text{KL}}(q_\\phi (z|x) \\| p_\\theta (z|x))}_{\\substack{\\text{posterior KL}\\\\\\text{HESAPLANAMAZ}}}$$\n\nDDPM:\n$$\\log p_\\theta (x_0) = \\underbrace{\\mathbb{E}_q[\\log p_\\theta (x_0|x_1)]}_{\\substack{\\text{reconstruction}\\\\\\text{hesaplanabilir}}} - \\underbrace{D_{\\text{KL}}(q(x_{1:T}|x_0) \\| p_\\theta (x_{1:T}))}_{\\substack{\\text{prior KL}\\\\\\text{hesaplanabilir (açılır)}}} + \\underbrace{D_{\\text{KL}}(q(x_{1:T}|x_0) \\| p_\\theta (x_{1:T}|x_0))}_{\\substack{\\text{posterior KL}\\\\\\text{HESAPLANAMAZ}}}$$\n\nDropped term her ikisinde de aynı yapı, aynı yön:\nVAE:   D_KL( q_φ(z|x)       ||  p_θ(z|x)       )  ← ikisi de $x\\to z$\nDDPM:  D_KL( q(x_{1:T}|x_0) ||  p_θ(x_{1:T}|x_0) ) ← ikisi de $x_0\\to x_{1:T}$",
-          "qa": true
+          "text": "VAE:\nlog p_θ(x) = E_z[log p_θ(x|z)]  -  D_KL(q_φ(z|x) || p(z))  +  D_KL(q_φ(z|x) || p_θ(z|x))\n             ─────────────────     ──────────────────────────     ──────────────────────────\n             reconstruction        prior KL                       posterior KL\n             hesaplanabilir        hesaplanabilir                 HESAPLANAMAZ\n\nDDPM:\nlog p_θ(x_0) = E_q[log p_θ(x_0|x_1)]  -  D_KL(q(x_{1:T}|x_0) || p_θ(x_{1:T}))  +  D_KL(q(x_{1:T}|x_0) || p_θ(x_{1:T}|x_0))\n               ─────────────────────     ──────────────────────────────────────────    ─────────────────────────────────────────\n               reconstruction            prior KL                                       posterior KL\n               hesaplanabilir            hesaplanabilir (açılır)                        HESAPLANAMAZ\n\nDropped term her ikisinde de aynı yapı, aynı yön:\nVAE:   D_KL( q_φ(z|x)       ||  p_θ(z|x)       )  ← ikisi de x→z\nDDPM:  D_KL( q(x_{1:T}|x_0) ||  p_θ(x_{1:T}|x_0) ) ← ikisi de x_0→x_{1:T}"
         },
         {
           "type": "text",
