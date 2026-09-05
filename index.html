@@ -34,9 +34,9 @@
 body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh}
 
 /* SIDEBAR */
-#sidebar{width:262px;background:var(--sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:50;transition:transform .25s;overflow-y:auto}
-.sidebar-hdr{padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
-.sidebar-hdr h2{font-size:15px;font-weight:700;color:var(--accent-light)}
+#sidebar{width:262px;padding-bottom:28px;background:var(--sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:50;transition:transform .25s;overflow-y:auto}
+.sidebar-hdr{padding:20px 16px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
+.sidebar-hdr h2{font-size:21px;font-weight:800;letter-spacing:-.3px;line-height:1.2;color:var(--accent-light)}
 .sidebar-hdr p{font-size:11px;color:var(--muted);margin-top:2px}
 #sidebar-close{display:none;position:absolute;top:10px;right:10px;background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer}
 .nav-btn{display:flex;align-items:center;gap:10px;width:100%;padding:10px 16px;border:none;background:none;color:var(--muted);font-size:12px;cursor:pointer;text-align:left;border-left:3px solid transparent;transition:background .15s,color .15s,border-color .15s}
@@ -342,6 +342,8 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .ch-ov-label::after{content:'';flex:1;height:1px;background:var(--border)}
 .ch-ov-body p{font-size:16px;line-height:1.85;color:var(--overview-text);margin-bottom:14px}
 .ch-ov-body p:last-child{margin-bottom:0}
+.ch-ov-body strong{font-weight:700;color:var(--text)}
+.ch-ov-body .katex{margin:0 .15em}
 .ch-ov-body .katex-display{margin:.4em 0;overflow-x:auto}
 
 /* TRANSFORMER LEARNING TREE */
@@ -381,7 +383,7 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 
 /* ── MATH collapsible group ── */
 .math-group-toggle{
-  display:flex;align-items:center;gap:6px;
+  display:flex;align-items:center;gap:0;
   padding:10px 16px 4px;
   font-size:13.5px;font-weight:700;text-transform:none;letter-spacing:.2px;
   color:var(--text);opacity:.88;
@@ -395,6 +397,9 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .math-group-toggle.open .math-group-arrow{transform:rotate(90deg)}
 .math-group-items{ display:none }
 .math-group-items.open{ display:block }
+.math-group-items{padding-bottom:8px}
+.math-group-toggle::before{content:'▸';display:inline-block;width:14px;font-size:10px;opacity:.6;transition:transform .2s}
+.math-group-toggle.open::before{transform:rotate(90deg)}
 
 /* ── ML-OVERALL group + iki yonlu rozet ── */
 .nav-group-toggle{display:flex;align-items:center;gap:6px;padding:14px 16px 4px;font-size:13.5px;font-weight:700;text-transform:none;letter-spacing:.2px;color:var(--text);opacity:.88;cursor:default;user-select:none}
@@ -857,8 +862,7 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
   </button>
 
   <div class="math-group-toggle" id="math-group-toggle" onclick="toggleMathGroup()">
-    <span class="math-group-arrow">▶</span>
-    <span>MATH · Probability &amp; Stats</span>
+    <span>Math · Probability &amp; Stats</span>
   </div>
   <div class="math-group-items" id="math-group-items">
     <button class="nav-btn" data-sec="math01" onclick="switchSection('math01');closeSidebar()">
@@ -1758,7 +1762,7 @@ function showOverview(sec){
   const body = $('ch-ov-body');
   const text = OVERVIEWS[sec];
   if(text){
-    const paras = text.split('\n\n').filter(p=>p.trim()).map(p=>`<p>${esc(p.trim())}</p>`).join('');
+    const paras = text.split('\n\n').filter(p=>p.trim()).map(p=>`<p>${esc(p.trim()).replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')}</p>`).join('');
     body.innerHTML = paras;
     panel.style.display = '';
     if(typeof renderMathInElement === 'function'){
