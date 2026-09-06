@@ -303,28 +303,27 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .sec-fig .axis{stroke:var(--border)}
 .sec-fig text{fill:var(--muted);font-size:13px;font-family:inherit}
 .sec-fig figcaption{font-size:13px;color:var(--muted);margin-top:4px;font-style:italic}
-#home-page{display:none;max-width:1080px;margin:0 auto;padding:56px 28px 72px}
-.home-hero{text-align:center;padding-bottom:40px;border-bottom:1px solid var(--border);margin-bottom:8px}
-.home-hero h1{font-size:54px;font-weight:800;letter-spacing:-1.4px;line-height:1.05;color:var(--text)}
-.home-hero .home-rule{width:56px;height:2px;background:var(--accent);margin:20px auto 18px}
-.home-hero p{font-size:18px;line-height:1.7;color:var(--muted);max-width:620px;margin:0 auto}
-.home-stats{display:flex;justify-content:center;flex-wrap:wrap;gap:0 34px;margin-top:30px}
-.home-stat b{display:block;font-size:30px;font-weight:800;color:var(--accent);line-height:1.1}
-.home-stat span{font-size:12.5px;color:var(--muted)}
-.home-sec-label{font-size:11px;font-weight:800;letter-spacing:1.6px;color:var(--muted);margin:44px 0 14px}
-.home-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:0 30px}
-.home-card{display:block;width:100%;text-align:left;background:none;border:none;border-top:1px solid var(--border);padding:16px 2px 18px;cursor:pointer;color:inherit;font:inherit}
-.home-card:hover .home-card-t{color:var(--accent)}
-.home-card-n{font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.5px}
-.home-card-t{font-size:19px;font-weight:700;color:var(--text);margin:5px 0 6px;line-height:1.3;transition:color .15s}
-.home-card-d{font-size:13.5px;color:var(--muted);line-height:1.6}
-.home-chips{display:flex;flex-wrap:wrap;gap:8px}
-.home-chip{background:none;border:1px solid var(--border);border-radius:2px;padding:7px 13px;font:inherit;font-size:13px;color:var(--muted);cursor:pointer;transition:border-color .15s,color .15s}
-.home-chip:hover{border-color:var(--accent);color:var(--text)}
-.home-chip b{color:var(--text);font-weight:700}
+#home-page{display:none;max-width:940px;margin:0 auto;padding:72px 32px 88px}
+.home-hero{text-align:center;margin-bottom:14px}
+.home-hero h1{font-family:Georgia,'Iowan Old Style','Times New Roman',serif;font-size:52px;font-weight:400;letter-spacing:.01em;line-height:1.1;color:var(--text)}
+.home-hero .home-rule{height:1px;background:var(--border);margin:26px 0 22px}
+.home-hero .home-rule-in{width:34px;height:1px;background:var(--accent);margin:0 auto;position:relative;top:-1px}
+.home-hero p{font-family:Georgia,'Iowan Old Style','Times New Roman',serif;font-style:italic;font-size:17.5px;line-height:1.75;color:var(--muted);max-width:560px;margin:0 auto}
+.home-meta{text-align:center;font-size:12.5px;color:var(--muted);margin-top:18px;letter-spacing:.02em}
+.home-cols{display:grid;grid-template-columns:1fr 1fr;gap:0 60px;margin-top:52px}
+.home-col h3{font-size:11px;font-weight:800;letter-spacing:1.7px;color:var(--muted);padding-bottom:9px;border-bottom:1px solid var(--text);margin-bottom:4px}
+.toc-row{display:flex;align-items:baseline;gap:11px;width:100%;background:none;border:none;padding:9px 0;font:inherit;color:inherit;cursor:pointer;text-align:left}
+.toc-row+.toc-row{border-top:1px solid var(--border)}
+.toc-num{flex:0 0 26px;font-size:11.5px;font-weight:700;color:var(--accent);letter-spacing:.04em}
+.toc-name{font-size:16px;color:var(--text);white-space:nowrap}
+.toc-sub{font-size:12.5px;color:var(--muted);font-style:italic;white-space:nowrap}
+.toc-dots{flex:1 1 auto;min-width:14px;border-bottom:1px dotted var(--border);transform:translateY(-4px)}
+.toc-meta{flex:0 0 auto;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.toc-row:hover .toc-name{color:var(--accent)}
+.toc-row:hover .toc-dots{border-bottom-color:var(--accent)}
 .sidebar-hdr h2{cursor:pointer}
 .sidebar-hdr h2:hover{color:var(--accent)}
-@media(max-width:640px){.home-hero h1{font-size:38px}#home-page{padding:34px 20px 56px}}
+@media(max-width:760px){.home-cols{grid-template-columns:1fr;gap:38px}.home-hero h1{font-size:38px}#home-page{padding:44px 22px 62px}}
 .sec-table{width:100%;border-collapse:collapse;font-size:14.5px}
 .sec-table th{background:var(--popup-tbl-head);color:var(--accent-light);padding:7px 10px;text-align:left;font-weight:700;border-bottom:2px solid var(--border)}
 .sec-table td{padding:7px 10px;border-bottom:1px solid var(--border);color:var(--sec-text);vertical-align:top}
@@ -2182,13 +2181,13 @@ function showTxPopup(node){
 
 /* ==================== ANA SAYFA ==================== */
 const COURSE_AREAS = [
-  {label:'ML',      sub:'Bastian Leibe · RWTH',      pre:/^ch\d/,    first:'ch01'},
-  {label:'IDA',     sub:'Image Data Analysis',        pre:/^ida\d/,   first:'ida01'},
+  {label:'ML',      sub:'RWTH, Leibe',      pre:/^ch\d/,    first:'ch01'},
+  {label:'IDA',     sub:'RWTH, Stegmaier',        pre:/^ida\d/,   first:'ida01'},
   {label:'CS231n',  sub:'Stanford',                   pre:/^cs\d/,    first:'cs01'},
-  {label:'Vector Spaces', sub:'EE499 · ODTÜ',         pre:/^vs\d/,    first:'vs01'},
+  {label:'Vector Spaces', sub:'EE499, METU',         pre:/^vs\d/,    first:'vs01'},
   {label:'ML Lab',  sub:'RWTH + Stanford A3',         pre:/^lab/,     first:'lab01'},
-  {label:'Python & DSA', sub:'sözdizimi, NumPy, Big-O',pre:/^py\d/,   first:'py01'},
-  {label:'Math',    sub:'olasılık, dağılım, puzzle',  pre:/^math\d/,  first:'math01'}
+  {label:'Python & DSA', sub:'syntax, NumPy, Big-O',pre:/^py\d/,   first:'py01'},
+  {label:'Math',    sub:'probability, puzzles',  pre:/^math\d/,  first:'math01'}
 ];
 function buildHome(){
   const host = $('home-page'); if(!host) return;
@@ -2196,35 +2195,40 @@ function buildHome(){
   const total = src.reduce((n,c) => n + ((DATA[c]||[]).length), 0);
   const fams  = src.filter(c => (DATA[c]||[]).length).length;
   const groups = []; MLO_NAV.forEach(m => { if(!groups.includes(m.group)) groups.push(m.group); });
+  const ROMAN = ['I','II','III','IV','V','VI','VII','VIII','IX','X'];
 
-  const stat = (n,l) => `<div class="home-stat"><b>${n}</b><span>${esc(l)}</span></div>`;
-  let html = `<div class="home-hero">
-      <h1>ML Reference</h1><div class="home-rule"></div>
-      <p>Makine öğrenmesi, görüntü analizi ve doğrusal cebir — tek koleksiyon, iki eksen.
-         Kavramla ara ya da dersle ara; aynı kart iki yerde de aynı karttır.</p>
-      <div class="home-stats">${stat(total,'kart')}${stat(fams,'bölüm')}${stat(MLO_NAV.length,'ML-OVERALL')}${stat(groups.length,'kavram grubu')}</div>
-    </div>`;
+  const row = (key,num,name,sub,meta) =>
+    `<button class="toc-row" data-go="${key}"><span class="toc-num">${esc(num)}</span>` +
+    `<span class="toc-name">${esc(name)}</span>` +
+    (sub ? `<span class="toc-sub">${esc(sub)}</span>` : '') +
+    `<span class="toc-dots"></span><span class="toc-meta">${esc(meta)}</span></button>`;
 
-  html += `<div class="home-sec-label">KAVRAM EKSENİ — ML-OVERALL</div><div class="home-grid">`;
-  groups.forEach(g => {
+  let left = '';
+  groups.forEach((g,i) => {
     const ms = MLO_NAV.filter(m => m.group===g);
-    const rng = ms.length>1 ? `${ms[0].num} – ${ms[ms.length-1].num}` : ms[0].num;
-    html += `<button class="home-card" data-go="${ms[0].key}">
-        <div class="home-card-n">${esc(rng)}</div>
-        <div class="home-card-t">${esc(g)}</div>
-        <div class="home-card-d">${esc(ms.map(m=>m.title).join(' · '))}</div>
-      </button>`;
+    const rng = ms.length>1 ? `${ms[0].num}–${ms[ms.length-1].num}` : ms[0].num;
+    left += row(ms[0].key, ROMAN[i]||String(i+1), g, '', rng);
   });
-  html += `</div>`;
 
-  html += `<div class="home-sec-label">KAYNAK EKSENİ — DERSLER</div><div class="home-chips">`;
+  let right = '';
   COURSE_AREAS.forEach(a => {
     const n = CHAPTERS.filter(c => a.pre.test(c)).reduce((k,c) => k + ((DATA[c]||[]).length), 0);
-    if(!n) return;
-    html += `<button class="home-chip" data-go="${a.first}"><b>${esc(a.label)}</b> · ${n} kart<br><span style="font-size:11.5px">${esc(a.sub)}</span></button>`;
+    if(n) right += row(a.first, '', a.label, a.sub, n);
   });
-  html += `</div>`;
-  host.innerHTML = html;
+
+  host.innerHTML =
+    `<div class="home-hero">
+       <h1>ML Reference</h1>
+       <div class="home-rule"><div class="home-rule-in"></div></div>
+       <p>Machine learning, image data analysis and linear algebra — one collection,
+          two ways in. Follow an idea across courses, or open a course and read it through.
+          The same card lives in both.</p>
+       <div class="home-meta">${total} cards &middot; ${fams} sections &middot; ${MLO_NAV.length} concept chapters</div>
+     </div>
+     <div class="home-cols">
+       <div class="home-col"><h3>BY CONCEPT</h3>${left}</div>
+       <div class="home-col"><h3>BY SOURCE</h3>${right}</div>
+     </div>`;
   host.querySelectorAll('[data-go]').forEach(el => el.onclick = () => switchSection(el.dataset.go));
 }
 
