@@ -5801,7 +5801,7 @@
         {
           "type": "text",
           "heading": "0. Ortak başlangıç: MLE hedefi",
-          "text": "Her iki modelin de aynı hedefi var: training verisi x'i en probable kılan $\\theta$'yı bul.\n\n$\\mathrm{VAE}: \\qquad \\theta^* = \\operatorname{argmax} \\log p_\\theta (x)$\n$\\mathrm{DDPM}: \\quad \\theta^* = \\operatorname{argmax} \\log p_\\theta (x_0)$\n\nAma latent space farklı tanımlanıyor:\n\nVAE:  $z \\sim \\mathcal{N}(0,I)$ → decoder → x  (tek adım)\nDDPM: x_0 → x_1 → ... → x_T ~ N(0,I) → ... → x_0  (T adım)"
+          "text": "Her iki modelin de aynı hedefi var: training verisi x'i en probable kılan $\\theta$'yı bul.\n\n$\\mathrm{VAE}: \\qquad \\theta^* = \\operatorname{argmax} \\log p_\\theta (x)$\n$\\mathrm{DDPM}: \\quad \\theta^* = \\operatorname{argmax} \\log p_\\theta (x_0)$\n\nAma latent space farklı tanımlanıyor:\n\nVAE: $z \\sim \\mathcal{N}(0,I)$ → decoder → x (tek adım)\nDDPM: $x_0 \\to x_1 \\to \\ldots \\to x_T \\sim \\mathcal{N}(0,I) \\to \\ldots \\to x_0$ (T adım)"
         },
         {
           "type": "text",
@@ -5824,7 +5824,7 @@
         {
           "type": "text",
           "heading": "4. Log rearrange → 3 terim",
-          "text": "VAE:\n$$= \\underbrace{\\log p_\\theta (x|z)}_{\\text{Term 1}} - \\underbrace{\\log q_\\phi (z|x)/p(z)}_{\\text{Term 2}} + \\underbrace{\\log q_\\phi (z|x)/p_\\theta (z|x)}_{\\text{Term 3}}$$\n\nDDPM:\n$= \\log p_\\theta (x_0|x_1) \\quad - \\quad \\log q(x_{1:T}|x_0)/p_\\theta (x_{1:T}) \\quad + \\quad \\log q(x_{1:T}|x_0)/p_\\theta (x_{1:T}|x_0)$\n  ─────────────────     ──────────────────────────────────     ──────────────────────────────────────\n  Term 1                Term 2                                  Term 3",
+          "text": "VAE:\n$$= \\underbrace{\\log p_\\theta(x|z)}_{\\text{Term 1}} - \\underbrace{\\log q_\\phi(z|x)/p(z)}_{\\text{Term 2}} + \\underbrace{\\log q_\\phi(z|x)/p_\\theta(z|x)}_{\\text{Term 3}}$$\n\nDDPM:\n$$= \\underbrace{\\log p_\\theta(x_0|x_1)}_{\\text{Term 1}} - \\underbrace{\\log q(x_{1:T}|x_0)/p_\\theta(x_{1:T})}_{\\text{Term 2}} + \\underbrace{\\log q(x_{1:T}|x_0)/p_\\theta(x_{1:T}|x_0)}_{\\text{Term 3}}$$",
           "qa": true
         },
         {
@@ -5836,13 +5836,13 @@
         {
           "type": "text",
           "heading": "7. Drop et → ELBO",
-          "text": "$\\operatorname{KL} \\ge 0$ → drop → lower bound:\n\nVAE:\n$\\log p_\\theta (x) \\ge \\mathbb{E}_z[\\log p_\\theta (x|z)] \\quad - \\quad D_{\\text{KL}}(q_\\phi (z|x) \\| p(z))$\n              reconstruction        prior KL\n\nDDPM:\n$\\log p_\\theta (x_0) \\ge \\mathbb{E}_q[\\log p_\\theta (x_0|x_1)] \\quad - \\quad D_{\\text{KL}}(q(x_{1:T}|x_0) \\| p_\\theta (x_{1:T}))$\n               reconstruction             prior KL (daha açılacak)",
+          "text": "$\\operatorname{KL} \\ge 0$ → drop → lower bound:\n\nVAE:\n$$\\log p_\\theta(x) \\ge \\underbrace{\\mathbb{E}_z[\\log p_\\theta(x|z)]}_{\\text{reconstruction}} - \\underbrace{D_{\\text{KL}}(q_\\phi(z|x) \\| p(z))}_{\\text{prior KL}}$$\n\nDDPM:\n$$\\log p_\\theta(x_0) \\ge \\underbrace{\\mathbb{E}_q[\\log p_\\theta(x_0|x_1)]}_{\\text{reconstruction}} - \\underbrace{D_{\\text{KL}}(q(x_{1:T}|x_0) \\| p_\\theta(x_{1:T}))}_{\\substack{\\text{prior KL}\\\\\\text{(daha açılacak)}}}$$",
           "qa": true
         },
         {
           "type": "text",
           "heading": "8. DDPM Term 2'yi aç → $L_T + L_{t-1}$",
-          "text": "VAE'de Term 2 tek KL — bitti.\nDDPM'de T adım var, Term 2 açılıyor (Bayes ile forward yön flip edilince):\n\n$D_{\\text{KL}}(q(x_{1:T}|x_0) \\| p_\\theta (x_{1:T}))$\n$= D_{\\text{KL}}(q(x_T|x_0) \\| p(x_T))$                               ← L_T: prior matching\n$+ \\sum D_{\\text{KL}}(q(x_{t-1}|x_t,x_0) \\| p_\\theta (x_{t-1}|x_t))$         ← L_{t-1}: denoising\n\nTam DDPM ELBO:\n$\\mathrm{ELBO} = \\mathbb{E}_q[\\log p_\\theta (x_0|x_1)]$                               ← L_0: reconstruction\n     - $D_{\\text{KL}}(q(x_T|x_0) \\| p(x_T))$                          ← $L_T$\n     - $\\sum D_{\\text{KL}}(q(x_{t-1}|x_t,x_0) \\| p_\\theta (x_{t-1}|x_t))$    ← L_{t-1}",
+          "text": "VAE'de Term 2 tek KL — bitti. DDPM'de T adım var, Term 2 açılıyor (Bayes ile forward yön flip edilince):\n\n$$D_{\\text{KL}}(q(x_{1:T}|x_0) \\| p_\\theta(x_{1:T})) = \\underbrace{D_{\\text{KL}}(q(x_T|x_0) \\| p(x_T))}_{\\substack{L_T\\\\\\text{prior matching}}} + \\underbrace{\\sum D_{\\text{KL}}(q(x_{t-1}|x_t,x_0) \\| p_\\theta(x_{t-1}|x_t))}_{\\substack{L_{t-1}\\\\\\text{denoising}}}$$\n\nTam DDPM ELBO:\n$$\\mathrm{ELBO} = \\underbrace{\\mathbb{E}_q[\\log p_\\theta(x_0|x_1)]}_{\\substack{L_0\\\\\\text{reconstruction}}} - \\underbrace{D_{\\text{KL}}(q(x_T|x_0) \\| p(x_T))}_{\\substack{L_T\\\\\\text{prior matching}}} - \\underbrace{\\sum D_{\\text{KL}}(q(x_{t-1}|x_t,x_0) \\| p_\\theta(x_{t-1}|x_t))}_{\\substack{L_{t-1}\\\\\\text{denoising}}}$$",
           "qa": true
         },
         {
@@ -16929,7 +16929,7 @@
         {
           "type": "text",
           "heading": "0. Ortak başlangıç: MLE hedefi",
-          "text": "Her iki modelin de aynı hedefi var: training verisi x'i en probable kılan $\\theta$'yı bul.\n\n$\\mathrm{VAE}: \\qquad \\theta^* = \\operatorname{argmax} \\log p_\\theta (x)$\n$\\mathrm{DDPM}: \\quad \\theta^* = \\operatorname{argmax} \\log p_\\theta (x_0)$\n\nAma latent space farklı tanımlanıyor:\n\nVAE:  $z \\sim \\mathcal{N}(0,I)$ → decoder → x  (tek adım)\nDDPM: x_0 → x_1 → ... → x_T ~ N(0,I) → ... → x_0  (T adım)"
+          "text": "Her iki modelin de aynı hedefi var: training verisi x'i en probable kılan $\\theta$'yı bul.\n\n$\\mathrm{VAE}: \\qquad \\theta^* = \\operatorname{argmax} \\log p_\\theta (x)$\n$\\mathrm{DDPM}: \\quad \\theta^* = \\operatorname{argmax} \\log p_\\theta (x_0)$\n\nAma latent space farklı tanımlanıyor:\n\nVAE: $z \\sim \\mathcal{N}(0,I)$ → decoder → x (tek adım)\nDDPM: $x_0 \\to x_1 \\to \\ldots \\to x_T \\sim \\mathcal{N}(0,I) \\to \\ldots \\to x_0$ (T adım)"
         },
         {
           "type": "text",
@@ -16952,7 +16952,7 @@
         {
           "type": "text",
           "heading": "4. Log rearrange → 3 terim",
-          "text": "VAE:\n$$= \\underbrace{\\log p_\\theta (x|z)}_{\\text{Term 1}} - \\underbrace{\\log q_\\phi (z|x)/p(z)}_{\\text{Term 2}} + \\underbrace{\\log q_\\phi (z|x)/p_\\theta (z|x)}_{\\text{Term 3}}$$\n\nDDPM:\n$= \\log p_\\theta (x_0|x_1) \\quad - \\quad \\log q(x_{1:T}|x_0)/p_\\theta (x_{1:T}) \\quad + \\quad \\log q(x_{1:T}|x_0)/p_\\theta (x_{1:T}|x_0)$\n  ─────────────────     ──────────────────────────────────     ──────────────────────────────────────\n  Term 1                Term 2                                  Term 3",
+          "text": "VAE:\n$$= \\underbrace{\\log p_\\theta(x|z)}_{\\text{Term 1}} - \\underbrace{\\log q_\\phi(z|x)/p(z)}_{\\text{Term 2}} + \\underbrace{\\log q_\\phi(z|x)/p_\\theta(z|x)}_{\\text{Term 3}}$$\n\nDDPM:\n$$= \\underbrace{\\log p_\\theta(x_0|x_1)}_{\\text{Term 1}} - \\underbrace{\\log q(x_{1:T}|x_0)/p_\\theta(x_{1:T})}_{\\text{Term 2}} + \\underbrace{\\log q(x_{1:T}|x_0)/p_\\theta(x_{1:T}|x_0)}_{\\text{Term 3}}$$",
           "qa": true
         },
         {
@@ -16964,13 +16964,13 @@
         {
           "type": "text",
           "heading": "7. Drop et → ELBO",
-          "text": "$\\operatorname{KL} \\ge 0$ → drop → lower bound:\n\nVAE:\n$\\log p_\\theta (x) \\ge \\mathbb{E}_z[\\log p_\\theta (x|z)] \\quad - \\quad D_{\\text{KL}}(q_\\phi (z|x) \\| p(z))$\n              reconstruction        prior KL\n\nDDPM:\n$\\log p_\\theta (x_0) \\ge \\mathbb{E}_q[\\log p_\\theta (x_0|x_1)] \\quad - \\quad D_{\\text{KL}}(q(x_{1:T}|x_0) \\| p_\\theta (x_{1:T}))$\n               reconstruction             prior KL (daha açılacak)",
+          "text": "$\\operatorname{KL} \\ge 0$ → drop → lower bound:\n\nVAE:\n$$\\log p_\\theta(x) \\ge \\underbrace{\\mathbb{E}_z[\\log p_\\theta(x|z)]}_{\\text{reconstruction}} - \\underbrace{D_{\\text{KL}}(q_\\phi(z|x) \\| p(z))}_{\\text{prior KL}}$$\n\nDDPM:\n$$\\log p_\\theta(x_0) \\ge \\underbrace{\\mathbb{E}_q[\\log p_\\theta(x_0|x_1)]}_{\\text{reconstruction}} - \\underbrace{D_{\\text{KL}}(q(x_{1:T}|x_0) \\| p_\\theta(x_{1:T}))}_{\\substack{\\text{prior KL}\\\\\\text{(daha açılacak)}}}$$",
           "qa": true
         },
         {
           "type": "text",
           "heading": "8. DDPM Term 2'yi aç → $L_T + L_{t-1}$",
-          "text": "VAE'de Term 2 tek KL — bitti.\nDDPM'de T adım var, Term 2 açılıyor (Bayes ile forward yön flip edilince):\n\n$D_{\\text{KL}}(q(x_{1:T}|x_0) \\| p_\\theta (x_{1:T}))$\n$= D_{\\text{KL}}(q(x_T|x_0) \\| p(x_T))$                               ← L_T: prior matching\n$+ \\sum D_{\\text{KL}}(q(x_{t-1}|x_t,x_0) \\| p_\\theta (x_{t-1}|x_t))$         ← L_{t-1}: denoising\n\nTam DDPM ELBO:\n$\\mathrm{ELBO} = \\mathbb{E}_q[\\log p_\\theta (x_0|x_1)]$   ← L_0: reconstruction\n     - $D_{\\text{KL}}(q(x_T|x_0) \\| p(x_T))$               ← $L_T$\n     - $\\sum D_{\\text{KL}}(q(x_{t-1}|x_t,x_0) \\| p_\\theta (x_{t-1}|x_t))$  ← L_{t-1}",
+          "text": "VAE'de Term 2 tek KL — bitti. DDPM'de T adım var, Term 2 açılıyor (Bayes ile forward yön flip edilince):\n\n$$D_{\\text{KL}}(q(x_{1:T}|x_0) \\| p_\\theta(x_{1:T})) = \\underbrace{D_{\\text{KL}}(q(x_T|x_0) \\| p(x_T))}_{\\substack{L_T\\\\\\text{prior matching}}} + \\underbrace{\\sum D_{\\text{KL}}(q(x_{t-1}|x_t,x_0) \\| p_\\theta(x_{t-1}|x_t))}_{\\substack{L_{t-1}\\\\\\text{denoising}}}$$\n\nTam DDPM ELBO:\n$$\\mathrm{ELBO} = \\underbrace{\\mathbb{E}_q[\\log p_\\theta(x_0|x_1)]}_{\\substack{L_0\\\\\\text{reconstruction}}} - \\underbrace{D_{\\text{KL}}(q(x_T|x_0) \\| p(x_T))}_{\\substack{L_T\\\\\\text{prior matching}}} - \\underbrace{\\sum D_{\\text{KL}}(q(x_{t-1}|x_t,x_0) \\| p_\\theta(x_{t-1}|x_t))}_{\\substack{L_{t-1}\\\\\\text{denoising}}}$$",
           "qa": true
         },
         {
