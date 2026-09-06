@@ -303,6 +303,28 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .sec-fig .axis{stroke:var(--border)}
 .sec-fig text{fill:var(--muted);font-size:13px;font-family:inherit}
 .sec-fig figcaption{font-size:13px;color:var(--muted);margin-top:4px;font-style:italic}
+#home-page{display:none;max-width:1080px;margin:0 auto;padding:56px 28px 72px}
+.home-hero{text-align:center;padding-bottom:40px;border-bottom:1px solid var(--border);margin-bottom:8px}
+.home-hero h1{font-size:54px;font-weight:800;letter-spacing:-1.4px;line-height:1.05;color:var(--text)}
+.home-hero .home-rule{width:56px;height:2px;background:var(--accent);margin:20px auto 18px}
+.home-hero p{font-size:18px;line-height:1.7;color:var(--muted);max-width:620px;margin:0 auto}
+.home-stats{display:flex;justify-content:center;flex-wrap:wrap;gap:0 34px;margin-top:30px}
+.home-stat b{display:block;font-size:30px;font-weight:800;color:var(--accent);line-height:1.1}
+.home-stat span{font-size:12.5px;color:var(--muted)}
+.home-sec-label{font-size:11px;font-weight:800;letter-spacing:1.6px;color:var(--muted);margin:44px 0 14px}
+.home-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:0 30px}
+.home-card{display:block;width:100%;text-align:left;background:none;border:none;border-top:1px solid var(--border);padding:16px 2px 18px;cursor:pointer;color:inherit;font:inherit}
+.home-card:hover .home-card-t{color:var(--accent)}
+.home-card-n{font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.5px}
+.home-card-t{font-size:19px;font-weight:700;color:var(--text);margin:5px 0 6px;line-height:1.3;transition:color .15s}
+.home-card-d{font-size:13.5px;color:var(--muted);line-height:1.6}
+.home-chips{display:flex;flex-wrap:wrap;gap:8px}
+.home-chip{background:none;border:1px solid var(--border);border-radius:2px;padding:7px 13px;font:inherit;font-size:13px;color:var(--muted);cursor:pointer;transition:border-color .15s,color .15s}
+.home-chip:hover{border-color:var(--accent);color:var(--text)}
+.home-chip b{color:var(--text);font-weight:700}
+.sidebar-hdr h2{cursor:pointer}
+.sidebar-hdr h2:hover{color:var(--accent)}
+@media(max-width:640px){.home-hero h1{font-size:38px}#home-page{padding:34px 20px 56px}}
 .sec-table{width:100%;border-collapse:collapse;font-size:14.5px}
 .sec-table th{background:var(--popup-tbl-head);color:var(--accent-light);padding:7px 10px;text-align:left;font-weight:700;border-bottom:2px solid var(--border)}
 .sec-table td{padding:7px 10px;border-bottom:1px solid var(--border);color:var(--sec-text);vertical-align:top}
@@ -399,7 +421,9 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .math-group-toggle.open::before{transform:rotate(90deg)}
 
 /* ── ML-OVERALL group + iki yonlu rozet ── */
-.nav-group-toggle{display:flex;align-items:center;gap:6px;padding:14px 16px 4px;font-size:13.5px;font-weight:700;text-transform:none;letter-spacing:.2px;color:var(--text);opacity:.88;cursor:default;user-select:none}
+.nav-group-toggle{display:flex;align-items:center;gap:6px;padding:14px 16px 4px;font-size:13.5px;font-weight:700;text-transform:none;letter-spacing:.2px;color:var(--text);opacity:.88;cursor:pointer;user-select:none}
+.nav-group-toggle::before{content:'▸';display:inline-block;width:14px;font-size:10px;opacity:.6;transition:transform .2s}
+.nav-group-toggle.open::before{transform:rotate(90deg)}
 .nav-group-toggle:hover{opacity:1}
 .nav-group-toggle.open .math-group-arrow{transform:rotate(90deg)}
 .nav-group-items{display:none;border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:4px}
@@ -521,7 +545,7 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 
 <nav id="sidebar">
   <div class="sidebar-hdr">
-    <h2>ML Reference</h2>
+    <h2 onclick="switchSection('home')" title="Ana sayfa">ML Reference</h2>
     <button id="sidebar-close" onclick="closeSidebar()">&#10005;</button>
   </div>
 
@@ -1596,6 +1620,7 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 <div id="summary-page" style="display:none"></div>
 <div id="ida-summary-page" style="display:none"></div>
 <div id="vs-summary-page" style="display:none"></div>
+<div id="home-page"></div>
 <div id="card-grid"></div>
 <div id="tx-tree-view" style="display:none"><div id="tx-container"></div></div>
 <div class="footer-text">Kart = detay popup &bull; <kbd>/</kbd> arama &bull; <kbd>ESC</kbd> kapat</div>
@@ -1650,7 +1675,7 @@ let OVERVIEWS = {};
 let SUMMARY = null;
 let IDA_SUMMARY = null;
 let VS_SUMMARY = null;
-let SEC = 'mlo01';
+let SEC = 'home';
 let F = {};
 CHAPTERS.forEach(c => F[c] = {cat:'', q:''});
 
@@ -1719,8 +1744,18 @@ function toggleMathGroup(){
 }
 
 function switchSection(sec){
-  if(sec === SEC){ const tc = $('toc-'+sec); if(tc) tc.classList.toggle('open'); return; }
+  if(sec === SEC && sec !== 'home'){ const tc = $('toc-'+sec); if(tc) tc.classList.toggle('open'); return; }
   SEC = sec;
+  const isHome = sec === 'home';
+  $('home-page').style.display = isHome ? 'block' : 'none';
+  if(isHome){
+    document.querySelectorAll('.nav-btn[data-sec]').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.section-header').forEach(h => h.classList.remove('active'));
+    document.querySelectorAll('.toc.open').forEach(t => t.classList.remove('open'));
+    ['overview-panel','card-grid','summary-page','ida-summary-page','vs-summary-page','tx-tree-view']
+      .forEach(id => { const e = $(id); if(e) e.style.display = 'none'; });
+    closeSidebar(); window.scrollTo(0,0); return;
+  }
   if(sec.startsWith('math')){
     $('math-group-items').classList.add('open');
     $('math-group-toggle').classList.add('open');
@@ -2144,6 +2179,55 @@ function showTxPopup(node){
   $('tx-close').onclick=hidePopup;
 }
 
+
+/* ==================== ANA SAYFA ==================== */
+const COURSE_AREAS = [
+  {label:'ML',      sub:'Bastian Leibe · RWTH',      pre:/^ch\d/,    first:'ch01'},
+  {label:'IDA',     sub:'Image Data Analysis',        pre:/^ida\d/,   first:'ida01'},
+  {label:'CS231n',  sub:'Stanford',                   pre:/^cs\d/,    first:'cs01'},
+  {label:'Vector Spaces', sub:'EE499 · ODTÜ',         pre:/^vs\d/,    first:'vs01'},
+  {label:'ML Lab',  sub:'RWTH + Stanford A3',         pre:/^lab/,     first:'lab01'},
+  {label:'Python & DSA', sub:'sözdizimi, NumPy, Big-O',pre:/^py\d/,   first:'py01'},
+  {label:'Math',    sub:'olasılık, dağılım, puzzle',  pre:/^math\d/,  first:'math01'}
+];
+function buildHome(){
+  const host = $('home-page'); if(!host) return;
+  const src   = CHAPTERS.filter(c => !c.startsWith('mlo'));   // mlo* ayni kartlara referans, iki kez sayma
+  const total = src.reduce((n,c) => n + ((DATA[c]||[]).length), 0);
+  const fams  = src.filter(c => (DATA[c]||[]).length).length;
+  const groups = []; MLO_NAV.forEach(m => { if(!groups.includes(m.group)) groups.push(m.group); });
+
+  const stat = (n,l) => `<div class="home-stat"><b>${n}</b><span>${esc(l)}</span></div>`;
+  let html = `<div class="home-hero">
+      <h1>ML Reference</h1><div class="home-rule"></div>
+      <p>Makine öğrenmesi, görüntü analizi ve doğrusal cebir — tek koleksiyon, iki eksen.
+         Kavramla ara ya da dersle ara; aynı kart iki yerde de aynı karttır.</p>
+      <div class="home-stats">${stat(total,'kart')}${stat(fams,'bölüm')}${stat(MLO_NAV.length,'ML-OVERALL')}${stat(groups.length,'kavram grubu')}</div>
+    </div>`;
+
+  html += `<div class="home-sec-label">KAVRAM EKSENİ — ML-OVERALL</div><div class="home-grid">`;
+  groups.forEach(g => {
+    const ms = MLO_NAV.filter(m => m.group===g);
+    const rng = ms.length>1 ? `${ms[0].num} – ${ms[ms.length-1].num}` : ms[0].num;
+    html += `<button class="home-card" data-go="${ms[0].key}">
+        <div class="home-card-n">${esc(rng)}</div>
+        <div class="home-card-t">${esc(g)}</div>
+        <div class="home-card-d">${esc(ms.map(m=>m.title).join(' · '))}</div>
+      </button>`;
+  });
+  html += `</div>`;
+
+  html += `<div class="home-sec-label">KAYNAK EKSENİ — DERSLER</div><div class="home-chips">`;
+  COURSE_AREAS.forEach(a => {
+    const n = CHAPTERS.filter(c => a.pre.test(c)).reduce((k,c) => k + ((DATA[c]||[]).length), 0);
+    if(!n) return;
+    html += `<button class="home-chip" data-go="${a.first}"><b>${esc(a.label)}</b> · ${n} kart<br><span style="font-size:11.5px">${esc(a.sub)}</span></button>`;
+  });
+  html += `</div>`;
+  host.innerHTML = html;
+  host.querySelectorAll('[data-go]').forEach(el => el.onclick = () => switchSection(el.dataset.go));
+}
+
 /* ==================== ML-OVERALL NAV (veriden uretilir) ==================== */
 function buildMloNav(){
   const sb = $('sidebar'); const shdr = sb.querySelector('.sidebar-hdr');
@@ -2151,9 +2235,10 @@ function buildMloNav(){
   const frag = document.createDocumentFragment();
   groups.forEach((g, gi) => {
     const gid = 'mlo-g'+gi;
-    const tog = document.createElement('div'); tog.className = 'nav-group-toggle open'; tog.id = gid+'-toggle';
+    const tog = document.createElement('div'); tog.className = 'nav-group-toggle'; tog.id = gid+'-toggle';
     tog.textContent = g;
-    const wrap = document.createElement('div'); wrap.className = 'nav-group-items open'; wrap.id = gid+'-items';
+    const wrap = document.createElement('div'); wrap.className = 'nav-group-items'; wrap.id = gid+'-items';
+    tog.onclick = () => { wrap.classList.toggle('open'); tog.classList.toggle('open'); };
     MLO_NAV.filter(m => m.group===g).forEach(m => {
       const b = document.createElement('button'); b.className = 'nav-btn' + (m.key===SEC?' active':''); b.dataset.sec = m.key;
       b.onclick = () => { switchSection(m.key); closeSidebar(); };
@@ -2261,6 +2346,11 @@ function applyData(d){
   CHAPTERS.forEach(c => buildDropdown('flt-'+c, DATA[c]));
   buildToc();
   updateCounts();
+  buildHome();
+  if(SEC === 'home'){ $('home-page').style.display = 'block';
+    ['overview-panel','card-grid','summary-page','ida-summary-page','vs-summary-page','tx-tree-view']
+      .forEach(id => { const e = $(id); if(e) e.style.display = 'none'; });
+    return; }
   showOverview(SEC);
   render();
 }

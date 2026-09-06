@@ -5372,7 +5372,7 @@
         {
           "type": "text",
           "heading": "Mimari: İki Ağ, Bir Amaç",
-          "text": "Girdi x           Latent z          Çıktı x̂\n$(224\\times 224)$  →→→  (128 sayı)  →→→  $(224\\times 224)$\n          Encoder         Decoder\n\nEncoder: Görüntüyü alır, giderek küçülen convolution katmanlarından geçirir, sonunda küçük bir vektör z çıkarır. Bu vektöre latent code denir. Görüntünün sıkıştırılmış özüdür.\n\nBottleneck (darboğaz): z vektörü. En dar nokta. Burada bilgi zorunlu olarak seçilir — hepsi geçemez. Bu kısıtlama aslında öğrenmeyi zorluyor: ağ neyin önemli olduğuna karar vermek zorunda.\n\nDecoder: z'yi alır, giderek büyüyen transposed conv katmanlarından geçirir, orijinal boyuta geri döner.",
+          "text": "Girdi x $(224\\times 224)$  →  Encoder  →  Latent z (128 sayı)  →  Decoder  →  Çıktı x̂ $(224\\times 224)$\n\nEncoder: Görüntüyü alır, giderek küçülen convolution katmanlarından geçirir, sonunda küçük bir vektör z çıkarır. Bu vektöre latent code denir. Görüntünün sıkıştırılmış özüdür.\n\nBottleneck (darboğaz): z vektörü. En dar nokta. Burada bilgi zorunlu olarak seçilir — hepsi geçemez. Bu kısıtlama aslında öğrenmeyi zorluyor: ağ neyin önemli olduğuna karar vermek zorunda.\n\nDecoder: z'yi alır, giderek büyüyen transposed conv katmanlarından geçirir, orijinal boyuta geri döner.",
           "qa": true
         },
         {
@@ -5749,7 +5749,7 @@
         {
           "type": "text",
           "heading": "6. ELBO — aynı Jensen trick",
-          "text": "VAE'de $q_\\phi (z|x)$ çarpıp böldük. Burada $q(x_{1:T}|x_0)$ ile aynı trick:\n\n$\\log p_\\theta (x_0) \\ge \\mathbb{E}_q[ \\log p_\\theta (x_{0:T}) / q(x_{1:T}|x_0) ] = \\mathrm{ELBO}$\n\nAçılınca:\n\n$\\mathrm{ELBO} = \\mathbb{E}_q[\\log p_\\theta (x_0|x_1)]$                                 ← L_0: reconstruction\n     - $\\operatorname{KL}(q(x_T|x_0) \\| p(x_T))$                              ← $L_T$: prior matching\n     - $\\sum \\operatorname{KL}(q(x_{t-1}|x_t,x_0) \\| p_\\theta (x_{t-1}|x_t))$        ← L_{t-1}: denoising\n\nVAE ELBO ile karşılaştır:\n\n$\\mathrm{ELBO}_{\\text{VAE}} = \\mathbb{E}_z[\\log p_\\theta (x|z)] \\quad - \\quad \\operatorname{KL}(q_\\phi (z|x) \\| p(z))$\n            reconstruction         prior matching\n\nYapı aynı — DDPM'de araya T tane denoising KL terimi giriyor.",
+          "text": "VAE'de $q_\\phi (z|x)$ çarpıp böldük. Burada $q(x_{1:T}|x_0)$ ile aynı trick:\n\n$\\log p_\\theta (x_0) \\ge \\mathbb{E}_q[ \\log p_\\theta (x_{0:T}) / q(x_{1:T}|x_0) ] = \\mathrm{ELBO}$\n\nAçılınca:\n\n$$\\mathrm{ELBO} = \\underbrace{\\mathbb{E}_q[\\log p_\\theta(x_0|x_1)]}_{\\substack{L_0\\\\\\text{reconstruction}}} - \\underbrace{\\operatorname{KL}(q(x_T|x_0) \\| p(x_T))}_{\\substack{L_T\\\\\\text{prior matching}}} - \\underbrace{\\sum \\operatorname{KL}(q(x_{t-1}|x_t,x_0) \\| p_\\theta(x_{t-1}|x_t))}_{\\substack{L_{t-1}\\\\\\text{denoising}}}$$\n\nVAE ELBO ile karşılaştır:\n\n$$\\mathrm{ELBO}_{\\text{VAE}} = \\underbrace{\\mathbb{E}_z[\\log p_\\theta(x|z)]}_{\\text{reconstruction}} - \\underbrace{\\operatorname{KL}(q_\\phi(z|x) \\| p(z))}_{\\text{prior matching}}$$\n\nYapı aynı — DDPM'de araya T tane denoising KL terimi giriyor.",
           "qa": true
         },
         {
@@ -7402,21 +7402,123 @@
       "sections": [
         {
           "type": "text",
+          "qa": true,
           "heading": "Ortak şablon — hepsinde aynı yapı",
-          "text": "Her yerde şu form var:\n  p( gördüğüm şey | aradığım şey )\n\nMLE hep şunu yapıyor:\n  'Aradığım şeyin hangi değeri, gördüğümü en olası kılar?'\n\nFark sadece: aradığım şey ne?\n\nML kursu:\n  Gördüğüm:  $x_1$, ..., $x_N$  (veri noktaları)\n  Aradığım:  mu  (dağılımın ortalaması)\n  Cevap:     mu = sayı  (örn. 3.2)\n\nEE499:\n  Gördüğüm:  y  (gürültülü ölçüm)\n  Aradığım:  x  (gerçek sinyal)\n  Cevap:     x = vektör\n\nVAE:\n  Gördüğüm:  x  (yüz resimleri, binlerce tane)\n  Aradığım:  $\\theta , \\phi$  (encoder/decoder ağırlıkları)\n  Cevap:     bir fonksiyon — encoder ve decoder ağı",
-          "qa": true
+          "text": "Her yerde şu form var: $p(\\text{gördüğüm şey} \\mid \\text{aradığım şey})$\n\nMLE hep şunu yapıyor: 'Aradığım şeyin hangi değeri, gördüğümü en olası kılar?'\n\nFark sadece şu: aradığım şey ne?"
+        },
+        {
+          "type": "table",
+          "rows": [
+            [
+              "",
+              "ML kursu",
+              "EE499",
+              "VAE"
+            ],
+            [
+              "Gördüğüm",
+              "$x_1, \\ldots, x_N$ (veri noktaları)",
+              "$y$ (gürültülü ölçüm)",
+              "$x$ (yüz resimleri, binlerce)"
+            ],
+            [
+              "Aradığım",
+              "$\\mu$ (dağılımın ortalaması)",
+              "$x$ (gerçek sinyal)",
+              "$\\theta, \\phi$ (encoder/decoder ağırlıkları)"
+            ],
+            [
+              "Cevap",
+              "$\\mu$ = sayı (örn. 3.2)",
+              "$x$ = vektör",
+              "bir fonksiyon — encoder ve decoder ağı"
+            ]
+          ]
         },
         {
           "type": "text",
+          "qa": true,
           "heading": "z ne peki — VAE'de neden hiç 'bulunmuyor'?",
-          "text": "ML kursu:  mu → bulduğumda işim bitiyor\nEE499:     x  → bulduğumda işim bitiyor\nVAE:       z  → hiç 'bulmuyorum' bile\n\nz, VAE'de bir ara değişken. Her resim için farklı.\n'Bu resmin z'si 3.2'dir' demiyorum.\n'Bu resmin z'si N(mu(x), sigma(x)) dağılımından geliyor' diyorum.\nBu dağılımı öğreniyorum — encoder ağırlıkları bu dağılımı tanımlıyor.\n\nVAE'nin sonunda elde ettiğim:\n  encoder: herhangi bir resim ver → z dağılımını söyle\n  decoder: herhangi bir z ver     → resim üret\n\nKL terimi neden var?\n  Test zamanında x yok, z ~ N(0,I)'dan örnekleyeceğim.\n  Eğer encoder z'leri rastgele yerlere dağıtırsa,\n  N(0,I)'dan çektiğim z decoder'a anlamsız gelir.\n  KL terimi: 'encoder'ın z dağılımları N(0,I)'dan uzaklaşmasın.'\n  → Test zamanında N(0,I)'dan örnekleyebilir hale geliyoruz.\n  Bu bir prior değil, latent space'i kullanılabilir tutma zorunluluğu.",
-          "qa": true
+          "text": "Aradığım şeyi bulmak ne demek, üç durumda karşılaştır:"
+        },
+        {
+          "type": "table",
+          "rows": [
+            [
+              "",
+              "Aradığım",
+              "Durum"
+            ],
+            [
+              "ML kursu",
+              "$\\mu$",
+              "bulduğumda işim bitiyor"
+            ],
+            [
+              "EE499",
+              "$x$",
+              "bulduğumda işim bitiyor"
+            ],
+            [
+              "VAE",
+              "$z$",
+              "hiç 'bulmuyorum' bile"
+            ]
+          ]
         },
         {
           "type": "text",
+          "text": "$z$, VAE'de bir ara değişken — her resim için farklı. 'Bu resmin $z$'si 3.2'dir' demiyorum; 'bu resmin $z$'si $\\mathcal{N}(\\mu(x), \\sigma(x))$ dağılımından geliyor' diyorum. Bu dağılımı öğreniyorum — encoder ağırlıkları bu dağılımı tanımlıyor.\n\nVAE'nin sonunda elde ettiğim:"
+        },
+        {
+          "type": "list",
+          "items": [
+            "encoder: herhangi bir resim ver → $z$ dağılımını söyle",
+            "decoder: herhangi bir $z$ ver → resim üret"
+          ]
+        },
+        {
+          "type": "text",
+          "heading": "KL terimi neden var?",
+          "text": "Test zamanında $x$ yok, $z \\sim \\mathcal{N}(0,I)$'dan örnekleyeceğim. Eğer encoder $z$'leri rastgele yerlere dağıtırsa, $\\mathcal{N}(0,I)$'dan çektiğim $z$ decoder'a anlamsız gelir.\n\nKL terimi bunu engelliyor: 'encoder'ın $z$ dağılımları $\\mathcal{N}(0,I)$'dan uzaklaşmasın.' → Test zamanında $\\mathcal{N}(0,I)$'dan örnekleyebilir hale geliyoruz.\n\nBu bir prior değil, latent space'i kullanılabilir tutma zorunluluğu."
+        },
+        {
+          "type": "text",
+          "qa": true,
           "heading": "$p(z)$ prior'u var — neden MAP değil?",
-          "text": "Kritik soru: prior kimin üzerinde?\n\nMLE:  theta deterministik unknown, p(theta) YOK  → MLE\nMAP:  theta rastgele,              p(theta) VAR  → MAP\n\nPrior, TAHMİN ETTİĞİN ŞEYİN üzerinde olmalı.\n\nVAE'de tahmin edilen:  $\\theta , \\phi$  (network ağırlıkları)\np(theta) var mı?       HAYIR  → MLE\n\nz'de prior var:  $p(z) = \\mathcal{N}(0,I)$\nAma z tahmin edilmiyor — z integrate ediliyor.\nz'nin prior'u, theta/phi için MAP yapmıyor.\n\nEğer theta'ya prior koysaydın:\n  p(theta) ~ $\\mathcal{N}(0,I)$  →  log p(theta) ∝ $-\\|\\theta \\|^{2}$\n  loss = reconstruction loss + ||theta||²\n                               ──────────\n                               L2 weight decay\n\n  Bu tam olarak neural network'teki weight decay!\n  Yani: L2 regularization = Gaussian prior ile MAP on theta.",
-          "qa": true
+          "text": "Kritik soru: prior kimin üzerinde?"
+        },
+        {
+          "type": "table",
+          "rows": [
+            [
+              "Yöntem",
+              "$\\theta$ nasıl?",
+              "$p(\\theta)$"
+            ],
+            [
+              "MLE",
+              "deterministik unknown",
+              "YOK"
+            ],
+            [
+              "MAP",
+              "rastgele",
+              "VAR"
+            ]
+          ]
+        },
+        {
+          "type": "text",
+          "text": "Prior, tahmin ettiğin şeyin üzerinde olmalı.\n\nVAE'de tahmin edilen $\\theta, \\phi$ (network ağırlıkları) ve bunların üzerinde prior yok → MLE.\n\n$z$'de prior var: $p(z) = \\mathcal{N}(0,I)$. Ama $z$ tahmin edilmiyor — $z$ integrate ediliyor. $z$'nin prior'u, $\\theta/\\phi$ için MAP yapmıyor.\n\nEğer $\\theta$'ya prior koysaydın — $p(\\theta) \\sim \\mathcal{N}(0,I)$, yani $\\log p(\\theta) \\propto -\\|\\theta\\|^2$ — loss şöyle olurdu:"
+        },
+        {
+          "type": "text",
+          "text": "$$\\text{loss} = \\text{reconstruction loss} + \\underbrace{\\|\\theta\\|^2}_{\\text{L2 weight decay}}$$"
+        },
+        {
+          "type": "text",
+          "text": "Bu tam olarak neural network'teki weight decay. Yani: L2 regularization = $\\theta$ üzerinde Gaussian prior ile MAP."
         },
         {
           "type": "table",
@@ -7485,7 +7587,7 @@
         {
           "type": "text",
           "heading": "MLE'den MAP'e — paradigma kayışı",
-          "text": "MLE:  x deterministik — bilinmeyen ama sabit bir sayı.\n      Prior yok. Sadece 'bu y'yi en olası kılan x nedir?'\n\nMAP:  x artık rastgele — hakkında istatistiksel bilgimiz var.\n      Prior var: $p(x)$ — x'in olası değerleri hakkında önceden bilgi.\n\nMLE'de:\n  $x_{\\text{ML}} = \\operatorname{argmax}_x \\quad p(y|x)$\n\nMAP'te Bayes kuralı devreye giriyor:\n  $p(x|y) = p(y|x) \\cdot p(x) / p(y)$\n            ────────  ─────\n           likelihood  prior   ($p(y)$ x'e bağlı değil, sabit)\n\n  $x_{\\text{MAP}} = \\operatorname{argmax}_x \\quad p(x|y)$\n        $= \\operatorname{argmax}_x \\quad p(y|x) \\cdot p(x)$\n        $= \\operatorname{argmax}_x \\quad \\log p(y|x) + \\log p(x)$\n        $$= \\underbrace{\\operatorname{argmin}_x \\quad -\\log p(y|x)}_{\\text{data fidelity}} - \\underbrace{\\log p(x)}_{\\text{regularization}}$$",
+          "text": "MLE:  x deterministik — bilinmeyen ama sabit bir sayı. Prior yok. Sadece 'bu y'yi en olası kılan x nedir?'\n\nMAP:  x artık rastgele — hakkında istatistiksel bilgimiz var. Prior var: $p(x)$ — x'in olası değerleri hakkında önceden bilgi.\n\nMLE'de:\n  $x_{\\text{ML}} = \\operatorname{argmax}_x \\quad p(y|x)$\n\nMAP'te Bayes kuralı devreye giriyor:\n$$p(x|y) = \\underbrace{p(y|x)}_{\\text{likelihood}} \\cdot \\underbrace{p(x)}_{\\text{prior}} / p(y)$$\n($p(y)$ x'e bağlı değil, sabit — argmax'ı etkilemiyor.)\n\n  $x_{\\text{MAP}} = \\operatorname{argmax}_x \\quad p(x|y)$\n        $= \\operatorname{argmax}_x \\quad p(y|x) \\cdot p(x)$\n        $= \\operatorname{argmax}_x \\quad \\log p(y|x) + \\log p(x)$\n        $$= \\underbrace{\\operatorname{argmin}_x \\quad -\\log p(y|x)}_{\\text{data fidelity}} - \\underbrace{\\log p(x)}_{\\text{regularization}}$$",
           "qa": true
         },
         {
@@ -7577,7 +7679,7 @@
         {
           "type": "text",
           "heading": "",
-          "text": "$R^n$ = row space ⊕ null space\n       (rank)      (n-rank)\n\nAx = $A(x_{\\text{row}} + x_{\\text{null}}) = A\\cdot x_{\\text{row}} + 0 = A\\cdot x_{\\text{row}}$\n→ A yalnızca row space bileşenini görüyor",
+          "text": "$$\\mathbb{R}^n = \\underbrace{\\text{row space}}_{\\text{rank}} \\oplus \\underbrace{\\text{null space}}_{\\text{n - rank}}$$\n\nAx = $A(x_{\\text{row}} + x_{\\text{null}}) = A\\cdot x_{\\text{row}} + 0 = A\\cdot x_{\\text{row}}$\n→ A yalnızca row space bileşenini görüyor",
           "qa": true
         }
       ],
@@ -16712,7 +16814,7 @@
         {
           "type": "text",
           "heading": "6. ELBO — aynı Jensen trick",
-          "text": "VAE'de $q_\\phi (z|x)$ çarpıp böldük. Burada $q(x_{1:T}|x_0)$ ile aynı trick:\n\n$\\log p_\\theta (x_0) \\ge \\mathbb{E}_q[ \\log p_\\theta (x_{0:T}) / q(x_{1:T}|x_0) ] = \\mathrm{ELBO}$\n\nAçılınca:\n\n$\\mathrm{ELBO} = \\mathbb{E}_q[\\log p_\\theta (x_0|x_1)]$                                 ← L_0: reconstruction\n     - $\\operatorname{KL}(q(x_T|x_0) \\| p(x_T))$                              ← $L_T$: prior matching\n     - $\\sum \\operatorname{KL}(q(x_{t-1}|x_t,x_0) \\| p_\\theta (x_{t-1}|x_t))$        ← L_{t-1}: denoising\n\nVAE ELBO ile karşılaştır:\n\n$\\mathrm{ELBO}_{\\text{VAE}} = \\mathbb{E}_z[\\log p_\\theta (x|z)] \\quad - \\quad \\operatorname{KL}(q_\\phi (z|x) \\| p(z))$\n            reconstruction         prior matching\n\nYapı aynı — DDPM'de araya T tane denoising KL terimi giriyor.",
+          "text": "VAE'de $q_\\phi (z|x)$ çarpıp böldük. Burada $q(x_{1:T}|x_0)$ ile aynı trick:\n\n$\\log p_\\theta (x_0) \\ge \\mathbb{E}_q[ \\log p_\\theta (x_{0:T}) / q(x_{1:T}|x_0) ] = \\mathrm{ELBO}$\n\nAçılınca:\n\n$$\\mathrm{ELBO} = \\underbrace{\\mathbb{E}_q[\\log p_\\theta(x_0|x_1)]}_{\\substack{L_0\\\\\\text{reconstruction}}} - \\underbrace{\\operatorname{KL}(q(x_T|x_0) \\| p(x_T))}_{\\substack{L_T\\\\\\text{prior matching}}} - \\underbrace{\\sum \\operatorname{KL}(q(x_{t-1}|x_t,x_0) \\| p_\\theta(x_{t-1}|x_t))}_{\\substack{L_{t-1}\\\\\\text{denoising}}}$$\n\nVAE ELBO ile karşılaştır:\n\n$$\\mathrm{ELBO}_{\\text{VAE}} = \\underbrace{\\mathbb{E}_z[\\log p_\\theta(x|z)]}_{\\text{reconstruction}} - \\underbrace{\\operatorname{KL}(q_\\phi(z|x) \\| p(z))}_{\\text{prior matching}}$$\n\nYapı aynı — DDPM'de araya T tane denoising KL terimi giriyor.",
           "qa": true
         },
         {
@@ -16842,7 +16944,7 @@
         {
           "type": "text",
           "heading": "VAE'deki KL terimi",
-          "text": "VAE ELBO:\n\n$\\mathrm{ELBO} = \\mathbb{E}_z[\\log p_\\theta (x|z)] \\quad - \\quad D_{\\text{KL}}(q_\\phi (z|x) \\| p(z))$\n        reconstruction         prior KL\n\nKL yönü: q başa, p sona.\n  q = encoder — öğrenilen approximate posterior\n  p = prior   — $\\mathcal{N}(0,I)$, sabit",
+          "text": "VAE ELBO:\n\n$$\\mathrm{ELBO} = \\underbrace{\\mathbb{E}_z[\\log p_\\theta(x|z)]}_{\\text{reconstruction}} - \\underbrace{D_{\\text{KL}}(q_\\phi(z|x) \\| p(z))}_{\\text{prior KL}}$$\n\nq = encoder — öğrenilen approximate posterior\np = prior — $\\mathcal{N}(0,I)$, sabit\n  p = prior   — $\\mathcal{N}(0,I)$, sabit",
           "qa": true
         },
         {
@@ -16873,21 +16975,123 @@
       "sections": [
         {
           "type": "text",
+          "qa": true,
           "heading": "Ortak şablon — hepsinde aynı yapı",
-          "text": "Her yerde şu form var:\n  p( gördüğüm şey | aradığım şey )\n\nMLE hep şunu yapıyor:\n  'Aradığım şeyin hangi değeri, gördüğümü en olası kılar?'\n\nFark sadece: aradığım şey ne?\n\nML kursu:\n  Gördüğüm:  $x_1$, ..., $x_N$  (veri noktaları)\n  Aradığım:  mu  (dağılımın ortalaması)\n  Cevap:     mu = sayı  (örn. 3.2)\n\nEE499:\n  Gördüğüm:  y  (gürültülü ölçüm)\n  Aradığım:  x  (gerçek sinyal)\n  Cevap:     x = vektör\n\nVAE:\n  Gördüğüm:  x  (yüz resimleri, binlerce tane)\n  Aradığım:  $\\theta , \\phi$  (encoder/decoder ağırlıkları)\n  Cevap:     bir fonksiyon — encoder ve decoder ağı",
-          "qa": true
+          "text": "Her yerde şu form var: $p(\\text{gördüğüm şey} \\mid \\text{aradığım şey})$\n\nMLE hep şunu yapıyor: 'Aradığım şeyin hangi değeri, gördüğümü en olası kılar?'\n\nFark sadece şu: aradığım şey ne?"
+        },
+        {
+          "type": "table",
+          "rows": [
+            [
+              "",
+              "ML kursu",
+              "EE499",
+              "VAE"
+            ],
+            [
+              "Gördüğüm",
+              "$x_1, \\ldots, x_N$ (veri noktaları)",
+              "$y$ (gürültülü ölçüm)",
+              "$x$ (yüz resimleri, binlerce)"
+            ],
+            [
+              "Aradığım",
+              "$\\mu$ (dağılımın ortalaması)",
+              "$x$ (gerçek sinyal)",
+              "$\\theta, \\phi$ (encoder/decoder ağırlıkları)"
+            ],
+            [
+              "Cevap",
+              "$\\mu$ = sayı (örn. 3.2)",
+              "$x$ = vektör",
+              "bir fonksiyon — encoder ve decoder ağı"
+            ]
+          ]
         },
         {
           "type": "text",
+          "qa": true,
           "heading": "z ne peki — VAE'de neden hiç 'bulunmuyor'?",
-          "text": "ML kursu:  mu → bulduğumda işim bitiyor\nEE499:     x  → bulduğumda işim bitiyor\nVAE:       z  → hiç 'bulmuyorum' bile\n\nz, VAE'de bir ara değişken. Her resim için farklı.\n'Bu resmin z'si 3.2'dir' demiyorum.\n'Bu resmin z'si N(mu(x), sigma(x)) dağılımından geliyor' diyorum.\nBu dağılımı öğreniyorum — encoder ağırlıkları bu dağılımı tanımlıyor.\n\nVAE'nin sonunda elde ettiğim:\n  encoder: herhangi bir resim ver → z dağılımını söyle\n  decoder: herhangi bir z ver     → resim üret\n\nKL terimi neden var?\n  Test zamanında x yok, z ~ N(0,I)'dan örnekleyeceğim.\n  Eğer encoder z'leri rastgele yerlere dağıtırsa,\n  N(0,I)'dan çektiğim z decoder'a anlamsız gelir.\n  KL terimi: 'encoder'ın z dağılımları N(0,I)'dan uzaklaşmasın.'\n  → Test zamanında N(0,I)'dan örnekleyebilir hale geliyoruz.\n  Bu bir prior değil, latent space'i kullanılabilir tutma zorunluluğu.",
-          "qa": true
+          "text": "Aradığım şeyi bulmak ne demek, üç durumda karşılaştır:"
+        },
+        {
+          "type": "table",
+          "rows": [
+            [
+              "",
+              "Aradığım",
+              "Durum"
+            ],
+            [
+              "ML kursu",
+              "$\\mu$",
+              "bulduğumda işim bitiyor"
+            ],
+            [
+              "EE499",
+              "$x$",
+              "bulduğumda işim bitiyor"
+            ],
+            [
+              "VAE",
+              "$z$",
+              "hiç 'bulmuyorum' bile"
+            ]
+          ]
         },
         {
           "type": "text",
+          "text": "$z$, VAE'de bir ara değişken — her resim için farklı. 'Bu resmin $z$'si 3.2'dir' demiyorum; 'bu resmin $z$'si $\\mathcal{N}(\\mu(x), \\sigma(x))$ dağılımından geliyor' diyorum. Bu dağılımı öğreniyorum — encoder ağırlıkları bu dağılımı tanımlıyor.\n\nVAE'nin sonunda elde ettiğim:"
+        },
+        {
+          "type": "list",
+          "items": [
+            "encoder: herhangi bir resim ver → $z$ dağılımını söyle",
+            "decoder: herhangi bir $z$ ver → resim üret"
+          ]
+        },
+        {
+          "type": "text",
+          "heading": "KL terimi neden var?",
+          "text": "Test zamanında $x$ yok, $z \\sim \\mathcal{N}(0,I)$'dan örnekleyeceğim. Eğer encoder $z$'leri rastgele yerlere dağıtırsa, $\\mathcal{N}(0,I)$'dan çektiğim $z$ decoder'a anlamsız gelir.\n\nKL terimi bunu engelliyor: 'encoder'ın $z$ dağılımları $\\mathcal{N}(0,I)$'dan uzaklaşmasın.' → Test zamanında $\\mathcal{N}(0,I)$'dan örnekleyebilir hale geliyoruz.\n\nBu bir prior değil, latent space'i kullanılabilir tutma zorunluluğu."
+        },
+        {
+          "type": "text",
+          "qa": true,
           "heading": "$p(z)$ prior'u var — neden MAP değil?",
-          "text": "Kritik soru: prior kimin üzerinde?\n\nMLE:  theta deterministik unknown, p(theta) YOK  → MLE\nMAP:  theta rastgele,              p(theta) VAR  → MAP\n\nPrior, TAHMİN ETTİĞİN ŞEYİN üzerinde olmalı.\n\nVAE'de tahmin edilen:  $\\theta , \\phi$  (network ağırlıkları)\np(theta) var mı?       HAYIR  → MLE\n\nz'de prior var:  $p(z) = \\mathcal{N}(0,I)$\nAma z tahmin edilmiyor — z integrate ediliyor.\nz'nin prior'u, theta/phi için MAP yapmıyor.\n\nEğer theta'ya prior koysaydın:\n  p(theta) ~ $\\mathcal{N}(0,I)$  →  log p(theta) ∝ $-\\|\\theta \\|^{2}$\n  loss = reconstruction loss + ||theta||²\n                               ──────────\n                               L2 weight decay\n\n  Bu tam olarak neural network'teki weight decay!\n  Yani: L2 regularization = Gaussian prior ile MAP on theta.",
-          "qa": true
+          "text": "Kritik soru: prior kimin üzerinde?"
+        },
+        {
+          "type": "table",
+          "rows": [
+            [
+              "Yöntem",
+              "$\\theta$ nasıl?",
+              "$p(\\theta)$"
+            ],
+            [
+              "MLE",
+              "deterministik unknown",
+              "YOK"
+            ],
+            [
+              "MAP",
+              "rastgele",
+              "VAR"
+            ]
+          ]
+        },
+        {
+          "type": "text",
+          "text": "Prior, tahmin ettiğin şeyin üzerinde olmalı.\n\nVAE'de tahmin edilen $\\theta, \\phi$ (network ağırlıkları) ve bunların üzerinde prior yok → MLE.\n\n$z$'de prior var: $p(z) = \\mathcal{N}(0,I)$. Ama $z$ tahmin edilmiyor — $z$ integrate ediliyor. $z$'nin prior'u, $\\theta/\\phi$ için MAP yapmıyor.\n\nEğer $\\theta$'ya prior koysaydın — $p(\\theta) \\sim \\mathcal{N}(0,I)$, yani $\\log p(\\theta) \\propto -\\|\\theta\\|^2$ — loss şöyle olurdu:"
+        },
+        {
+          "type": "text",
+          "text": "$$\\text{loss} = \\text{reconstruction loss} + \\underbrace{\\|\\theta\\|^2}_{\\text{L2 weight decay}}$$"
+        },
+        {
+          "type": "text",
+          "text": "Bu tam olarak neural network'teki weight decay. Yani: L2 regularization = $\\theta$ üzerinde Gaussian prior ile MAP."
         },
         {
           "type": "table",
