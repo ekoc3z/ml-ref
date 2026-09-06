@@ -305,13 +305,13 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .sec-fig .axis{stroke:var(--border)}
 .sec-fig text{fill:var(--muted);font-size:13px;font-family:inherit}
 .sec-fig figcaption{font-size:13px;color:var(--muted);margin-top:4px;font-style:italic}
-.home-search{margin:38px auto 0;max-width:560px;position:relative}
+.home-search{margin:64px auto 0;max-width:560px;position:relative;padding-top:0}
 .home-search input{width:100%;font-family:var(--serif);font-size:17px;padding:11px 14px 11px 30px;background:transparent;color:var(--text);border:none;border-bottom:1px solid var(--border);border-radius:0;outline:none;transition:border-color .15s}
 .home-search input:focus{border-bottom-color:var(--accent)}
 .home-search input::placeholder{color:var(--muted);opacity:.7}
 .home-search::before{content:'⌕';position:absolute;left:4px;top:9px;font-size:19px;color:var(--muted)}
 .home-hint{text-align:center;font-size:12px;color:var(--muted);margin-top:9px;opacity:.75}
-#home-results{margin-top:34px}
+#home-results{margin-top:30px;min-height:2px}
 .sr-count{font-size:11px;font-weight:800;letter-spacing:1.6px;color:var(--muted);padding-bottom:9px;border-bottom:1px solid var(--text);margin-bottom:2px}
 .sr{display:flex;align-items:flex-start;gap:12px;border-bottom:1px solid var(--border)}
 .sr-main{flex:1;min-width:0;background:none;border:none;padding:13px 0;font:inherit;color:inherit;text-align:left;cursor:pointer}
@@ -330,7 +330,7 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .home-hero .home-rule{height:1px;background:var(--border);margin:26px 0 0}
 .home-hero .home-rule-in{width:34px;height:1px;background:var(--accent);margin:0 auto;position:relative;top:-1px}
 .home-meta{text-align:center;font-size:12.5px;color:var(--muted);margin-top:16px;letter-spacing:.02em;font-variant-numeric:tabular-nums}
-.home-cols{display:grid;grid-template-columns:1fr 1fr;gap:0 60px;margin-top:52px}
+.home-cols{display:grid;grid-template-columns:1fr 1fr;gap:0 60px;margin-top:52px;padding-bottom:52px;border-bottom:1px solid var(--border)}
 .home-col h3{font-family:var(--serif);font-size:11px;font-weight:800;letter-spacing:1.7px;color:var(--muted);padding-bottom:9px;border-bottom:1px solid var(--text);margin-bottom:4px}
 .toc-row{display:flex;align-items:baseline;gap:11px;width:100%;background:none;border:none;padding:9px 0;font:inherit;color:inherit;cursor:pointer;text-align:left}
 .toc-row+.toc-row{border-top:1px solid var(--border)}
@@ -2231,10 +2231,10 @@ function snip(text, q){
        + esc(text.slice(i+q.length,b)) + (b<text.length?' …':'');
 }
 function homeSearch(q){
-  const box = $('home-results'), cols = $('home-cols'), hint = $('home-hint');
+  const box = $('home-results'), hint = $('home-hint');
   q = (q||'').trim().toLowerCase();
-  if(q.length < 2){ box.innerHTML=''; cols.style.display=''; if(hint) hint.style.display=''; return; }
-  cols.style.display='none'; if(hint) hint.style.display='none';
+  if(q.length < 2){ box.innerHTML=''; if(hint) hint.style.display=''; return; }
+  if(hint) hint.style.display='none';
   const res = [];
   CHAPTERS.filter(c => !c.startsWith('mlo')).forEach(fam => {
     (DATA[fam]||[]).forEach(item => {
@@ -2320,14 +2320,14 @@ function buildHome(){
        <h1>ML Reference</h1>
        <div class="home-rule"><div class="home-rule-in"></div></div>
        <div class="home-meta">${total} cards &middot; ${fams} sections &middot; ${MLO_NAV.length} concept chapters</div>
-       <div class="home-search"><input id="home-q" type="search" placeholder="Search every card…" autocomplete="off"></div>
-       <div class="home-hint" id="home-hint">Titles, headings and body text &middot; click a result to open the card, &rarr; to go to its section</div>
      </div>
-     <div id="home-results"></div>
      <div class="home-cols" id="home-cols">
        <div class="home-col"><h3>BY CONCEPT</h3>${left}</div>
        <div class="home-col"><h3>BY SOURCE</h3>${right}</div>
-     </div>`;
+     </div>
+     <div class="home-search"><input id="home-q" type="search" placeholder="Search every card…" autocomplete="off"></div>
+     <div class="home-hint" id="home-hint">Titles, headings and body text &middot; click a result to open the card, &rarr; to go to its section</div>
+     <div id="home-results"></div>`;
   host.querySelectorAll('[data-go]').forEach(el => el.onclick = () => switchSection(el.dataset.go));
   const qi = $('home-q');
   if(qi){ let t; qi.oninput = () => { clearTimeout(t); t = setTimeout(() => homeSearch(qi.value), 130); };
