@@ -307,10 +307,9 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 #home-page{display:none;max-width:940px;margin:0 auto;padding:72px 32px 88px}
 .home-hero{text-align:center;margin-bottom:14px}
 .home-hero h1{font-family:var(--serif);font-size:52px;font-weight:400;letter-spacing:.01em;line-height:1.1;color:var(--text)}
-.home-hero .home-rule{height:1px;background:var(--border);margin:26px 0 22px}
+.home-hero .home-rule{height:1px;background:var(--border);margin:26px 0 0}
 .home-hero .home-rule-in{width:34px;height:1px;background:var(--accent);margin:0 auto;position:relative;top:-1px}
-.home-hero p{font-family:var(--serif);font-size:17px;line-height:1.7;color:var(--muted);max-width:520px;margin:0 auto}
-.home-meta{text-align:center;font-size:12.5px;color:var(--muted);margin-top:18px;letter-spacing:.02em}
+.home-meta{text-align:center;font-size:12.5px;color:var(--muted);margin-top:16px;letter-spacing:.02em;font-variant-numeric:tabular-nums}
 .home-cols{display:grid;grid-template-columns:1fr 1fr;gap:0 60px;margin-top:52px}
 .home-col h3{font-size:11px;font-weight:800;letter-spacing:1.7px;color:var(--muted);padding-bottom:9px;border-bottom:1px solid var(--text);margin-bottom:4px}
 .toc-row{display:flex;align-items:baseline;gap:11px;width:100%;background:none;border:none;padding:9px 0;font:inherit;color:inherit;cursor:pointer;text-align:left}
@@ -2221,8 +2220,6 @@ function buildHome(){
     `<div class="home-hero">
        <h1>ML Reference</h1>
        <div class="home-rule"><div class="home-rule-in"></div></div>
-       <p>Machine learning, image analysis and linear algebra — indexed two ways:
-          by concept and by course.</p>
        <div class="home-meta">${total} cards &middot; ${fams} sections &middot; ${MLO_NAV.length} concept chapters</div>
      </div>
      <div class="home-cols">
