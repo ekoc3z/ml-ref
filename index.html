@@ -13,6 +13,7 @@
   --sec-text:#e0e0e0; --sec-formula-bg:transparent; --sec-formula-border:transparent; --sec-formula-text:#ececec;
   --sec-cmp-bg:#171717; --sec-note-bg:#1c1a14; --sec-note-border:#3a3320; --sec-note-text:#e6d9b8;
   --sec-insight-bg:#171717; --sec-insight-border:#c9a97a; --sec-insight-text:#e0e0e0; --sec-code-text:#e6e6e6;
+  --serif:Georgia,'Iowan Old Style','Palatino Linotype',serif;
   --popup-bg:#151515; --popup-tbl-head:#1c1c1c; --overview-bg:transparent; --overview-text:#d6d6d6;
   --hdr-bg:rgba(17,17,17,.96);
   --chain-next-col:#8fbf9a; --chain-next-bg:rgba(143,191,154,.07); --chain-next-border:#8fbf9a;
@@ -36,7 +37,7 @@ body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;backgr
 /* SIDEBAR */
 #sidebar{width:262px;padding-bottom:28px;background:var(--sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:50;transition:transform .25s;overflow-y:auto}
 .sidebar-hdr{padding:20px 16px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
-.sidebar-hdr h2{font-size:21px;font-weight:800;letter-spacing:-.3px;line-height:1.2;color:var(--accent-light)}
+.sidebar-hdr h2{font-family:var(--serif);font-weight:600;font-size:22px;font-weight:800;letter-spacing:-.3px;line-height:1.2;color:var(--accent-light)}
 .sidebar-hdr p{font-size:11px;color:var(--muted);margin-top:2px}
 #sidebar-close{display:none;position:absolute;top:10px;right:10px;background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer}
 .nav-btn{display:flex;align-items:center;gap:10px;width:100%;padding:10px 16px;border:none;background:none;color:var(--muted);font-size:12px;cursor:pointer;text-align:left;border-left:3px solid transparent;transition:background .15s,color .15s,border-color .15s}
@@ -264,7 +265,7 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .bp-arrow{color:var(--accent);opacity:.5}
 
 /* IDA sidebar course separator */
-.course-divider{padding:14px 16px 6px;font-size:13.5px;font-weight:700;text-transform:none;letter-spacing:.2px;color:var(--text);opacity:.88;border-top:1px solid var(--border);margin-top:6px;cursor:pointer;user-select:none}
+.course-divider{font-family:var(--serif);padding:14px 16px 6px;font-size:13.5px;font-weight:700;text-transform:none;letter-spacing:.2px;color:var(--text);opacity:.88;border-top:1px solid var(--border);margin-top:6px;cursor:pointer;user-select:none}
 .course-divider::before{content:'▸';display:inline-block;width:14px;font-size:10px;opacity:.6;transition:transform .2s}
 .course-divider.open::before{transform:rotate(90deg)}
 .course-divider:hover{color:var(--text)}
@@ -305,17 +306,17 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .sec-fig figcaption{font-size:13px;color:var(--muted);margin-top:4px;font-style:italic}
 #home-page{display:none;max-width:940px;margin:0 auto;padding:72px 32px 88px}
 .home-hero{text-align:center;margin-bottom:14px}
-.home-hero h1{font-family:Georgia,'Iowan Old Style','Times New Roman',serif;font-size:52px;font-weight:400;letter-spacing:.01em;line-height:1.1;color:var(--text)}
+.home-hero h1{font-family:var(--serif);font-size:52px;font-weight:400;letter-spacing:.01em;line-height:1.1;color:var(--text)}
 .home-hero .home-rule{height:1px;background:var(--border);margin:26px 0 22px}
 .home-hero .home-rule-in{width:34px;height:1px;background:var(--accent);margin:0 auto;position:relative;top:-1px}
-.home-hero p{font-family:Georgia,'Iowan Old Style','Times New Roman',serif;font-style:italic;font-size:17.5px;line-height:1.75;color:var(--muted);max-width:560px;margin:0 auto}
+.home-hero p{font-family:var(--serif);font-size:17px;line-height:1.7;color:var(--muted);max-width:520px;margin:0 auto}
 .home-meta{text-align:center;font-size:12.5px;color:var(--muted);margin-top:18px;letter-spacing:.02em}
 .home-cols{display:grid;grid-template-columns:1fr 1fr;gap:0 60px;margin-top:52px}
 .home-col h3{font-size:11px;font-weight:800;letter-spacing:1.7px;color:var(--muted);padding-bottom:9px;border-bottom:1px solid var(--text);margin-bottom:4px}
 .toc-row{display:flex;align-items:baseline;gap:11px;width:100%;background:none;border:none;padding:9px 0;font:inherit;color:inherit;cursor:pointer;text-align:left}
 .toc-row+.toc-row{border-top:1px solid var(--border)}
 .toc-num{flex:0 0 26px;font-size:11.5px;font-weight:700;color:var(--accent);letter-spacing:.04em}
-.toc-name{font-size:16px;color:var(--text);white-space:nowrap}
+.toc-name{font-family:var(--serif);font-size:16.5px;color:var(--text);white-space:nowrap}
 .toc-sub{font-size:12.5px;color:var(--muted);font-style:italic;white-space:nowrap}
 .toc-dots{flex:1 1 auto;min-width:14px;border-bottom:1px dotted var(--border);transform:translateY(-4px)}
 .toc-meta{flex:0 0 auto;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
@@ -400,7 +401,7 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 }
 
 /* ── MATH collapsible group ── */
-.math-group-toggle{
+.math-group-toggle{font-family:var(--serif);
   display:flex;align-items:center;gap:0;
   padding:10px 16px 4px;
   font-size:13.5px;font-weight:700;text-transform:none;letter-spacing:.2px;
@@ -420,7 +421,7 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .math-group-toggle.open::before{transform:rotate(90deg)}
 
 /* ── ML-OVERALL group + iki yonlu rozet ── */
-.nav-group-toggle{display:flex;align-items:center;gap:6px;padding:14px 16px 4px;font-size:13.5px;font-weight:700;text-transform:none;letter-spacing:.2px;color:var(--text);opacity:.88;cursor:pointer;user-select:none}
+.nav-group-toggle{font-family:var(--serif);display:flex;align-items:center;gap:6px;padding:14px 16px 4px;font-size:13.5px;font-weight:700;text-transform:none;letter-spacing:.2px;color:var(--text);opacity:.88;cursor:pointer;user-select:none}
 .nav-group-toggle::before{content:'▸';display:inline-block;width:14px;font-size:10px;opacity:.6;transition:transform .2s}
 .nav-group-toggle.open::before{transform:rotate(90deg)}
 .nav-group-toggle:hover{opacity:1}
@@ -468,7 +469,7 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 [data-theme="light"] .sidebar-foot button{background:transparent}
 [data-theme="light"] .ch-overview-panel{background:transparent;border-bottom:1px solid var(--border);padding:24px 0 18px}
 [data-theme="light"] .ch-ov-body p{color:#33302a}
-.nav-group-label{padding:16px 16px 0;font-size:11px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:var(--muted);opacity:.8}
+.nav-group-label{font-family:var(--serif);padding:16px 16px 0;font-size:11px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:var(--muted);opacity:.8}
 .controls select{display:none}
 .controls input[type=search]{background:transparent;border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--text);font-size:12px;min-width:200px}
 .wiki-article{scroll-margin-top:96px}
@@ -2220,9 +2221,8 @@ function buildHome(){
     `<div class="home-hero">
        <h1>ML Reference</h1>
        <div class="home-rule"><div class="home-rule-in"></div></div>
-       <p>Machine learning, image data analysis and linear algebra — one collection,
-          two ways in. Follow an idea across courses, or open a course and read it through.
-          The same card lives in both.</p>
+       <p>Machine learning, image analysis and linear algebra — indexed two ways:
+          by concept and by course.</p>
        <div class="home-meta">${total} cards &middot; ${fams} sections &middot; ${MLO_NAV.length} concept chapters</div>
      </div>
      <div class="home-cols">
