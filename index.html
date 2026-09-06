@@ -296,6 +296,13 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .sec-list{list-style:none;padding:0}
 .sec-list li{font-size:17px;color:var(--sec-text);line-height:1.7;padding:3px 0 3px 14px;position:relative}
 .sec-list li::before{content:"›";position:absolute;left:0;color:var(--accent);font-weight:700}
+.sec-fig{margin:10px 0 4px;color:var(--muted)}
+.sec-fig svg{max-width:100%;height:auto;display:block;overflow:visible}
+.sec-fig .p-curve{stroke:currentColor;fill:none}
+.sec-fig .q-curve{stroke:var(--accent);fill:var(--accent);fill-opacity:.10}
+.sec-fig .axis{stroke:var(--border)}
+.sec-fig text{fill:var(--muted);font-size:11px;font-family:inherit}
+.sec-fig figcaption{font-size:13px;color:var(--muted);margin-top:4px;font-style:italic}
 .sec-table{width:100%;border-collapse:collapse;font-size:14.5px}
 .sec-table th{background:var(--popup-tbl-head);color:var(--accent-light);padding:7px 10px;text-align:left;font-weight:700;border-bottom:2px solid var(--border)}
 .sec-table td{padding:7px 10px;border-bottom:1px solid var(--border);color:var(--sec-text);vertical-align:top}
@@ -1974,6 +1981,8 @@ function renderSection(s){
       const tbody = rows.slice(1).map(r=>`<tr>${r.map(c=>`<td>${esc(c)}</td>`).join('')}</tr>`).join('');
       return `<div class="sec-block">${h}<table class="sec-table"><thead>${thead}</thead><tbody>${tbody}</tbody></table></div>`;
     }
+    case 'svg':
+      return `<div class="sec-block">${h}<figure class="sec-fig">${s.svg||''}${s.caption?`<figcaption>${esc(s.caption)}</figcaption>`:''}</figure></div>`;
     case 'compare':{
       const L = s.left||{}, R = s.right||{};
       const lpts = (L.points||[]).map(p=>`<li>${esc(p)}</li>`).join('');
