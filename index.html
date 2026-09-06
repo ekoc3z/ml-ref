@@ -15,6 +15,7 @@
   --sec-insight-bg:#171717; --sec-insight-border:#c9a97a; --sec-insight-text:#e0e0e0; --sec-code-text:#e6e6e6;
   --serif:Georgia,'Iowan Old Style','Palatino Linotype',serif;
   --serif-ui:Charter,'Bitstream Charter','Sitka Text',Cambria,'Palatino Linotype',serif;
+  --find:#3fbfae;
   --popup-bg:#151515; --popup-tbl-head:#1c1c1c; --overview-bg:transparent; --overview-text:#d6d6d6;
   --hdr-bg:rgba(17,17,17,.96);
   --chain-next-col:#8fbf9a; --chain-next-bg:rgba(143,191,154,.07); --chain-next-border:#8fbf9a;
@@ -305,11 +306,11 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .sec-fig .axis{stroke:var(--border)}
 .sec-fig text{fill:var(--muted);font-size:13px;font-family:inherit}
 .sec-fig figcaption{font-size:13px;color:var(--muted);margin-top:4px;font-style:italic}
-.home-search{margin:64px auto 0;max-width:560px;position:relative;padding-top:0}
-.home-search input{width:100%;font-family:var(--serif);font-size:17px;padding:11px 14px 11px 30px;background:transparent;color:var(--text);border:none;border-bottom:1px solid var(--border);border-radius:0;outline:none;transition:border-color .15s}
-.home-search input:focus{border-bottom-color:var(--accent)}
+.home-search{margin:22px auto 0;max-width:560px;position:relative}
+.home-search input{width:100%;font-family:var(--serif);font-size:17px;padding:11px 14px 11px 32px;background:transparent;color:var(--text);border:none;border-bottom:1px solid var(--border);border-radius:0;outline:none;transition:border-color .15s}
+.home-search input:focus{border-bottom-color:var(--find)}
 .home-search input::placeholder{color:var(--muted);opacity:.7}
-.home-search::before{content:'⌕';position:absolute;left:4px;top:9px;font-size:19px;color:var(--muted)}
+.home-search::before{content:'';position:absolute;left:6px;top:15px;width:9px;height:9px;border:2px solid var(--find);border-radius:50%;box-shadow:3px 3px 0 -1px var(--find)}
 .home-hint{text-align:center;font-size:12px;color:var(--muted);margin-top:9px;opacity:.75}
 #home-results{margin-top:30px;min-height:2px}
 .sr-count{font-size:11px;font-weight:800;letter-spacing:1.6px;color:var(--muted);padding-bottom:9px;border-bottom:1px solid var(--text);margin-bottom:2px}
@@ -330,7 +331,7 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .home-hero .home-rule{height:1px;background:var(--border);margin:26px 0 0}
 .home-hero .home-rule-in{width:34px;height:1px;background:var(--accent);margin:0 auto;position:relative;top:-1px}
 .home-meta{text-align:center;font-size:12.5px;color:var(--muted);margin-top:16px;letter-spacing:.02em;font-variant-numeric:tabular-nums}
-.home-cols{display:grid;grid-template-columns:1fr 1fr;gap:0 60px;margin-top:52px;padding-bottom:52px;border-bottom:1px solid var(--border)}
+.home-cols{display:grid;grid-template-columns:1fr 1fr;gap:0 60px;margin-top:52px;padding-bottom:26px;border-bottom:1px solid var(--border)}
 .home-col h3{font-family:var(--serif);font-size:11px;font-weight:800;letter-spacing:1.7px;color:var(--muted);padding-bottom:9px;border-bottom:1px solid var(--text);margin-bottom:4px}
 .toc-row{display:flex;align-items:baseline;gap:11px;width:100%;background:none;border:none;padding:9px 0;font:inherit;color:inherit;cursor:pointer;text-align:left}
 .toc-row+.toc-row{border-top:1px solid var(--border)}
@@ -451,6 +452,7 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .mlo-badge:hover{opacity:1}
 
 /* ── KAĞIT görünümü: sade, krem, düz metin (ml-150 esinli) ── */
+[data-theme="light"]{--find:#0e8c7d}
 [data-theme="light"] body{font-family:-apple-system,BlinkMacSystemFont,"Inter","Segoe UI",Roboto,Helvetica,Arial,sans-serif}
 [data-theme="light"] .wiki-article{border-left:none;padding:30px 44px}
 [data-theme="light"] .wiki-article[class*="card-cat-"]{--cc:var(--muted)!important;border-left:none}
