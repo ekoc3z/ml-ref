@@ -305,6 +305,25 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .sec-fig .axis{stroke:var(--border)}
 .sec-fig text{fill:var(--muted);font-size:13px;font-family:inherit}
 .sec-fig figcaption{font-size:13px;color:var(--muted);margin-top:4px;font-style:italic}
+.home-search{margin:38px auto 0;max-width:560px;position:relative}
+.home-search input{width:100%;font-family:var(--serif);font-size:17px;padding:11px 14px 11px 30px;background:transparent;color:var(--text);border:none;border-bottom:1px solid var(--border);border-radius:0;outline:none;transition:border-color .15s}
+.home-search input:focus{border-bottom-color:var(--accent)}
+.home-search input::placeholder{color:var(--muted);opacity:.7}
+.home-search::before{content:'⌕';position:absolute;left:4px;top:9px;font-size:19px;color:var(--muted)}
+.home-hint{text-align:center;font-size:12px;color:var(--muted);margin-top:9px;opacity:.75}
+#home-results{margin-top:34px}
+.sr-count{font-size:11px;font-weight:800;letter-spacing:1.6px;color:var(--muted);padding-bottom:9px;border-bottom:1px solid var(--text);margin-bottom:2px}
+.sr{display:flex;align-items:flex-start;gap:12px;border-bottom:1px solid var(--border)}
+.sr-main{flex:1;min-width:0;background:none;border:none;padding:13px 0;font:inherit;color:inherit;text-align:left;cursor:pointer}
+.sr-crumb{font-size:11.5px;color:var(--muted);letter-spacing:.03em}
+.sr-title{font-family:var(--serif);font-size:17px;color:var(--text);margin:3px 0 5px;line-height:1.35;transition:color .15s}
+.sr-main:hover .sr-title{color:var(--accent)}
+.sr-secs{font-size:12.5px;color:var(--muted);font-style:italic;margin-bottom:4px}
+.sr-snip{font-size:13.5px;line-height:1.6;color:var(--muted)}
+.sr-snip mark{background:var(--accent-bg);color:var(--text);padding:0 2px;border-radius:2px}
+.sr-go{flex:0 0 auto;align-self:center;background:none;border:1px solid var(--border);border-radius:2px;color:var(--muted);font-size:15px;line-height:1;padding:7px 10px;cursor:pointer;transition:border-color .15s,color .15s}
+.sr-go:hover{border-color:var(--accent);color:var(--accent)}
+.sr-empty{padding:26px 0;color:var(--muted);font-size:14px}
 #home-page{display:none;max-width:940px;margin:0 auto;padding:72px 32px 88px}
 .home-hero{text-align:center;margin-bottom:14px}
 .home-hero h1{font-family:var(--serif);font-size:52px;font-weight:400;letter-spacing:.01em;line-height:1.1;color:var(--text)}
@@ -2192,6 +2211,83 @@ const COURSE_AREAS = [
   {label:'Python & DSA', sub:'syntax, NumPy, Big-O',pre:/^py\d/,   first:'py01'},
   {label:'Math',    sub:'probability, puzzles',  pre:/^math\d/,  first:'math01'}
 ];
+
+/* ---- ana sayfa aramasi: tum govde metnini tarar, kunye + baglam gosterir ---- */
+const FAM_LABEL = {};
+function famLabel(fam){
+  if(FAM_LABEL[fam]) return FAM_LABEL[fam];
+  const a = COURSE_AREAS.find(x => x.pre.test(fam));
+  const num = (fam.match(/\d+$/)||[''])[0];
+  return FAM_LABEL[fam] = (a ? a.label : fam) + (num ? ' · ' + num : '');
+}
+function plain(t){ return String(t||'').replace(/\$\$?/g,'').replace(/\\[a-zA-Z]+\{?|\}/g,'').replace(/\s+/g,' ').trim(); }
+function secBody(sec){
+  return plain([sec.text||'', (sec.items||[]).join(' · '), (sec.rows||[]).map(r=>r.join(' ')).join(' · ')].join(' '));
+}
+function snip(text, q){
+  const i = text.toLowerCase().indexOf(q); if(i < 0) return '';
+  const a = Math.max(0, i-50), b = Math.min(text.length, i+q.length+70);
+  return (a>0?'… ':'') + esc(text.slice(a,i)) + '<mark>' + esc(text.slice(i,i+q.length)) + '</mark>'
+       + esc(text.slice(i+q.length,b)) + (b<text.length?' …':'');
+}
+function homeSearch(q){
+  const box = $('home-results'), cols = $('home-cols'), hint = $('home-hint');
+  q = (q||'').trim().toLowerCase();
+  if(q.length < 2){ box.innerHTML=''; cols.style.display=''; if(hint) hint.style.display=''; return; }
+  cols.style.display='none'; if(hint) hint.style.display='none';
+  const res = [];
+  CHAPTERS.filter(c => !c.startsWith('mlo')).forEach(fam => {
+    (DATA[fam]||[]).forEach(item => {
+      const inTitle = (item.title||'').toLowerCase().includes(q);
+      const inSum   = (item.summary||'').toLowerCase().includes(q);
+      const heads = [], snips = [];
+      (item.sections||[]).forEach(sec => {
+        const h = sec.heading||'', body = secBody(sec);
+        const hitH = h.toLowerCase().includes(q), hitB = body.toLowerCase().includes(q);
+        if(hitH || hitB){ if(h) heads.push(plain(h)); if(hitB && snips.length < 1) snips.push(snip(body, q)); }
+      });
+      if(inTitle || inSum || heads.length || snips.length){
+        if(!snips.length && inSum) snips.push(snip(plain(item.summary), q));
+        res.push({item, fam, score:(inTitle?100:0) + (inSum?20:0) + heads.length*3 + snips.length});
+      }
+    });
+  });
+  res.sort((a,b) => b.score - a.score);
+  if(!res.length){ box.innerHTML = `<div class="sr-empty">“${esc(q)}” için sonuç yok.</div>`; return; }
+  const shown = res.slice(0, 40);
+  let html = `<div class="sr-count">${res.length} RESULT${res.length>1?'S':''}${res.length>40?' — ILK 40':''}</div>`;
+  shown.forEach(r => {
+    const it = r.item;
+    const heads = [], snips = [];
+    (it.sections||[]).forEach(sec => {
+      const h = sec.heading||'', body = secBody(sec);
+      const hitH = h.toLowerCase().includes(q), hitB = body.toLowerCase().includes(q);
+      if((hitH||hitB) && h && heads.length < 3) heads.push(plain(h));
+      if(hitB && !snips.length) snips.push(snip(body, q));
+    });
+    if(!snips.length && (it.summary||'').toLowerCase().includes(q)) snips.push(snip(plain(it.summary), q));
+    html += `<div class="sr">
+      <button class="sr-main" data-id="${esc(it.id||'')}" data-fam="${esc(r.fam)}">
+        <div class="sr-crumb">${esc(famLabel(r.fam))}${it.cat?' — '+esc(it.cat):''}</div>
+        <div class="sr-title">${esc(it.title||'')}</div>
+        ${heads.length?`<div class="sr-secs">§ ${heads.map(esc).join(' · § ')}</div>`:''}
+        ${snips.length?`<div class="sr-snip">${snips[0]}</div>`:''}
+      </button>
+      <button class="sr-go" data-id="${esc(it.id||'')}" data-fam="${esc(r.fam)}" title="Bölüme git">&rarr;</button>
+    </div>`;
+  });
+  box.innerHTML = html;
+  const find = el => (DATA[el.dataset.fam]||[]).find(x => x.id === el.dataset.id);
+  box.querySelectorAll('.sr-main').forEach(el => el.onclick = () => {
+    const it = find(el); if(it) showPopup(it, catClass(it.cat, it._home || el.dataset.fam));
+  });
+  box.querySelectorAll('.sr-go').forEach(el => el.onclick = () => {
+    const fam = el.dataset.fam, id = el.dataset.id;
+    switchSection(fam);
+    setTimeout(() => { const t = document.getElementById('card-'+id); if(t) t.scrollIntoView({block:'start'}); }, 60);
+  });
+}
+
 function buildHome(){
   const host = $('home-page'); if(!host) return;
   const src   = CHAPTERS.filter(c => !c.startsWith('mlo'));   // mlo* ayni kartlara referans, iki kez sayma
@@ -2224,12 +2320,18 @@ function buildHome(){
        <h1>ML Reference</h1>
        <div class="home-rule"><div class="home-rule-in"></div></div>
        <div class="home-meta">${total} cards &middot; ${fams} sections &middot; ${MLO_NAV.length} concept chapters</div>
+       <div class="home-search"><input id="home-q" type="search" placeholder="Search every card…" autocomplete="off"></div>
+       <div class="home-hint" id="home-hint">Titles, headings and body text &middot; click a result to open the card, &rarr; to go to its section</div>
      </div>
-     <div class="home-cols">
+     <div id="home-results"></div>
+     <div class="home-cols" id="home-cols">
        <div class="home-col"><h3>BY CONCEPT</h3>${left}</div>
        <div class="home-col"><h3>BY SOURCE</h3>${right}</div>
      </div>`;
   host.querySelectorAll('[data-go]').forEach(el => el.onclick = () => switchSection(el.dataset.go));
+  const qi = $('home-q');
+  if(qi){ let t; qi.oninput = () => { clearTimeout(t); t = setTimeout(() => homeSearch(qi.value), 130); };
+          qi.onkeydown = e => { if(e.key === 'Escape'){ qi.value=''; homeSearch(''); qi.blur(); } }; }
 }
 
 /* ==================== ML-OVERALL NAV (veriden uretilir) ==================== */
