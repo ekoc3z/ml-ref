@@ -2065,7 +2065,8 @@ function renderSection(s){
     case 'anim':{
       const steps = s.steps||[];
       if(!steps.length) return '';
-      const caps = steps.map((t,i)=>`<span data-s="${i}"${i===0?' class="on"':''}>${esc(t)}</span>`).join('');
+      const md = t => esc(t).replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>').replace(/\*([^*]+)\*/g,'<em>$1</em>');
+      const caps = steps.map((t,i)=>`<span data-s="${i}"${i===0?' class="on"':''}>${md(t)}</span>`).join('');
       return `<div class="sec-block">${h}<figure class="sec-fig sec-anim" data-step="0" data-n="${steps.length}">${s.svg||''}<div class="anim-bar"><button class="anim-btn" data-d="-1" aria-label="Onceki adim">◀</button><span class="anim-count">1 / ${steps.length}</span><button class="anim-btn" data-d="1" aria-label="Sonraki adim">▶</button></div><figcaption class="anim-cap">${caps}</figcaption></figure></div>`;
     }
     case 'compare':{
