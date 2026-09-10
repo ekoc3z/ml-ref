@@ -314,8 +314,8 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .sec-anim .anim-btn:disabled{opacity:.3;cursor:default}
 .sec-anim .anim-count{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
 .sec-anim .anim-cap{font-size:14.5px;color:var(--sec-text);margin-top:9px;font-style:normal;line-height:1.6;min-height:3.2em}
-.sec-anim .anim-cap span{display:none}
-.sec-anim .anim-cap span.on{display:block}
+.sec-anim .anim-cap > span{display:none}
+.sec-anim .anim-cap > span.on{display:block}
 .sec-anim [data-from]{transition:opacity .28s ease}
 .sec-anim .tile{fill:none;stroke:var(--border)}
 .sec-anim .sig{fill:currentColor;stroke:none}
@@ -2095,7 +2095,7 @@ function animSet(fig, i){
   const n = +fig.dataset.n || 1;
   i = Math.max(0, Math.min(n-1, i));
   fig.dataset.step = i;
-  fig.querySelectorAll('.anim-cap span').forEach(sp=>sp.classList.toggle('on', +sp.dataset.s === i));
+  fig.querySelectorAll('.anim-cap > span[data-s]').forEach(sp=>sp.classList.toggle('on', +sp.dataset.s === i));
   const cnt = fig.querySelector('.anim-count');
   if(cnt) cnt.textContent = (i+1) + ' / ' + n;
   fig.querySelectorAll('[data-from]').forEach(el=>{
