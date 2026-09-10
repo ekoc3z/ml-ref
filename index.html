@@ -306,6 +306,26 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .sec-fig .axis{stroke:var(--border)}
 .sec-fig text{fill:var(--muted);font-size:13px;font-family:inherit}
 .sec-fig figcaption{font-size:13px;color:var(--muted);margin-top:4px;font-style:italic}
+/* --- adim adim diyagram (type:'anim') --- */
+.sec-anim{border:1px solid var(--border);padding:12px 12px 9px;margin:14px 0 6px}
+.sec-anim .anim-bar{display:flex;align-items:center;gap:10px;margin-top:9px;padding-top:9px;border-top:1px solid var(--border)}
+.sec-anim .anim-btn{font:inherit;font-size:14px;line-height:1;color:var(--muted);background:transparent;border:1px solid var(--border);padding:4px 11px;cursor:pointer;transition:color .15s,border-color .15s}
+.sec-anim .anim-btn:hover:not(:disabled){color:var(--accent);border-color:var(--accent)}
+.sec-anim .anim-btn:disabled{opacity:.3;cursor:default}
+.sec-anim .anim-count{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.sec-anim .anim-cap{font-size:14.5px;color:var(--sec-text);margin-top:9px;font-style:normal;line-height:1.6;min-height:3.2em}
+.sec-anim .anim-cap span{display:none}
+.sec-anim .anim-cap span.on{display:block}
+.sec-anim [data-from]{transition:opacity .28s ease}
+.sec-anim .tile{fill:none;stroke:var(--border)}
+.sec-anim .sig{fill:currentColor;stroke:none}
+.sec-anim .noise{fill:currentColor;stroke:none}
+.sec-anim .arw{stroke:var(--border);fill:none}
+.sec-anim .arwh{fill:var(--border);stroke:none}
+.sec-anim .net{fill:none;stroke:var(--border)}
+.sec-anim .lbl{font-size:12px}
+.sec-anim .hi{stroke:var(--accent)}
+.sec-anim text.hi{fill:var(--accent);stroke:none}
 .home-search{margin:22px auto 0;max-width:560px;position:relative}
 .home-search input{width:100%;font-family:var(--serif);font-size:17px;padding:11px 14px 11px 32px;background:transparent;color:var(--text);border:none;border-bottom:1px solid var(--border);border-radius:0;outline:none;transition:border-color .15s}
 .home-search input:focus{border-bottom-color:var(--find)}
@@ -2001,6 +2021,7 @@ function renderCards(sec){
       throwOnError:false
     });
   }
+  initAnims(grid);
 }
 
 /* ==================== RENDER SECTIONS ==================== */
@@ -2041,6 +2062,12 @@ function renderSection(s){
     }
     case 'svg':
       return `<div class="sec-block">${h}<figure class="sec-fig">${s.svg||''}${s.caption?`<figcaption>${esc(s.caption)}</figcaption>`:''}</figure></div>`;
+    case 'anim':{
+      const steps = s.steps||[];
+      if(!steps.length) return '';
+      const caps = steps.map((t,i)=>`<span data-s="${i}"${i===0?' class="on"':''}>${esc(t)}</span>`).join('');
+      return `<div class="sec-block">${h}<figure class="sec-fig sec-anim" data-step="0" data-n="${steps.length}">${s.svg||''}<div class="anim-bar"><button class="anim-btn" data-d="-1" aria-label="Onceki adim">◀</button><span class="anim-count">1 / ${steps.length}</span><button class="anim-btn" data-d="1" aria-label="Sonraki adim">▶</button></div><figcaption class="anim-cap">${caps}</figcaption></figure></div>`;
+    }
     case 'compare':{
       const L = s.left||{}, R = s.right||{};
       const lpts = (L.points||[]).map(p=>`<li>${esc(p)}</li>`).join('');
@@ -2057,6 +2084,42 @@ function renderSection(s){
     default: return '';
   }
 }
+
+/* ==================== ADIM ADIM DIYAGRAM (type:'anim') ====================
+   SVG icinde yazar su iki ozniteligi kullanir:
+     data-from="2"  data-to="5"   -> oge yalnizca 2..5 adimlarinda gorunur (data-to yoksa sona kadar)
+     data-hi="3,4"                -> o adimlarda vurgu rengine doner
+   Adim metinleri JSON'da steps[] dizisi. Otomatik oynatma YOK, kontrol kullanicida. */
+function animSet(fig, i){
+  const n = +fig.dataset.n || 1;
+  i = Math.max(0, Math.min(n-1, i));
+  fig.dataset.step = i;
+  fig.querySelectorAll('.anim-cap span').forEach(sp=>sp.classList.toggle('on', +sp.dataset.s === i));
+  const cnt = fig.querySelector('.anim-count');
+  if(cnt) cnt.textContent = (i+1) + ' / ' + n;
+  fig.querySelectorAll('[data-from]').forEach(el=>{
+    const t = el.dataset.to;
+    const a = +el.dataset.from;
+    const b = (t === undefined || t === '') ? Infinity : +t;
+    el.style.opacity = (i >= a && i <= b) ? '' : '0';
+  });
+  fig.querySelectorAll('[data-hi]').forEach(el=>{
+    el.classList.toggle('hi', el.dataset.hi.split(',').map(Number).indexOf(i) !== -1);
+  });
+  const btns = fig.querySelectorAll('.anim-btn');
+  if(btns[0]) btns[0].disabled = (i === 0);
+  if(btns[1]) btns[1].disabled = (i === n-1);
+}
+function initAnims(root){
+  (root || document).querySelectorAll('.sec-anim').forEach(f=>animSet(f, 0));
+}
+document.addEventListener('click', function(e){
+  const b = e.target.closest ? e.target.closest('.anim-btn') : null;
+  if(!b) return;
+  const fig = b.closest('.sec-anim');
+  if(!fig) return;
+  animSet(fig, (+fig.dataset.step || 0) + (+b.dataset.d || 0));
+});
 
 /* ==================== SHOW POPUP ==================== */
 function showPopup(item, cc){
@@ -2092,6 +2155,7 @@ function showPopup(item, cc){
       throwOnError:false
     });
   }
+  initAnims($('popupBox'));
 }
 
 /* ==================== POPUP ==================== */
