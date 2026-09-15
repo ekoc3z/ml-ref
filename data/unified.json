@@ -8290,181 +8290,103 @@
     {
       "title": "MLE, MAP, VAE — Aradığım Şey Ne? Prior Kimin Üzerinde?",
       "cat": "Estimation",
-      "summary": "MLE her zaman aynı soruyu sorar: gördüğümü en olası kılan aradığım nedir? ML kursunda aranan mu, EE499'da sinyal x, VAE'de network ağırlıkları theta/phi. z VAE'de hiç 'bulunmuyor' — integrate ediliyor. MAP için prior, tahmin ettiğin şeyin üzerinde olmalı: p(theta). $p(z)$ olması MAP yapmıyor. Weight decay = Gaussian prior ile MAP.",
+      "summary": "MLE tek bir hareket: çan eğrisini kaydıra kaydıra, gördüğün veriyi en az şaşırtıcı yapan yeri bulmak. Değişen tek şey aradığın şeyin ne olduğu — ML dersinde bir sayı, EE499'da bir sinyal, VAE'de ağ ağırlıkları. VAE'de z hiç bulunmuyor, integrate ediliyor. MAP'e geçmek için prior tahmin ettiğin şeyin üzerinde olmalı; weight decay tam olarak budur.",
       "context": "EE499 · MLE, MAP ve VAE Karşılaştırması",
       "sections": [
         {
           "type": "text",
-          "qa": true,
-          "heading": "Ortak şablon — hepsinde aynı yapı",
-          "text": "Her yerde şu form var: $p(\\text{gördüğüm şey} \\mid \\text{aradığım şey})$\n\nMLE hep şunu yapıyor: 'Aradığım şeyin hangi değeri, gördüğümü en olası kılar?'\n\nFark sadece şu: aradığım şey ne?"
-        },
-        {
-          "type": "table",
-          "rows": [
-            [
-              "",
-              "ML kursu",
-              "EE499",
-              "VAE"
-            ],
-            [
-              "Gördüğüm",
-              "$x_1, \\ldots, x_N$ (veri noktaları)",
-              "$y$ (gürültülü ölçüm)",
-              "$x$ (yüz resimleri, binlerce)"
-            ],
-            [
-              "Aradığım",
-              "$\\mu$ (dağılımın ortalaması)",
-              "$x$ (gerçek sinyal)",
-              "$\\theta, \\phi$ (encoder/decoder ağırlıkları)"
-            ],
-            [
-              "Cevap",
-              "$\\mu$ = sayı (örn. 3.2)",
-              "$x$ = vektör",
-              "bir fonksiyon — encoder ve decoder ağı"
-            ]
-          ]
-        },
-        {
-          "type": "text",
-          "qa": true,
-          "heading": "z ne peki — VAE'de neden hiç 'bulunmuyor'?",
-          "text": "Aradığım şeyi bulmak ne demek, üç durumda karşılaştır:"
-        },
-        {
-          "type": "table",
-          "rows": [
-            [
-              "",
-              "Aradığım",
-              "Durum"
-            ],
-            [
-              "ML kursu",
-              "$\\mu$",
-              "bulduğumda işim bitiyor"
-            ],
-            [
-              "EE499",
-              "$x$",
-              "bulduğumda işim bitiyor"
-            ],
-            [
-              "VAE",
-              "$z$",
-              "hiç 'bulmuyorum' bile"
-            ]
-          ]
-        },
-        {
-          "type": "text",
-          "text": "$z$, VAE'de bir ara değişken — her resim için farklı. 'Bu resmin $z$'si 3.2'dir' demiyorum; 'bu resmin $z$'si $\\mathcal{N}(\\mu(x), \\sigma(x))$ dağılımından geliyor' diyorum. Bu dağılımı öğreniyorum — encoder ağırlıkları bu dağılımı tanımlıyor.\n\nVAE'nin sonunda elde ettiğim:"
+          "heading": "Önce MLE'nin kendisi",
+          "text": "Elinde beş sayı var: 2.1, 3.4, 2.8, 3.9, 3.0. Bunları bir sayı doğrusuna nokta nokta diz — hepsi 3'ün etrafında kümelenmiş. Şimdi elinde bir çan eğrisi olduğunu düşün ve bu eğriyi doğru boyunca sağa sola kaydırabiliyorsun. Soru: eğriyi nereye koyarsan bu beş nokta en beklendik hale gelir?\n\nEğriyi 10'a koyarsan noktalar eğrinin çok solunda, kuyrukta kalır — öyle bir dünyada tam bu beş sayıyı görmek şaşırtıcı olurdu. 3'e koyarsan noktalar tepenin altına düşer, hiç şaşırtıcı değil. MLE tam olarak bu: eğriyi kaydıra kaydıra, gördüğün veriyi en az şaşırtıcı yapan yeri bulmak. Buradaki cevap 3.04, yani beş sayının ortalaması.\n\nŞimdi harfleri yerine koyalım:"
         },
         {
           "type": "list",
           "items": [
-            "encoder: herhangi bir resim ver → $z$ dağılımını söyle",
-            "decoder: herhangi bir $z$ ver → resim üret"
+            "$x$ — **gördüğün şey**, veri. Burada o beş sayı.",
+            "$\\theta$ — **aradığın şey**, bilinmeyen. Burada eğrinin nereye oturduğu, yani ortalama.",
+            "$p(x \\mid \\theta)$ — **likelihood**: \"$\\theta$ şu değer olsaydı, tam bu veriyi görme ihtimalim ne olurdu?\""
           ]
         },
         {
           "type": "text",
-          "heading": "KL terimi neden var?",
-          "text": "Test zamanında $x$ yok, $z \\sim \\mathcal{N}(0,I)$'dan örnekleyeceğim. Eğer encoder $z$'leri rastgele yerlere dağıtırsa, $\\mathcal{N}(0,I)$'dan çektiğim $z$ decoder'a anlamsız gelir.\n\nKL terimi bunu engelliyor: 'encoder'ın $z$ dağılımları $\\mathcal{N}(0,I)$'dan uzaklaşmasın.' → Test zamanında $\\mathcal{N}(0,I)$'dan örnekleyebilir hale geliyoruz.\n\nBu bir prior değil, latent space'i kullanılabilir tutma zorunluluğu."
+          "text": "Dikkat edilecek yer şu: likelihood \"$\\theta$ kaç?\" sorusuna cevap vermiyor. \"$\\theta$ şu olsaydı veri ne kadar beklendik olurdu?\" sorusuna cevap veriyor. MLE de bu ihtimali en büyük yapanı seçiyor:\n\n$$\\hat{\\theta}_{\\text{MLE}} = \\operatorname*{arg\\,max}_{\\theta}\\; p(x \\mid \\theta)$$\n\nBu satır kartın tamamının şablonu. Bundan sonrası tek bir şeyi değiştiriyor: $\\theta$'nın yerine ne koyduğun. Bazen bir sayı, bazen bir sinyal, bazen bir sinir ağının milyonlarca ağırlığı — soru hep aynı kalıyor."
         },
         {
           "type": "text",
-          "qa": true,
-          "heading": "$p(z)$ prior'u var — neden MAP değil?",
-          "text": "Kritik soru: prior kimin üzerinde?"
+          "heading": "Aynı soru, üç farklı kılık",
+          "text": "Yukarıdaki beş sayı örneği ML dersindeki durumdu: aradığın şey $\\mu$, yani **bir sayı**. Cevabı bulduğunda elinde 3.04 var, iş bitiyor.\n\nEE499'da soru aynı, aranan değişiyor. Elinde gürültülü bir ölçüm $y$ var ve arkasında gerçek bir sinyal olduğunu biliyorsun. MLE yine soruyor: sinyal ne olsaydı bu ölçümü görmem en olası olurdu? Cevap artık tek sayı değil, **bir vektör** — sinyalin kendisi. Ama yaptığın hareket aynı: bilinmeyeni oynata oynata, gördüğünü en az şaşırtıcı yapan yeri arıyorsun.\n\nVAE üçüncü kılık, ve hayal etmesi en zor olanı — o yüzden yavaş gidelim. Elinde 200.000 yüz fotoğrafı var. Bu sefer kaydıracağın bir çan eğrisi yok; onun yerine gürültüden yüz üreten bir sinir ağı var. Ağın ağırlıklarını değiştirdikçe ürettiği şey değişiyor: bir ayarda bulanık lekeler çıkıyor, başka bir ayarda gerçek yüzlere benziyor. Soru yine aynı: **ağırlıklar ne olsaydı, elimdeki bu 200.000 gerçek yüzü görmem en olası olurdu?** Yani çan eğrisini kaydırmak yerine milyonlarca ağırlığı ayarlıyorsun — ama yaptığın iş birebir aynı iş. Cevap bu sefer bir sayı ya da vektör değil, **bir fonksiyon**: encoder ve decoder."
+        },
+        {
+          "type": "text",
+          "heading": "z'yi neden hiç bulmuyoruz",
+          "text": "Burada VAE'ye özgü bir tuhaflık çıkıyor. VAE'de bir de $z$ var, latent değişken. Onu da mı arıyoruz?\n\nHayır, ve fark önemli. ML dersinde $\\mu$'yü bulduğunda işin bitiyordu: elinde 3.04 var. EE499'da sinyali bulduğunda işin bitiyordu: elinde sinyal var. Ama VAE'de \"$z$'yi buldum\" diyebileceğin bir an yok.\n\nSebebi, $z$'nin her resim için ayrı olması. 200.000 resmin 200.000 $z$'si var ve sen tek tek onların peşinde değilsin. \"Bu resmin $z$'si 3.2'dir\" demiyorsun; \"bu resmin $z$'si $\\mathcal{N}(\\mu(x), \\sigma(x))$'den geliyor\" diyorsun. Aradığın şey o dağılımı üreten kural — yani yine ağırlıklar.\n\nEğitim bittiğinde elinde kalan iki şey var: herhangi bir resim verince $z$ dağılımını söyleyen bir encoder, ve herhangi bir $z$ verince resim üreten bir decoder. $z$'lerin kendisi ortada yok. **$z$ bulunmuyor, integrate ediliyor.**"
+        },
+        {
+          "type": "text",
+          "heading": "KL terimi neden var",
+          "text": "$z$'yi integrate etmek tek başına yetmiyor, çünkü test zamanında elinde resim olmayacak. Yeni bir yüz üretmek istediğinde encoder'a verecek bir $x$ yok; doğrudan $\\mathcal{N}(0,I)$'dan bir $z$ çekip decoder'a vereceksin.\n\nSorun şu: encoder eğitim boyunca $z$'leri istediği yere dağıtabilir. Bir resminkini 50 civarına, başkasınınkini $-30$'a koyarsa, senin $\\mathcal{N}(0,I)$'dan çektiğin $z$ — çoğunlukla $-2$ ile $2$ arasında — decoder'ın hiç görmediği bir bölgeye düşer ve çıkan şey bulanık bir leke olur.\n\nKL terimi tam olarak bunu engelliyor: encoder'ın ürettiği dağılımları $\\mathcal{N}(0,I)$ etrafında tutuyor, böylece test zamanında çektiğin $z$ decoder'ın tanıdığı bir yere düşüyor.\n\nBuradaki incelik kartın asıl konusuna bağlanıyor: **KL bir prior değil.** $\\mathcal{N}(0,I)$ burada latent uzayı kullanılabilir tutan bir kısıt. Neden prior sayılmadığını bir sonraki adım söylüyor."
+        },
+        {
+          "type": "text",
+          "heading": "Prior kimin üzerinde",
+          "text": "MLE ile MAP'ı ayıran tek bir soru var: **aradığın şeyin üzerinde prior var mı?**\n\nMLE'de aradığın şey deterministik ama bilinmeyen bir büyüklük. Ona olasılık atfetmiyorsun, sadece veriyi en iyi açıklayanı seçiyorsun. MAP'te ise aradığın şeyi rastgele bir değişken kabul ediyorsun ve veriyi görmeden önce ne düşündüğünü $p(\\theta)$ ile yazıyorsun.\n\nKritik nokta şu: prior, **tahmin ettiğin şeyin** üzerinde olmalı. Başka bir şeyin üzerindeki prior seni MAP'e geçirmiyor.\n\nVAE'de tahmin ettiğin şey $\\theta$ ve $\\phi$, yani ağırlıklar. Bunların üzerinde prior var mı? Yok. Dolayısıyla VAE, adında \"variational\" geçmesine ve içinde $p(z)$ bulunmasına rağmen, ağırlıklar açısından **MLE yapıyor.**\n\nPeki $p(z) = \\mathcal{N}(0,I)$ ne? O gerçekten bir prior — ama $z$'nin üzerinde, ve $z$ tahmin edilmiyor, integrate ediliyor. Tahmin etmediğin bir şeyin prior'u, tahmin ettiğin şey için MAP yapmıyor."
+        },
+        {
+          "type": "text",
+          "heading": "Weight decay tam olarak burada",
+          "text": "VAE'yi gerçekten MAP'e çevirmek isteseydin ne yapman gerekirdi? Prior'ı $z$'ye değil $\\theta$'ya koyman.\n\nDiyelim $p(\\theta) = \\mathcal{N}(0,I)$ dedin: \"ağırlıkların sıfır civarında, küçük olmasını bekliyorum.\" MAP'te maksimize ettiğin şey likelihood çarpı prior; logaritmasını alınca çarpım toplama dönüşüyor ve Gaussian prior'ın logaritması $-\\|\\theta\\|^2$ veriyor. Minimize ederek yazarsan:\n\n$$\\text{loss} = \\text{reconstruction loss} + \\underbrace{\\lambda\\|\\theta\\|^2}_{\\text{L2 weight decay}}$$\n\nBu tanıdık gelmeli — kodda her gün yazdığın weight decay. Dönüm noktası tek cümlede: **L2 regularization, ağırlıkların üzerine Gaussian prior koyup MAP yapmaktır.** Keyfi bir hile değil, bir cümlenin matematiği: \"ağırlıkların küçük olduğuna önceden inanıyorum.\"\n\nYani `weight_decay=1e-4` yazdığın an, farkında olmadan MLE'den MAP'e geçiyorsun."
         },
         {
           "type": "table",
+          "heading": "Özet",
           "rows": [
             [
-              "Yöntem",
-              "$\\theta$ nasıl?",
-              "$p(\\theta)$"
-            ],
-            [
-              "MLE",
-              "deterministik unknown",
-              "YOK"
-            ],
-            [
-              "MAP",
-              "rastgele",
-              "VAR"
-            ]
-          ]
-        },
-        {
-          "type": "text",
-          "text": "Prior, tahmin ettiğin şeyin üzerinde olmalı.\n\nVAE'de tahmin edilen $\\theta, \\phi$ (network ağırlıkları) ve bunların üzerinde prior yok → MLE.\n\n$z$'de prior var: $p(z) = \\mathcal{N}(0,I)$. Ama $z$ tahmin edilmiyor — $z$ integrate ediliyor. $z$'nin prior'u, $\\theta/\\phi$ için MAP yapmıyor.\n\nEğer $\\theta$'ya prior koysaydın — $p(\\theta) \\sim \\mathcal{N}(0,I)$, yani $\\log p(\\theta) \\propto -\\|\\theta\\|^2$ — loss şöyle olurdu:"
-        },
-        {
-          "type": "text",
-          "text": "$$\\text{loss} = \\text{reconstruction loss} + \\underbrace{\\|\\theta\\|^2}_{\\text{L2 weight decay}}$$"
-        },
-        {
-          "type": "text",
-          "text": "Bu tam olarak neural network'teki weight decay. Yani: L2 regularization = $\\theta$ üzerinde Gaussian prior ile MAP."
-        },
-        {
-          "type": "table",
-          "heading": "Özet tablo",
-          "rows": [
-            [
-              "Yöntem",
-              "Gördüğüm",
+              "Nerede",
+              "Gördüğüm $x$",
               "Aradığım",
-              "p(aranan) var mı?",
+              "Üzerinde prior?",
               "Yöntem"
             ],
             [
-              "ML kursu MLE",
-              "x_i",
-              "mu, sigma",
-              "Yok",
+              "ML dersi",
+              "5 ölçüm",
+              "$\\mu$ — bir sayı",
+              "yok",
               "MLE"
             ],
             [
-              "EE499 MLE",
-              "y",
-              "x (sinyal)",
-              "Yok",
+              "EE499",
+              "gürültülü $y$",
+              "sinyal — vektör",
+              "yok",
               "MLE"
             ],
             [
-              "MAP",
-              "y",
-              "x (sinyal)",
-              "Var: p(x)",
+              "EE499 + prior",
+              "gürültülü $y$",
+              "sinyal",
+              "var: $p(x)$",
               "MAP"
             ],
             [
               "VAE",
-              "x (resimler)",
-              "theta, phi",
-              "Yok",
+              "200.000 yüz",
+              "$\\theta, \\phi$ — ağırlıklar",
+              "yok",
               "MLE"
             ],
             [
-              "VAE + L2 reg",
-              "x (resimler)",
-              "theta, phi",
-              "Var: p(theta)",
+              "VAE + weight decay",
+              "200.000 yüz",
+              "$\\theta, \\phi$",
+              "var: $p(\\theta)$",
               "MAP"
             ],
             [
-              "",
-              "",
-              "z",
-              "Var: p(z) = N(0,I)",
-              "Variational Inference"
+              "VAE'deki $z$",
+              "—",
+              "tahmin edilmiyor",
+              "var: $\\mathcal{N}(0,I)$",
+              "integrate ediliyor"
             ]
           ]
         }
