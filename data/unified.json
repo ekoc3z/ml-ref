@@ -8368,34 +8368,88 @@
       ]
     },
     {
-      "title": "MLE → MAP: x Deterministik'ten Rastgele'ye — Prior Devreye Giriyor",
+      "title": "MLE → MAP → Bayesian: Prior Devreye Girince Ne Değişiyor?",
       "cat": "Estimation",
-      "summary": "MLE'de x deterministik — prior yok, sadece likelihood. MAP'te x rastgele — Bayes kuralıyla likelihood * prior maximize edilir. Gaussian prior → Tikhonov regularization, ama $\\lambda$ artık keyfi değil prior istatistiğinden geliyor. Prior zayıflayınca $\\mathrm{MAP} \\to \\mathrm{MLE}$.",
+      "summary": "MLE'de aradığın şey deterministik: prior yok, sadece veri. MAP'te onu rastgele kabul ediyorsun ve veriyi görmeden ne düşündüğünü prior'la yazıyorsun; log alınca bu tam olarak regularization terimi oluyor. Gaussian prior Tikhonov'u, Laplace prior LASSO'yu veriyor — ve lambda artık keyfi değil, prior istatistiğinden geliyor. Prior'ın ağırlığı veri miktarına bakar: az veride belirleyici, çok veride likelihood onu eziyor. Üçüncü seçenek tek bir cevap seçmeyip posteriorun tamamını tutmak.",
       "context": "EE499 · MAP Estimation",
       "sections": [
         {
           "type": "text",
-          "heading": "MLE'den MAP'e — paradigma kayışı",
-          "text": "MLE:  x deterministik — bilinmeyen ama sabit bir sayı. Prior yok. Sadece 'bu y'yi en olası kılan x nedir?'\n\nMAP:  x artık rastgele — hakkında istatistiksel bilgimiz var. Prior var: $p(x)$ — x'in olası değerleri hakkında önceden bilgi.\n\nMLE'de:\n  $x_{\\text{ML}} = \\operatorname{argmax}_x \\quad p(y|x)$\n\nMAP'te Bayes kuralı devreye giriyor:\n$$p(x|y) = \\underbrace{p(y|x)}_{\\text{likelihood}} \\cdot \\underbrace{p(x)}_{\\text{prior}} / p(y)$$\n($p(y)$ x'e bağlı değil, sabit — argmax'ı etkilemiyor.)\n\n  $x_{\\text{MAP}} = \\operatorname{argmax}_x \\quad p(x|y)$\n        $= \\operatorname{argmax}_x \\quad p(y|x) \\cdot p(x)$\n        $= \\operatorname{argmax}_x \\quad \\log p(y|x) + \\log p(x)$\n        $$= \\underbrace{\\operatorname{argmin}_x \\quad -\\log p(y|x)}_{\\text{data fidelity}} - \\underbrace{\\log p(x)}_{\\text{regularization}}$$",
-          "qa": true
+          "heading": "Tek bir varsayım değişiyor",
+          "text": "MLE'de aradığın şey **deterministik**: bilinmeyen ama sabit bir büyüklük. Ona olasılık atfetmiyorsun, sadece \"bu veriyi en olası kılan değer hangisi\" diye soruyorsun.\n\nMAP'te tek bir varsayım değişiyor: aradığın şeyi de **rastgele bir değişken** kabul ediyorsun. Yani veriyi görmeden önce onun hakkında bir kanaatin var ve bunu $p(x)$ ile yazıyorsun.\n\nFarkı bir sayıyla görelim. $y = x + n$ kurulumunda $y = 1.5$ ölçtün. MLE'nin cevabı $x = 1.5$ — gördüğünü al, başka bilgin yok. Şimdi prior ekle: $x \\sim \\mathcal{N}(0,1)$, yani \"sinyaller genelde sıfır civarındadır.\" Gürültü de birim varyanslıysa MAP'in cevabı **0.75** çıkıyor: veriyle prior'ın tam ortası.\n\nPrior ne kadar güçlüyse cevap o kadar sıfıra yaklaşıyor. Prior zayıfladıkça — yani $x$'in varyansı büyüdükçe — cevap 1.5'e geri dönüyor. **Yani MLE ayrı bir yöntem değil, MAP'in \"prior'ım yok\" özel durumu.**"
         },
         {
           "type": "text",
-          "heading": "Prior ne işe yarıyor — sezgi",
-          "text": "MLE:  Sadece veriye bak. 'Bu gözlemleri en olası kılan x?'\nMAP:  Veriye bak + x hakkında önceden ne biliyorsan onu da kullan.\n      'Bu gözlemlere uygun VE a priori olası olan x?'\n\nSomut örnek: $y = 1.5$ gözlemledin.\n  $\\mathrm{MLE} \\to x_{\\text{ML}} = 1.5$  (sadece veriye güven)\n  $\\mathrm{MAP} \\to x$ prior'ı $\\mathcal{N}(0,1)$ ise → $x_{\\text{MAP}}$ < 1.5  (prior sıfıra çekiyor)\n        Prior ne kadar güçlüyse, tahmin o kadar sıfıra yaklaşıyor.\n\nPrior güçlendikçe:\n  $R_x$ küçülür → $R_x^{-1}$ büyür → regularization ağırlaşır\n  → tahmin prior'a yaklaşır, veriden uzaklaşır\n\nPrior zayıflayınca:\n  $R_x$ → sonsuz → $R_x^{-1} \\to 0$ → regularization kayboluyor\n  → $\\mathrm{MAP} \\to \\mathrm{MLE}$\n\nYani MLE, MAP'in 'prior yok' özel durumu.",
-          "qa": true
+          "heading": "Bayes kuralı, çarpımı toplama çeviriyor",
+          "text": "MAP'in istediği şey posterior: veriyi gördükten sonra $x$ hakkında ne düşünüyorsun. Bayes kuralı bunu elindeki iki parçadan kuruyor:\n\n$$p(x \\mid y) = \\frac{p(y \\mid x)\\, p(x)}{p(y)}$$\n\nPaydadaki $p(y)$ $x$'e bağlı değil, yani hangi $x$'i seçersen seç aynı sayı — maksimize ederken onu atabilirsin. Geriye likelihood çarpı prior kalıyor. Logaritmasını alırsan çarpım toplama dönüşüyor, işaretini çevirip minimize ederek yazarsan:\n\n$$x_{\\text{MAP}} = \\operatorname*{arg\\,min}_{x}\\; \\underbrace{-\\log p(y \\mid x)}_{\\text{veriye uyum}} \\;\\underbrace{-\\log p(x)}_{\\text{regularization}}$$\n\nDönüm noktası tek cümlede: **regularization terimi gökten inmiyor, prior'ın logaritmasıdır.** Loss'a eklediğin ceza, \"$x$ hakkında şuna inanıyorum\" cümlesinin matematiğe çevrilmiş hali."
         },
         {
           "type": "text",
-          "heading": "Gaussian olunca somutlaşıyor",
-          "text": "$y = Ax + n, \\quad n \\sim \\mathcal{N}(0, \\sigma _n^{2}I)$\n$x \\sim \\mathcal{N}(0, R_x)$   ← Gaussian prior\n\n-log $p(y|x) \\propto \\|y - Ax\\|^{2}$        (Gaussian gürültüden)\n-log $p(x)$   ∝ $x^{\\top} R_x^{-1}$ x        (Gaussian prior'dan)\n\n$$x_{\\text{MAP}} = \\underbrace{\\operatorname{argmin} \\quad \\|y - Ax\\|^{2}}_{\\text{data fidelity}} + \\underbrace{x^{\\top} R_x^{-1} x}_{\\text{regularization}}$$\n\nKapalı form çözüm:\n  $x_{\\text{MAP}} = (A^{\\top}A + R_x^{-1})^{-1} A^{\\top}y$\n\nChapter 2'deki Tikhonov regularization:\n  $x_{\\text{Tikhonov}} = (A^{\\top}A + \\lambda I)^{-1} A^{\\top}y$\n\nBirebir aynı formül! Fark şu:\n  Tikhonov: $\\lambda$ keyfi seçiliyordu (deneme-yanılma)\n  MAP:      $R_x^{-1}$ = x'in prior istatistiğinden geliyor\n\nArtık regularization'ın nereden geldiğini biliyoruz: prior!",
-          "qa": true
+          "heading": "Prior ne zaman ağır basar? Veri miktarına bakar",
+          "text": "Yukarıdaki toplamın iki terimi eşit büyümüyor, ve fark pratikte belirleyici.\n\nLikelihood terimi her veri noktası için bir katkı topluyor — $N$ büyüdükçe o terim de büyüyor. Prior terimi ise **sabit**: kaç veri toplarsan topla tek bir $\\log p(x)$ var.\n\n$N = 10$ iken prior'ın sesi güçlü çıkıyor, tahmini gerçekten çekiyor. $N = 100{,}000$ iken likelihood prior'ı eziyor ve MAP pratikte MLE'ye dönüşüyor. **Yani prior, az veride işe yarayan bir destek; bol veride kendiliğinden devreden çıkıyor.** Küçük veri setlerinde regularization'ın neden hayat kurtardığı, büyük veri setlerinde neden gevşetilebildiği tam olarak bu."
         },
         {
           "type": "text",
-          "heading": "Prior seçimi regularization şeklini belirliyor",
-          "text": "Farklı prior'lar farklı regularization veriyor:\n\nGaussian prior:  $p(x) \\propto \\exp(-\\|x\\|^{2})$\n  -log $p(x) \\propto \\|x\\|^{2}$   → L2 regularization (Tikhonov/Ridge)\n  Küçük ama sıfır olmayan bileşenler\n\nLaplace prior:   $p(x) \\propto \\exp(-\\|x\\|_1)$\n  -log $p(x) \\propto \\|x\\|_1$  → L1 regularization (LASSO)\n  Bazı bileşenler tam sıfır → sparse çözüm\n  Compressed sensing'in temeli bu\n\nGenel:\n  $$x_{\\text{MAP}} = \\underbrace{\\operatorname{argmin} \\quad -\\log p(y|x)}_{\\substack{\\text{gürültü dağılımı}\\\\\\text{belirliyor}}} - \\underbrace{\\log p(x)}_{\\substack{\\text{prior dağılımı}\\\\\\text{belirliyor}}}$$\n\nYani Chapter 2'de 'hangi normu kullanalım?' sorusu aslında\n'x hakkında ne inanıyoruz?' sorusuydu.",
-          "qa": true
+          "heading": "Gaussian olunca Tikhonov çıkıyor",
+          "text": "Şimdi somut hesap. $y = Ax + n$, gürültü $n \\sim \\mathcal{N}(0, \\sigma_n^2 I)$, prior $x \\sim \\mathcal{N}(0, R_x)$.\n\nGaussian gürültüden veriye uyum terimi $\\|y - Ax\\|^2$ çıkıyor. Gaussian prior'dan da regularization terimi $x^\\top R_x^{-1} x$ çıkıyor. İkisini topla:\n\n$$x_{\\text{MAP}} = \\operatorname*{arg\\,min}_{x}\\; \\|y - Ax\\|^2 + x^\\top R_x^{-1} x$$\n\nBunun kapalı form çözümü var:\n\n$$x_{\\text{MAP}} = (A^\\top A + R_x^{-1})^{-1} A^\\top y$$\n\nBu formülü daha önce başka bir isimle gördün — **Tikhonov regularization**, $(A^\\top A + \\lambda I)^{-1} A^\\top y$. Birebir aynı yapı.\n\nVe asıl kazanç burada: Tikhonov'da $\\lambda$'yı deneme yanılmayla seçiyordun, nereden geldiği belli değildi. MAP'te o yerde duran şey $R_x^{-1}$, yani **$x$'in kendi istatistiği**. Regularization katsayısı artık keyfi bir düğme değil, ölçülebilir bir büyüklük."
+        },
+        {
+          "type": "text",
+          "heading": "Prior'ın şekli, cezanın şeklini belirliyor",
+          "text": "Gaussian prior seçmek bir tercihti; başka prior başka ceza veriyor.\n\n**Gaussian prior**, $p(x) \\propto \\exp(-\\|x\\|^2)$. Logaritması $\\|x\\|^2$, yani **L2 regularization** — Ridge, Tikhonov. Bileşenleri küçültüyor ama sıfırlamıyor.\n\n**Laplace prior**, $p(x) \\propto \\exp(-\\|x\\|_1)$. Logaritması $\\|x\\|_1$, yani **L1 regularization** — LASSO. Bu sefer bazı bileşenler tam olarak sıfır oluyor, çözüm seyrek çıkıyor. **Compressed sensing'in temeli bu**, ve MRI'da hızlandırılmış çekimin klasik yönteminin altında yatan varsayım da bu.\n\nYani Chapter 2'deki *\"hangi normu kullanalım?\"* sorusu aslında hiç norm sorusu değildi. **\"$x$ hakkında ne inanıyorum?\"** sorusuydu — ve seçtiğin norm o inancın adıydı."
+        },
+        {
+          "type": "text",
+          "heading": "Üçüncü seçenek: tek cevap yerine posterior'ın tamamı",
+          "text": "MLE de MAP de sonunda **tek bir sayı** veriyor: posterior'ın tepe noktası. Ama posterior bir dağılım, ve tepesini alıp gerisini atmak bilgi kaybı — dağılımın ne kadar dar ya da geniş olduğunu, yani cevabından ne kadar emin olduğunu çöpe atıyorsun.\n\nBayesian yaklaşım tam olarak bunu yapmıyor: $p(x \\mid y)$'nin tamamını tutuyor. Karşılığında **belirsizlik** bilgisi kazanıyorsun — \"cevabım 0.75 ama şu aralıkta olabilir.\" Bedeli hesap: tepe noktasını bulmak bir optimizasyon problemi, dağılımın tamamıyla çalışmak integral demek, ve o integraller genelde kapalı formda çözülmüyor.\n\nBu kartın sonunda durduğu yer tesadüfen senin çalışacağın yer: **MRI'da difüzyon modelleri tam olarak bu üçüncü çerçevede.** Tek bir görüntü \"çözmek\" yerine olası görüntülerin dağılımından örnekliyorlar, ve belirsizlik haritası çıkarabilmelerinin sebebi bu."
+        },
+        {
+          "type": "table",
+          "heading": "Özet",
+          "rows": [
+            [
+              "",
+              "MLE",
+              "MAP",
+              "Bayesian"
+            ],
+            [
+              "Çıktı",
+              "tek $x$",
+              "tek $x$",
+              "dağılımın tamamı"
+            ],
+            [
+              "Prior",
+              "yok",
+              "var",
+              "var"
+            ],
+            [
+              "Regularization",
+              "yok",
+              "var — prior'ın logaritması",
+              "—"
+            ],
+            [
+              "Belirsizlik",
+              "yok",
+              "yok",
+              "**var**"
+            ],
+            [
+              "Hesap",
+              "en ucuz",
+              "optimizasyon",
+              "integral, pahalı"
+            ],
+            [
+              "Çok veride",
+              "—",
+              "MLE'ye yakınsıyor",
+              "—"
+            ]
+          ]
         }
       ],
       "id": "vs03-mle-map-x-deterministik-ten-rastgele-ye-prior-devreye-giriyo",
@@ -8404,7 +8458,8 @@
         "likelihood",
         "maximum a posteriori",
         "posterior",
-        "Bayes"
+        "Bayes",
+        "Bayes theorem"
       ]
     },
     {
@@ -8907,67 +8962,6 @@
       ],
       "id": "vs04-map-maximum-a-posteriori",
       "keywords": [
-        "posterior"
-      ]
-    },
-    {
-      "title": "MLE vs MAP — Karşılaştırma",
-      "cat": "Estimation",
-      "summary": "MLE: sadece veri. MAP: veri + prior = regularization. Bayesian: tüm posterior. Az veride MAP > MLE, çok veride $\\mathrm{MAP} \\to \\mathrm{MLE}$.",
-      "context": "Practice · Estimation",
-      "sections": [
-        {
-          "type": "table",
-          "heading": "",
-          "rows": [
-            [
-              "",
-              "MLE",
-              "MAP",
-              "Bayesian"
-            ],
-            [
-              "Output",
-              "tek $\\theta$",
-              "tek $\\theta$",
-              "dağılım"
-            ],
-            [
-              "Prior",
-              "yok",
-              "var",
-              "var"
-            ],
-            [
-              "Reg",
-              "yok",
-              "var",
-              "—"
-            ],
-            [
-              "Uncertainty",
-              "yok",
-              "yok",
-              "var"
-            ]
-          ]
-        },
-        {
-          "type": "text",
-          "heading": "Az Veri vs Çok Veri",
-          "text": "log posterior = log likelihood + log prior. Likelihood her veri noktasıyla bir terim ekliyor (N ile büyüyor), prior sabit kalıyor. $N=10$: prior belirleyici. $N=100000$: likelihood prior'ı eziyor → $\\mathrm{MAP} \\approx \\mathrm{MLE}$."
-        },
-        {
-          "type": "text",
-          "heading": "",
-          "text": "Bayesian inference: tek $\\theta$ seçmek yerine $P(\\theta |\\mathrm{data})$ dağılımının tamamını kullan. Uncertainty bilgisi var, ama hesabı pahalı (integral). Diffusion modeller MRI'da bu yaklaşım."
-        }
-      ],
-      "id": "vs04-mle-vs-map-karsilastirma",
-      "keywords": [
-        "maximum likelihood",
-        "likelihood",
-        "maximum a posteriori",
         "posterior"
       ]
     },
@@ -18957,198 +18951,6 @@
       ]
     },
     {
-      "title": "MLE, MAP, VAE — Aradığım Şey Ne? Prior Kimin Üzerinde?",
-      "cat": "Generative Models",
-      "summary": "MLE her zaman aynı soruyu sorar: gördüğümü en olası kılan aradığım nedir? ML kursunda aranan mu, EE499'da sinyal x, VAE'de network ağırlıkları theta/phi. z VAE'de hiç 'bulunmuyor' — integrate ediliyor. MAP için prior, tahmin ettiğin şeyin üzerinde olmalı: p(theta). $p(z)$ olması MAP yapmıyor. Weight decay = Gaussian prior ile MAP.",
-      "context": "CS231n · Generative Models",
-      "sections": [
-        {
-          "type": "text",
-          "qa": true,
-          "heading": "Ortak şablon — hepsinde aynı yapı",
-          "text": "Her yerde şu form var: $p(\\text{gördüğüm şey} \\mid \\text{aradığım şey})$\n\nMLE hep şunu yapıyor: 'Aradığım şeyin hangi değeri, gördüğümü en olası kılar?'\n\nFark sadece şu: aradığım şey ne?"
-        },
-        {
-          "type": "table",
-          "rows": [
-            [
-              "",
-              "ML kursu",
-              "EE499",
-              "VAE"
-            ],
-            [
-              "Gördüğüm",
-              "$x_1, \\ldots, x_N$ (veri noktaları)",
-              "$y$ (gürültülü ölçüm)",
-              "$x$ (yüz resimleri, binlerce)"
-            ],
-            [
-              "Aradığım",
-              "$\\mu$ (dağılımın ortalaması)",
-              "$x$ (gerçek sinyal)",
-              "$\\theta, \\phi$ (encoder/decoder ağırlıkları)"
-            ],
-            [
-              "Cevap",
-              "$\\mu$ = sayı (örn. 3.2)",
-              "$x$ = vektör",
-              "bir fonksiyon — encoder ve decoder ağı"
-            ]
-          ]
-        },
-        {
-          "type": "text",
-          "qa": true,
-          "heading": "z ne peki — VAE'de neden hiç 'bulunmuyor'?",
-          "text": "Aradığım şeyi bulmak ne demek, üç durumda karşılaştır:"
-        },
-        {
-          "type": "table",
-          "rows": [
-            [
-              "",
-              "Aradığım",
-              "Durum"
-            ],
-            [
-              "ML kursu",
-              "$\\mu$",
-              "bulduğumda işim bitiyor"
-            ],
-            [
-              "EE499",
-              "$x$",
-              "bulduğumda işim bitiyor"
-            ],
-            [
-              "VAE",
-              "$z$",
-              "hiç 'bulmuyorum' bile"
-            ]
-          ]
-        },
-        {
-          "type": "text",
-          "text": "$z$, VAE'de bir ara değişken — her resim için farklı. 'Bu resmin $z$'si 3.2'dir' demiyorum; 'bu resmin $z$'si $\\mathcal{N}(\\mu(x), \\sigma(x))$ dağılımından geliyor' diyorum. Bu dağılımı öğreniyorum — encoder ağırlıkları bu dağılımı tanımlıyor.\n\nVAE'nin sonunda elde ettiğim:"
-        },
-        {
-          "type": "list",
-          "items": [
-            "encoder: herhangi bir resim ver → $z$ dağılımını söyle",
-            "decoder: herhangi bir $z$ ver → resim üret"
-          ]
-        },
-        {
-          "type": "text",
-          "heading": "KL terimi neden var?",
-          "text": "Test zamanında $x$ yok, $z \\sim \\mathcal{N}(0,I)$'dan örnekleyeceğim. Eğer encoder $z$'leri rastgele yerlere dağıtırsa, $\\mathcal{N}(0,I)$'dan çektiğim $z$ decoder'a anlamsız gelir.\n\nKL terimi bunu engelliyor: 'encoder'ın $z$ dağılımları $\\mathcal{N}(0,I)$'dan uzaklaşmasın.' → Test zamanında $\\mathcal{N}(0,I)$'dan örnekleyebilir hale geliyoruz.\n\nBu bir prior değil, latent space'i kullanılabilir tutma zorunluluğu."
-        },
-        {
-          "type": "text",
-          "qa": true,
-          "heading": "$p(z)$ prior'u var — neden MAP değil?",
-          "text": "Kritik soru: prior kimin üzerinde?"
-        },
-        {
-          "type": "table",
-          "rows": [
-            [
-              "Yöntem",
-              "$\\theta$ nasıl?",
-              "$p(\\theta)$"
-            ],
-            [
-              "MLE",
-              "deterministik unknown",
-              "YOK"
-            ],
-            [
-              "MAP",
-              "rastgele",
-              "VAR"
-            ]
-          ]
-        },
-        {
-          "type": "text",
-          "text": "Prior, tahmin ettiğin şeyin üzerinde olmalı.\n\nVAE'de tahmin edilen $\\theta, \\phi$ (network ağırlıkları) ve bunların üzerinde prior yok → MLE.\n\n$z$'de prior var: $p(z) = \\mathcal{N}(0,I)$. Ama $z$ tahmin edilmiyor — $z$ integrate ediliyor. $z$'nin prior'u, $\\theta/\\phi$ için MAP yapmıyor.\n\nEğer $\\theta$'ya prior koysaydın — $p(\\theta) \\sim \\mathcal{N}(0,I)$, yani $\\log p(\\theta) \\propto -\\|\\theta\\|^2$ — loss şöyle olurdu:"
-        },
-        {
-          "type": "text",
-          "text": "$$\\text{loss} = \\text{reconstruction loss} + \\underbrace{\\|\\theta\\|^2}_{\\text{L2 weight decay}}$$"
-        },
-        {
-          "type": "text",
-          "text": "Bu tam olarak neural network'teki weight decay. Yani: L2 regularization = $\\theta$ üzerinde Gaussian prior ile MAP."
-        },
-        {
-          "type": "table",
-          "heading": "Özet tablo",
-          "rows": [
-            [
-              "Yöntem",
-              "Gördüğüm",
-              "Aradığım",
-              "p(aranan) var mı?",
-              "Yöntem"
-            ],
-            [
-              "ML kursu MLE",
-              "x_i",
-              "mu, sigma",
-              "Yok",
-              "MLE"
-            ],
-            [
-              "EE499 MLE",
-              "y",
-              "x (sinyal)",
-              "Yok",
-              "MLE"
-            ],
-            [
-              "MAP",
-              "y",
-              "x (sinyal)",
-              "Var: p(x)",
-              "MAP"
-            ],
-            [
-              "VAE",
-              "x (resimler)",
-              "theta, phi",
-              "Yok",
-              "MLE"
-            ],
-            [
-              "VAE + L2 reg",
-              "x (resimler)",
-              "theta, phi",
-              "Var: p(theta)",
-              "MAP"
-            ],
-            [
-              "",
-              "",
-              "z",
-              "Var: p(z) = N(0,I)",
-              "Variational Inference"
-            ]
-          ]
-        }
-      ],
-      "id": "cs12-mle-map-vae-aradigim-sey-ne-prior-kimin-uzerinde",
-      "keywords": [
-        "maximum likelihood",
-        "likelihood",
-        "maximum a posteriori",
-        "posterior",
-        "Bayes",
-        "generative model"
-      ]
-    },
-    {
       "title": "VAE vs DDPM — ELBO Derivation Tam Karşılaştırması",
       "cat": "Generative Models",
       "summary": "VAE ve DDPM ELBO türetiminin adım adım karşılaştırması: ortak Bayes hareketi, 3 terim, dropped term, prior KL farkı ve final loss. Benzerlik ve farklar intuition ile.",
@@ -25775,7 +25577,6 @@
         "math06-maximum-likelihood-estimation",
         "vs04-map-maximum-a-posteriori",
         "vs03-mle-map-x-deterministik-ten-rastgele-ye-prior-devreye-giriyo",
-        "vs04-mle-vs-map-karsilastirma",
         "vs03-map-regularizasyon-prior-secimi-ceza-terimini-belirliyor",
         "vs03-mle-map-vae-aradigim-sey-ne-prior-kimin-uzerinde",
         "ch03-bayesian-vs-frequentist-inference",
@@ -26078,7 +25879,7 @@
         "cs12-ddpm-vae-paraleli-ile-tam-matematiksel-akis",
         "cs12-kl-divergence-yonu-p-q-mass-covering-q-p-mode-seeking",
         "cs12-vae-de-kl-yonu-neden-d-kl-q-p-kullaniliyor",
-        "cs12-mle-map-vae-aradigim-sey-ne-prior-kimin-uzerinde",
+        "vs03-mle-map-vae-aradigim-sey-ne-prior-kimin-uzerinde",
         "cs12-vae-vs-ddpm-elbo-derivation-tam-karsilastirmasi",
         "vs04-vae-vs-autoencoder",
         "vs04-vae-loss-turetimi"
