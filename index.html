@@ -410,6 +410,9 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .ch-ov-body strong{font-weight:700;color:var(--text)}
 .ch-ov-body .katex{margin:0 .15em}
 .ch-ov-body .katex-display{margin:.4em 0;overflow-x:auto}
+.ch-ov-anim{margin-top:18px;padding-top:16px;border-top:1px solid var(--border)}
+.ch-ov-anim .sec-block{margin-bottom:0}
+.ch-ov-anim .sec-fig svg{max-width:100%;height:auto}
 
 /* TRANSFORMER LEARNING TREE */
 #tx-tree-view{padding:20px;overflow-x:auto}
@@ -1836,10 +1839,14 @@ function switchSection(sec){
 function showOverview(sec){
   const panel = $('overview-panel');
   const body = $('ch-ov-body');
-  const text = OVERVIEWS[sec];
+  // Girdi ya duz metin ya da {text, anim} — anim, OVERVIEWS._anims icinde anahtarla durur
+  const ov   = OVERVIEWS[sec];
+  const text = (typeof ov === 'string') ? ov : (ov && ov.text);
+  const anim = (ov && typeof ov === 'object' && ov.anim)
+             ? (OVERVIEWS._anims || {})[ov.anim] : null;
   if(text){
     const paras = text.split('\n\n').filter(p=>p.trim()).map(p=>`<p>${esc(p.trim()).replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')}</p>`).join('');
-    body.innerHTML = paras;
+    body.innerHTML = paras + (anim ? `<div class="ch-ov-anim">${renderSection(anim)}</div>` : '');
     panel.style.display = '';
     if(typeof renderMathInElement === 'function'){
       renderMathInElement(panel,{
@@ -1847,6 +1854,7 @@ function showOverview(sec){
         throwOnError:false
       });
     }
+    if(anim) initAnims(panel);   // KaTeX'ten SONRA — adim metinleri formul icerebiliyor
   } else {
     panel.style.display = 'none';
   }
@@ -2569,7 +2577,7 @@ function applyData(d){
 }
 
 
-fetch('./data/unified.json?v=20260915131248')
+fetch('./data/unified.json?v=20260915235338')
   .then(r => { if(!r.ok) throw new Error(r.status); return r.json() })
   .then(applyData)
   .catch(() => {
