@@ -8206,91 +8206,9 @@
       ]
     },
     {
-      "title": "MLE: İki Kullanım, Aynı Fikir — Parametre Tahmini vs Sinyal Tahmini",
-      "cat": "Estimation",
-      "summary": "MLE her zaman aynı soruyu sorar: 'Gözlemleri en olası kılan bilinmeyen nedir?' ML kursunda bilinmeyen = dağılım parametresi $(\\mu , \\sigma )$. EE499'da bilinmeyen = sinyal (x in $y=Ax+n$). İkisi de p(gözlem|bilinmeyen) maximize ediyor. Gaussian olunca her ikisi de kareler toplamını minimize etmeye dönüşüyor.",
-      "context": "EE499 · Maximum Likelihood Estimation",
-      "sections": [
-        {
-          "type": "text",
-          "heading": "İki farklı MLE kullanımı — bilinmeyen nedir?",
-          "text": "ML kursu (ch03) — parametre tahmini:\n  Elimde N veri noktası var: $x_1, x_2$, ..., $x_N$\n  Bunlar bir dağılımdan geldi, parametresini bilmiyorum.\n  Gaussian varsayıyorum, mu'yu bulmak istiyorum.\n\n  Bilinmeyen = dağılımın parametresi $(\\mu , \\sigma )$\n\nEE499 — sinyal tahmini:\n  Elimde M ölçüm var: $y_1, y_2$, ..., $y_M$\n  Bunlar bir sinyalden + gürültüden geldi.\n  x sinyalini bulmak istiyorum.\n\n  Bilinmeyen = sinyal (x)\n\nFark sadece bu. Soru, mantık, formül: tamamen aynı.",
-          "qa": true
-        },
-        {
-          "type": "text",
-          "heading": "Ortak mantık — her ikisinde de aynı soru",
-          "text": "Her ikisinde de:\n\n  1. Bir 'bilinmeyen' var (deterministik, sabit).\n  2. Bir 'gözlem' var (rastgele, gürültülü).\n  3. p(gözlem | bilinmeyen) yazıyorsun.\n  4. Bu fonksiyonu bilinmeyene göre maximize ediyorsun.\n\nSoru her iki durumda da aynı:\n  'Elindeki gözlemleri en olası kılan bilinmeyen nedir?'\n\n─────────────────────────────────────────────────────\nML kursu:  $\\theta _{\\text{ML}} = \\operatorname{argmax}_\\theta \\quad \\prod _i \\quad p(x_i | \\theta )$\n$EE499: \\qquad x_{\\text{ML}} = \\operatorname{argmax}_x \\qquad p(y | x)$\n─────────────────────────────────────────────────────\n\nFormül yapısı birebir aynı.\nSadece 'bilinmeyen' değişti: theta yerine x.",
-          "qa": true
-        },
-        {
-          "type": "code",
-          "heading": "Gaussian olunca ikisi de aynı yere çıkıyor",
-          "text": "ML kursu — Gaussian dağılım:\n  x_i ~ N(mu, sigma²)\n  log p(x_i | mu) = -log(sqrt(2pi)*sigma) - (x_i - mu)² / (2sigma²)\n  argmax mu = argmin  sum (x_i - mu)²\n  → mu_ML = (1/N) * sum x_i   ← sample mean\n\nEE499 — Gaussian gürültü (y = Ax + n, n ~ N(0, sigma²I)):\n  y_i ~ N((Ax)_i, sigma²)\n  log p(y | x) = sabit - 1/(2sigma²) * ||y - Ax||²\n  argmax x = argmin  ||y - Ax||²\n  → x_ML = x_LS   ← Least Squares çözümü\n\n─────────────────────────────────────────────────────\nİkisi de aynı adımları izliyor:\n  Gaussian yaz → log al → sabit terimleri at\n  → kalan şey sum of squared errors → minimize et.\n─────────────────────────────────────────────────────\n\nKarşılaştırma:\n  ML kursu:  gözlemler = veri noktaları,  bilinmeyen = merkez (mu)\n  EE499:     gözlemler = y ölçümleri,     bilinmeyen = sinyal (x)\n  Her ikisinde de: 'ortalamaya en yakın şeyi bul' demek bu."
-        },
-        {
-          "type": "text",
-          "heading": "$p(y|x)$: iki gözle bakış",
-          "text": "$y = x + n, \\quad n \\sim \\mathcal{N}(0, \\sigma ^{2})$ basit örneği:\n\nGöz 1 — y fonksiyonu olarak (x sabit):\n  Bu bir Gaussian. x merkezli, sigma varyanslı.\n  'x=3 ise, y'nin değeri büyük ihtimalle 3 civarında olur.'\n  → koşullu dağılım.\n\nGöz 2 — x fonksiyonu olarak (y gözlemlendi, sabit):\n  $y = 1.5$ ölçtüm. Peki x ne?\n  Hangi x değeri bu y = 1.5'i en olası kılar?\n  → likelihood fonksiyonu.\n\n  x = 1.5'te tepe yapar → $x_{\\text{ML}} = y$.\n  Sezgi: 'En saf tahmin: gördüğün şeyi al.'\n  Gürültü yoksa zaten $y = x \\to x_{\\text{ML}} = y$ tam doğru.\n  Gürültü varsa: elimizdeki tek bilgi y, oradan en iyisini al.\n\nML kursundaki bağlantı:\n  Orada da aynı şey — mu'yu fix et, veriyi bak:\n  'Hangi mu bu $x_i$'leri en olası kılar?'\n  Gaussian için cevap: merkezi $x_i$'lere en yakın olan mu, yani ortalama.",
-          "qa": true
-        },
-        {
-          "type": "text",
-          "heading": "Gürültü türü → farklı maliyet fonksiyonu",
-          "text": "Gaussian özel bir durum — farklı gürültüler farklı çözüm veriyor:"
-        },
-        {
-          "type": "table",
-          "rows": [
-            [
-              "Gürültü",
-              "MLE çözümü"
-            ],
-            [
-              "i.i.d. Gaussian",
-              "$\\operatorname{argmin} \\|y - Ax\\|^2$ (LS)"
-            ],
-            [
-              "Correlated Gaussian",
-              "$\\operatorname{argmin}\\ (y-Ax)^\\top \\Sigma^{-1}(y-Ax)$ (weighted LS)"
-            ],
-            [
-              "Laplacian (keskin)",
-              "$\\operatorname{argmin} \\|y - Ax\\|_1$ (L1 norm)"
-            ],
-            [
-              "Poisson (foton sayımı)",
-              "KL divergence minimization"
-            ],
-            [
-              "Generalized Gaussian $p$",
-              "$\\operatorname{argmin} \\|y - Ax\\|_p^p$"
-            ]
-          ]
-        },
-        {
-          "type": "text",
-          "text": "Aynı MLE mantığı, farklı gürültü varsayımı → farklı optimizasyon problemi. Yani LS, L1, ağırlıklı LS gibi deterministik görünen yöntemler aslında birinin altında bir gürültü dağılımı varsayımı taşıyor.\n\nML kursunda da aynı:"
-        },
-        {
-          "type": "list",
-          "items": [
-            "Gaussian varsay → MLE = sample mean",
-            "Laplace varsay → MLE = sample median",
-            "Farklı dağılım → farklı tahmin edici"
-          ]
-        }
-      ],
-      "id": "vs03-mle-iki-kullanim-ayni-fikir-parametre-tahmini-vs-sinyal-tahm",
-      "keywords": [
-        "maximum likelihood",
-        "likelihood"
-      ]
-    },
-    {
       "title": "MLE, MAP, VAE — Aradığım Şey Ne? Prior Kimin Üzerinde?",
       "cat": "Estimation",
-      "summary": "MLE tek bir hareket: çan eğrisini kaydıra kaydıra, gördüğün veriyi en az şaşırtıcı yapan yeri bulmak. Değişen tek şey aradığın şeyin ne olduğu — ML dersinde bir sayı, EE499'da bir sinyal, VAE'de ağ ağırlıkları. VAE'de z hiç bulunmuyor, integrate ediliyor. MAP'e geçmek için prior tahmin ettiğin şeyin üzerinde olmalı; weight decay tam olarak budur.",
+      "summary": "MLE tek bir hareket: çan eğrisini kaydıra kaydıra, gördüğün veriyi en az şaşırtıcı yapan yeri bulmak. Değişen tek şey aradığın şeyin ne olduğu — bir sayı, bir sinyal ya da ağ ağırlıkları. Gaussian varsayarsan bu iş kareler toplamına, yani ortalamaya ve least squares'e iniyor. VAE'de z hiç bulunmuyor, integrate ediliyor. MAP'e geçmek için prior tahmin ettiğin şeyin üzerinde olmalı: weight decay budur. Ve loss seçmek aslında gürültü dağılımı seçmektir.",
       "context": "EE499 · MLE, MAP ve VAE Karşılaştırması",
       "sections": [
         {
@@ -8312,8 +8230,18 @@
         },
         {
           "type": "text",
+          "heading": "Aynı formüle iki türlü bakmak",
+          "text": "Buraya bir incelik giriyor ve karıştırılması çok kolay. $p(y \\mid x)$ yazdığında elinde tek bir fonksiyon var, ama ona iki ayrı gözle bakabilirsin ve iki bakış iki farklı şey söylüyor.\n\nEn basit örnekle gidelim: $y = x + n$, gürültü $n \\sim \\mathcal{N}(0, \\sigma^2)$.\n\n**Birinci göz — $x$ sabit, $y$ değişken.** \"Gerçek sinyal 3 ise, ölçtüğüm $y$ ne çıkar?\" Cevap 3 merkezli bir çan eğrisi. Bu bir koşullu dağılım: $y$ üzerinden toplamı 1 eden, gerçek bir olasılık dağılımı.\n\n**İkinci göz — $y$ sabit, $x$ değişken.** Ölçümü yaptın, $y = 1.5$ çıktı. Soru tersine döndü: hangi $x$ bu 1.5'i en olası kılar? Aynı fonksiyona bu sefer $x$'in fonksiyonu olarak bakıyorsun. İşte buna **likelihood** deniyor, ve artık bir olasılık dağılımı değil — $x$ üzerinden toplamının 1 etmesi gerekmiyor.\n\nİkinci gözle baktığında fonksiyon $x = 1.5$'te tepe yapıyor, yani $x_{\\text{ML}} = y$. Sezgisi bu kadar basit: **en saf tahmin, gördüğün şeyi almaktır.** Gürültü olmasaydı zaten $y = x$ olurdu; gürültü varken de elindeki tek bilgi $y$, ondan fazlasını uyduramazsın.\n\nAynı ayrım çan eğrisi örneğinde de vardı. $\\mu$'yü sabitleyip \"bu ortalamayla hangi veriler gelir\" diye bakmak birinci göz; veriyi sabitleyip \"hangi ortalama bu veriyi en olası kılar\" diye bakmak ikinci göz. Kartın başındaki eğriyi kaydırma hareketi, ikinci gözle bakmanın ta kendisi."
+        },
+        {
+          "type": "text",
           "heading": "Aynı soru, üç farklı kılık",
           "text": "Yukarıdaki beş sayı örneği ML dersindeki durumdu: aradığın şey $\\mu$, yani **bir sayı**. Cevabı bulduğunda elinde 3.04 var, iş bitiyor.\n\nEE499'da soru aynı, aranan değişiyor. Elinde gürültülü bir ölçüm $y$ var ve arkasında gerçek bir sinyal olduğunu biliyorsun. MLE yine soruyor: sinyal ne olsaydı bu ölçümü görmem en olası olurdu? Cevap artık tek sayı değil, **bir vektör** — sinyalin kendisi. Ama yaptığın hareket aynı: bilinmeyeni oynata oynata, gördüğünü en az şaşırtıcı yapan yeri arıyorsun.\n\nVAE üçüncü kılık, ve hayal etmesi en zor olanı — o yüzden yavaş gidelim. Elinde 200.000 yüz fotoğrafı var. Bu sefer kaydıracağın bir çan eğrisi yok; onun yerine gürültüden yüz üreten bir sinir ağı var. Ağın ağırlıklarını değiştirdikçe ürettiği şey değişiyor: bir ayarda bulanık lekeler çıkıyor, başka bir ayarda gerçek yüzlere benziyor. Soru yine aynı: **ağırlıklar ne olsaydı, elimdeki bu 200.000 gerçek yüzü görmem en olası olurdu?** Yani çan eğrisini kaydırmak yerine milyonlarca ağırlığı ayarlıyorsun — ama yaptığın iş birebir aynı iş. Cevap bu sefer bir sayı ya da vektör değil, **bir fonksiyon**: encoder ve decoder."
+        },
+        {
+          "type": "text",
+          "heading": "Gaussian olunca hepsi kareler toplamına iniyor",
+          "text": "Şimdi somut bir hesap, çünkü MLE'nin neden hep tanıdık formüllere çıktığını burası açıklıyor.\n\nÇan eğrisi örneğine dön. Gaussian'ın logaritmasını alırsan üstel kaybolur ve geriye bir sabit artı $-(x_i - \\mu)^2 / 2\\sigma^2$ kalır. Bütün veri noktaları için topla, sonra sabitleri at — $\\mu$'ye göre maksimize ederken sabitler hiçbir şeyi değiştirmiyor. Elinde kalan:\n\n$$\\operatorname*{arg\\,max}_{\\mu}\\; p(x \\mid \\mu) \\;=\\; \\operatorname*{arg\\,min}_{\\mu} \\sum_i (x_i - \\mu)^2$$\n\nMLE, kareler toplamını minimize etmeye dönüştü. Bunu çözersen cevap $\\mu = \\frac{1}{N}\\sum_i x_i$, yani örneklem ortalaması — kartın başındaki 3.04 tam olarak buradan geliyor.\n\nEE499 tarafında aynı üç adım, aynı sonuç. $y = Ax + n$ ve gürültü Gaussian ise, log alıp sabitleri attığında elinde $\\|y - Ax\\|^2$ kalıyor:\n\n$$\\operatorname*{arg\\,max}_{x}\\; p(y \\mid x) \\;=\\; \\operatorname*{arg\\,min}_{x} \\|y - Ax\\|^2$$\n\nBu tam olarak **least squares**. Yani derste ayrı ayrı öğrendiğin \"ortalama al\" ve \"en küçük kareler\" iki farklı yöntem değil; ikisi de Gaussian varsayımı altındaki MLE'nin aynı yoldan geçmiş hali: **Gaussian yaz → log al → sabitleri at → kalan kareler toplamını minimize et.**"
         },
         {
           "type": "text",
@@ -8334,6 +8262,44 @@
           "type": "text",
           "heading": "Weight decay tam olarak burada",
           "text": "VAE'yi gerçekten MAP'e çevirmek isteseydin ne yapman gerekirdi? Prior'ı $z$'ye değil $\\theta$'ya koyman.\n\nDiyelim $p(\\theta) = \\mathcal{N}(0,I)$ dedin: \"ağırlıkların sıfır civarında, küçük olmasını bekliyorum.\" MAP'te maksimize ettiğin şey likelihood çarpı prior; logaritmasını alınca çarpım toplama dönüşüyor ve Gaussian prior'ın logaritması $-\\|\\theta\\|^2$ veriyor. Minimize ederek yazarsan:\n\n$$\\text{loss} = \\text{reconstruction loss} + \\underbrace{\\lambda\\|\\theta\\|^2}_{\\text{L2 weight decay}}$$\n\nBu tanıdık gelmeli — kodda her gün yazdığın weight decay. Dönüm noktası tek cümlede: **L2 regularization, ağırlıkların üzerine Gaussian prior koyup MAP yapmaktır.** Keyfi bir hile değil, bir cümlenin matematiği: \"ağırlıkların küçük olduğuna önceden inanıyorum.\"\n\nYani `weight_decay=1e-4` yazdığın an, farkında olmadan MLE'den MAP'e geçiyorsun."
+        },
+        {
+          "type": "text",
+          "heading": "Gürültüyü seçmek, loss'u seçmektir",
+          "text": "Son bir genelleme, ve weight decay ile aynı türden bir aydınlanma.\n\nYukarıdaki türetmede kareler toplamının çıkmasının tek bir sebebi vardı: gürültüyü Gaussian varsaydık. Başka bir gürültü varsayarsan aynı üç adım başka bir şey verir."
+        },
+        {
+          "type": "table",
+          "rows": [
+            [
+              "Gürültü varsayımı",
+              "MLE'nin çıkardığı problem"
+            ],
+            [
+              "i.i.d. Gaussian",
+              "$\\operatorname*{arg\\,min} \\|y - Ax\\|^2$ — least squares"
+            ],
+            [
+              "Correlated Gaussian",
+              "$\\operatorname*{arg\\,min}\\ (y-Ax)^\\top \\Sigma^{-1}(y-Ax)$ — ağırlıklı LS"
+            ],
+            [
+              "Laplacian (kalın kuyruk)",
+              "$\\operatorname*{arg\\,min} \\|y - Ax\\|_1$ — L1"
+            ],
+            [
+              "Poisson (foton sayımı)",
+              "KL divergence minimizasyonu"
+            ],
+            [
+              "Generalized Gaussian $p$",
+              "$\\operatorname*{arg\\,min} \\|y - Ax\\|_p^p$"
+            ]
+          ]
+        },
+        {
+          "type": "text",
+          "text": "Aynı şey çan eğrisi tarafında da geçerli: Gaussian varsayarsan MLE sana **ortalamayı** verir, Laplace varsayarsan **medyanı**. Medyanın aykırı değerlere neden dayanıklı olduğu sorusunun cevabı burada — Laplace'ın kuyrukları kalın, yani \"ara sıra çok sapan bir ölçüm gelir\" diyor, o yüzden tek bir uç değer tahmini sürükleyemiyor.\n\nDönüm noktası tek cümlede: **loss fonksiyonu seçmek, aslında gürültünün dağılımını seçmektir.** L2 yazdığında Gaussian, L1 yazdığında Laplace varsaymış oluyorsun. Deterministik görünen her maliyet fonksiyonunun altında saklı bir olasılık modeli var — tıpkı weight decay'in altında saklı bir prior olduğu gibi."
         },
         {
           "type": "table",
@@ -25807,7 +25773,6 @@
         "ch03-maximum-likelihood-estimation-mle",
         "vs04-mle-maximum-likelihood-estimation",
         "math06-maximum-likelihood-estimation",
-        "vs03-mle-iki-kullanim-ayni-fikir-parametre-tahmini-vs-sinyal-tahm",
         "vs04-map-maximum-a-posteriori",
         "vs03-mle-map-x-deterministik-ten-rastgele-ye-prior-devreye-giriyo",
         "vs04-mle-vs-map-karsilastirma",
