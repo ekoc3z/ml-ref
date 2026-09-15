@@ -83,6 +83,12 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .wiki-article-title:hover{color:var(--cc,var(--accent-light))}
 .wiki-article-meta{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .wiki-article-ctx{font-size:11px;color:var(--muted);font-style:italic;opacity:.8}
+.card-keys{display:flex;flex-wrap:wrap;gap:4px 9px;margin-top:7px;font-size:10.5px;letter-spacing:.4px;color:var(--muted);opacity:.62}
+.card-keys .kw{cursor:pointer;border-bottom:1px dotted transparent;transition:opacity .1s,border-color .1s}
+.card-keys .kw:hover{opacity:1;color:var(--cc,var(--accent-light));border-bottom-color:currentColor}
+.card-keys .kw+.kw::before{content:'·';margin-right:9px;opacity:.45;color:var(--muted)}
+.sr-keys{font-size:10.5px;color:var(--muted);opacity:.7;margin-top:3px;letter-spacing:.3px}
+.sr-keys mark{background:var(--find,#0e8c7d);color:#fff;padding:0 2px;border-radius:2px}
 .wiki-article-lead{font-size:16px;line-height:1.75;color:#9aa5bc;margin:10px 0 18px;font-style:italic;padding:8px 14px;background:rgba(255,255,255,.02);border-left:2px solid var(--border);border-radius:0 4px 4px 0}
 .wiki-article-body .sec-block{margin-bottom:16px}
 .wiki-article-body .sec-block:last-child{margin-bottom:0}
@@ -1742,7 +1748,8 @@ function $(id){ return document.getElementById(id) }
 
 /* Extract searchable text from a rich item */
 function searchText(item){
-  const parts = [item.title, item.cat, item.summary||item.desc||'', item.context||''];
+  const parts = [item.title, item.cat, item.summary||item.desc||'', item.context||'',
+                 (item.keywords||[]).join(' ')];
   if(item.sections){
     item.sections.forEach(s => {
       if(s.text) parts.push(s.text);
@@ -1985,6 +1992,19 @@ function renderCards(sec){
       hdrEl.className = 'wiki-article-header';
       hdrEl.appendChild(titleEl);
       hdrEl.appendChild(metaEl);
+      // Keywords — arama takma adlari; tiklayinca o terimi arar
+      if(item.keywords && item.keywords.length){
+        const kEl = document.createElement('div');
+        kEl.className = 'card-keys';
+        item.keywords.forEach(k => {
+          const sp = document.createElement('span');
+          sp.className = 'kw'; sp.textContent = k;
+          sp.title = '“' + k + '” ara';
+          sp.onclick = (e) => { e.stopPropagation(); searchKeyword(k); };
+          kEl.appendChild(sp);
+        });
+        hdrEl.appendChild(kEl);
+      }
       article.appendChild(hdrEl);
 
       // Lead / summary shown as italic intro paragraph
@@ -2143,9 +2163,16 @@ function showPopup(item, cc){
       <span class="p-cat">${esc(item.cat)}</span>
       ${item.context ? `<span class="p-ctx">${esc(item.context)}</span>` : ''}
     </div>
+    ${(item.keywords||[]).length ? `<div class="card-keys" id="popup-keys">${item.keywords.map(k =>
+        `<span class="kw" data-kw="${esc(k)}">${esc(k)}</span>`).join('')}</div>` : ''}
     ${item.summary ? `<p class="popup-summary">${esc(item.summary)}</p>` : ''}
     <hr class="popup-divider">
     ${body}`;
+  const pk = $('popup-keys');
+  if(pk) pk.querySelectorAll('.kw').forEach(el => {
+    el.title = '“' + el.dataset.kw + '” ara';
+    el.onclick = () => searchKeyword(el.dataset.kw);
+  });
   $('popupOverlay').classList.add('show');
   if(typeof renderMathInElement === 'function'){
     renderMathInElement($('popupBox'),{
@@ -2297,6 +2324,13 @@ function snip(text, q){
   return (a>0?'… ':'') + esc(text.slice(a,i)) + '<mark>' + esc(text.slice(i,i+q.length)) + '</mark>'
        + esc(text.slice(i+q.length,b)) + (b<text.length?' …':'');
 }
+function searchKeyword(k){
+  hidePopup();
+  switchSection('home');
+  setTimeout(() => { const qi = $('home-q');
+    if(qi){ qi.value = k; homeSearch(k); qi.scrollIntoView({block:'center'}); } }, 60);
+}
+
 function homeSearch(q){
   const box = $('home-results'), hint = $('home-hint');
   q = (q||'').trim().toLowerCase();
@@ -2307,15 +2341,17 @@ function homeSearch(q){
     (DATA[fam]||[]).forEach(item => {
       const inTitle = (item.title||'').toLowerCase().includes(q);
       const inSum   = (item.summary||'').toLowerCase().includes(q);
+      const kwHit   = (item.keywords||[]).filter(k => k.toLowerCase().includes(q));
       const heads = [], snips = [];
       (item.sections||[]).forEach(sec => {
         const h = sec.heading||'', body = secBody(sec);
         const hitH = h.toLowerCase().includes(q), hitB = body.toLowerCase().includes(q);
         if(hitH || hitB){ if(h) heads.push(plain(h)); if(hitB && snips.length < 1) snips.push(snip(body, q)); }
       });
-      if(inTitle || inSum || heads.length || snips.length){
+      if(inTitle || inSum || kwHit.length || heads.length || snips.length){
         if(!snips.length && inSum) snips.push(snip(plain(item.summary), q));
-        res.push({item, fam, score:(inTitle?100:0) + (inSum?20:0) + heads.length*3 + snips.length});
+        res.push({item, fam, score:(inTitle?100:0) + (kwHit.length?60:0) + (inSum?20:0)
+                                  + heads.length*3 + snips.length});
       }
     });
   });
@@ -2337,6 +2373,10 @@ function homeSearch(q){
       <button class="sr-main" data-id="${esc(it.id||'')}" data-fam="${esc(r.fam)}">
         <div class="sr-crumb">${esc(famLabel(r.fam))}${it.cat?' — '+esc(it.cat):''}</div>
         <div class="sr-title">${esc(it.title||'')}</div>
+        ${(() => { const kw = (it.keywords||[]);
+                    if(!kw.some(k => k.toLowerCase().includes(q))) return '';
+                    return `<div class="sr-keys">${kw.map(k => k.toLowerCase().includes(q)
+                      ? `<mark>${esc(k)}</mark>` : esc(k)).join(' &middot; ')}</div>`; })()}
         ${heads.length?`<div class="sr-secs">§ ${heads.map(esc).join(' · § ')}</div>`:''}
         ${snips.length?`<div class="sr-snip">${snips[0]}</div>`:''}
       </button>
@@ -2393,7 +2433,7 @@ function buildHome(){
        <div class="home-col"><h3>BY SOURCE</h3>${right}</div>
      </div>
      <div class="home-search"><input id="home-q" type="search" placeholder="Search every card…" autocomplete="off"></div>
-     <div class="home-hint" id="home-hint">Titles, headings and body text &middot; click a result to open the card, &rarr; to go to its section</div>
+     <div class="home-hint" id="home-hint">Titles, keywords, headings and body text &middot; click a result to open the card, &rarr; to go to its section</div>
      <div id="home-results"></div>`;
   host.querySelectorAll('[data-go]').forEach(el => el.onclick = () => switchSection(el.dataset.go));
   const qi = $('home-q');
@@ -2529,7 +2569,7 @@ function applyData(d){
 }
 
 
-fetch('./data/unified.json?v=20260910142218')
+fetch('./data/unified.json?v=20260915131248')
   .then(r => { if(!r.ok) throw new Error(r.status); return r.json() })
   .then(applyData)
   .catch(() => {
