@@ -14078,112 +14078,6 @@
         "encoder-decoder",
         "skip connection"
       ]
-    },
-    {
-      "title": "DDPM — Matematiksel Özet: Forward, Reverse, ε Prediction ve L_simple",
-      "cat": "Diffusion",
-      "summary": "DDPM'in tüm matematiksel yapısı: forward process, Bayes ile türetilen reverse posterior, $x_0$'dan bağımsız $\\varepsilon$ reparametrizasyonu ve neden $L_{\\text{simple}} + \\varepsilon$ en iyi çalıştığı (Table 2 ablation).",
-      "context": "ML Lab · Session 7 — DDPM Paper (Ho et al. 2020) Unified Derivation",
-      "sections": [
-        {
-          "type": "formula",
-          "heading": "Forward Process",
-          "text": "Parametrik noise schedule (β_t, t=1..T) ile her adımda Gaussian noise ekleniyor:\n$$q(x_t | x_{t-1}) = \\mathcal{N}(\\sqrt{1-\\beta_t}\\,x_{t-1},\\; \\beta_t \\mathbf{I})$$\n\nClosed-form reparametrization — herhangi t'ye direkt atlama (ᾱ_t = ∏α_s, α_t=1-β_t):\n$$q(x_t | x_0) = \\mathcal{N}(\\sqrt{\\bar{\\alpha}_t}\\,x_0,\\; (1-\\bar{\\alpha}_t)\\mathbf{I})$$\n$$x_t = \\sqrt{\\bar{\\alpha}_t}\\,x_0 + \\sqrt{1-\\bar{\\alpha}_t}\\,\\varepsilon, \\quad \\varepsilon \\sim \\mathcal{N}(0,\\mathbf{I})$$"
-        },
-        {
-          "type": "text",
-          "heading": "Reverse Process — Ground Truth ($x_0$'a Koşullu)",
-          "text": "Bayes ile $q(x_{t-1}|x_t, x_0)$ türetilebiliyor — ama $x_0$'a koşullu:\n\n$q(x_{t-1}|x_t, x_0) = \\mathcal{N}(\\mu _t, \\beta _t\\cdot I)$\n\n$\\mu _t$ ve $\\beta _t$, forward parametrelerinden $(\\alpha _t, \\bar{\\alpha }_t, \\beta _t)$ analitik olarak türetiliyor. $x_0$ bilinince bu dağılım tamamen biliniyor."
-        },
-        {
-          "type": "text",
-          "heading": "Reparametrization → $\\varepsilon$ Prediction",
-          "text": "$\\mu _t x_0$ cinsinden:\n\n  $\\mu _t = (\\sqrt{\\bar{\\alpha }_{t-1}}\\cdot \\beta _t)/(1-\\bar{\\alpha }_t)\\cdot x_0 \\quad + \\quad (\\sqrt{\\alpha_t}\\cdot (1-\\bar{\\alpha }_{t-1}))/(1-\\bar{\\alpha }_t)\\cdot x_t$\n\nAma $p_\\theta (x_{t-1}|x_t)$ inference'da $x_0$'ı bilmiyor — amacımız $x_0$'dan bağımsız approximation.\n\n$x_0$'ı $\\varepsilon$ cinsinden yaz:\n\n  $x_0 = (x_t - \\sqrt{1-\\bar{\\alpha }_t}\\cdot \\varepsilon ) / \\sqrt{\\bar{\\alpha }_t}$\n\nYerine koyunca $\\mu _t$ yalnızca $x_t$ ve $\\varepsilon$'ya bağlı hale geliyor:\n\n  $\\mu _t = (1/\\sqrt{\\alpha_t}) \\cdot (x_t - \\beta _t/\\sqrt{1-\\bar{\\alpha }_t} \\cdot \\varepsilon )$\n\nNetwork $\\mu _\\theta$ yerine $\\varepsilon _\\theta$ predict ediyor.\nVariance sabit seçilince KL sadece mean farkına indirgenip:\n\n  $L_{\\text{simple}} = \\mathbb{E}[\\|\\varepsilon - \\varepsilon _\\theta (x_t, t)\\|^{2}]$",
-          "qa": true
-        },
-        {
-          "type": "text",
-          "heading": "Neden $\\varepsilon + L_{\\text{simple}}$ En İyi? (DDPM Table 2)",
-          "text": "Full ELBO'da her parameterizasyon için timestep katsayısı var:\n\n  $\\mathrm{SNR}(t) = \\bar{\\alpha }_t / (1-\\bar{\\alpha }_t)$\n\n  x_0 prediction: λ_x0 = (1/2)(SNR(t-1) - SNR(t))\n  ε prediction:   λ_ε  = (1-α_t)² / (2σ_q²(t)·α_t·(1-ᾱ_t))\n  μ prediction:   λ_μ  = 1/(2σ_t²) · (türetilmiş μ̃_t farkı)\n\nt büyüdükçe SNR azalıyor → katsayılar küçülüyor.\n\nFull ELBO vs $L_{\\text{simple}}$ (CIFAR10, Table 2):\n\n                    Full ELBO      L_simple\n  x_0 prediction:  kötü*          —\n  μ prediction:    FID 13.22      unstable\n  ε prediction:    FID 13.51      FID 3.17  ← en iyi\n\n* \"predicting $x_0$ led to worse sample quality\" (DDPM paper)\n\nFull ELBO'da $\\mu \\approx \\varepsilon$ — aynı KL, parameterizasyon fark etmiyor.\n$L_{\\text{simple}}$ ile katsayı drop edilince $\\mu$ unstable oluyor.\n$\\varepsilon + L_{\\text{simple}}$'ın reweighting'i küçük t'yi down-weight ediyor\n→ network büyük t'deki zor görevlere odaklanıyor → daha iyi sample quality.\n\n\"it is just another parameterization of p_θ(x_{t-1}|x_t)\"\n— $\\varepsilon$ teorik üstünlük değil, $L_{\\text{simple}}$ ile kombinasyonu iyi çalışıyor.",
-          "qa": true
-        }
-      ],
-      "id": "lab07-ddpm-matematiksel-ozet-forward-reverse-prediction-ve-l-simpl",
-      "keywords": [
-        "diffusion",
-        "denoising",
-        "noise schedule"
-      ]
-    },
-    {
-      "title": "DDPM — Training & Inference: Tam Parametreler ve Dimensionlar",
-      "cat": "Diffusion",
-      "summary": "DDPM training ve inference adımları tüm variable'ların shape'leriyle. Precomputed schedule, U-Net input/output, loss, sampling algoritması.",
-      "context": "ML Lab · Session 7 — DDPM Implementation",
-      "sections": [
-        {
-          "type": "code",
-          "heading": "Precomputed — shape (T,), scalar per timestep",
-          "text": "β_t  : 0.0001 → 0.02  (linear schedule)\nα_t  = 1 - β_t\nᾱ_t  = α_1 · α_2 · ... · α_t   (cumulative product)\nσ_t  = sqrt(β_t · (1-ᾱ_{t-1}) / (1-ᾱ_t))"
-        },
-        {
-          "type": "code",
-          "heading": "Training",
-          "text": "1. x_0 ~ dataset              (B, C, H, W)   gerçek image\n\n2. t ~ Uniform(1, T)          (B,)            her image için random adım\n\n3. ε ~ N(0, I)                (B, C, H, W)   ground truth noise\n\n4. x_t = sqrt(ᾱ_t)·x_0       (B, C, H, W)   noisy image\n       + sqrt(1-ᾱ_t)·ε                       (closed-form, tek adım)\n\n5. ε_θ = U-Net(x_t, t)        (B, C, H, W)   predicted noise\n         input:  x_t  (B, C, H, W)\n                 t    (B,) → sinusoidal embedding → her residual block'a eklenir\n         output: ε_θ  (B, C, H, W)\n\n6. Loss = ||ε - ε_θ||²        scalar"
-        },
-        {
-          "type": "code",
-          "heading": "Inference (Sampling)",
-          "text": "1. x_T ~ N(0, I)              (B, C, H, W)   saf noise\n\n2. for t = T, T-1, ..., 1:\n\n   ε_θ = U-Net(x_t, t)        (B, C, H, W)   predicted noise\n\n   μ_θ = (1/sqrt(α_t))        (B, C, H, W)   x_{t-1} mean\n       · (x_t - β_t/sqrt(1-ᾱ_t) · ε_θ)\n\n   z ~ N(0,I)  if t > 1       (B, C, H, W)   sampling noise\n   z = 0       if t = 1\n\n   x_{t-1} = μ_θ + σ_t · z   (B, C, H, W)\n\n3. return x_0                  (B, C, H, W)   üretilen image"
-        },
-        {
-          "type": "table",
-          "heading": "Tüm Variable'lar",
-          "rows": [
-            [
-              "Variable",
-              "Shape",
-              "Açıklama"
-            ],
-            [
-              "x_0, x_t, ε, ε_θ",
-              "(B, C, H, W)",
-              "image boyutunda"
-            ],
-            [
-              "μ_θ, z",
-              "(B, C, H, W)",
-              "image boyutunda"
-            ],
-            [
-              "β_t, α_t, ᾱ_t, σ_t",
-              "scalar",
-              "her t için bir değer"
-            ],
-            [
-              "t",
-              "(B,)",
-              "batch'te her image için ayrı"
-            ]
-          ]
-        },
-        {
-          "type": "insight",
-          "heading": "$\\sigma _t$ neden o formül?",
-          "text": "σ_t = sqrt(β̃_t) — Bayes'ten türetilen posterior variance. q(x_{t-1}|x_t, x_0) ∝ q(x_t|x_{t-1}) · q(x_{t-1}|x_0) iki Gaussian PDF çarpımı → precision'lar toplanır → β̃_t = β_t·(1-ᾱ_{t-1})/(1-ᾱ_t) çıkar. Keyfi seçim değil, matematikten gelen zorunluluk. z eklenmesi stochasticity için değil, Gaussian'dan sample almanın ta kendisi: x = μ + σ·z."
-        },
-        {
-          "type": "note",
-          "heading": "Loss basitleştirmesi",
-          "text": "Teorik ELBO loss'ta β_t²/(2α_t(1-ᾱ_t)||Σ_θ||²) weighting term'i var. Ho et al. (2020) bunu kaldırınca sonuçlar daha iyi çıktı — weighting küçük t'leri fazla ağırlandırıyordu. L_simple = E[||ε - ε_θ(x_t, t)||²] kullanılıyor."
-        }
-      ],
-      "id": "lab07-ddpm-training-inference-tam-parametreler-ve-dimensionlar",
-      "keywords": [
-        "diffusion",
-        "denoising",
-        "noise schedule"
-      ]
     }
   ],
   "lab08": [
@@ -18740,92 +18634,6 @@
       ]
     },
     {
-      "title": "DDPM — VAE Paraleli ile Tam Matematiksel Akış",
-      "cat": "Generative Models",
-      "summary": "DDPM'in matematik yapısı VAE ile karşılaştırmalı: latent variable setup, intractable marginal, ELBO, forward/reverse process ve neden encoder network gerekmediği.",
-      "context": "CS231n · Lecture 13 · May 15, 2025",
-      "sections": [
-        {
-          "type": "text",
-          "heading": "1. Latent variable setup",
-          "text": "VAE'de tek bir gizli z vardı. DDPM'de latent değişkenler $x_1, x_2$, ..., $x_T$\n— yani orijinal görüntünün T adımda gürültülenmiş halleri.\n\n$x_0 \\to x_1 \\to x_2 \\to \\ldots \\to x_T \\sim \\mathcal{N}(0,I)$\n(gerçek)                        (saf gürültü)",
-          "qa": true
-        },
-        {
-          "type": "text",
-          "heading": "2. Asıl hedef: MLE",
-          "text": "VAE'de olduğu gibi, elimizdeki training verisi $x_0$'ı en probable kılan $\\theta$'yı bul:\n\n$\\theta^* = \\operatorname{argmax} \\log p_\\theta (x_0)$"
-        },
-        {
-          "type": "text",
-          "heading": "3. Problem: marginal intractable",
-          "text": "$p_\\theta (x_0) = \\int p_\\theta (x_{0:T}) dx_{1:T}$\n\nT boyutlu integral — tüm olası gürültü yolları üzerinden toplamak gerekiyor → intractable. VAE'deki z integraliyle tamamen aynı sorun."
-        },
-        {
-          "type": "text",
-          "heading": "4. Forward process — encoder'ın karşılığı",
-          "text": "VAE'de encoder $q_\\phi (z|x)$ öğreniliyordu. DDPM'de forward process sabit bir noise schedule:\n\n$q(x_t | x_{t-1}) = \\mathcal{N}(\\sqrt{1-\\beta _t} \\cdot x_{t-1}, \\quad \\beta _t \\cdot I)$\n\nHer adımda biraz gürültü ekleniyor. T adım sonunda $x_T \\approx \\mathcal{N}(0,I)$. Kapalı form sayesinde herhangi bir t anına tek adımda atlanabiliyor:\n\n$x_t = \\sqrt{\\bar{\\alpha}_t} \\cdot x_0 + \\sqrt{1-\\bar{\\alpha}_t} \\cdot \\varepsilon, \\qquad \\varepsilon \\sim \\mathcal{N}(0,I)$\n$\\bar{\\alpha }_t = (1-\\beta _1)(1-\\beta _2)\\ldots (1-\\beta _t)$\n\nEncoder forward pass gibi ama parametresiz — $\\phi$ yok, öğrenilmiyor."
-        },
-        {
-          "type": "text",
-          "heading": "5. Reverse process — decoder'ın karşılığı",
-          "text": "Model geriye gitmeyi öğreniyor — gürültüden görüntüye:\n\n$p_\\theta (x_{t-1} | x_t) = \\mathcal{N}(\\mu _\\theta (x_t, t), \\quad \\Sigma _\\theta )$\n\nVAE'de decoder $p_\\theta (x|z)$ tek adımda üretiyordu; burada T adımda aşamalı."
-        },
-        {
-          "type": "text",
-          "heading": "6. ELBO — aynı Jensen trick",
-          "text": "VAE'de $q_\\phi (z|x)$ çarpıp böldük. Burada $q(x_{1:T}|x_0)$ ile aynı trick:\n\n$\\log p_\\theta (x_0) \\ge \\mathbb{E}_q[ \\log p_\\theta (x_{0:T}) / q(x_{1:T}|x_0) ] = \\mathrm{ELBO}$\n\nAçılınca:\n\n$$\\mathrm{ELBO} = \\underbrace{\\mathbb{E}_q[\\log p_\\theta(x_0|x_1)]}_{\\substack{L_0\\\\\\text{reconstruction}}} - \\underbrace{\\operatorname{KL}(q(x_T|x_0) \\| p(x_T))}_{\\substack{L_T\\\\\\text{prior matching}}} - \\underbrace{\\sum \\operatorname{KL}(q(x_{t-1}|x_t,x_0) \\| p_\\theta(x_{t-1}|x_t))}_{\\substack{L_{t-1}\\\\\\text{denoising}}}$$\n\nVAE ELBO ile karşılaştır:\n\n$$\\mathrm{ELBO}_{\\text{VAE}} = \\underbrace{\\mathbb{E}_z[\\log p_\\theta(x|z)]}_{\\text{reconstruction}} - \\underbrace{\\operatorname{KL}(q_\\phi(z|x) \\| p(z))}_{\\text{prior matching}}$$\n\nYapı aynı — DDPM'de araya T tane denoising KL terimi giriyor.",
-          "qa": true
-        },
-        {
-          "type": "text",
-          "heading": "7. Neden encoder network gerekmiyor",
-          "text": "VAE'de $q_\\phi (z|x)$'i öğrenmek zorundaydık çünkü $p_\\theta (z|x)$ intractable'dı.\n\nDDPM'de denoising terimi şunu gerektiriyor:\n\n$q(x_{t-1}|x_t, x_0) = q(x_t|x_{t-1}) \\cdot q(x_{t-1}|x_0) / q(x_t|x_0)$\n\nBayes açılınca pay ve paydadaki her terim Gaussian — çarpım ve bölme de Gaussian → kapalı form, tractable. Posterior hesaplamak için ayrı network gerekmez."
-        },
-        {
-          "type": "text",
-          "heading": "8. Pratikte ne öğreniyor",
-          "text": "Her t anında:\n\n$x_t = \\sqrt{\\bar{\\alpha }_t} \\cdot x_0 \\quad + \\quad \\sqrt{1-\\bar{\\alpha }_t} \\cdot \\varepsilon$,    $\\varepsilon \\sim \\mathcal{N}(0,I)$\n\nModel şunu öğreniyor: $x_t$'yi gördüm, içindeki gürültü $\\varepsilon$ neydi?\n\nLoss = $\\mathbb{E}_{t,\\varepsilon }$ [ || ε - ε_θ(x_t, t) ||² ]\n\n$L_{t-1}$ KL terimleri bu MSE'ye sadeleşiyor.",
-          "qa": true
-        },
-        {
-          "type": "compare",
-          "heading": "VAE vs DDPM — Özet",
-          "left": {
-            "title": "VAE",
-            "points": [
-              "Latent: tek z",
-              "Prior: N(0,I)",
-              "Forward: encoder, öğreniliyor (φ)",
-              "Reverse: decoder, tek adım",
-              "Posterior: intractable → approximate",
-              "Loss: reconstruction + KL"
-            ]
-          },
-          "right": {
-            "title": "DDPM",
-            "points": [
-              "Latent: x_1...x_T",
-              "Prior: N(0,I)",
-              "Forward: noise schedule, sabit (parametresiz)",
-              "Reverse: denoiser, T adım",
-              "Posterior: tractable, kapalı form",
-              "Loss: noise prediction MSE"
-            ]
-          }
-        }
-      ],
-      "id": "cs12-ddpm-vae-paraleli-ile-tam-matematiksel-akis",
-      "keywords": [
-        "generative model",
-        "discriminative model",
-        "density estimation",
-        "variational autoencoder",
-        "latent space",
-        "diffusion"
-      ]
-    },
-    {
       "title": "KL Divergence Yönü — P||Q Mass-Covering, Q||P Mode-Seeking",
       "cat": "Generative Models",
       "summary": "$D_{\\text{KL}}(P\\|Q)$ ve $D_{\\text{KL}}(Q\\|P)$ farklı davranış üretiyor. $P\\|Q: Q$, P'nin her yerini kapsamak zorunda — geniş, yayvan. $Q\\|P: Q$, P'nin sıfır olduğu yerlerden kaçmak zorunda — dar, bir modu seçiyor. İki Gaussian örneğiyle somutlaşıyor.",
@@ -18948,128 +18756,6 @@
         "KL divergence",
         "Kullback-Leibler",
         "relative entropy"
-      ]
-    },
-    {
-      "title": "VAE vs DDPM — ELBO Derivation Tam Karşılaştırması",
-      "cat": "Generative Models",
-      "summary": "VAE ve DDPM ELBO türetiminin adım adım karşılaştırması: ortak Bayes hareketi, 3 terim, dropped term, prior KL farkı ve final loss. Benzerlik ve farklar intuition ile.",
-      "context": "CS231n · Lecture 13 · May 15, 2025",
-      "sections": [
-        {
-          "type": "text",
-          "heading": "0. Ortak başlangıç: MLE hedefi",
-          "text": "Her iki modelin de aynı hedefi var: training verisi x'i en probable kılan $\\theta$'yı bul.\n\n$\\mathrm{VAE}: \\qquad \\theta^* = \\operatorname{argmax} \\log p_\\theta (x)$\n$\\mathrm{DDPM}: \\quad \\theta^* = \\operatorname{argmax} \\log p_\\theta (x_0)$\n\nAma latent space farklı tanımlanıyor:\n\nVAE: $z \\sim \\mathcal{N}(0,I)$ → decoder → x (tek adım)\nDDPM: $x_0 \\to x_1 \\to \\ldots \\to x_T \\sim \\mathcal{N}(0,I) \\to \\ldots \\to x_0$ (T adım)"
-        },
-        {
-          "type": "text",
-          "heading": "1. Problem: marginal intractable",
-          "text": "VAE:\n$p_\\theta (x) = \\int p_\\theta (x|z) \\cdot p(z) dz$          ← z üzerinden, intractable\n\nDDPM:\n$p_\\theta (x_0) = \\int p_\\theta (x_{0:T}) dx_{1:T}$       ← T boyutlu, intractable\n\nDirekt MLE yapılamıyor → her ikisi de lower bound türetiyor.",
-          "qa": true
-        },
-        {
-          "type": "text",
-          "heading": "2. Bayes adımı — payı ikiye ayır",
-          "text": "VAE:\n$p_\\theta (x,z) = p_\\theta (x|z) \\cdot p(z)$        ← chain rule\n\n$$\\to \\log p_\\theta (x) = \\underbrace{\\log [ p_\\theta (x|z)\\cdot p(z) / p_\\theta (z|x) ]}_{\\text{likelihood × prior}}$$\n\nDDPM:\n$p_\\theta (x_{0:T}) = p_\\theta (x_{1:T}|x_0) \\cdot p_\\theta (x_0)$  ← chain rule: P(A,B)=P(B|A)·P(A)\n\n$$\\to \\log p_\\theta (x_0) = \\underbrace{\\log [ p_\\theta (x_{0:T}) / p_\\theta (x_{1:T}|x_0) ]}_{\\text{full joint / true reverse}}$$",
-          "qa": true
-        },
-        {
-          "type": "text",
-          "heading": "3. q sokmak — multiply top and bottom",
-          "text": "VAE:\n$q_\\phi (z|x)$ sokul     ← encoder, öğreniliyor ($\\phi$ parametreli)\n\nDDPM:\n$q(x_{1:T}|x_0)$ sokul  ← forward process, sabit ($\\beta$ schedule, parametresiz)",
-          "qa": true
-        },
-        {
-          "type": "text",
-          "heading": "4. Log rearrange → 3 terim",
-          "text": "VAE:\n$$= \\underbrace{\\log p_\\theta(x|z)}_{\\text{Term 1}} - \\underbrace{\\log q_\\phi(z|x)/p(z)}_{\\text{Term 2}} + \\underbrace{\\log q_\\phi(z|x)/p_\\theta(z|x)}_{\\text{Term 3}}$$\n\nDDPM:\n$$= \\underbrace{\\log p_\\theta(x_0|x_1)}_{\\text{Term 1}} - \\underbrace{\\log q(x_{1:T}|x_0)/p_\\theta(x_{1:T})}_{\\text{Term 2}} + \\underbrace{\\log q(x_{1:T}|x_0)/p_\\theta(x_{1:T}|x_0)}_{\\text{Term 3}}$$",
-          "qa": true
-        },
-        {
-          "type": "text",
-          "heading": "5-6. Expectation + KL olarak yaz",
-          "text": "VAE:\n$$\\log p_\\theta(x) = \\underbrace{\\mathbb{E}_z[\\log p_\\theta(x|z)]}_{\\substack{\\text{reconstruction}\\\\\\text{hesaplanabilir}}} - \\underbrace{D_{\\text{KL}}(q_\\phi(z|x) \\| p(z))}_{\\substack{\\text{prior KL}\\\\\\text{hesaplanabilir}}} + \\underbrace{D_{\\text{KL}}(q_\\phi(z|x) \\| p_\\theta(z|x))}_{\\substack{\\text{posterior KL}\\\\\\text{HESAPLANAMAZ}}}$$\n\nDDPM:\n$$\\log p_\\theta(x_0) = \\underbrace{\\mathbb{E}_q[\\log p_\\theta(x_0|x_1)]}_{\\substack{\\text{reconstruction}\\\\\\text{hesaplanabilir}}} - \\underbrace{D_{\\text{KL}}(q(x_{1:T}|x_0) \\| p_\\theta(x_{1:T}))}_{\\substack{\\text{prior KL}\\\\\\text{hesaplanabilir (açılır)}}} + \\underbrace{D_{\\text{KL}}(q(x_{1:T}|x_0) \\| p_\\theta(x_{1:T}|x_0))}_{\\substack{\\text{posterior KL}\\\\\\text{HESAPLANAMAZ}}}$$\n\nDropped term her ikisinde de aynı yapı, aynı yön:\nVAE — $D_{\\text{KL}}(q_\\phi(z|x) \\| p_\\theta(z|x))$, ikisi de $x \\to z$\nDDPM — $D_{\\text{KL}}(q(x_{1:T}|x_0) \\| p_\\theta(x_{1:T}|x_0))$, ikisi de $x_0 \\to x_{1:T}$",
-          "qa": true
-        },
-        {
-          "type": "text",
-          "heading": "7. Drop et → ELBO",
-          "text": "$\\operatorname{KL} \\ge 0$ → drop → lower bound:\n\nVAE:\n$$\\log p_\\theta(x) \\ge \\underbrace{\\mathbb{E}_z[\\log p_\\theta(x|z)]}_{\\text{reconstruction}} - \\underbrace{D_{\\text{KL}}(q_\\phi(z|x) \\| p(z))}_{\\text{prior KL}}$$\n\nDDPM:\n$$\\log p_\\theta(x_0) \\ge \\underbrace{\\mathbb{E}_q[\\log p_\\theta(x_0|x_1)]}_{\\text{reconstruction}} - \\underbrace{D_{\\text{KL}}(q(x_{1:T}|x_0) \\| p_\\theta(x_{1:T}))}_{\\substack{\\text{prior KL}\\\\\\text{(daha açılacak)}}}$$",
-          "qa": true
-        },
-        {
-          "type": "text",
-          "heading": "8. DDPM Term 2'yi aç → $L_T + L_{t-1}$",
-          "text": "VAE'de Term 2 tek KL — bitti. DDPM'de T adım var, Term 2 açılıyor (Bayes ile forward yön flip edilince):\n\n$$D_{\\text{KL}}(q(x_{1:T}|x_0) \\| p_\\theta(x_{1:T})) = \\underbrace{D_{\\text{KL}}(q(x_T|x_0) \\| p(x_T))}_{\\substack{L_T\\\\\\text{prior matching}}} + \\underbrace{\\sum D_{\\text{KL}}(q(x_{t-1}|x_t,x_0) \\| p_\\theta(x_{t-1}|x_t))}_{\\substack{L_{t-1}\\\\\\text{denoising}}}$$\n\nTam DDPM ELBO:\n$$\\mathrm{ELBO} = \\underbrace{\\mathbb{E}_q[\\log p_\\theta(x_0|x_1)]}_{\\substack{L_0\\\\\\text{reconstruction}}} - \\underbrace{D_{\\text{KL}}(q(x_T|x_0) \\| p(x_T))}_{\\substack{L_T\\\\\\text{prior matching}}} - \\underbrace{\\sum D_{\\text{KL}}(q(x_{t-1}|x_t,x_0) \\| p_\\theta(x_{t-1}|x_t))}_{\\substack{L_{t-1}\\\\\\text{denoising}}}$$",
-          "qa": true
-        },
-        {
-          "type": "text",
-          "heading": "9. $L_T$ ignore — VAE'den kritik fark",
-          "text": "VAE Term $2: D_{\\text{KL}}(q_\\phi (z|x) \\| p(z))$\n$\\phi$ VAR — encoder öğreniyor, bu KL onu regularize ediyor → optimize edilir, şart.\n\nDDPM $L_T: D_{\\text{KL}}(q(x_T|x_0) \\| p(x_T))$\n$\\phi$ YOK — forward process sabit, $p(x_T)=\\mathcal{N}(0,I)$ sabit.\nT adım yeterince büyükse $x_T$ zaten N(0,I)'ye yaklaşıyor, bu garanti.\n→ sabit kalır, ignore edilir.\n\nVAE'de prior KL encoder'ı latent space'e zorlar — öğrenmenin bir parçası.\nDDPM'de prior matching forward process tarafından otomatik sağlanıyor — öğrenilecek bir şey yok."
-        },
-        {
-          "type": "text",
-          "heading": "10. $L_{t-1} \\to \\mathrm{MSE}$",
-          "text": "$q(x_{t-1}|x_t,x_0)$ ve $p_\\theta (x_{t-1}|x_t)$ ikisi de Gaussian.\nGaussian KL kapalı formda açılınca mean farkının karesi çıkıyor:\n\n$L_{t-1} \\to \\|\\varepsilon - \\varepsilon _\\theta (x_t, t)\\|^{2}$\n\nKL matematiksel olarak hâlâ orada, Gaussian varsayımı altında MSE'ye dönüşüyor.\nVAE'deki gibi ayrı bir regularization terimi değil — doğrudan loss içine gömülüyor."
-        },
-        {
-          "type": "compare",
-          "heading": "Final loss",
-          "left": {
-            "title": "VAE",
-            "points": [
-              "reconstruction: E[log p_θ(x|z)]",
-              "prior KL: D_KL(q_φ(z|x) || p(z))",
-              "encoder φ her iki terimde aktif",
-              "KL ayrı regularization terimi olarak kalır"
-            ]
-          },
-          "right": {
-            "title": "DDPM",
-            "points": [
-              "loss = ||ε - ε_θ(x_t, t)||²",
-              "L_T ignore (parametresiz)",
-              "L_{t-1} Gaussian → MSE'ye sadeleşti",
-              "KL loss içine gömüldü, görünmez"
-            ]
-          }
-        },
-        {
-          "type": "compare",
-          "heading": "Özet: tüm farklar",
-          "left": {
-            "title": "VAE",
-            "points": [
-              "Latent: tek z",
-              "Forward: encoder q_φ — öğreniliyor",
-              "Prior KL: φ var → optimize edilir",
-              "Dropped: KL(q_φ||p_θ(z|x)) — explicit",
-              "Bound: Bayes + drop",
-              "Loss: reconstruction + KL"
-            ]
-          },
-          "right": {
-            "title": "DDPM",
-            "points": [
-              "Latent: x_1...x_T",
-              "Forward: noise schedule q — sabit",
-              "Prior KL: φ yok → ignore",
-              "Dropped: KL(q||p_θ(x_{1:T}|x_0)) — implicit (Jensen)",
-              "Bound: Jensen",
-              "Loss: noise MSE"
-            ]
-          }
-        }
-      ],
-      "id": "cs12-vae-vs-ddpm-elbo-derivation-tam-karsilastirmasi",
-      "keywords": [
-        "generative model",
-        "discriminative model",
-        "density estimation",
-        "variational autoencoder",
-        "latent space",
-        "evidence lower bound"
       ]
     }
   ],
@@ -25876,11 +25562,11 @@
         "cs12-vae-tam-tablo",
         "cs12-vae-neden-boyle-calisir-anlama-zinciri",
         "cs12-vae-sampling-and-disentanglement",
-        "cs12-ddpm-vae-paraleli-ile-tam-matematiksel-akis",
+        "ida11-ddpm-vae-paraleli-ile-tam-matematiksel-akis",
         "cs12-kl-divergence-yonu-p-q-mass-covering-q-p-mode-seeking",
         "cs12-vae-de-kl-yonu-neden-d-kl-q-p-kullaniliyor",
         "vs03-mle-map-vae-aradigim-sey-ne-prior-kimin-uzerinde",
-        "cs12-vae-vs-ddpm-elbo-derivation-tam-karsilastirmasi",
+        "ida11-vae-vs-ddpm-elbo-derivation-tam-karsilastirmasi",
         "vs04-vae-vs-autoencoder",
         "vs04-vae-loss-turetimi"
       ]
@@ -25940,9 +25626,7 @@
         "lab07-task-5-ddpm-noise-schedule",
         "lab07-task-6-7-ddpm-algoritmalar",
         "lab07-toy-vs-ddpm-training-objective-farki",
-        "lab07-huggingface-diffusers-ddpmscheduler-unet2dmodel",
-        "lab07-ddpm-matematiksel-ozet-forward-reverse-prediction-ve-l-simpl",
-        "lab07-ddpm-training-inference-tam-parametreler-ve-dimensionlar"
+        "lab07-huggingface-diffusers-ddpmscheduler-unet2dmodel"
       ]
     },
     {
