@@ -25913,7 +25913,8 @@
               "KL ıraksamasını minimize et",
               "Poisson loss'u"
             ]
-          ]
+          ],
+          "text": ""
         },
         {
           "type": "text",
@@ -26097,7 +26098,8 @@
               "yapılandırılmamış",
               "veriyle aynı boyutta"
             ]
-          ]
+          ],
+          "text": ""
         },
         {
           "type": "text",
@@ -26387,7 +26389,7 @@
         {
           "type": "text",
           "heading": "7. Ters yön: neden öğrenilmek zorunda",
-          "text": "Forward yönde tam olarak ne yaptığını biliyorsun. Peki ters yön neden bedava değil?\n\nÇünkü x_t'yi gören biri x_{t-1}'i kesin olarak bilemez. Noisy bir görüntüden geriye gitmenin birden çok makul yolu var — hangi temiz görüntüden geldiğini bilmiyorsun. Bu distribution, veri distribution'unun tamamına bağlı, ve onu bilmiyorsun. Zaten bilseydin üretmeyi de bilirdin.\n\nAma bir kurtuluş var: gerçek x_0'ı biliyorsan, ters adım analitik olarak hesaplanabiliyor. Yani q(x_{t-1} | x_t, x_0) kapalı formda bir Gaussian, ortalaması ve varyansı schedule'dan çıkıyor.\n\nTraining'de x_0 elinde. Üretimde değil. Bütün mesele, training'de bilinen bu hedefi, üretimde x_0 olmadan taklit edebilecek bir ağa öğretmek."
+          "text": "Forward yönde tam olarak ne yaptığını biliyorsun. Peki ters yön neden bedava değil?\n\nÇünkü x_t'yi gören biri $x_{t-1}$'i kesin olarak bilemez. Noisy bir görüntüden geriye gitmenin birden çok makul yolu var — hangi temiz görüntüden geldiğini bilmiyorsun. Bu distribution, veri distribution'unun tamamına bağlı, ve onu bilmiyorsun. Zaten bilseydin üretmeyi de bilirdin.\n\nAma bir kurtuluş var: gerçek x_0'ı biliyorsan, ters adım analitik olarak hesaplanabiliyor. Yani $q(x_{t-1} \\mid x_t, x_0)$ kapalı formda bir Gaussian, ortalaması ve varyansı schedule'dan çıkıyor.\n\nTraining'de x_0 elinde. Üretimde değil. Bütün mesele, training'de bilinen bu hedefi, üretimde x_0 olmadan taklit edebilecek bir ağa öğretmek."
         },
         {
           "type": "text",
@@ -26397,12 +26399,12 @@
         {
           "type": "formula",
           "heading": "DDPM ELBO — üç parça",
-          "text": "$$\\log p_\\theta(x_0) \\ \\ge\\ \\underbrace{\\mathbb{E}_q[\\log p_\\theta(x_0|x_1)]}_{L_0}\\ -\\ \\underbrace{D_{KL}\\bigl(q(x_T|x_0)\\,\\|\\,p(x_T)\\bigr)}_{L_T}\\ -\\ \\underbrace{\\textstyle\\sum_{t>1} D_{KL}\\bigl(q(x_{t-1}|x_t,x_0)\\,\\|\\,p_\\theta(x_{t-1}|x_t)\\bigr)}_{L_{t-1}}$$\n\n$L_T$ sabittir, atılır. $L_0$ son adımın yeniden kurulumudur. İşin tamamı $L_{t-1}$ toplamındadır."
+          "text": "$$\\log p_\\theta(x_0) \\ \\ge\\ \\underbrace{\\mathbb{E}_q[\\log p_\\theta(x_0|x_1)]}_{L_0}\\ -\\ \\underbrace{D_{KL}\\bigl(q(x_T|x_0)\\,\\|\\,p(x_T)\\bigr)}_{L_T}\\ -\\ \\underbrace{\\sum_{t>1} D_{KL}\\bigl(q(x_{t-1}|x_t,x_0)\\,\\|\\,p_\\theta(x_{t-1}|x_t)\\bigr)}_{L_{t-1}}$$\n\n$L_T$ sabittir, atılır. $L_0$ son adımın yeniden kurulumudur. İşin tamamı $L_{t-1}$ toplamındadır."
         },
         {
           "type": "text",
           "heading": "9. KL neden MSE'ye çöküyor",
-          "text": "Bu, konunun en çok gözden kaçan adımı, ve anlatıyı tamamlayan yer.\n\nL_{t-1} terimindeki iki distribution da Gaussian: gerçek ters adım Gaussian (yukarıda türetildi), ağın ürettiği ters adım da Gaussian olarak tanımlandı. İki Gaussian arasındaki KL'nin kapalı formu var. Varyansları sabit seçersen, o kapalı formdan geriye sadece ortalamaların farkının karesi kalıyor.\n\nYani KL kaybolmuyor — Gaussian varsayımı altında karesel hataya dönüşüyor.\n\nÜstüne bir sadeleştirme daha geliyor. Ortalamayı x_0 cinsinden değil epsilon cinsinden yazarsan, ağın tahmin etmesi gereken şey doğrudan eklenen noise oluyor. ELBO'dan gelen zamana bağlı weight katsayıları da atılınca geriye kalan şu:\n\nLoss = eklenen noise ile tahmin edilen noise arasındaki ortalama karesel hata.\n\nBu kadar. Sekiz satırlık bir türetmenin sonunda elinde kalan şey, bir regresyon loss'u."
+          "text": "Bu, konunun en çok gözden kaçan adımı, ve anlatıyı tamamlayan yer.\n\n$L_{t-1}$ terimindeki iki distribution da Gaussian: gerçek ters adım Gaussian (yukarıda türetildi), ağın ürettiği ters adım da Gaussian olarak tanımlandı. İki Gaussian arasındaki KL'nin kapalı formu var. Varyansları sabit seçersen, o kapalı formdan geriye sadece ortalamaların farkının karesi kalıyor.\n\nYani KL kaybolmuyor — Gaussian varsayımı altında karesel hataya dönüşüyor.\n\nÜstüne bir sadeleştirme daha geliyor. Ortalamayı x_0 cinsinden değil epsilon cinsinden yazarsan, ağın tahmin etmesi gereken şey doğrudan eklenen noise oluyor. ELBO'dan gelen zamana bağlı weight katsayıları da atılınca geriye kalan şu:\n\nLoss = eklenen noise ile tahmin edilen noise arasındaki ortalama karesel hata.\n\nBu kadar. Sekiz satırlık bir türetmenin sonunda elinde kalan şey, bir regresyon loss'u."
         },
         {
           "type": "formula",
@@ -26452,7 +26454,7 @@
         {
           "type": "formula",
           "heading": "CFG",
-          "text": "$$\\hat{\\epsilon} = (1+w)\\,\\epsilon_\\theta(x_t, y, t) \\ -\\ w\\,\\epsilon_\\theta(x_t, \\varnothing, t)$$\n\n$w = 0$ sıradan koşullu üretim. $w$ büyüdükçe çıktı koşula daha sadık, daha keskin, ama daha az çeşitli olur; aşırıya kaçınca doygun ve klişe görüntüler üretir."
+          "text": "$$\\hat{\\epsilon} = (1+w)\\,\\epsilon_\\theta(x_t, y, t) \\ -\\ w\\,\\epsilon_\\theta(x_t, \\emptyset, t)$$\n\n$w = 0$ sıradan koşullu üretim. $w$ büyüdükçe çıktı koşula daha sadık, daha keskin, ama daha az çeşitli olur; aşırıya kaçınca doygun ve klişe görüntüler üretir."
         },
         {
           "type": "note",
