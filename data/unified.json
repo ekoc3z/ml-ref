@@ -25370,6 +25370,178 @@
           "text": "Bu metin sırayı verir, ayrıntı kartlarda: forward/reverse türetmesinin tamamı ve VAE ile satır satır karşılaştırması ida11'de; U-Net'in içi, ResBlock ve boyut akışı yine ida11 ile lab07'de; kod tarafı (corruption, training loop, DDPMScheduler, UNet2DModel) lab07'de; CFG, latent diffusion, SDE/skor bakışı ve rectified flow cs13'te."
         }
       ]
+    },
+    "mle": {
+      "title": "MLE — Baştan Sona Konu Anlatımı",
+      "cat": "Konu Anlatımı",
+      "context": "Maximum Likelihood · ML ch03 · EE499 vs03 · Math 06 · CS231n 12 — tek oturumda okunmak için",
+      "chapters": [
+        "ch03",
+        "vs03",
+        "vs04",
+        "math06",
+        "cs12",
+        "mlo03"
+      ],
+      "summary": "Maximum likelihood'ın tek sorusundan başlayıp, neden log alındığına, Gaussian ve Bernoulli türetmelerine, MSE ve cross-entropy'nin oradan nasıl çıktığına, bir sinir ağı eğitmenin neden MLE olduğuna, MAP'in tek çarpan farkına ve weight decay'in neden bir prior olduğuna kadar tek akış.",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Bu metin ne için",
+          "text": "MLE, bu sitedeki en çok tekrar eden kavram: ML dersinde yoğunluk kestirimi olarak, EE499'da sinyal tahmini olarak, CS231n'de üretici modellerin eğitim ilkesi olarak, lab kartlarında ise doğrudan kayıp fonksiyonu olarak geçiyor. Kartlar bu parçaları ayrı ayrı doğru anlatıyor ama aralarındaki bağı kurmuyor.\n\nOysa hepsi tek bir cümlenin farklı kılıkları. Bu metin o cümleden başlayıp, günlük olarak yazdığın `nn.MSELoss()` ve `weight_decay=1e-4` satırlarına kadar kesintisiz gidiyor.\n\nSonunda şunu görmen lazım: bir sinir ağı eğitmek yeni bir şey değil, MLE'nin ta kendisi."
+        },
+        {
+          "type": "text",
+          "heading": "1. Tek soru",
+          "text": "Elinde beş sayı var: 2.1, 3.4, 2.8, 3.9, 3.0. Bir sayı doğrusuna nokta nokta diz — hepsi 3 civarında kümelenmiş.\n\nŞimdi elinde bir çan eğrisi olduğunu düşün ve onu doğru boyunca sağa sola kaydırabiliyorsun. Soru şu: eğriyi nereye koyarsan bu beş nokta en beklendik hale gelir?\n\nEğriyi 10'a koy: noktalar eğrinin çok solunda, kuyrukta kalır. Öyle bir dünyada tam bu beş sayıyı görmek şaşırtıcı olurdu. Eğriyi 3'e koy: noktalar tepenin altına düşer, hiç şaşırtıcı değil.\n\nMLE bu kadar: bilinmeyeni oynata oynata, gördüğün veriyi en az şaşırtıcı yapan yeri bulmak. Buradaki cevap 3.04, yani beş sayının ortalaması.\n\nSitenin her yerinde aynı hareket yapılıyor. Değişen tek şey, kaydırdığın nesnenin ne olduğu: bazen bir sayı, bazen bir sinyal vektörü, bazen bir ağın milyonlarca ağırlığı."
+        },
+        {
+          "type": "text",
+          "heading": "2. Harfler",
+          "text": "x — gördüğün şey, veri. Burada o beş sayı.\n\ntheta — aradığın şey, bilinmeyen. Burada eğrinin nereye oturduğu, yani ortalama.\n\np(x | theta) — likelihood: \"theta şu değer olsaydı, tam bu veriyi görme ihtimalim ne olurdu?\"\n\nHepsi bu. Formül, bu ihtimali en büyük yapan theta'yı seçmekten ibaret."
+        },
+        {
+          "type": "formula",
+          "heading": "Tanım",
+          "text": "$$\\hat{\\theta}_{\\text{MLE}} = \\operatorname*{arg\\,max}_{\\theta}\\ p(x \\mid \\theta)$$\n\nVeri bağımsız ve aynı dağılımdan geliyorsa likelihood bir çarpıma açılır:\n$$p(x \\mid \\theta) = \\prod_{i=1}^{N} p(x_i \\mid \\theta)$$"
+        },
+        {
+          "type": "text",
+          "heading": "3. Likelihood bir olasılık dağılımı değil",
+          "text": "Burası en çok karıştırılan yer, ve adıyla öldürmek gerekiyor.\n\nElinde p(x | theta) diye tek bir fonksiyon var, ama ona iki ayrı gözle bakabilirsin.\n\nBirinci göz: theta sabit, x değişken. \"Gerçek ortalama 3 ise, ölçtüğüm sayı ne çıkar?\" Cevap 3 merkezli bir çan eğrisi. Bu gerçek bir olasılık dağılımı — x üzerinden integrali 1.\n\nİkinci göz: x sabit, theta değişken. Ölçümü zaten yaptın, veri elinde. Soru tersine döndü: hangi theta bu veriyi en olası kılar? Aynı fonksiyona bu sefer theta'nın fonksiyonu olarak bakıyorsun. Buna likelihood deniyor.\n\nVe likelihood bir olasılık dağılımı değil. theta üzerinden integralinin 1 etmesi gerekmiyor, etmez de. Bu yüzden \"theta'nın olasılığı\" diye bir şeyden bahsetmiyorsun — MLE sana theta'nın ne kadar olası olduğunu söylemiyor, sadece hangi theta'nın veriyi en iyi açıkladığını söylüyor.\n\nBu ayrımı kaçırırsan MAP ile MLE arasındaki fark da anlaşılmaz hale geliyor, çünkü fark tam olarak burada."
+        },
+        {
+          "type": "text",
+          "heading": "4. Neden hep logaritma alıyoruz",
+          "text": "Üç ayrı sebep var ve üçü de pratik.\n\nSayısal taşma. Likelihood, 0 ile 1 arasında binlerce sayının çarpımı. N biraz büyüdüğünde çarpım kayan noktalı aritmetikte tam olarak sıfıra iniyor, ve sıfırı maksimize edemezsin. Log, çarpımı toplama çeviriyor ve (0,1) aralığını (eksi sonsuz, 0) aralığına açıyor.\n\nCevabı değiştirmiyor. Log monoton artan, dolayısıyla log L'yi maksimize eden theta ile L'yi maksimize eden theta aynı. Bedava bir dönüşüm.\n\nTüreve hazırlıyor. Gaussian'ın içinde bir üstel var; log onu yiyor ve geriye ikinci dereceden bir ifade kalıyor. Türev alıp sıfıra eşitlemek elle yapılabilir hale geliyor.\n\nVe optimizasyon tarafında negatifini alıyoruz: maksimizasyon yerine minimizasyon, çünkü bütün optimizasyon kütüphaneleri minimize ediyor. Negative log-likelihood tam olarak bu."
+        },
+        {
+          "type": "text",
+          "heading": "5. Gaussian'a uygula: ortalama nereden çıkıyor",
+          "text": "Çan eğrisi örneğine dön. Gaussian yoğunluğunun logaritmasını al: üstel kayboluyor, geriye bir sabit artı eksi (x_i - mu)^2 / 2 sigma^2 kalıyor. Bütün veri noktaları için topla. mu'ye göre maksimize ederken sabitler hiçbir şeyi değiştirmediği için onları at. Elinde kalan:\n\nlikelihood'ı maksimize etmek = kareler toplamını minimize etmek.\n\nTüretip sıfıra eşitlersen cevap örneklem ortalaması. Baştaki 3.04 buradan geliyor.\n\nBu, metnin en önemli cümlesinin ilk görünüşü: bir olasılık sorusu, bir kayıp fonksiyonuna dönüştü ve o kayıp fonksiyonu MSE."
+        },
+        {
+          "type": "formula",
+          "heading": "Gaussian MLE",
+          "text": "$$\\operatorname*{arg\\,max}_{\\mu}\\ p(x \\mid \\mu) \\;=\\; \\operatorname*{arg\\,min}_{\\mu} \\sum_{i} (x_i - \\mu)^2$$\n\n$$\\mu_{\\text{MLE}} = \\frac{1}{N}\\sum_{n=1}^{N} x_n \\qquad \\sigma^2_{\\text{MLE}} = \\frac{1}{N}\\sum_{n=1}^{N}(x_n - \\mu_{\\text{MLE}})^2$$"
+        },
+        {
+          "type": "text",
+          "heading": "6. Varyans neden yanlı çıkıyor",
+          "text": "Ortalama tahmini yansız. Varyans tahmini değil — sistematik olarak küçük çıkıyor, ve sebebi öğretici.\n\nVaryans formülünde gerçek ortalama yerine aynı veriden hesaplanmış tahmin kullanılıyor. Ama örneklem ortalaması tanımı gereği o veriye en yakın nokta: kareler toplamını minimize eden şey zaten o. Dolayısıyla veri noktalarının ondan uzaklıkları, gerçek ortalamadan uzaklıklarından ortalama olarak daha küçük.\n\nYanlılığın büyüklüğü tam olarak sigma^2 / N. Sezgisel karşılığı: bir serbestlik derecesi mu'yü tahmin etmeye harcandı. 1/N yerine 1/(N-1) kullanınca (Bessel düzeltmesi) tahmin yansız hale geliyor.\n\nBuradan çıkan genel ders: MLE her zaman yansız tahmin vermez. Verdiği garanti başka — çok veri limitinde doğruya yakınsıyor, ama sonlu veride yanlı olabilir."
+        },
+        {
+          "type": "text",
+          "heading": "7. Üç çalışılmış örnek",
+          "text": "Bernoulli. n deneme, k tanesi 1 (10 atışta 7 tura). Log-likelihood k log p + (n-k) log(1-p); türev sıfır dediğinde p = k/n. MLE, gözlenen frekansın kendisi.\n\nExponential. Log-likelihood n log lambda - lambda toplam(x_i); türevden lambda = n / toplam(x_i), yani örneklem ortalamasının tersi. Mantıklı, çünkü Exp(lambda) dağılımının ortalaması 1/lambda.\n\nUniform(0, theta). Burada yöntem değişiyor ve asıl ders bu. Likelihood, theta gözlenen en büyük değerden küçükse sıfır (o gözlem imkansız olurdu), büyükse 1/theta^n. İkinci durumda theta büyüdükçe likelihood düşüyor. Yani en iyi theta, mümkün olan en küçük theta: gözlenen en büyük değer.\n\nDikkat: burada türev alıp sıfıra eşitlemek işe yaramaz, çünkü maksimum bir iç noktada değil sınırda. \"MLE demek türev alıp sıfıra eşitlemek demek\" ezberi tam burada kırılıyor. MLE bir arg max, türev sadece onu bulmanın bir yolu."
+        },
+        {
+          "type": "text",
+          "heading": "8. Dönüm noktası: MLE bir kayıp fonksiyonudur",
+          "text": "Şimdi metnin çatısı kuruluyor.\n\nBir regresyon modeli düşün: y = f(x; theta) + gürültü, ve gürültü Gaussian. Bir veri noktasının olasılığı, Gaussian yoğunluğunun f(x_i; theta) merkezli hali. Log al, bütün noktalar için topla, theta'ya bağlı olmayan sabitleri at. Elinde kalan tam olarak şu: y_i ile f(x_i; theta) arasındaki farkların kareleri toplamı.\n\nYani MSE, keyfi seçilmiş bir maliyet fonksiyonu değil. Gaussian gürültü varsayımı altında maximum likelihood'ın kendisi.\n\nAynı hareketi sınıflandırmada yap. Model her örnek için p_i olasılığı üretiyor, etiket t_i ise 0 ya da 1. Doğru olasılığı elle seçmek yerine Bernoulli formülü bunu otomatik yapıyor: p_i üzeri t_i çarpı (1-p_i) üzeri (1-t_i). Etiket 1 ise ilk çarpan aktif, 0 ise ikincisi. Bütün örnekler için çarp, log al, negatifini al — çıkan şey binary cross-entropy.\n\nÇok sınıflıda softmax ile aynı hesap: log-likelihood toplamı, sadece doğru sınıfın log olasılıklarının toplamına iniyor, negatifi cross-entropy."
+        },
+        {
+          "type": "formula",
+          "heading": "İki türetmenin sonucu",
+          "text": "Gaussian gürültü:\n$$-\\log p(y \\mid x,\\theta) \\;\\propto\\; \\sum_i \\bigl(y_i - f(x_i;\\theta)\\bigr)^2 \\quad\\Rightarrow\\quad \\text{MSE}$$\n\nBernoulli etiket:\n$$-\\log p(t \\mid w) = -\\sum_i \\bigl[\\, t_i \\log p_i + (1-t_i)\\log(1-p_i) \\,\\bigr] \\quad\\Rightarrow\\quad \\text{BCE}$$"
+        },
+        {
+          "type": "table",
+          "heading": "Gürültü varsayımı, çıkan kayıp",
+          "rows": [
+            [
+              "Varsayım",
+              "MLE'nin verdiği problem",
+              "Bilinen adı"
+            ],
+            [
+              "Gaussian, bağımsız",
+              "kareler toplamını minimize et",
+              "MSE / en küçük kareler"
+            ],
+            [
+              "Korelasyonlu Gaussian",
+              "kovaryansla ağırlıklı kareler",
+              "genelleştirilmiş en küçük kareler"
+            ],
+            [
+              "Laplace (kalın kuyruk)",
+              "mutlak farkları minimize et",
+              "MAE / L1"
+            ],
+            [
+              "Bernoulli",
+              "negatif log olasılık toplamı",
+              "BCE"
+            ],
+            [
+              "Kategorik (softmax)",
+              "doğru sınıfın negatif log olasılığı",
+              "cross-entropy"
+            ],
+            [
+              "Poisson (foton sayımı)",
+              "KL ıraksamasını minimize et",
+              "Poisson kaybı"
+            ]
+          ]
+        },
+        {
+          "type": "text",
+          "heading": "9. Loss seçmek, gürültü seçmektir",
+          "text": "Yukarıdaki tablonun okunuş yönü önemli. Genelde soldan sağa okunuyor: \"verim şöyleyse şu loss'u kullanırım.\" Asıl aydınlatıcı olan sağdan sola okumak.\n\nKodda L2 yazdığın an, farkında olmadan \"hata Gaussian dağılıyor\" demiş oluyorsun. L1 yazdığın an \"hata Laplace dağılıyor, ara sıra çok sapan ölçümler gelir\" demiş oluyorsun.\n\nBu, aykırı değer sorusunun da cevabı. Gaussian varsayımı altında MLE sana ortalamayı verir; Laplace varsayımı altında medyanı. Medyanın aykırı değerlere neden dayanıklı olduğu buradan çıkıyor: Laplace'ın kuyrukları kalın, yani model zaten ara sıra uç bir gözlem bekliyor, o yüzden tek bir uç değer tahmini sürükleyemiyor.\n\nDönüm noktası tek cümlede: deterministik görünen her kayıp fonksiyonunun altında saklı bir olasılık modeli var."
+        },
+        {
+          "type": "text",
+          "heading": "10. Sinir ağı eğitmek zaten MLE yapmaktır",
+          "text": "Şimdi ölçeği büyüt, hareket aynı kalsın.\n\nÇan eğrisi örneğinde kaydırdığın şey tek bir sayıydı. Bir MLP'de kaydırdığın şey milyonlarca ağırlık. Soru değişmiyor: ağırlıkları öyle ayarla ki eğitim verisini görme olasılığı en büyük olsun.\n\nBağlantıyı tam kuran cümle şu: ağın son katmanı bir sayı değil, bir dağılımın parametresini üretiyor.\n\nRegresyonda ağın çıktısı, y'yi üreten Gaussian'ın ortalaması. Sınıflandırmada softmax çıktısı, kategorik dağılımın olasılıkları. İkisinde de ağ bir olasılık modeli kuruyor, sen de o modelin log olabilirliğini maksimize ediyorsun.\n\nDolayısıyla eğitim döngün — ileri geçiş, kayıp, geri yayılım, adım — maximum likelihood probleminin gradyan inişiyle çözülmesinden ibaret. Kapalı formda çözülemediği için (Gaussian ortalamasındaki gibi) sayısal olarak çözülüyor, farkın tamamı bu.\n\nBir bağlantı daha: eğitim verisi üzerinden log olabilirliği maksimize etmek, model dağılımı ile gerçek veri dağılımı arasındaki KL ıraksamasını minimize etmekle aynı şey. Üretici modellerin \"gerçek dağılıma yaklaşıyoruz\" cümlesinin arkasında bu duruyor."
+        },
+        {
+          "type": "code",
+          "heading": "Aynı üç adım, üç ölçekte",
+          "text": "                      aradığın theta        çözüm yolu\n─────────────────────────────────────────────────────────────\nbeş sayı, mu          tek sayı              kapalı form (ortalama)\ny = Ax + n            sinyal vektoru        kapalı form (en kucuk kareler)\nMLP / VAE / DDPM      milyonlarca agirlik   gradyan inisi\n\nUc satirda da yapilan is ayni:\n  1. bir olasilik modeli yaz          p(veri | theta)\n  2. log al, isareti cevir            -log p\n  3. theta uzerinde minimize et"
+        },
+        {
+          "type": "text",
+          "heading": "11. MLE ne zaman yetmiyor",
+          "text": "Üç tane para atışı yaptın, üçü de tura geldi. MLE'nin cevabı p = 1: \"bu para asla yazı gelmez.\"\n\nCevap matematiksel olarak doğru — o veriyi en olası kılan gerçekten p = 1. Ama saçma, çünkü elindeki bilgi çok az ve MLE onu sorgusuz kabul ediyor.\n\nGenel arıza biçimi bu: MLE verideki gürültüyü de sinyal sanıp fit ediyor. Aşırı öğrenmenin (overfitting) olasılıksal tarifi tam olarak budur. Veri arttıkça sorun kendiliğinden hafifliyor, ama az veride ciddi.\n\nUniform örneğinde de aynı arıza var: tahmin, gözlenen en büyük değer. Gerçek üst sınır neredeyse kesinlikle bundan büyük, ama MLE onu göremiyor çünkü elinde sadece gördüğü var.\n\nİki çıkış yolu: daha çok veri, ya da veriyi görmeden önceki bilgiyi hesaba katmak."
+        },
+        {
+          "type": "text",
+          "heading": "12. MAP: ayrı bir yöntem değil, tek bir çarpan",
+          "text": "MAP, MLE'ye theta üzerinde bir inanç ekliyor: veriyi görmeden önce theta hakkında ne düşünüyordun?\n\nBayes kuralında posterior, likelihood çarpı prior ile orantılı. MAP bu çarpımı maksimize ediyor. Log alınca çarpım toplama dönüşüyor, yani MAP'in kayıp fonksiyonu MLE'nin kayıp fonksiyonu artı bir ceza terimi.\n\nÜç tura örneğine dön: paranın hilesiz olmaya yakın olduğuna dair makul bir prior koyarsan, cevap 1 değil, 1'e doğru itilmiş ama makul bir sayı çıkıyor. Veri arttıkça likelihood terimi prior'ı bastırıyor ve MAP, MLE'ye yaklaşıyor. Prior'ın ağırlığı veri miktarıyla ters orantılı — az veride belirleyici, çok veride görünmez.\n\nAyırt edici tek soru şu, ve ezberlenmesi gereken cümle bu: prior, tahmin ettiğin şeyin üzerinde mi? Başka bir şeyin üzerindeki prior seni MAP'e geçirmiyor."
+        },
+        {
+          "type": "formula",
+          "heading": "MLE ve MAP",
+          "text": "$$\\hat{\\theta}_{\\text{MLE}} = \\operatorname*{arg\\,max}_{\\theta} \\log p(x \\mid \\theta) \\qquad \\hat{\\theta}_{\\text{MAP}} = \\operatorname*{arg\\,max}_{\\theta} \\bigl[\\log p(x \\mid \\theta) + \\log p(\\theta)\\bigr]$$"
+        },
+        {
+          "type": "text",
+          "heading": "13. Weight decay tam olarak burada",
+          "text": "Ağırlıkların üzerine sıfır ortalamalı Gaussian bir prior koy: \"ağırlıkların küçük olmasını bekliyorum.\"\n\nGaussian'ın logaritması, ağırlık vektörünün normunun karesini eksi işaretiyle veriyor. Minimize etme diline çevirince kayıp fonksiyonun şu hale geliyor: veri terimi artı lambda çarpı ağırlıkların karesi.\n\nBu, kodda her gün yazdığın weight decay.\n\nDönüm noktası tek cümlede: L2 regularization, ağırlıkların üzerine Gaussian prior koyup MAP yapmaktır. Keyfi bir hile değil, bir cümlenin matematiği.\n\nAynı mantıkla L1 regularization, ağırlıklara Laplace prior koymaktır — ve Laplace'ın sivri tepesi, çözümün tam sıfırlara oturmasını teşvik ettiği için seyreklik üretiyor.\n\nYani modelinde iki tane gizli olasılık varsayımı var: kayıp fonksiyonun gürültüyü seçiyor, regularization terimin ağırlıkların prior'ını seçiyor."
+        },
+        {
+          "type": "text",
+          "heading": "14. VAE: aradığın şey ağırlıklar, z değil",
+          "text": "VAE'de bir de z var, latent değişken. Onu da mı arıyoruz? Hayır, ve fark konunun kilidi.\n\nBeş sayı örneğinde mu'yü bulduğunda iş bitiyordu, elinde 3.04 vardı. VAE'de \"z'yi buldum\" diyebileceğin bir an yok, çünkü z her resim için ayrı. 200.000 resmin 200.000 z'si var ve sen tek tek onların peşinde değilsin. \"Bu resmin z'si 3.2'dir\" demiyorsun; \"bu resmin z'si şu dağılımdan geliyor\" diyorsun.\n\nAradığın şey, o dağılımı üreten kural — yani yine ağırlıklar. Eğitim bittiğinde elinde encoder ve decoder var, z'lerin kendisi ortada yok. z tahmin edilen bir şey değil, üzerinden integral alınan bir şey.\n\nBuradan çok sorulan soru çıkıyor: VAE'nin içinde p(z) var, o bir prior değil mi? Prior, evet — ama z'nin üzerinde, ve z tahmin edilmiyor. Tahmin edilen şey ağırlıklar, ve onların üzerinde prior yok.\n\nSonuç: VAE, adında variational geçmesine ve içinde bir prior bulunmasına rağmen, ağırlıklar açısından MLE yapıyor. KL terimi de bir regularization değil — encoder'ın ürettiği dağılımları standart normal etrafında tutuyor ki üretim zamanında çektiğin z, decoder'ın tanıdığı bir bölgeye düşsün."
+        },
+        {
+          "type": "text",
+          "heading": "15. ELBO neden devreye giriyor",
+          "text": "VAE'de log olabilirliği doğrudan maksimize edemiyorsun, çünkü p(x) hesaplanabilmesi için z üzerinden integral alınması gerekiyor ve o integral kapalı formda yok.\n\nÇözüm alt sınırla çalışmak: gerçek hedefin altında kalan, ama hesaplanabilen bir ifade türetip onu maksimize ediyorsun. Adı ELBO.\n\nÖnemli olan şu: hedef değişmedi. Hâlâ maximum likelihood yapıyorsun, sadece doğrudan tırmanamadığın için altındaki bir merdiveni tırmanıyorsun.\n\nAynı hikaye difüzyon modellerinde de geçerli, orada integral T adımlı bir yol üzerinden. Türetmenin tamamı ve iki modelin satır satır karşılaştırması için DDPM konu anlatımına bak — bu metnin bittiği yerden orası başlıyor."
+        },
+        {
+          "type": "insight",
+          "heading": "Geriye ne kalsın",
+          "text": "Bilinmeyeni oynata oynata, gördüğünü en az şaşırtıcı yapan yeri bul. Likelihood bir olasılık dağılımı değil, veriyi açıklama gücünün ölçüsü. Log almak cevabı değiştirmiyor, sadece çarpımı toplama çevirip hesabı mümkün kılıyor. Gaussian varsayarsan MSE, Bernoulli varsayarsan cross-entropy çıkıyor — yani kayıp fonksiyonu seçmek gürültü dağılımı seçmektir. Sinir ağı eğitmek bunun büyük ölçekli hali: ağ bir dağılımın parametresini üretiyor, gradyan inişi log olabilirliği tırmanıyor. Aradığın şeyin üzerine prior koyarsan MAP olur, ve Gaussian prior'ın adı weight decay'dir. VAE ve DDPM'de hedef hâlâ maximum likelihood; değişen tek şey, integral alınamadığı için alt sınırla çalışılması."
+        },
+        {
+          "type": "note",
+          "heading": "Nereye bakılır",
+          "text": "Bu metin sırayı verir, ayrıntı kartlarda: Gaussian türetmesi ve varyansın yanlılığı ch03'te; Bernoulli, Exponential ve Uniform çalışılmış örnekleri math06'da; MLE'den MSE ve BCE'ye adım adım türetmeler vs04'te; MLE-MAP-Bayesian geçişi, prior kimin üzerinde tartışması, MAP ile regularizasyon bağlantısı ve LMMSE tarafı vs03'te; üretici modeller için MLE ve KL yorumu cs12'de; ELBO'nun difüzyondaki hali ida11'de."
+        }
+      ]
     }
   },
   "mlo": [
