@@ -25236,37 +25236,37 @@
         "cs03",
         "mlo12"
       ],
-      "summary": "Tek bir kayıp sayısından milyonlarca gradyanın nasıl çıktığı: neden sonlu fark işe yaramıyor, hesaplama grafiği ve zincir kuralı, upstream çarpı local kuralı, bir doğrusal katmanın backward'ı boyutlarıyla, ve gradyanların neden sönüp patladığı.",
+      "summary": "Tek bir loss sayısından milyonlarca gradient'in nasıl çıktığı: neden sonlu fark işe yaramıyor, hesaplama grafiği ve zincir kuralı, upstream çarpı local kuralı, bir doğrusal katmanın backward'ı boyutlarıyla, ve gradient'lerin neden sönüp patladığı.",
       "sections": [
         {
           "type": "text",
           "heading": "Bu metin ne için",
-          "text": "Backprop, zincir kuralından ibaret ve tam da bu yüzden yanlış anlaşılıyor: formülü bilmek onu anlamak değil.\n\nAsıl soru şu — kayıp tek bir sayı. Bir tek sayıdan milyonlarca ağırlığın her biri için ayrı bir yön bilgisi nasıl çıkıyor?\n\nBu metin o soruyu takip ediyor, ve sonunda bir katmanın backward'ını boyutlarıyla yazabiliyor olman lazım."
+          "text": "Backprop, zincir kuralından ibaret ve tam da bu yüzden yanlış anlaşılıyor: formülü bilmek onu anlamak değil.\n\nAsıl soru şu — loss tek bir sayı. Bir tek sayıdan milyonlarca ağırlığın her biri için ayrı bir yön bilgisi nasıl çıkıyor?\n\nBu metin o soruyu takip ediyor, ve sonunda bir katmanın backward'ını boyutlarıyla yazabiliyor olman lazım."
         },
         {
           "type": "text",
           "heading": "1. Problem",
-          "text": "Ağın milyonlarca ağırlığı var. Her biri için şunu bilmek istiyorsun: bu ağırlığı azıcık artırsam kayıp ne kadar değişirdi?\n\nBu sayının adı o ağırlığın gradyanı. Elinde bütün gradyanlar olsa, her ağırlığı kaybı düşüren yönde küçük bir adım kaydırırsın. Öğrenme tam olarak bu.\n\nSoru, o sayıları nasıl elde edeceğin."
+          "text": "Ağın milyonlarca ağırlığı var. Her biri için şunu bilmek istiyorsun: bu ağırlığı azıcık artırsam loss ne kadar değişirdi?\n\nBu sayının adı o ağırlığın gradient'i. Elinde bütün gradient'ler olsa, her ağırlığı loss'u düşüren yönde küçük bir adım kaydırırsın. Öğrenme tam olarak bu.\n\nSoru, o sayıları nasıl elde edeceğin."
         },
         {
           "type": "text",
           "heading": "2. Neden akla ilk gelen yöntem işe yaramıyor",
-          "text": "En doğrudan yol: bir ağırlığı azıcık değiştir, ağı baştan çalıştır, kaybın ne kadar değiştiğine bak. Sonra eski haline getir, sıradakine geç.\n\nMatematiksel olarak doğru, pratikte imkansız. Yüz milyon parametreli bir ağda tek bir gradyan adımı için yüz milyon ileri geçiş gerekir.\n\nBackprop ise bütün gradyanları tek bir ileri artı tek bir geri geçişte hesaplıyor. Geri geçişin maliyeti ileri geçişin iki-üç katı, ve bu oran parametre sayısından bağımsız.\n\nDerin öğrenmeyi mümkün kılan şey bu ölçekleme farkı. Numaranın özü ise ara sonuçları yeniden kullanmak."
+          "text": "En doğrudan yol: bir ağırlığı azıcık değiştir, ağı baştan çalıştır, loss'un ne kadar değiştiğine bak. Sonra eski haline getir, sıradakine geç.\n\nMatematiksel olarak doğru, pratikte imkansız. Yüz milyon parametreli bir ağda tek bir gradient adımı için yüz milyon ileri geçiş gerekir.\n\nBackprop ise bütün gradient'leri tek bir ileri artı tek bir geri geçişte hesaplıyor. Geri geçişin maliyeti ileri geçişin iki-üç katı, ve bu oran parametre sayısından bağımsız.\n\nDerin öğrenmeyi mümkün kılan şey bu ölçekleme farkı. Numaranın özü ise ara sonuçları yeniden kullanmak."
         },
         {
           "type": "text",
           "heading": "3. Hesaplama grafiği",
-          "text": "Ağı katmanlar yığını olarak değil, işlemler grafiği olarak düşün. Düğümler işlemler — çarp, topla, maksimum al, sigmoid uygula. Kenarlar veri akışı.\n\nİleri geçiş grafiği baştan sona yürüyüp kaybı hesaplıyor, ve yol boyunca ara değerleri saklıyor.\n\nGeri geçiş aynı grafiği tersten yürüyor.\n\nBu bakışın gücü şurada: her düğümün yalnızca kendi yerel türevini bilmesi yeterli. Grafiğin tamamını kimse bilmek zorunda değil. Modülerlik buradan geliyor — bu yüzden PyTorch'ta kendi katmanını yazabiliyorsun."
+          "text": "Ağı katmanlar yığını olarak değil, işlemler grafiği olarak düşün. Düğümler işlemler — çarp, topla, maksimum al, sigmoid uygula. Kenarlar veri akışı.\n\nİleri geçiş grafiği baştan sona yürüyüp loss'u hesaplıyor, ve yol boyunca ara değerleri saklıyor.\n\nGeri geçiş aynı grafiği tersten yürüyor.\n\nBu bakışın gücü şurada: her düğümün yalnızca kendi yerel türevini bilmesi yeterli. Grafiğin tamamını kimse bilmek zorunda değil. Modülerlik buradan geliyor — bu yüzden PyTorch'ta kendi katmanını yazabiliyorsun."
         },
         {
           "type": "text",
           "heading": "4. Tek kural: upstream çarpı local",
-          "text": "Bir düğüme geri geçişte yukarıdan bir gradyan geliyor: \"senin çıktın azıcık değişseydi kayıp şu kadar değişirdi.\"\n\nDüğüm kendi yerel türevini biliyor: \"benim çıktım, girdim değişince şu kadar değişir.\"\n\nİkisini çarpıyorsun, aşağıya iletiyorsun. Zincir kuralının tamamı bu.\n\nSık kullanılan düğümlerin davranışı ezberlenecek kadar basit. Toplama düğümü gelen gradyanı iki girdisine olduğu gibi dağıtıyor. Çarpma düğümü gradyanı diğer girdiyle takas ediyor. Maksimum düğümü gradyanın tamamını kazanan girdiye gönderiyor, diğerine sıfır. ReLU pozitif bölgede geçiriyor, negatifte kesiyor."
+          "text": "Bir düğüme geri geçişte yukarıdan bir gradient geliyor: \"senin çıktın azıcık değişseydi loss şu kadar değişirdi.\"\n\nDüğüm kendi yerel türevini biliyor: \"benim çıktım, girdim değişince şu kadar değişir.\"\n\nİkisini çarpıyorsun, aşağıya iletiyorsun. Zincir kuralının tamamı bu.\n\nSık kullanılan düğümlerin davranışı ezberlenecek kadar basit. Toplama düğümü gelen gradient'i iki girdisine olduğu gibi dağıtıyor. Çarpma düğümü gradient'i diğer girdiyle takas ediyor. Maksimum düğümü gradient'in tamamını kazanan girdiye gönderiyor, diğerine sıfır. ReLU pozitif bölgede geçiriyor, negatifte kesiyor."
         },
         {
           "type": "text",
-          "heading": "5. Tek sayıdan milyonlarca gradyana",
-          "text": "Kayıp tek bir sayı, mesela 2.3. Ama kaybın çıktı vektörüne göre türevi bir vektör.\n\nÜç sınıflı bir problemde ağ şunu demiş olsun: kedi 0.72, köpek 0.20, kuş 0.08. Gerçek etiket kedi. Kaybın çıktıya göre türevi kabaca şunu söylüyor: kedi tahminini artırırsan kayıp azalır, diğer ikisini azaltırsan kayıp azalır.\n\nBilgi ilk kez burada açılıyor: tek sayı, sınıf sayısı kadar bileşenli bir vektöre dönüştü.\n\nSonra backprop bu vektörü alıp katman katman geriye yürüyor. Her katmanda gradyan, o katmanın girdi boyutuna göre yeniden şekilleniyor ve genişliyor. Son katmanda üç bileşendi, bir önceki katmanda yüzlerce, daha öncekinde binlerce.\n\nHer katman yalnızca iki şeye bakıyor: yukarıdan gelen gradyan ve ileri geçişte sakladığı kendi girdisi."
+          "heading": "5. Tek sayıdan milyonlarca gradient'e",
+          "text": "Loss tek bir sayı, mesela 2.3. Ama loss'un çıktı vektörüne göre türevi bir vektör.\n\nÜç sınıflı bir problemde ağ şunu demiş olsun: kedi 0.72, köpek 0.20, kuş 0.08. Gerçek etiket kedi. Loss'un çıktıya göre türevi kabaca şunu söylüyor: kedi tahminini artırırsan loss azalır, diğer ikisini azaltırsan loss azalır.\n\nBilgi ilk kez burada açılıyor: tek sayı, sınıf sayısı kadar bileşenli bir vektöre dönüştü.\n\nSonra backprop bu vektörü alıp katman katman geriye yürüyor. Her katmanda gradient, o katmanın girdi boyutuna göre yeniden şekilleniyor ve genişliyor. Son katmanda üç bileşendi, bir önceki katmanda yüzlerce, daha öncekinde binlerce.\n\nHer katman yalnızca iki şeye bakıyor: yukarıdan gelen gradient ve ileri geçişte sakladığı kendi girdisi."
         },
         {
           "type": "code",
@@ -25276,12 +25276,12 @@
         {
           "type": "text",
           "heading": "6. O üç satırın neden böyle olduğu",
-          "text": "Transpozlar ezberlenmez, boyutlardan çıkar. İleri geçişte girdi (yığın, giriş) boyutunda, ağırlık (çıkış, giriş) boyutunda ve çarpımın sonucu (yığın, çıkış). Geri geçişte elindeki (yığın, çıkış), üretmen gereken (yığın, giriş). Aradaki tek uyumlu çarpım, gelen gradyan ile ağırlığın kendisi. Transpoz, boyutların oturması için doğal olarak çıkıyor.\n\nAğırlığın gradyanı, gelen gradyan ile ileri geçişte saklanan girdinin çarpımı — yığındaki her örneğin katkısı toplanarak. Matris çarpımı zaten o toplamayı yapıyor.\n\nBias'ın gradyanı ise yığın boyunca toplam, ve sebebi öğretici: ileri geçişte bias yayımlanarak her satıra kopyalanmıştı. Yani kayba her satırdan ayrı bir yoldan katkı verdi. Zincir kuralı, bir değer birden çok yoldan kullanıldığında katkıların toplanmasını söylüyor.\n\nEzberlenecek kural şu: ileri geçişte yayım varsa, geri geçişte toplama vardır."
+          "text": "Transpozlar ezberlenmez, boyutlardan çıkar. İleri geçişte girdi (yığın, giriş) boyutunda, ağırlık (çıkış, giriş) boyutunda ve çarpımın sonucu (yığın, çıkış). Geri geçişte elindeki (yığın, çıkış), üretmen gereken (yığın, giriş). Aradaki tek uyumlu çarpım, gelen gradient ile ağırlığın kendisi. Transpoz, boyutların oturması için doğal olarak çıkıyor.\n\nAğırlığın gradient'i, gelen gradient ile ileri geçişte saklanan girdinin çarpımı — yığındaki her örneğin katkısı toplanarak. Matris çarpımı zaten o toplamayı yapıyor.\n\nBias'ın gradient'i ise yığın boyunca toplam, ve sebebi öğretici: ileri geçişte bias yayımlanarak her satıra kopyalanmıştı. Yani loss'a her satırdan ayrı bir yoldan katkı verdi. Zincir kuralı, bir değer birden çok yoldan kullanıldığında katkıların toplanmasını söylüyor.\n\nEzberlenecek kural şu: ileri geçişte yayım varsa, geri geçişte toplama vardır."
         },
         {
           "type": "text",
           "heading": "7. Katman özyinelemesi",
-          "text": "Aynı şeyi katman diliyle de yazabilirsin. Her katman için bir hata sinyali tanımla: kaybın o katmanın doğrusal çıktısına göre türevi.\n\nSon katmanda bu sinyal doğrudan kayıptan geliyor. Geriye doğru her katmanda iki şeyle çarpılıyor: bir sonraki katmanın ağırlık matrisinin transpozu, ve kendi aktivasyon fonksiyonunun türevi.\n\nAğırlık gradyanları da bu sinyal ile katmanın girdisinin çarpımından çıkıyor.\n\nBu formül, bir sonraki bölümün tamamını açıklıyor — çünkü gradyanın her katmanda neyle çarpıldığını açıkça gösteriyor."
+          "text": "Aynı şeyi katman diliyle de yazabilirsin. Her katman için bir hata sinyali tanımla: loss'un o katmanın doğrusal çıktısına göre türevi.\n\nSon katmanda bu sinyal doğrudan loss'tan geliyor. Geriye doğru her katmanda iki şeyle çarpılıyor: bir sonraki katmanın ağırlık matrisinin transpozu, ve kendi aktivasyon fonksiyonunun türevi.\n\nAğırlık gradient'leri da bu sinyal ile katmanın girdisinin çarpımından çıkıyor.\n\nBu formül, bir sonraki bölümün tamamını açıklıyor — çünkü gradient'in her katmanda neyle çarpıldığını açıkça gösteriyor."
         },
         {
           "type": "text",
@@ -25290,23 +25290,23 @@
         },
         {
           "type": "text",
-          "heading": "9. Sönen ve patlayan gradyanlar",
-          "text": "Gradyan her katmanda aktivasyonun türeviyle çarpılıyor.\n\nSigmoid'in türevi en fazla 0.25. On katmanlı bir ağda gradyan, en iyi ihtimalle 0.25'in onuncu kuvvetiyle çarpılıyor — yani milyonda bir mertebesine iniyor. İlk katmanlara ulaşan sinyal pratikte sıfır, o katmanlar öğrenemiyor. Sönen gradyan bu.\n\nReLU'da pozitif bölgede türev tam olarak bir. Gradyan aktivasyondan hiç zayıflamadan geçiyor, ilk katmanlara kendi büyüklüğünde ulaşıyor.\n\n\"Ama nöronların yarısı sıfır üretmiyor mu\" sorusunun cevabı: evet, ve bu aslında istenen bir şey. Farklı nöronlar farklı örüntülere uzmanlaşıyor; yatay kenar arayan bir nöronun her girdide ateşlenmesi gerekmiyor.\n\nDiğer yönde, ağırlıkların normu büyükse aynı çarpım zinciri gradyanı patlatıyor. Karşı önlemler: gradyan kırpma, dikkatli ilklendirme, normalizasyon katmanları, ve artık bağlantılar — sonuncusu gradyana katmanları atlayan kestirme bir yol açtığı için özellikle etkili."
+          "heading": "9. Sönen ve patlayan gradient'ler",
+          "text": "Gradient her katmanda aktivasyonun türeviyle çarpılıyor.\n\nSigmoid'in türevi en fazla 0.25. On katmanlı bir ağda gradient, en iyi ihtimalle 0.25'in onuncu kuvvetiyle çarpılıyor — yani milyonda bir mertebesine iniyor. İlk katmanlara ulaşan sinyal pratikte sıfır, o katmanlar öğrenemiyor. Sönen gradient bu.\n\nReLU'da pozitif bölgede türev tam olarak bir. Gradient aktivasyondan hiç zayıflamadan geçiyor, ilk katmanlara kendi büyüklüğünde ulaşıyor.\n\n\"Ama nöronların yarısı sıfır üretmiyor mu\" sorusunun cevabı: evet, ve bu aslında istenen bir şey. Farklı nöronlar farklı örüntülere uzmanlaşıyor; yatay kenar arayan bir nöronun her girdide ateşlenmesi gerekmiyor.\n\nDiğer yönde, ağırlıkların normu büyükse aynı çarpım zinciri gradient'i patlatıyor. Karşı önlemler: gradient kırpma, dikkatli ilklendirme, normalizasyon katmanları, ve artık bağlantılar — sonuncusu gradient'e katmanları atlayan kestirme bir yol açtığı için özellikle etkili."
         },
         {
           "type": "text",
           "heading": "10. Öğrenme tam olarak nerede oluyor",
-          "text": "Sıra şu: ileri geçiş tahmin üretir ve ara değerleri saklar. Kayıp tek bir sayı verir. Backprop o sayıyı her ağırlık için bir gradyana açar. Güncelleme adımı ağırlıkları gradyanın ters yönünde kaydırır.\n\nÖğrenme yalnızca son adımda oluyor. Backprop hiçbir şey öğrenmiyor — sadece yön bilgisi üretiyor.\n\nTek bir adım anlamsız görünür, ağırlıklar minicik kayar. Ama binlerce adım sonra her ağırlık doğru yönde birikmiş olur.\n\nBir de bedeli var: ileri geçişte saklanan ara değerler bellekte duruyor. Derin ağlarda eğitim sırasındaki bellek tüketiminin büyük kısmı ağırlıklardan değil, geri geçişte lazım olacak bu ara değerlerden geliyor."
+          "text": "Sıra şu: ileri geçiş tahmin üretir ve ara değerleri saklar. Loss tek bir sayı verir. Backprop o sayıyı her ağırlık için bir gradient'e açar. Güncelleme adımı ağırlıkları gradient'in ters yönünde kaydırır.\n\nÖğrenme yalnızca son adımda oluyor. Backprop hiçbir şey öğrenmiyor — sadece yön bilgisi üretiyor.\n\nTek bir adım anlamsız görünür, ağırlıklar minicik kayar. Ama binlerce adım sonra her ağırlık doğru yönde birikmiş olur.\n\nBir de bedeli var: ileri geçişte saklanan ara değerler bellekte duruyor. Derin ağlarda eğitim sırasındaki bellek tüketiminin büyük kısmı ağırlıklardan değil, geri geçişte lazım olacak bu ara değerlerden geliyor."
         },
         {
           "type": "insight",
           "heading": "Geriye ne kalsın",
-          "text": "Gradyanları tek tek ölçmek imkansız; backprop hepsini tek ileri artı tek geri geçişte üretir ve maliyeti parametre sayısından bağımsızdır. Ağı işlemler grafiği olarak gör; her düğüm yalnızca kendi yerel türevini bilir, kural upstream çarpı local. Kayıp tek sayıdır ama çıktıya göre türevi vektördür, ve geriye doğru her katmanda genişler. Transpozlar ezber değil, boyut uyumundan çıkar. İleri geçişte yayım varsa geri geçişte toplama vardır. Gradyan her katmanda ağırlık ve aktivasyon türeviyle çarpıldığı için sigmoid derinlikte söner, ReLU sönmez. Öğrenme backprop'ta değil, güncelleme adımında olur."
+          "text": "Gradient'leri tek tek ölçmek imkansız; backprop hepsini tek ileri artı tek geri geçişte üretir ve maliyeti parametre sayısından bağımsızdır. Ağı işlemler grafiği olarak gör; her düğüm yalnızca kendi yerel türevini bilir, kural upstream çarpı local. Loss tek sayıdır ama çıktıya göre türevi vektördür, ve geriye doğru her katmanda genişler. Transpozlar ezber değil, boyut uyumundan çıkar. İleri geçişte yayım varsa geri geçişte toplama vardır. Gradient her katmanda ağırlık ve aktivasyon türeviyle çarpıldığı için sigmoid derinlikte söner, ReLU sönmez. Öğrenme backprop'ta değil, güncelleme adımında olur."
         },
         {
           "type": "note",
           "heading": "Nereye bakılır",
-          "text": "Hesaplama grafiği, delta kuralı ve verimlilik analizi ch07'de; aktivasyondan gradyana, backprop'tan eğitim döngüsüne uzanan anlatım yine ch07'de; katman katman uygulama, boyutlar ve zincir kuralı sezgisi lab03'te; düğüm bazlı gradyan kuralları cs03'te. Optimizasyon adımının kendisi (SGD, momentum, Adam) ch08'de."
+          "text": "Hesaplama grafiği, delta kuralı ve verimlilik analizi ch07'de; aktivasyondan gradient'e, backprop'tan eğitim döngüsüne uzanan anlatım yine ch07'de; katman katman uygulama, boyutlar ve zincir kuralı sezgisi lab03'te; düğüm bazlı gradient kuralları cs03'te. Optimizasyon adımının kendisi (SGD, momentum, Adam) ch08'de."
         }
       ]
     },
@@ -25332,7 +25332,7 @@
         {
           "type": "text",
           "heading": "1. Başlangıç: RNN'in darboğazı",
-          "text": "Bir cümleyi başka bir dile çeviren klasik kurulumu düşün. Encoder cümleyi kelime kelime okuyor ve tek bir gizli vektörde özetliyor. Decoder o vektörden çeviriyi üretiyor.\n\nİki ayrı sorun var.\n\nBirincisi darboğaz: kırk kelimelik bir cümlenin tamamı tek bir vektöre sıkıştırılıyor. Cümle uzadıkça baştaki bilgi eziliyor.\n\nİkincisi sıralılık: her adım bir öncekini beklemek zorunda. Uzun bir diziyi işlemek uzun bir zincir demek, ve gradyan o zincir boyunca geriye akarken ya sönüyor ya patlıyor.\n\nAttention önce birinci soruna cevap olarak doğdu. İkincisini çözmesi sonradan, ve bir yan etki olarak geldi."
+          "text": "Bir cümleyi başka bir dile çeviren klasik kurulumu düşün. Encoder cümleyi kelime kelime okuyor ve tek bir gizli vektörde özetliyor. Decoder o vektörden çeviriyi üretiyor.\n\nİki ayrı sorun var.\n\nBirincisi darboğaz: kırk kelimelik bir cümlenin tamamı tek bir vektöre sıkıştırılıyor. Cümle uzadıkça baştaki bilgi eziliyor.\n\nİkincisi sıralılık: her adım bir öncekini beklemek zorunda. Uzun bir diziyi işlemek uzun bir zincir demek, ve gradient o zincir boyunca geriye akarken ya sönüyor ya patlıyor.\n\nAttention önce birinci soruna cevap olarak doğdu. İkincisini çözmesi sonradan, ve bir yan etki olarak geldi."
         },
         {
           "type": "text",
@@ -25357,7 +25357,7 @@
         {
           "type": "text",
           "heading": "5. Neden boyutun kareköküne bölüyoruz",
-          "text": "Bu, formüldeki en çok ezberlenen ve en az anlaşılan parça.\n\nSorgu ve anahtar bileşenleri kabaca bağımsız ve birim ölçekliyse, nokta çarpımı d_k tane terimin toplamı olduğu için varyansı d_k ile büyüyor. Yani boyut arttıkça skorlar büyük sayılara savruluyor.\n\nSoftmax'a çok büyük sayılar girdiğinde çıktı neredeyse tek bir konuma bir, kalanlara sıfır veriyor. Bu iki şeyi birden bozuyor: dikkat keskinleşip bilgi taşımaz hale geliyor, ve o doygun bölgede softmax'ın gradyanı sıfıra yaklaşıyor — öğrenme duruyor.\n\nKareköküne bölmek varyansı bire geri çekiyor. Yani ölçekleme bir güzellik değil, eğitimin çalışması için gerekli."
+          "text": "Bu, formüldeki en çok ezberlenen ve en az anlaşılan parça.\n\nSorgu ve anahtar bileşenleri kabaca bağımsız ve birim ölçekliyse, nokta çarpımı d_k tane terimin toplamı olduğu için varyansı d_k ile büyüyor. Yani boyut arttıkça skorlar büyük sayılara savruluyor.\n\nSoftmax'a çok büyük sayılar girdiğinde çıktı neredeyse tek bir konuma bir, kalanlara sıfır veriyor. Bu iki şeyi birden bozuyor: dikkat keskinleşip bilgi taşımaz hale geliyor, ve o doygun bölgede softmax'ın gradient'i sıfıra yaklaşıyor — öğrenme duruyor.\n\nKareköküne bölmek varyansı bire geri çekiyor. Yani ölçekleme bir güzellik değil, eğitimin çalışması için gerekli."
         },
         {
           "type": "text",
@@ -25382,12 +25382,12 @@
         {
           "type": "text",
           "heading": "10. Cross-attention: sorgu bir yerden, anahtar başka yerden",
-          "text": "Şimdiye kadar üç vektör de aynı diziden geliyordu. Sorguyu bir kaynaktan, anahtar ve değeri başka bir kaynaktan alırsan cross-attention elde edersin.\n\nÇeviride decoder bunu kullanıyor: sorgular üretilen çeviriden, anahtar ve değerler encoder'ın çıktısından. Yani \"şu an ürettiğim kelime için kaynak cümlenin neresine bakmalıyım\".\n\nAynı mekanizma modaliteler arasında da çalışıyor. Görüntü altyazılamada sorgular metinden, anahtar ve değerler görüntü özniteliklerinden geliyor. Metinden görüntü üreten difüzyon modellerinde ise yön tersine dönüyor: sorgular görüntüden, anahtar ve değerler metinden — her piksel hangi kelimenin kendisini ilgilendirdiğini seçiyor.\n\nYani \"koşulu modele nasıl veririm\" sorusunun en genel cevabı bu mekanizma."
+          "text": "Şimdiye kadar üç vektör de aynı diziden geliyordu. Sorguyu bir kaynaktan, anahtar ve değeri başka bir kaynaktan alırsan cross-attention elde edersin.\n\nÇeviride decoder bunu kullanıyor: sorgular üretilen çeviriden, anahtar ve değerler encoder'ın çıktısından. Yani \"şu an ürettiğim kelime için kaynak cümlenin neresine bakmalıyım\".\n\nAynı mekanizma modaliteler arasında da çalışıyor. Görüntü altyazılamada sorgular metinden, anahtar ve değerler görüntü özniteliklerinden geliyor. Metinden görüntü üreten diffusion modellerinde ise yön tersine dönüyor: sorgular görüntüden, anahtar ve değerler metinden — her piksel hangi kelimenin kendisini ilgilendirdiğini seçiyor.\n\nYani \"koşulu modele nasıl veririm\" sorusunun en genel cevabı bu mekanizma."
         },
         {
           "type": "text",
           "heading": "11. Bloğun geri kalanı süs değil",
-          "text": "Transformer bloğu yalnızca attention'dan ibaret değil; her biri belirli bir arızayı çözen üç parça daha var.\n\nArtık bağlantı. Attention çıktısı girdiye ekleniyor. Bu, derin yığınlarda gradyanın kestirme bir yoldan geriye akmasını sağlıyor; onsuz derin Transformer eğitilemiyor.\n\nKatman normalizasyonu. Attention ve toplama sonrası ölçekler kayıyor; normalizasyon aktivasyonları sabit bir bantta tutuyor.\n\nİleri beslemeli katman. Attention aslında sadece bir ağırlıklı ortalama — konumlar arasında bilgi taşıyor ama tek bir konumun içinde doğrusal olmayan bir işlem yapmıyor. O işi bu katman yapıyor: her konuma ayrı ayrı uygulanan, genişletip daraltan küçük bir ağ.\n\nİkisinin iş bölümü net: attention konumlar arasında karıştırır, ileri beslemeli katman konumun içinde işler."
+          "text": "Transformer bloğu yalnızca attention'dan ibaret değil; her biri belirli bir arızayı çözen üç parça daha var.\n\nArtık bağlantı. Attention çıktısı girdiye ekleniyor. Bu, derin yığınlarda gradient'in kestirme bir yoldan geriye akmasını sağlıyor; onsuz derin Transformer eğitilemiyor.\n\nKatman normalizasyonu. Attention ve toplama sonrası ölçekler kayıyor; normalizasyon aktivasyonları sabit bir bantta tutuyor.\n\nİleri beslemeli katman. Attention aslında sadece bir ağırlıklı ortalama — konumlar arasında bilgi taşıyor ama tek bir konumun içinde doğrusal olmayan bir işlem yapmıyor. O işi bu katman yapıyor: her konuma ayrı ayrı uygulanan, genişletip daraltan küçük bir ağ.\n\nİkisinin iş bölümü net: attention konumlar arasında karıştırır, ileri beslemeli katman konumun içinde işler."
         },
         {
           "type": "text",
@@ -25402,7 +25402,7 @@
         {
           "type": "note",
           "heading": "Nereye bakılır",
-          "text": "Sorgu-anahtar-değer ayrımı, pozisyon kodlamasının gerekçesi, çok kafalı yapının matematiği ve encoder-decoder boyut akışı ch12'de; RNN attention'dan self-attention'a geçişin adım adım eşleştirmesi yine ch12'de; CS231n tarafı cs07'de; görüntü tarafı (ViT, Swin, DETR) ida07 ve ida08'de; uygulama için labtc altyazılama oturumunda. Metin koşullamasının difüzyondaki hali için DDPM konu anlatımına bak."
+          "text": "Sorgu-anahtar-değer ayrımı, pozisyon kodlamasının gerekçesi, çok kafalı yapının matematiği ve encoder-decoder boyut akışı ch12'de; RNN attention'dan self-attention'a geçişin adım adım eşleştirmesi yine ch12'de; CS231n tarafı cs07'de; görüntü tarafı (ViT, Swin, DETR) ida07 ve ida08'de; uygulama için labtc altyazılama oturumunda. Metin koşullamasının diffusion'daki hali için DDPM konu anlatımına bak."
         }
       ]
     },
@@ -25423,7 +25423,7 @@
         {
           "type": "text",
           "heading": "Bu metin ne için",
-          "text": "MLE, bu sitedeki en çok tekrar eden kavram: ML dersinde yoğunluk kestirimi olarak, EE499'da sinyal tahmini olarak, CS231n'de üretici modellerin eğitim ilkesi olarak, lab kartlarında ise doğrudan kayıp fonksiyonu olarak geçiyor. Kartlar bu parçaları ayrı ayrı doğru anlatıyor ama aralarındaki bağı kurmuyor.\n\nOysa hepsi tek bir cümlenin farklı kılıkları. Bu metin o cümleden başlayıp, günlük olarak yazdığın `nn.MSELoss()` ve `weight_decay=1e-4` satırlarına kadar kesintisiz gidiyor.\n\nSonunda şunu görmen lazım: bir sinir ağı eğitmek yeni bir şey değil, MLE'nin ta kendisi."
+          "text": "MLE, bu sitedeki en çok tekrar eden kavram: ML dersinde yoğunluk kestirimi olarak, EE499'da sinyal tahmini olarak, CS231n'de generative modellerin eğitim ilkesi olarak, lab kartlarında ise doğrudan loss fonksiyonu olarak geçiyor. Kartlar bu parçaları ayrı ayrı doğru anlatıyor ama aralarındaki bağı kurmuyor.\n\nOysa hepsi tek bir cümlenin farklı kılıkları. Bu metin o cümleden başlayıp, günlük olarak yazdığın `nn.MSELoss()` ve `weight_decay=1e-4` satırlarına kadar kesintisiz gidiyor.\n\nSonunda şunu görmen lazım: bir sinir ağı eğitmek yeni bir şey değil, MLE'nin ta kendisi."
         },
         {
           "type": "text",
@@ -25453,7 +25453,7 @@
         {
           "type": "text",
           "heading": "5. Gaussian'a uygula: ortalama nereden çıkıyor",
-          "text": "Çan eğrisi örneğine dön. Gaussian yoğunluğunun logaritmasını al: üstel kayboluyor, geriye bir sabit artı eksi (x_i - mu)^2 / 2 sigma^2 kalıyor. Bütün veri noktaları için topla. mu'ye göre maksimize ederken sabitler hiçbir şeyi değiştirmediği için onları at. Elinde kalan:\n\nlikelihood'ı maksimize etmek = kareler toplamını minimize etmek.\n\nTüretip sıfıra eşitlersen cevap örneklem ortalaması. Baştaki 3.04 buradan geliyor.\n\nBu, metnin en önemli cümlesinin ilk görünüşü: bir olasılık sorusu, bir kayıp fonksiyonuna dönüştü ve o kayıp fonksiyonu MSE."
+          "text": "Çan eğrisi örneğine dön. Gaussian yoğunluğunun logaritmasını al: üstel kayboluyor, geriye bir sabit artı eksi (x_i - mu)^2 / 2 sigma^2 kalıyor. Bütün veri noktaları için topla. mu'ye göre maksimize ederken sabitler hiçbir şeyi değiştirmediği için onları at. Elinde kalan:\n\nlikelihood'ı maksimize etmek = kareler toplamını minimize etmek.\n\nTüretip sıfıra eşitlersen cevap örneklem ortalaması. Baştaki 3.04 buradan geliyor.\n\nBu, metnin en önemli cümlesinin ilk görünüşü: bir olasılık sorusu, bir loss fonksiyonuna dönüştü ve o loss fonksiyonu MSE."
         },
         {
           "type": "formula",
@@ -25472,7 +25472,7 @@
         },
         {
           "type": "text",
-          "heading": "8. Dönüm noktası: MLE bir kayıp fonksiyonudur",
+          "heading": "8. Dönüm noktası: MLE bir loss fonksiyonudur",
           "text": "Şimdi metnin çatısı kuruluyor.\n\nBir regresyon modeli düşün: y = f(x; theta) + gürültü, ve gürültü Gaussian. Bir veri noktasının olasılığı, Gaussian yoğunluğunun f(x_i; theta) merkezli hali. Log al, bütün noktalar için topla, theta'ya bağlı olmayan sabitleri at. Elinde kalan tam olarak şu: y_i ile f(x_i; theta) arasındaki farkların kareleri toplamı.\n\nYani MSE, keyfi seçilmiş bir maliyet fonksiyonu değil. Gaussian gürültü varsayımı altında maximum likelihood'ın kendisi.\n\nAynı hareketi sınıflandırmada yap. Model her örnek için p_i olasılığı üretiyor, etiket t_i ise 0 ya da 1. Doğru olasılığı elle seçmek yerine Bernoulli formülü bunu otomatik yapıyor: p_i üzeri t_i çarpı (1-p_i) üzeri (1-t_i). Etiket 1 ise ilk çarpan aktif, 0 ise ikincisi. Bütün örnekler için çarp, log al, negatifini al — çıkan şey binary cross-entropy.\n\nÇok sınıflıda softmax ile aynı hesap: log-likelihood toplamı, sadece doğru sınıfın log olasılıklarının toplamına iniyor, negatifi cross-entropy."
         },
         {
@@ -25482,7 +25482,7 @@
         },
         {
           "type": "table",
-          "heading": "Gürültü varsayımı, çıkan kayıp",
+          "heading": "Gürültü varsayımı, çıkan loss",
           "rows": [
             [
               "Varsayım",
@@ -25517,24 +25517,24 @@
             [
               "Poisson (foton sayımı)",
               "KL ıraksamasını minimize et",
-              "Poisson kaybı"
+              "Poisson loss'u"
             ]
           ]
         },
         {
           "type": "text",
           "heading": "9. Loss seçmek, gürültü seçmektir",
-          "text": "Yukarıdaki tablonun okunuş yönü önemli. Genelde soldan sağa okunuyor: \"verim şöyleyse şu loss'u kullanırım.\" Asıl aydınlatıcı olan sağdan sola okumak.\n\nKodda L2 yazdığın an, farkında olmadan \"hata Gaussian dağılıyor\" demiş oluyorsun. L1 yazdığın an \"hata Laplace dağılıyor, ara sıra çok sapan ölçümler gelir\" demiş oluyorsun.\n\nBu, aykırı değer sorusunun da cevabı. Gaussian varsayımı altında MLE sana ortalamayı verir; Laplace varsayımı altında medyanı. Medyanın aykırı değerlere neden dayanıklı olduğu buradan çıkıyor: Laplace'ın kuyrukları kalın, yani model zaten ara sıra uç bir gözlem bekliyor, o yüzden tek bir uç değer tahmini sürükleyemiyor.\n\nDönüm noktası tek cümlede: deterministik görünen her kayıp fonksiyonunun altında saklı bir olasılık modeli var."
+          "text": "Yukarıdaki tablonun okunuş yönü önemli. Genelde soldan sağa okunuyor: \"verim şöyleyse şu loss'u kullanırım.\" Asıl aydınlatıcı olan sağdan sola okumak.\n\nKodda L2 yazdığın an, farkında olmadan \"hata Gaussian dağılıyor\" demiş oluyorsun. L1 yazdığın an \"hata Laplace dağılıyor, ara sıra çok sapan ölçümler gelir\" demiş oluyorsun.\n\nBu, aykırı değer sorusunun da cevabı. Gaussian varsayımı altında MLE sana ortalamayı verir; Laplace varsayımı altında medyanı. Medyanın aykırı değerlere neden dayanıklı olduğu buradan çıkıyor: Laplace'ın kuyrukları kalın, yani model zaten ara sıra uç bir gözlem bekliyor, o yüzden tek bir uç değer tahmini sürükleyemiyor.\n\nDönüm noktası tek cümlede: deterministik görünen her loss fonksiyonunun altında saklı bir olasılık modeli var."
         },
         {
           "type": "text",
           "heading": "10. Sinir ağı eğitmek zaten MLE yapmaktır",
-          "text": "Şimdi ölçeği büyüt, hareket aynı kalsın.\n\nÇan eğrisi örneğinde kaydırdığın şey tek bir sayıydı. Bir MLP'de kaydırdığın şey milyonlarca ağırlık. Soru değişmiyor: ağırlıkları öyle ayarla ki eğitim verisini görme olasılığı en büyük olsun.\n\nBağlantıyı tam kuran cümle şu: ağın son katmanı bir sayı değil, bir dağılımın parametresini üretiyor.\n\nRegresyonda ağın çıktısı, y'yi üreten Gaussian'ın ortalaması. Sınıflandırmada softmax çıktısı, kategorik dağılımın olasılıkları. İkisinde de ağ bir olasılık modeli kuruyor, sen de o modelin log olabilirliğini maksimize ediyorsun.\n\nDolayısıyla eğitim döngün — ileri geçiş, kayıp, geri yayılım, adım — maximum likelihood probleminin gradyan inişiyle çözülmesinden ibaret. Kapalı formda çözülemediği için (Gaussian ortalamasındaki gibi) sayısal olarak çözülüyor, farkın tamamı bu.\n\nBir bağlantı daha: eğitim verisi üzerinden log olabilirliği maksimize etmek, model dağılımı ile gerçek veri dağılımı arasındaki KL ıraksamasını minimize etmekle aynı şey. Üretici modellerin \"gerçek dağılıma yaklaşıyoruz\" cümlesinin arkasında bu duruyor."
+          "text": "Şimdi ölçeği büyüt, hareket aynı kalsın.\n\nÇan eğrisi örneğinde kaydırdığın şey tek bir sayıydı. Bir MLP'de kaydırdığın şey milyonlarca ağırlık. Soru değişmiyor: ağırlıkları öyle ayarla ki eğitim verisini görme olasılığı en büyük olsun.\n\nBağlantıyı tam kuran cümle şu: ağın son katmanı bir sayı değil, bir dağılımın parametresini üretiyor.\n\nRegresyonda ağın çıktısı, y'yi üreten Gaussian'ın ortalaması. Sınıflandırmada softmax çıktısı, kategorik dağılımın olasılıkları. İkisinde de ağ bir olasılık modeli kuruyor, sen de o modelin log olabilirliğini maksimize ediyorsun.\n\nDolayısıyla eğitim döngün — ileri geçiş, loss, geri yayılım, adım — maximum likelihood probleminin gradient inişiyle çözülmesinden ibaret. Kapalı formda çözülemediği için (Gaussian ortalamasındaki gibi) sayısal olarak çözülüyor, farkın tamamı bu.\n\nBir bağlantı daha: eğitim verisi üzerinden log olabilirliği maksimize etmek, model dağılımı ile gerçek veri dağılımı arasındaki KL ıraksamasını minimize etmekle aynı şey. generative modellerin \"gerçek dağılıma yaklaşıyoruz\" cümlesinin arkasında bu duruyor."
         },
         {
           "type": "code",
           "heading": "Aynı üç adım, üç ölçekte",
-          "text": "                      aradığın theta        çözüm yolu\n─────────────────────────────────────────────────────────────\nbeş sayı, mu          tek sayı              kapalı form (ortalama)\ny = Ax + n            sinyal vektoru        kapalı form (en kucuk kareler)\nMLP / VAE / DDPM      milyonlarca agirlik   gradyan inisi\n\nUc satirda da yapilan is ayni:\n  1. bir olasilik modeli yaz          p(veri | theta)\n  2. log al, isareti cevir            -log p\n  3. theta uzerinde minimize et"
+          "text": "                      aradığın theta        çözüm yolu\n─────────────────────────────────────────────────────────────\nbeş sayı, mu          tek sayı              kapalı form (ortalama)\ny = Ax + n            sinyal vektoru        kapalı form (en kucuk kareler)\nMLP / VAE / DDPM      milyonlarca agirlik   gradient inisi\n\nUc satirda da yapilan is ayni:\n  1. bir olasilik modeli yaz          p(veri | theta)\n  2. log al, isareti cevir            -log p\n  3. theta uzerinde minimize et"
         },
         {
           "type": "text",
@@ -25544,7 +25544,7 @@
         {
           "type": "text",
           "heading": "12. MAP: ayrı bir yöntem değil, tek bir çarpan",
-          "text": "MAP, MLE'ye theta üzerinde bir inanç ekliyor: veriyi görmeden önce theta hakkında ne düşünüyordun?\n\nBayes kuralında posterior, likelihood çarpı prior ile orantılı. MAP bu çarpımı maksimize ediyor. Log alınca çarpım toplama dönüşüyor, yani MAP'in kayıp fonksiyonu MLE'nin kayıp fonksiyonu artı bir ceza terimi.\n\nÜç tura örneğine dön: paranın hilesiz olmaya yakın olduğuna dair makul bir prior koyarsan, cevap 1 değil, 1'e doğru itilmiş ama makul bir sayı çıkıyor. Veri arttıkça likelihood terimi prior'ı bastırıyor ve MAP, MLE'ye yaklaşıyor. Prior'ın ağırlığı veri miktarıyla ters orantılı — az veride belirleyici, çok veride görünmez.\n\nAyırt edici tek soru şu, ve ezberlenmesi gereken cümle bu: prior, tahmin ettiğin şeyin üzerinde mi? Başka bir şeyin üzerindeki prior seni MAP'e geçirmiyor."
+          "text": "MAP, MLE'ye theta üzerinde bir inanç ekliyor: veriyi görmeden önce theta hakkında ne düşünüyordun?\n\nBayes kuralında posterior, likelihood çarpı prior ile orantılı. MAP bu çarpımı maksimize ediyor. Log alınca çarpım toplama dönüşüyor, yani MAP'in loss fonksiyonu MLE'nin loss fonksiyonu artı bir ceza terimi.\n\nÜç tura örneğine dön: paranın hilesiz olmaya yakın olduğuna dair makul bir prior koyarsan, cevap 1 değil, 1'e doğru itilmiş ama makul bir sayı çıkıyor. Veri arttıkça likelihood terimi prior'ı bastırıyor ve MAP, MLE'ye yaklaşıyor. Prior'ın ağırlığı veri miktarıyla ters orantılı — az veride belirleyici, çok veride görünmez.\n\nDiscriminator tek soru şu, ve ezberlenmesi gereken cümle bu: prior, tahmin ettiğin şeyin üzerinde mi? Başka bir şeyin üzerindeki prior seni MAP'e geçirmiyor."
         },
         {
           "type": "formula",
@@ -25554,7 +25554,7 @@
         {
           "type": "text",
           "heading": "13. Weight decay tam olarak burada",
-          "text": "Ağırlıkların üzerine sıfır ortalamalı Gaussian bir prior koy: \"ağırlıkların küçük olmasını bekliyorum.\"\n\nGaussian'ın logaritması, ağırlık vektörünün normunun karesini eksi işaretiyle veriyor. Minimize etme diline çevirince kayıp fonksiyonun şu hale geliyor: veri terimi artı lambda çarpı ağırlıkların karesi.\n\nBu, kodda her gün yazdığın weight decay.\n\nDönüm noktası tek cümlede: L2 regularization, ağırlıkların üzerine Gaussian prior koyup MAP yapmaktır. Keyfi bir hile değil, bir cümlenin matematiği.\n\nAynı mantıkla L1 regularization, ağırlıklara Laplace prior koymaktır — ve Laplace'ın sivri tepesi, çözümün tam sıfırlara oturmasını teşvik ettiği için seyreklik üretiyor.\n\nYani modelinde iki tane gizli olasılık varsayımı var: kayıp fonksiyonun gürültüyü seçiyor, regularization terimin ağırlıkların prior'ını seçiyor."
+          "text": "Ağırlıkların üzerine sıfır ortalamalı Gaussian bir prior koy: \"ağırlıkların küçük olmasını bekliyorum.\"\n\nGaussian'ın logaritması, ağırlık vektörünün normunun karesini eksi işaretiyle veriyor. Minimize etme diline çevirince loss fonksiyonun şu hale geliyor: veri terimi artı lambda çarpı ağırlıkların karesi.\n\nBu, kodda her gün yazdığın weight decay.\n\nDönüm noktası tek cümlede: L2 regularization, ağırlıkların üzerine Gaussian prior koyup MAP yapmaktır. Keyfi bir hile değil, bir cümlenin matematiği.\n\nAynı mantıkla L1 regularization, ağırlıklara Laplace prior koymaktır — ve Laplace'ın sivri tepesi, çözümün tam sıfırlara oturmasını teşvik ettiği için seyreklik üretiyor.\n\nYani modelinde iki tane gizli olasılık varsayımı var: loss fonksiyonun gürültüyü seçiyor, regularization terimin ağırlıkların prior'ını seçiyor."
         },
         {
           "type": "text",
@@ -25564,22 +25564,22 @@
         {
           "type": "text",
           "heading": "15. ELBO neden devreye giriyor",
-          "text": "VAE'de log olabilirliği doğrudan maksimize edemiyorsun, çünkü p(x) hesaplanabilmesi için z üzerinden integral alınması gerekiyor ve o integral kapalı formda yok.\n\nÇözüm alt sınırla çalışmak: gerçek hedefin altında kalan, ama hesaplanabilen bir ifade türetip onu maksimize ediyorsun. Adı ELBO.\n\nÖnemli olan şu: hedef değişmedi. Hâlâ maximum likelihood yapıyorsun, sadece doğrudan tırmanamadığın için altındaki bir merdiveni tırmanıyorsun.\n\nAynı hikaye difüzyon modellerinde de geçerli, orada integral T adımlı bir yol üzerinden. Türetmenin tamamı ve iki modelin satır satır karşılaştırması için DDPM konu anlatımına bak — bu metnin bittiği yerden orası başlıyor."
+          "text": "VAE'de log olabilirliği doğrudan maksimize edemiyorsun, çünkü p(x) hesaplanabilmesi için z üzerinden integral alınması gerekiyor ve o integral kapalı formda yok.\n\nÇözüm alt sınırla çalışmak: gerçek hedefin altında kalan, ama hesaplanabilen bir ifade türetip onu maksimize ediyorsun. Adı ELBO.\n\nÖnemli olan şu: hedef değişmedi. Hâlâ maximum likelihood yapıyorsun, sadece doğrudan tırmanamadığın için altındaki bir merdiveni tırmanıyorsun.\n\nAynı hikaye diffusion modellerinde de geçerli, orada integral T adımlı bir yol üzerinden. Türetmenin tamamı ve iki modelin satır satır karşılaştırması için DDPM konu anlatımına bak — bu metnin bittiği yerden orası başlıyor."
         },
         {
           "type": "insight",
           "heading": "Geriye ne kalsın",
-          "text": "Bilinmeyeni oynata oynata, gördüğünü en az şaşırtıcı yapan yeri bul. Likelihood bir olasılık dağılımı değil, veriyi açıklama gücünün ölçüsü. Log almak cevabı değiştirmiyor, sadece çarpımı toplama çevirip hesabı mümkün kılıyor. Gaussian varsayarsan MSE, Bernoulli varsayarsan cross-entropy çıkıyor — yani kayıp fonksiyonu seçmek gürültü dağılımı seçmektir. Sinir ağı eğitmek bunun büyük ölçekli hali: ağ bir dağılımın parametresini üretiyor, gradyan inişi log olabilirliği tırmanıyor. Aradığın şeyin üzerine prior koyarsan MAP olur, ve Gaussian prior'ın adı weight decay'dir. VAE ve DDPM'de hedef hâlâ maximum likelihood; değişen tek şey, integral alınamadığı için alt sınırla çalışılması."
+          "text": "Bilinmeyeni oynata oynata, gördüğünü en az şaşırtıcı yapan yeri bul. Likelihood bir olasılık dağılımı değil, veriyi açıklama gücünün ölçüsü. Log almak cevabı değiştirmiyor, sadece çarpımı toplama çevirip hesabı mümkün kılıyor. Gaussian varsayarsan MSE, Bernoulli varsayarsan cross-entropy çıkıyor — yani loss fonksiyonu seçmek gürültü dağılımı seçmektir. Sinir ağı eğitmek bunun büyük ölçekli hali: ağ bir dağılımın parametresini üretiyor, gradient inişi log olabilirliği tırmanıyor. Aradığın şeyin üzerine prior koyarsan MAP olur, ve Gaussian prior'ın adı weight decay'dir. VAE ve DDPM'de hedef hâlâ maximum likelihood; değişen tek şey, integral alınamadığı için alt sınırla çalışılması."
         },
         {
           "type": "note",
           "heading": "Nereye bakılır",
-          "text": "Bu metin sırayı verir, ayrıntı kartlarda: Gaussian türetmesi ve varyansın yanlılığı ch03'te; Bernoulli, Exponential ve Uniform çalışılmış örnekleri math06'da; MLE'den MSE ve BCE'ye adım adım türetmeler vs04'te; MLE-MAP-Bayesian geçişi, prior kimin üzerinde tartışması, MAP ile regularizasyon bağlantısı ve LMMSE tarafı vs03'te; üretici modeller için MLE ve KL yorumu cs12'de; ELBO'nun difüzyondaki hali ida11'de."
+          "text": "Bu metin sırayı verir, ayrıntı kartlarda: Gaussian türetmesi ve varyansın yanlılığı ch03'te; Bernoulli, Exponential ve Uniform çalışılmış örnekleri math06'da; MLE'den MSE ve BCE'ye adım adım türetmeler vs04'te; MLE-MAP-Bayesian geçişi, prior kimin üzerinde tartışması, MAP ile regularizasyon bağlantısı ve LMMSE tarafı vs03'te; generative modeller için MLE ve KL yorumu cs12'de; ELBO'nun diffusion'daki hali ida11'de."
         }
       ]
     },
     "generative": {
-      "title": "Üretici Modeller — Genel Çerçeve",
+      "title": "Generative Models — Genel Çerçeve",
       "cat": "Konu Anlatımı",
       "context": "Generative Models · CS231n 12-13 · IDA 10-11 · ML-OVERALL 19-21 — diğer üç anlatımın girişi",
       "chapters": [
@@ -25593,42 +25593,42 @@
         "mlo20",
         "mlo21"
       ],
-      "summary": "Sınıflandırmak ile üretmek arasındaki farktan başlayıp, üretmenin neden yapısal olarak daha zor olduğuna, modellerin hangi eksene göre ayrıldığına (açık/örtük yoğunluk) ve autoregressive, VAE, GAN, difüzyonun bu haritada nereye oturduğuna kadar. VAE, GAN ve DDPM anlatımlarının girişi.",
+      "summary": "Sınıflandırmak ile üretmek arasındaki farktan başlayıp, üretmenin neden yapısal olarak daha zor olduğuna, modellerin hangi eksene göre ayrıldığına (açık/örtük yoğunluk) ve autoregressive, VAE, GAN, diffusion'ın bu haritada nereye oturduğuna kadar. VAE, GAN ve DDPM anlatımlarının girişi.",
       "sections": [
         {
           "type": "text",
           "heading": "Bu metin ne için",
-          "text": "VAE, GAN ve difüzyonun ayrı ayrı anlatımları var. Ama üçünün de aynı problemin farklı cevapları olduğunu görmeden okunursa, birbirinden bağımsız üç mimari gibi duruyorlar.\n\nBu metin o ortak zemini kuruyor: hangi problem, neden zor, ve hangi yol ayrımında kim nereye saptı. Diğer üçünden önce okunmak için yazıldı."
+          "text": "VAE, GAN ve diffusion'ın ayrı ayrı anlatımları var. Ama üçünün de aynı problemin farklı cevapları olduğunu görmeden okunursa, birbirinden bağımsız üç mimari gibi duruyorlar.\n\nBu metin o ortak zemini kuruyor: hangi problem, neden zor, ve hangi yol ayrımında kim nereye saptı. Diğer üçünden önce okunmak için yazıldı."
         },
         {
           "type": "text",
           "heading": "1. Üç soru, üç model tipi",
-          "text": "Bir köpek fotoğrafı düşün. Ona bakarak üç farklı şey sorabilirsin, ve üçü üç ayrı model demek.\n\nBirincisi: bu fotoğrafta ne var? Model, görüntüyü alıp etiket üretiyor. Öğrendiği şey, görüntü verildiğinde etiketin olasılığı. Buna ayırt edici model deniyor — bildiğin sınıflandırıcı.\n\nİkincisi: bana yeni bir fotoğraf üret. Etiket yok, girdi yok. Model, görüntülerin dağılımının kendisini öğrenmek zorunda. Üretici model bu.\n\nÜçüncüsü: bana bir köpek fotoğrafı üret. Etiketi sen veriyorsun, model o etikete uyan görüntüleri üretiyor. Koşullu üretici model.\n\nÜçü de aynı ailedenmiş gibi görünüyor ama zorlukları arasında uçurum var, ve sebebi çok basit bir şeyde saklı."
+          "text": "Bir köpek fotoğrafı düşün. Ona bakarak üç farklı şey sorabilirsin, ve üçü üç ayrı model demek.\n\nBirincisi: bu fotoğrafta ne var? Model, görüntüyü alıp etiket üretiyor. Öğrendiği şey, görüntü verildiğinde etiketin olasılığı. Buna discriminator model deniyor — bildiğin classifier.\n\nİkincisi: bana yeni bir fotoğraf üret. Etiket yok, girdi yok. Model, görüntülerin dağılımının kendisini öğrenmek zorunda. generative model bu.\n\nÜçüncüsü: bana bir köpek fotoğrafı üret. Etiketi sen veriyorsun, model o etikete uyan görüntüleri üretiyor. Koşullu generative model.\n\nÜçü de aynı ailedenmiş gibi görünüyor ama zorlukları arasında uçurum var, ve sebebi çok basit bir şeyde saklı."
         },
         {
           "type": "text",
           "heading": "2. Yoğunluk yarışı: üretmek neden daha zor",
-          "text": "Olasılıkların toplamı bire eşit olmak zorunda. Kritik soru şu: ne yarışıyor?\n\nSınıflandırıcıda, tek bir görüntü için etiketler yarışıyor. Köpek mi kedi mi kuş mu — bin tane etiketin var diyelim, bin şey bir birim olasılığı paylaşıyor. Model yalnızca o bin şeyi sıralayabilmek zorunda.\n\nÜretici modelde ise bütün olası görüntüler yarışıyor. Bu fotoğrafa yüksek olasılık vermek, başka bir görüntüden olasılık almak demek. Ve o başka görüntüler, var olabilecek her görüntü — bütün köpekler, bütün kediler, bütün manzaralar, ve bunların yanında anlamsız piksel yığınlarının astronomik çokluğu.\n\nModel hepsini tutarlı biçimde sıralayabilmek zorunda. Gerçek bir fotoğrafa, gürültüden daha yüksek olasılık vermeyi kendi öğrenmek zorunda.\n\nDönüm noktası tek cümlede: sınıflandırmak sonlu bir yarışı çözmek, üretmek bütün görüntü uzayını sıralamak.\n\nKoşullu üretici model arada duruyor: yarış hâlâ bütün görüntüler arasında ama her sınıf için ayrı ayrı bölünmüş. Sınıflandırmaktan zor, koşulsuz üretmekten kolay."
+          "text": "Olasılıkların toplamı bire eşit olmak zorunda. Kritik soru şu: ne yarışıyor?\n\nClassifier'da, tek bir görüntü için etiketler yarışıyor. Köpek mi kedi mi kuş mu — bin tane etiketin var diyelim, bin şey bir birim olasılığı paylaşıyor. Model yalnızca o bin şeyi sıralayabilmek zorunda.\n\ngenerative modelde ise bütün olası görüntüler yarışıyor. Bu fotoğrafa yüksek olasılık vermek, başka bir görüntüden olasılık almak demek. Ve o başka görüntüler, var olabilecek her görüntü — bütün köpekler, bütün kediler, bütün manzaralar, ve bunların yanında anlamsız piksel yığınlarının astronomik çokluğu.\n\nModel hepsini tutarlı biçimde sıralayabilmek zorunda. Gerçek bir fotoğrafa, gürültüden daha yüksek olasılık vermeyi kendi öğrenmek zorunda.\n\nDönüm noktası tek cümlede: sınıflandırmak sonlu bir yarışı çözmek, üretmek bütün görüntü uzayını sıralamak.\n\nKoşullu generative model arada duruyor: yarış hâlâ bütün görüntüler arasında ama her sınıf için ayrı ayrı bölünmüş. Sınıflandırmaktan zor, koşulsuz üretmekten kolay."
         },
         {
           "type": "formula",
           "heading": "Üç model, üç normalizasyon",
-          "text": "$$\\text{ayırt edici: } p(y \\mid x), \\quad \\sum_y p(y \\mid x) = 1 \\qquad \\text{(etiketler yarışır)}$$\n$$\\text{üretici: } p(x), \\quad \\int p(x)\\,dx = 1 \\qquad \\text{(tüm görüntüler yarışır)}$$\n$$\\text{koşullu üretici: } p(x \\mid y) \\qquad \\text{(her sınıf içinde tüm görüntüler yarışır)}$$"
+          "text": "$$\\text{discriminator: } p(y \\mid x), \\quad \\sum_y p(y \\mid x) = 1 \\qquad \\text{(etiketler yarışır)}$$\n$$\\text{generator: } p(x), \\quad \\int p(x)\\,dx = 1 \\qquad \\text{(tüm görüntüler yarışır)}$$\n$$\\text{koşullu generative: } p(x \\mid y) \\qquad \\text{(her sınıf içinde tüm görüntüler yarışır)}$$"
         },
         {
           "type": "text",
           "heading": "3. İkisi arasındaki köprü",
-          "text": "Üçü birbirinden kopuk değil. Bayes kuralı koşullu üretici modeli, elindeki bir sınıflandırıcı ile bir üretici modelden kurmanı sağlıyor: sınıflandırıcının verdiği oranı, koşulsuz yoğunlukla ağırlıklandırıyorsun.\n\nBu yalnızca teorik bir bağ değil. Difüzyonda classifier guidance tam olarak buydu — ayrı eğitilmiş bir sınıflandırıcının gradyanını kullanarak üretimi bir sınıfa doğru itmek. Classifier-free guidance ise aynı işi tek modelin içinde yapıyor.\n\nYani \"koşulu modele nasıl veririm\" sorusunun kökü burada."
+          "text": "Üçü birbirinden kopuk değil. Bayes kuralı koşullu generative modeli, elindeki bir classifier ile bir generative modelden kurmanı sağlıyor: classifier'ın verdiği oranı, koşulsuz yoğunlukla ağırlıklandırıyorsun.\n\nBu yalnızca teorik bir bağ değil. diffusion'da classifier guidance tam olarak buydu — ayrı eğitilmiş bir classifier'ın gradient'ini kullanarak üretimi bir sınıfa doğru itmek. Classifier-free guidance ise aynı işi tek modelin içinde yapıyor.\n\nYani \"koşulu modele nasıl veririm\" sorusunun kökü burada."
         },
         {
           "type": "text",
           "heading": "4. Bu modeller ne işe yarıyor",
-          "text": "Üretim akla ilk geleni ama listenin tamamı daha geniş, ve bazıları daha kullanışlı.\n\nÖrnek üretmek: sentez, veri çoğaltma, eksik modalite tamamlama.\n\nAnomali tespiti: modelin düşük olasılık verdiği örnekler aykırı demektir. Bunun için modelin gerçekten olasılık hesaplayabilmesi gerekiyor — birazdan gelecek ayrımın pratik karşılığı bu.\n\nEtiketsiz öznitelik öğrenme: veriyi modellemeyi öğrenen ağ, yapıyı da öğreniyor; sonra küçük bir etiketli kümeyle üstüne sınıflandırıcı takılabiliyor.\n\nBelirsizliği modellemek: bir girdiye karşılık birden çok doğru çıktı olabildiği durumlar. Metinden görüntü üretimi böyle — tek doğru cevap yok, bir dağılım var. Sınıflandırıcı mantığı burada çöküyor, çünkü ortalama almak anlamsız bir çıktı veriyor."
+          "text": "Üretim akla ilk geleni ama listenin tamamı daha geniş, ve bazıları daha kullanışlı.\n\nÖrnek üretmek: sentez, veri çoğaltma, eksik modalite tamamlama.\n\nAnomali tespiti: modelin düşük olasılık verdiği örnekler aykırı demektir. Bunun için modelin gerçekten olasılık hesaplayabilmesi gerekiyor — birazdan gelecek ayrımın pratik karşılığı bu.\n\nEtiketsiz öznitelik öğrenme: veriyi modellemeyi öğrenen ağ, yapıyı da öğreniyor; sonra küçük bir etiketli kümeyle üstüne classifier takılabiliyor.\n\nBelirsizliği modellemek: bir girdiye karşılık birden çok doğru çıktı olabildiği durumlar. Metinden görüntü üretimi böyle — tek doğru cevap yok, bir dağılım var. Classifier mantığı burada çöküyor, çünkü ortalama almak anlamsız bir çıktı veriyor."
         },
         {
           "type": "text",
           "heading": "5. Asıl ayrım: yoğunluğu yazabiliyor musun",
-          "text": "Üretici modelleri ayıran temel eksen, mimari değil şu soru: model, önüne konan bir görüntüye olasılık verebiliyor mu?\n\nAçık yoğunluk. Model p(x)'i hesaplayabiliyor. Bir görüntünün ne kadar olası olduğunu söyleyebiliyor, dolayısıyla anomali tespitinde ve model karşılaştırmasında kullanılabiliyor.\n\nÖrtük yoğunluk. Model p(x)'i hesaplayamıyor ama ondan örnek çekebiliyor. Sana görüntü üretiyor, ama \"bu görüntü ne kadar olası\" sorusuna cevap veremiyor.\n\nAçık olanlar da kendi içinde ikiye ayrılıyor: yoğunluğu tam olarak hesaplayabilenler, ve ancak bir alt sınırla yaklaşabilenler.\n\nBütün harita bu iki soruya göre kuruluyor."
+          "text": "generative modelleri ayıran temel eksen, mimari değil şu soru: model, önüne konan bir görüntüye olasılık verebiliyor mu?\n\nAçık yoğunluk. Model p(x)'i hesaplayabiliyor. Bir görüntünün ne kadar olası olduğunu söyleyebiliyor, dolayısıyla anomali tespitinde ve model karşılaştırmasında kullanılabiliyor.\n\nÖrtük yoğunluk. Model p(x)'i hesaplayamıyor ama ondan örnek çekebiliyor. Sana görüntü üretiyor, ama \"bu görüntü ne kadar olası\" sorusuna cevap veremiyor.\n\nAçık olanlar da kendi içinde ikiye ayrılıyor: yoğunluğu tam olarak hesaplayabilenler, ve ancak bir alt sınırla yaklaşabilenler.\n\nBütün harita bu iki soruya göre kuruluyor."
         },
         {
           "type": "code",
@@ -25642,13 +25642,13 @@
         },
         {
           "type": "text",
-          "heading": "7. Autoencoder: neden üretici model değil",
-          "text": "Autoencoder sıkıştırıp geri açıyor: encoder dar bir koda indiriyor, decoder geri kuruyor, kayıp da yeniden kurulum hatası. Etiket gerekmiyor ve öğrendiği kod gerçekten anlamlı — etiketsiz öznitelik öğrenmenin klasik yolu, modern kendinden denetimli yöntemlerin atası.\n\nAma üretemiyor, ve sebebi öğretici: yeni bir görüntü üretmek için yeni bir kod örneklemen gerekiyor, ve hangi kodların geçerli olduğunu söyleyen hiçbir şey yok. Kod uzayında delikler var, aralar çöp üretiyor.\n\nYani geçerli bir kod üretmek, doğrudan geçerli bir görüntü üretmek kadar zor. Hiçbir şey kazanmadın.\n\nEksik olan tek şey, kodun nereden geldiğinin belli olması. VAE tam olarak bunu ekliyor."
+          "heading": "7. Autoencoder: neden generative model değil",
+          "text": "Autoencoder sıkıştırıp geri açıyor: encoder dar bir koda indiriyor, decoder geri kuruyor, loss da yeniden kurulum hatası. Etiket gerekmiyor ve öğrendiği kod gerçekten anlamlı — etiketsiz öznitelik öğrenmenin klasik yolu, modern kendinden denetimli yöntemlerin atası.\n\nAma üretemiyor, ve sebebi öğretici: yeni bir görüntü üretmek için yeni bir kod örneklemen gerekiyor, ve hangi kodların geçerli olduğunu söyleyen hiçbir şey yok. Kod uzayında delikler var, aralar çöp üretiyor.\n\nYani geçerli bir kod üretmek, doğrudan geçerli bir görüntü üretmek kadar zor. Hiçbir şey kazanmadın.\n\nEksik olan tek şey, kodun nereden geldiğinin belli olması. VAE tam olarak bunu ekliyor."
         },
         {
           "type": "text",
           "heading": "8. Üç cevap, üç farklı taviz",
-          "text": "VAE. Kodu bilinen bir dağılımdan gelmeye zorluyor, böylece üretim zamanında nereden örnekleyeceğini biliyorsun. Bedeli, marjinal olasılığın artık hesaplanamaması — bir alt sınırla çalışıyorsun. Eğitimi stabil, latent uzayı okunaklı, çıktısı bulanık.\n\nGAN. Olasılık hesaplamayı tamamen bırakıyor. Sadece örnekleyen bir model kuruyor ve kaliteyi bir ayırt ediciye ölçtürüyor. Çıktısı keskin ve üretim tek adımda, ama eğitim bir denge arayışı; izleyebileceğin dürüst bir sayı yok ve mod kaybı yapısal bir risk.\n\nDifüzyon. Zor problemi bin kolay probleme bölüyor: tek adımda üretmek yerine, gürültüden görüntüye küçük adımlarla gidiyor. Eğitimi VAE kadar stabil, kalitesi GAN'dan iyi, mod kapsaması en iyisi. Bedeli üretim hızı — tek ileri geçiş yerine onlarca.\n\nÜç tavizin ortak paydası şu: kalite, çeşitlilik, hız ve eğitim stabilitesi aynı anda alınamıyor. Her model bu dörtlüden hangisini feda ettiğiyle tanımlanıyor."
+          "text": "VAE. Kodu bilinen bir dağılımdan gelmeye zorluyor, böylece üretim zamanında nereden örnekleyeceğini biliyorsun. Bedeli, marjinal olasılığın artık hesaplanamaması — bir alt sınırla çalışıyorsun. Eğitimi stabil, latent uzayı okunaklı, çıktısı bulanık.\n\nGAN. Olasılık hesaplamayı tamamen bırakıyor. Sadece örnekleyen bir model kuruyor ve kaliteyi bir discriminator'e ölçtürüyor. Çıktısı keskin ve üretim tek adımda, ama eğitim bir denge arayışı; izleyebileceğin dürüst bir sayı yok ve mode collapse yapısal bir risk.\n\nDiffusion. Zor problemi bin kolay probleme bölüyor: tek adımda üretmek yerine, gürültüden görüntüye küçük adımlarla gidiyor. Eğitimi VAE kadar stabil, kalitesi GAN'dan iyi, mod kapsaması en iyisi. Bedeli üretim hızı — tek ileri geçiş yerine onlarca.\n\nÜç tavizin ortak paydası şu: kalite, çeşitlilik, hız ve eğitim stabilitesi aynı anda alınamıyor. Her model bu dörtlüden hangisini feda ettiğiyle tanımlanıyor."
         },
         {
           "type": "table",
@@ -25659,7 +25659,7 @@
               "Autoregressive",
               "VAE",
               "GAN",
-              "Difüzyon"
+              "Diffusion"
             ],
             [
               "p(x) hesaplanır mı",
@@ -25708,22 +25708,22 @@
         {
           "type": "text",
           "heading": "9. Üçünün altındaki ortak ilke",
-          "text": "GAN dışındaki hepsinin eğitim ilkesi aynı: maximum likelihood. Eğitim verisini en olası kılan parametreleri arıyorsun.\n\nAutoregressive modeller bunu doğrudan yapıyor, çünkü olasılığı tam hesaplayabiliyorlar. VAE ve difüzyon doğrudan yapamıyor — ilkinde gizli değişken üzerinden, ikincisinde T adımlı yol üzerinden alınamayan bir integral var — o yüzden hesaplanabilir bir alt sınırla çalışıyorlar. Hedef değişmiyor, sadece tırmanılan merdiven değişiyor.\n\nGAN bu çizginin dışında duruyor, ve bütün karakteri buradan geliyor: optimize ettiği dürüst bir olabilirlik yok, onun yerine öğrenilen bir ölçüt var.\n\nMLE'nin kendisini hatırlaman gerekiyorsa MLE konu anlatımına bak; oradaki \"gürültü seçmek loss seçmektir\" cümlesi burada da geçerli — VAE'nin yeniden kurulum terimi tam olarak o yüzden kareler toplamı."
+          "text": "GAN dışındaki hepsinin eğitim ilkesi aynı: maximum likelihood. Eğitim verisini en olası kılan parametreleri arıyorsun.\n\nAutoregressive modeller bunu doğrudan yapıyor, çünkü olasılığı tam hesaplayabiliyorlar. VAE ve diffusion doğrudan yapamıyor — ilkinde gizli değişken üzerinden, ikincisinde T adımlı yol üzerinden alınamayan bir integral var — o yüzden hesaplanabilir bir alt sınırla çalışıyorlar. Hedef değişmiyor, sadece tırmanılan merdiven değişiyor.\n\nGAN bu çizginin dışında duruyor, ve bütün karakteri buradan geliyor: optimize ettiği dürüst bir olabilirlik yok, onun yerine öğrenilen bir ölçüt var.\n\nMLE'nin kendisini hatırlaman gerekiyorsa MLE konu anlatımına bak; oradaki \"gürültü seçmek loss seçmektir\" cümlesi burada da geçerli — VAE'nin yeniden kurulum terimi tam olarak o yüzden kareler toplamı."
         },
         {
           "type": "text",
           "heading": "10. Bugün nerede durulduğu",
-          "text": "Ailelerin yarıştığı dönem bitti; modern sistemler üçünü birden kullanıyor.\n\nMetinden görüntü üreten bir model tipik olarak şöyle kurulu: bir VAE görüntüyü küçük bir latent uzaya sıkıştırıyor, o VAE'nin çözücüsünü keskin tutan şey bir GAN ayırt edicisi, ve asıl üretimi latent uzayda bir difüzyon modeli yapıyor. Koşul metinden geliyor ve cross-attention ile bağlanıyor.\n\nDil tarafı ise autoregressive kaldı, ve görüntü üretimine de geri döndü: görüntüyü ayrık kodlara çevirip o kodları autoregressive üretmek yeniden rekabetçi.\n\nYani harita bir sıralama değil, bir alet çantası. Doğru soru \"hangisi en iyi\" değil, \"bu problemde neyi feda edebilirim\"."
+          "text": "Ailelerin yarıştığı dönem bitti; modern sistemler üçünü birden kullanıyor.\n\nMetinden görüntü üreten bir model tipik olarak şöyle kurulu: bir VAE görüntüyü küçük bir latent uzaya sıkıştırıyor, o VAE'nin çözücüsünü keskin tutan şey bir GAN discriminator'ü, ve asıl üretimi latent uzayda bir diffusion modeli yapıyor. Koşul metinden geliyor ve cross-attention ile bağlanıyor.\n\nDil tarafı ise autoregressive kaldı, ve görüntü üretimine de geri döndü: görüntüyü ayrık kodlara çevirip o kodları autoregressive üretmek yeniden rekabetçi.\n\nYani harita bir sıralama değil, bir alet çantası. Doğru soru \"hangisi en iyi\" değil, \"bu problemde neyi feda edebilirim\"."
         },
         {
           "type": "insight",
           "heading": "Geriye ne kalsın",
-          "text": "Sınıflandırmada etiketler tek bir görüntü için yarışır, üretimde bütün görüntüler evrensel olarak yarışır — üretmenin yapısal olarak zor olmasının tek sebebi bu. Modelleri ayıran asıl eksen mimari değil, yoğunluğu hesaplayabilip hesaplayamadıkları. Autoregressive tam hesaplar ama yavaş üretir; VAE ve difüzyon alt sınırla çalışır; GAN hesaplamayı tamamen bırakır. Sıradan autoencoder üretemez çünkü geçerli kodun nereden geleceği belli değildir. Kalite, çeşitlilik, hız ve stabilite aynı anda alınamaz; her model hangisini feda ettiğiyle tanımlanır. GAN hariç hepsinin altında maximum likelihood vardır."
+          "text": "Sınıflandırmada etiketler tek bir görüntü için yarışır, üretimde bütün görüntüler evrensel olarak yarışır — üretmenin yapısal olarak zor olmasının tek sebebi bu. Modelleri ayıran asıl eksen mimari değil, yoğunluğu hesaplayabilip hesaplayamadıkları. Autoregressive tam hesaplar ama yavaş üretir; VAE ve diffusion alt sınırla çalışır; GAN hesaplamayı tamamen bırakır. Sıradan autoencoder üretemez çünkü geçerli kodun nereden geleceği belli değildir. Kalite, çeşitlilik, hız ve stabilite aynı anda alınamaz; her model hangisini feda ettiğiyle tanımlanır. GAN hariç hepsinin altında maximum likelihood vardır."
         },
         {
           "type": "note",
           "heading": "Sonra nereye",
-          "text": "Bu metin giriş; devamı üç ayrı konu anlatımında: VAE (kodun nereden geldiğini nasıl çözdüğü, ELBO, reparameterization), GAN (öğrenilen kayıp, mode collapse, DCGAN-StyleGAN-CycleGAN) ve DDPM (forward-reverse süreç, ELBO'nun MSE'ye çökmesi, CFG, latent diffusion). Kart tarafında: ayırt edici-üretici ayrımı ve taksonomi cs12'de, autoregressive zincir kuralı yine cs12'de, GAN teorisi ve difüzyon ailesinin geniş çerçevesi cs13'te."
+          "text": "Bu metin giriş; devamı üç ayrı konu anlatımında: VAE (kodun nereden geldiğini nasıl çözdüğü, ELBO, reparameterization), GAN (öğrenilen loss, mode collapse, DCGAN-StyleGAN-CycleGAN) ve DDPM (forward-reverse süreç, ELBO'nun MSE'ye çökmesi, CFG, latent diffusion). Kart tarafında: discriminator-generator ayrımı ve taksonomi cs12'de, autoregressive zincir kuralı yine cs12'de, GAN teorisi ve diffusion ailesinin geniş çerçevesi cs13'te."
         }
       ]
     },
@@ -25750,7 +25750,7 @@
         {
           "type": "text",
           "heading": "2. Sıradan autoencoder neden üretemiyor",
-          "text": "Autoencoder tam olarak bunu yapıyor: encoder görüntüyü dar bir z'ye sıkıştırıyor, decoder z'den geri açıyor, kayıp da yeniden kurulum hatası. Etiket gerekmiyor.\n\nEğitim biter, yeniden kurulum güzel. Şimdi yeni bir görüntü üretmeyi dene: rastgele bir z seç, decoder'a ver.\n\nÇıkan şey çöp.\n\nSebebi şu: encoder z'leri istediği yere koymakta serbest. Bir resmin z'sini 50 civarına, başkasınınkini eksi 30'a koyabilir. Arada kocaman boşluklar kalıyor, ve o boşluklar decoder'ın hiç görmediği bölgeler. Ayrıca hangi z'lerin geçerli olduğunu bilmiyorsun — nereden örnekleyeceğini söyleyen hiçbir şey yok.\n\nEksik olan tek şey bu: latent uzayın bir yapısı yok.\n\nVAE'nin tamamı bu cümleye verilen cevap."
+          "text": "Autoencoder tam olarak bunu yapıyor: encoder görüntüyü dar bir z'ye sıkıştırıyor, decoder z'den geri açıyor, loss da yeniden kurulum hatası. Etiket gerekmiyor.\n\nEğitim biter, yeniden kurulum güzel. Şimdi yeni bir görüntü üretmeyi dene: rastgele bir z seç, decoder'a ver.\n\nÇıkan şey çöp.\n\nSebebi şu: encoder z'leri istediği yere koymakta serbest. Bir resmin z'sini 50 civarına, başkasınınkini eksi 30'a koyabilir. Arada kocaman boşluklar kalıyor, ve o boşluklar decoder'ın hiç görmediği bölgeler. Ayrıca hangi z'lerin geçerli olduğunu bilmiyorsun — nereden örnekleyeceğini söyleyen hiçbir şey yok.\n\nEksik olan tek şey bu: latent uzayın bir yapısı yok.\n\nVAE'nin tamamı bu cümleye verilen cevap."
         },
         {
           "type": "text",
@@ -25795,7 +25795,7 @@
         {
           "type": "text",
           "heading": "9. İki terim zıt yönde çekiyor",
-          "text": "Yeniden kurulum terimi diyor ki: her görüntünün z'si ayırt edilebilir olsun, yoksa decoder hangi görüntüyü kuracağını bilemez. Bu terim tek başına kalsa encoder z'leri birbirinden olabildiğince uzağa iterdi — yani sıradan autoencoder'ın hatasına geri dönerdik.\n\nKL terimi diyor ki: bütün z dağılımları standart normalin etrafında toplansın. Bu terim tek başına kalsa encoder bütün görüntüler için aynı dağılımı üretir, z hiçbir bilgi taşımaz, decoder da ortalama bir bulanıklık basar.\n\nDenge ikisinin arasında. Sonuç, hem dolu hem ayırt edici bir latent uzay: boşluk yok ki örneklediğin z çöpe düşsün, ama z'ler birbirine de yapışmamış.\n\nVAE'yi bir cümlede anlatman gerekse bu cümle olurdu."
+          "text": "Yeniden kurulum terimi diyor ki: her görüntünün z'si ayırt edilebilir olsun, yoksa decoder hangi görüntüyü kuracağını bilemez. Bu terim tek başına kalsa encoder z'leri birbirinden olabildiğince uzağa iterdi — yani sıradan autoencoder'ın hatasına geri dönerdik.\n\nKL terimi diyor ki: bütün z dağılımları standart normalin etrafında toplansın. Bu terim tek başına kalsa encoder bütün görüntüler için aynı dağılımı üretir, z hiçbir bilgi taşımaz, decoder da ortalama bir bulanıklık basar.\n\nDenge ikisinin arasında. Sonuç, hem dolu hem discriminator bir latent uzay: boşluk yok ki örneklediğin z çöpe düşsün, ama z'ler birbirine de yapışmamış.\n\nVAE'yi bir cümlede anlatman gerekse bu cümle olurdu."
         },
         {
           "type": "text",
@@ -25805,7 +25805,7 @@
         {
           "type": "text",
           "heading": "11. Reparameterization trick: neden mecburuz",
-          "text": "Bir sorun var. ELBO'nun ilk terimi, encoder'ın ürettiği dağılımdan z çekmeyi gerektiriyor. Ama örnekleme rastgele bir işlem ve gradyan onun içinden geçemiyor — \"bu örneklemeyi biraz değiştirsem kayıp nasıl değişirdi\" sorusunun türevi yok.\n\nÇözüm, rastgeleliği yoldan çekmek: z'yi doğrudan çekmek yerine, standart normalden bir gürültü çek ve z'yi encoder'ın ürettiği ortalama artı standart sapma çarpı o gürültü olarak yaz.\n\nArtık rastgelelik, parametrelere bağlı olmayan ayrı bir girdi. Ortalama ve standart sapma ise sıradan cebirsel işlemlerle z'ye bağlı, gradyan rahatça akıyor.\n\nAynı numarayı difüzyonda da görmüştün: orada da x_t, x_0 ile gürültünün ağırlıklı toplamı olarak yazılıyordu. İki yerde de yapılan şey aynı — rastgeleliği, gradyanın akabileceği bir biçime sokmak."
+          "text": "Bir sorun var. ELBO'nun ilk terimi, encoder'ın ürettiği dağılımdan z çekmeyi gerektiriyor. Ama örnekleme rastgele bir işlem ve gradient onun içinden geçemiyor — \"bu örneklemeyi biraz değiştirsem loss nasıl değişirdi\" sorusunun türevi yok.\n\nÇözüm, rastgeleliği yoldan çekmek: z'yi doğrudan çekmek yerine, standart normalden bir gürültü çek ve z'yi encoder'ın ürettiği ortalama artı standart sapma çarpı o gürültü olarak yaz.\n\nArtık rastgelelik, parametrelere bağlı olmayan ayrı bir girdi. Ortalama ve standart sapma ise sıradan cebirsel işlemlerle z'ye bağlı, gradient rahatça akıyor.\n\nAynı numarayı diffusion'da da görmüştün: orada da x_t, x_0 ile gürültünün ağırlıklı toplamı olarak yazılıyordu. İki yerde de yapılan şey aynı — rastgeleliği, gradient'in akabileceği bir biçime sokmak."
         },
         {
           "type": "formula",
@@ -25815,7 +25815,7 @@
         {
           "type": "text",
           "heading": "12. Eğitim ile üretim farkı",
-          "text": "Eğitimde zincir şu: görüntü gelir, encoder z dağılımını verir, reparameterization ile bir z çekilir, decoder görüntüyü kurar, iki terimli kayıp hesaplanır.\n\nÜretimde encoder hiç kullanılmıyor. Doğrudan standart normalden bir z çekip decoder'a veriyorsun.\n\nBu, KL teriminin neden var olduğunun pratik kanıtı: üretimde çektiğin z'nin decoder'ın tanıdığı bir bölgeye düşmesi gerekiyor, ve onu oraya çeken tek şey o terim.\n\nEncoder atılmıyor ama — bir görüntüyü latent koda çevirmek istersen (arama, düzenleme, anomali tespiti) hâlâ elinde."
+          "text": "Eğitimde zincir şu: görüntü gelir, encoder z dağılımını verir, reparameterization ile bir z çekilir, decoder görüntüyü kurar, iki terimli loss hesaplanır.\n\nÜretimde encoder hiç kullanılmıyor. Doğrudan standart normalden bir z çekip decoder'a veriyorsun.\n\nBu, KL teriminin neden var olduğunun pratik kanıtı: üretimde çektiğin z'nin decoder'ın tanıdığı bir bölgeye düşmesi gerekiyor, ve onu oraya çeken tek şey o terim.\n\nEncoder atılmıyor ama — bir görüntüyü latent koda çevirmek istersen (arama, düzenleme, anomali tespiti) hâlâ elinde."
         },
         {
           "type": "text",
@@ -25825,22 +25825,22 @@
         {
           "type": "text",
           "heading": "14. Neden bulanık üretiyor",
-          "text": "VAE'nin bilinen kusuru bulanıklık, ve sebebi mimari değil kayıp fonksiyonu.\n\nDecoder Gaussian varsayıldığı için kayıp karesel. Karesel hata, belirsizlik karşısında ortalamayı seçer. Model bir kenarın tam olarak nerede olduğundan emin değilse iki olasılığın ortasını basar — ve iki keskin kenarın ortalaması bulanık bir kenardır.\n\nGAN bu sorunu kayıp fonksiyonunu değiştirerek çözüyor: bir ayırt edici, ortalama görüntüleri sahte diye yakalıyor, dolayısıyla ortalama almak artık ödüllendirilmiyor. Difüzyon ise sorunu başka yoldan çözüyor — tek adımda tüm belirsizliği çözmek zorunda kalmıyor, belirsizliği bin küçük adıma yayıyor.\n\nModern latent diffusion mimarileri ikisini birden kullanıyor: sıkıştırma için VAE, keskin çözücü için GAN ayırt edicisi, üretim için difüzyon."
+          "text": "VAE'nin bilinen kusuru bulanıklık, ve sebebi mimari değil loss fonksiyonu.\n\nDecoder Gaussian varsayıldığı için loss karesel. Karesel hata, belirsizlik karşısında ortalamayı seçer. Model bir kenarın tam olarak nerede olduğundan emin değilse iki olasılığın ortasını basar — ve iki keskin kenarın ortalaması bulanık bir kenardır.\n\nGAN bu sorunu loss fonksiyonunu değiştirerek çözüyor: bir discriminator, ortalama görüntüleri sahte diye yakalıyor, dolayısıyla ortalama almak artık ödüllendirilmiyor. Diffusion ise sorunu başka yoldan çözüyor — tek adımda tüm belirsizliği çözmek zorunda kalmıyor, belirsizliği bin küçük adıma yayıyor.\n\nModern latent diffusion mimarileri ikisini birden kullanıyor: sıkıştırma için VAE, keskin çözücü için GAN discriminator'ü, üretim için diffusion."
         },
         {
           "type": "text",
           "heading": "15. VAE MLE mi yapıyor, MAP mi",
-          "text": "Sık sorulan soru: içinde p(z) = N(0, I) var, bu bir prior değil mi, o halde VAE MAP yapmıyor mu?\n\nAyırt edici tek test şu: prior, tahmin ettiğin şeyin üzerinde mi?\n\nVAE'de tahmin ettiğin şey ağırlıklar. Onların üzerinde bir prior yok. p(z) gerçekten bir prior ama z'nin üzerinde, ve z tahmin edilmiyor — üzerinden integral alınıyor.\n\nDolayısıyla VAE, adında variational geçmesine rağmen ağırlıklar açısından maximum likelihood yapıyor. Gerçekten MAP yapmak isteseydin ağırlıklara prior koyman gerekirdi, ki onun adı weight decay."
+          "text": "Sık sorulan soru: içinde p(z) = N(0, I) var, bu bir prior değil mi, o halde VAE MAP yapmıyor mu?\n\nDiscriminator tek test şu: prior, tahmin ettiğin şeyin üzerinde mi?\n\nVAE'de tahmin ettiğin şey ağırlıklar. Onların üzerinde bir prior yok. p(z) gerçekten bir prior ama z'nin üzerinde, ve z tahmin edilmiyor — üzerinden integral alınıyor.\n\nDolayısıyla VAE, adında variational geçmesine rağmen ağırlıklar açısından maximum likelihood yapıyor. Gerçekten MAP yapmak isteseydin ağırlıklara prior koyman gerekirdi, ki onun adı weight decay."
         },
         {
           "type": "insight",
           "heading": "Geriye ne kalsın",
-          "text": "Üretmek için yapılandırılmış bir latent uzay lazım; sıradan autoencoder'ın latent uzayında delikler var, o yüzden üretemiyor. Hedef yine maximum likelihood, ama z gizli olduğu için marjinal integral alınamıyor. Encoder bu yüzden var — denklemden türetilmedi, hesaplanamayan posteriorun yerine dışarıdan kondu. ELBO iki terim: yeniden kurulum z'leri ayırır, KL onları prior'a toplar; denge dolu ve ayırt edici bir uzay verir. Reparameterization gradyanın örneklemenin içinden geçebilmesi için. Üretimde encoder yok. Bulanıklık mimariden değil karesel kayıptan geliyor."
+          "text": "Üretmek için yapılandırılmış bir latent uzay lazım; sıradan autoencoder'ın latent uzayında delikler var, o yüzden üretemiyor. Hedef yine maximum likelihood, ama z gizli olduğu için marjinal integral alınamıyor. Encoder bu yüzden var — denklemden türetilmedi, hesaplanamayan posteriorun yerine dışarıdan kondu. ELBO iki terim: yeniden kurulum z'leri ayırır, KL onları prior'a toplar; denge dolu ve discriminator bir uzay verir. Reparameterization gradient'in örneklemenin içinden geçebilmesi için. Üretimde encoder yok. Bulanıklık mimariden değil karesel loss'tan geliyor."
         },
         {
           "type": "note",
           "heading": "Nereye bakılır",
-          "text": "Kurulum, latent uzay ve Bayes formülasyonu ile ELBO'nun tam tablosu cs12'de; VAE ile DDPM'in ELBO türetmelerinin satır satır karşılaştırması ida11'de; MLE-MAP ayrımı ve prior kimin üzerinde tartışması vs03'te. Aynı zincirin difüzyondaki hali için DDPM konu anlatımına bak."
+          "text": "Kurulum, latent uzay ve Bayes formülasyonu ile ELBO'nun tam tablosu cs12'de; VAE ile DDPM'in ELBO türetmelerinin satır satır karşılaştırması ida11'de; MLE-MAP ayrımı ve prior kimin üzerinde tartışması vs03'te. Aynı zincirin diffusion'daki hali için DDPM konu anlatımına bak."
         }
       ]
     },
@@ -25853,87 +25853,87 @@
         "lab06",
         "mlo20"
       ],
-      "summary": "GAN'ın neden olasılık hesaplamayı tamamen bıraktığından başlayıp, iki ağın yarışına, eğitimin neden kırılgan olduğuna, mode collapse'e, DCGAN ve StyleGAN tasarım kararlarına, CycleGAN'ın eşleşmemiş veri numarasına ve difüzyonun neden devraldığına kadar tek akış.",
+      "summary": "GAN'ın neden olasılık hesaplamayı tamamen bıraktığından başlayıp, iki ağın yarışına, eğitimin neden kırılgan olduğuna, mode collapse'e, DCGAN ve StyleGAN tasarım kararlarına, CycleGAN'ın eşleşmemiş veri numarasına ve diffusion'ın neden devraldığına kadar tek akış.",
       "sections": [
         {
           "type": "text",
           "heading": "Bu metin ne için",
-          "text": "GAN, VAE ve difüzyonla aynı işi yapıyor ama tamamen farklı bir felsefeyle. O felsefeyi görmeden ne neden iyi çalıştığı ne de neden eğitiminin bu kadar zor olduğu anlaşılıyor.\n\nBu metin oradan başlıyor: GAN'ın neyi yapmayı reddettiği."
+          "text": "GAN, VAE ve diffusion'la aynı işi yapıyor ama tamamen farklı bir felsefeyle. O felsefeyi görmeden ne neden iyi çalıştığı ne de neden eğitiminin bu kadar zor olduğu anlaşılıyor.\n\nBu metin oradan başlıyor: GAN'ın neyi yapmayı reddettiği."
         },
         {
           "type": "text",
-          "heading": "1. Üretici modellerin ikiye ayrıldığı yer",
-          "text": "Bir üretici modelden iki ayrı şey isteyebilirsin.\n\nBirincisi: bana verdiğim görüntünün ne kadar olası olduğunu söyle. Bu, modelin bir olasılık hesaplayabilmesini gerektiriyor. Autoregressive modeller bunu tam olarak yapıyor, VAE ise yaklaşık olarak — bir alt sınır üzerinden.\n\nİkincisi: bana yeni bir görüntü üret. Bunun için olasılık hesaplamana gerek yok. Sadece örnek verebilmen yeterli.\n\nGAN tam olarak bu ayrımı kullanıyor. Olasılık hesaplamayı tamamen bırakıyor, sadece örnekleyebilen bir model kuruyor. Adı implicit density: dağılımı yazamıyorsun ama ondan çekebiliyorsun.\n\nKazandığı şey büyük — artık integral, alt sınır, hesaplanamayan posterior gibi dertler yok. Kaybettiği şey de büyük: elinde optimize ettiğin dürüst bir sayı kalmıyor, ve bütün sorunları buradan çıkıyor."
+          "heading": "1. generative modellerin ikiye ayrıldığı yer",
+          "text": "Bir generative modelden iki ayrı şey isteyebilirsin.\n\nBirincisi: bana verdiğim görüntünün ne kadar olası olduğunu söyle. Bu, modelin bir olasılık hesaplayabilmesini gerektiriyor. Autoregressive modeller bunu tam olarak yapıyor, VAE ise yaklaşık olarak — bir alt sınır üzerinden.\n\nİkincisi: bana yeni bir görüntü üret. Bunun için olasılık hesaplamana gerek yok. Sadece örnek verebilmen yeterli.\n\nGAN tam olarak bu ayrımı kullanıyor. Olasılık hesaplamayı tamamen bırakıyor, sadece örnekleyebilen bir model kuruyor. Adı implicit density: dağılımı yazamıyorsun ama ondan çekebiliyorsun.\n\nKazandığı şey büyük — artık integral, alt sınır, hesaplanamayan posterior gibi dertler yok. Kaybettiği şey de büyük: elinde optimize ettiğin dürüst bir sayı kalmıyor, ve bütün sorunları buradan çıkıyor."
         },
         {
           "type": "text",
           "heading": "2. Kalpazan ve polis",
-          "text": "İki ağ var.\n\nÜretici, rastgele bir gürültü vektöründen görüntü üretiyor. Kalpazan: sahte para basmaya çalışıyor.\n\nAyırt edici, kendisine verilen görüntünün gerçek veri kümesinden mi yoksa üreticiden mi geldiğine karar veriyor. Polis.\n\nİkisi birbirini eğitiyor. Kalpazan daha iyi sahte üretince polisin daha iyi bakması gerekiyor; polis keskinleşince kalpazanın daha gerçekçi olması gerekiyor.\n\nBuradaki gerçek yenilik şu: kayıp fonksiyonu elle yazılmıyor, öğreniliyor. VAE'de \"iyi görüntü ne demek\" sorusunun cevabını sen kareler toplamı diye sabitliyorsun. GAN'da o cevabı ayırt edici üretiyor ve eğitim boyunca değişiyor."
+          "text": "İki ağ var.\n\nGenerator, rastgele bir gürültü vektöründen görüntü üretiyor. Kalpazan: sahte para basmaya çalışıyor.\n\nDiscriminator, kendisine verilen görüntünün gerçek veri kümesinden mi yoksa generator'den mi geldiğine karar veriyor. Polis.\n\nİkisi birbirini eğitiyor. Kalpazan daha iyi sahte üretince polisin daha iyi bakması gerekiyor; polis keskinleşince kalpazanın daha gerçekçi olması gerekiyor.\n\nBuradaki gerçek yenilik şu: loss fonksiyonu elle yazılmıyor, öğreniliyor. VAE'de \"iyi görüntü ne demek\" sorusunun cevabını sen kareler toplamı diye sabitliyorsun. GAN'da o cevabı discriminator üretiyor ve eğitim boyunca değişiyor."
         },
         {
           "type": "text",
-          "heading": "3. İki kayıp, tek yarış",
-          "text": "Ayırt edicinin işi sıradan bir ikili sınıflandırma: gerçeklere 1, sahtelere 0 demeye çalışıyor. Kaybı da tanıdık, binary cross-entropy.\n\nÜreticinin işi bunun tersi: ayırt ediciyi yanıltmak.\n\nİlk yazılışında üretici, ayırt edicinin sahte deme olasılığını minimize ediyordu. Pratikte bu çalışmıyor: eğitimin başında üretici çok kötü, ayırt edici onu kolayca yakalıyor, ve o bölgede gradyan neredeyse sıfır — yani üretici en çok öğrenmesi gereken anda hiçbir sinyal alamıyor.\n\nÇözüm basit bir yeniden yazım: minimize etmek yerine, ayırt edicinin gerçek deme olasılığını maksimize et. Aynı yöne itiyor ama gradyanı eğitim başında güçlü. Uygulamaların tamamı bunu kullanıyor.\n\nBu detay, GAN literatüründeki genel kalıbın ilk örneği: yöntem doğru, ama işe yaraması için bir sürü pratik düzeltme gerekiyor."
+          "heading": "3. İki loss, tek yarış",
+          "text": "Discriminator'ün işi sıradan bir ikili sınıflandırma: gerçeklere 1, sahtelere 0 demeye çalışıyor. Loss'u da tanıdık, binary cross-entropy.\n\nGenerator'ün işi bunun tersi: discriminator'ü yanıltmak.\n\nİlk yazılışında generator, discriminator'ün sahte deme olasılığını minimize ediyordu. Pratikte bu çalışmıyor: eğitimin başında generator çok kötü, discriminator onu kolayca yakalıyor, ve o bölgede gradient neredeyse sıfır — yani generator en çok öğrenmesi gereken anda hiçbir sinyal alamıyor.\n\nÇözüm basit bir yeniden yazım: minimize etmek yerine, discriminator'ün gerçek deme olasılığını maksimize et. Aynı yöne itiyor ama gradient'i eğitim başında güçlü. Uygulamaların tamamı bunu kullanıyor.\n\nBu detay, GAN literatüründeki genel kalıbın ilk örneği: yöntem doğru, ama işe yaraması için bir sürü pratik düzeltme gerekiyor."
         },
         {
           "type": "code",
           "heading": "Eğitim döngüsü",
-          "text": "for her batch:\n    # 1) Ayirt ediciyi guncelle\n    gercek  = batch\n    sahte   = G(z),  z ~ N(0, I)\n    kayip_D = BCE(D(gercek), 1) + BCE(D(sahte.detach()), 0)\n    kayip_D geri yayilir, yalniz D guncellenir\n\n    # 2) Ureticiyi guncelle\n    sahte   = G(z)\n    kayip_G = BCE(D(sahte), 1)        # non-saturating bicim\n    kayip_G geri yayilir, yalniz G guncellenir\n\nDikkat: D guncellenirken sahte goruntu grafikten kopariliyor (detach),\nyoksa D'nin kaybi G'yi de gunceller — yanlis yone."
+          "text": "for her batch:\n    # 1) Ayirt ediciyi guncelle\n    gercek  = batch\n    sahte   = G(z),  z ~ N(0, I)\n    kayip_D = BCE(D(gercek), 1) + BCE(D(sahte.detach()), 0)\n    kayip_D geri yayilir, yalniz D guncellenir\n\n    # 2) Ureticiyi guncelle\n    sahte   = G(z)\n    kayip_G = BCE(D(sahte), 1)        # non-saturating bicim\n    kayip_G geri yayilir, yalniz G guncellenir\n\nDikkat: D guncellenirken sahte goruntu grafikten kopariliyor (detach),\nyoksa D'nin loss'u G'yi de gunceller — yanlis yone."
         },
         {
           "type": "text",
           "heading": "4. Küçük ama öğretici bir detay: neden tanh",
-          "text": "Üreticinin son katmanı tanh, ve gerçek veri de eksi bir ile bir arasına normalize ediliyor. Bunun sebebi estetik değil.\n\nAyırt ediciye iki tür girdi geliyor: gerçek görüntüler ve üretilmiş görüntüler. Eğer gerçek veri sıfır ile bir arasında, üretilenler eksi bir ile bir arasında olsaydı, ayırt edici içeriğe hiç bakmadan sadece sayı aralığına bakarak ikisini ayırırdı. Öğrenecek hiçbir şeyi kalmazdı ve üreticiye hiçbir faydalı sinyal gitmezdi.\n\nİki girdi aynı aralıkta olunca ayırt edici gerçek farkı — yapıyı ve içeriği — öğrenmek zorunda kalıyor.\n\nBu, GAN'larla çalışırken tekrar tekrar karşına çıkacak bir düşünme biçiminin örneği: ayırt ediciye bedava bir ipucu bırakıp bırakmadığını her zaman kontrol et."
+          "text": "Generator'ün son katmanı tanh, ve gerçek veri de eksi bir ile bir arasına normalize ediliyor. Bunun sebebi estetik değil.\n\nDiscriminator'e iki tür girdi geliyor: gerçek görüntüler ve üretilmiş görüntüler. Eğer gerçek veri sıfır ile bir arasında, üretilenler eksi bir ile bir arasında olsaydı, discriminator içeriğe hiç bakmadan sadece sayı aralığına bakarak ikisini ayırırdı. Öğrenecek hiçbir şeyi kalmazdı ve generator'e hiçbir faydalı sinyal gitmezdi.\n\nİki girdi aynı aralıkta olunca discriminator gerçek farkı — yapıyı ve içeriği — öğrenmek zorunda kalıyor.\n\nBu, GAN'larla çalışırken tekrar tekrar karşına çıkacak bir düşünme biçiminin örneği: discriminator'e bedava bir ipucu bırakıp bırakmadığını her zaman kontrol et."
         },
         {
           "type": "text",
           "heading": "5. Neden keskin üretiyor",
-          "text": "VAE'nin bulanıklığının sebebi karesel kayıptı: belirsizlik karşısında ortalama alıyordu.\n\nGAN'da ortalama almanın bir bedeli var. İki olası kenarın ortasını basarsan ortaya gerçek veride hiç görülmeyen bir görüntü çıkar, ve ayırt edici tam olarak bunu yakalamak için eğitiliyor. Yani bulanıklık doğrudan cezalandırılıyor.\n\nGAN'ın keskinliği buradan geliyor: kayıp fonksiyonu, ortalama almayı ödüllendirmiyor."
+          "text": "VAE'nin bulanıklığının sebebi karesel loss'tu: belirsizlik karşısında ortalama alıyordu.\n\nGAN'da ortalama almanın bir bedeli var. İki olası kenarın ortasını basarsan ortaya gerçek veride hiç görülmeyen bir görüntü çıkar, ve discriminator tam olarak bunu yakalamak için eğitiliyor. Yani bulanıklık doğrudan cezalandırılıyor.\n\nGAN'ın keskinliği buradan geliyor: loss fonksiyonu, ortalama almayı ödüllendirmiyor."
         },
         {
           "type": "text",
           "heading": "6. Neden kırılgan",
-          "text": "Sıradan bir ağ eğitirken tek bir sayıyı aşağı indiriyorsun ve o sayıya bakarak iyi gidip gitmediğini anlıyorsun.\n\nGAN'da öyle bir sayı yok. İki ağ zıt yönde çekiyor ve aradığın şey bir minimum değil, bir denge. Ayırt edicinin kaybının düşmesi iyi haber de olabilir kötü haber de: ya kendisi iyileşti ya da üretici çöktü. Üreticinin kaybına bakarak da görüntü kalitesini kestiremezsin.\n\nÜstelik denge kırılgan. Ayırt edici fazla güçlenirse üreticiye giden gradyan kuruyor. Üretici fazla güçlenirse ayırt edici rastgele tahmine düşüyor ve yön bilgisi kalmıyor.\n\nGAN eğitiminin \"sanat gibi\" diye anılmasının sebebi bu: izleyeceğin güvenilir tek bir gösterge yok, bu yüzden üretilen görüntülere gözle bakmak fiilen bir ölçüm aracı."
+          "text": "Sıradan bir ağ eğitirken tek bir sayıyı aşağı indiriyorsun ve o sayıya bakarak iyi gidip gitmediğini anlıyorsun.\n\nGAN'da öyle bir sayı yok. İki ağ zıt yönde çekiyor ve aradığın şey bir minimum değil, bir denge. Discriminator'ün loss'unun düşmesi iyi haber de olabilir kötü haber de: ya kendisi iyileşti ya da generator çöktü. Generator'ün loss'una bakarak da görüntü kalitesini kestiremezsin.\n\nÜstelik denge kırılgan. Discriminator fazla güçlenirse generator'e giden gradient kuruyor. Generator fazla güçlenirse discriminator rastgele tahmine düşüyor ve yön bilgisi kalmıyor.\n\nGAN eğitiminin \"sanat gibi\" diye anılmasının sebebi bu: izleyeceğin güvenilir tek bir gösterge yok, bu yüzden üretilen görüntülere gözle bakmak fiilen bir ölçüm aracı."
         },
         {
           "type": "text",
           "heading": "7. Mode collapse",
-          "text": "En karakteristik arıza bu.\n\nGerçek veri çok modlu: rakam veri kümesinde on rakam var. Üretici bir modu keşfedip ayırt ediciyi onunla kandırabildiğini görürse, geri kalan modları ihmal etmeye başlıyor. Zamanla yalnızca bir veya iki rakam üretir hale geliyor.\n\nAsıl sinsi tarafı şu: bu durumda kayıp değerleri gayet makul görünebiliyor. Üretici işini yapıyor — sadece çeşitliliği kaybetti, ve kayıp fonksiyonunda çeşitliliği ölçen hiçbir terim yok.\n\nTeşhis için eğitim boyunca ayırt edicinin gerçek ve sahte görüntülere verdiği değerleri izle. Gerçeklerde bire, sahtelerde sıfıra sabitlenip kalıyorsa ya mode collapse ya da genel çöküş var.\n\nKarşı önlemler: ayırt ediciye batch içindeki çeşitliliği görme imkanı vermek, Wasserstein biçimine geçerek daha düzgün gradyan almak, ayırt edicinin fonksiyonunu spektral normalizasyonla dizginlemek, öğrenme oranını düşürmek. Hiçbiri kesin çözüm değil — mode collapse GAN'ların yapısal riski."
+          "text": "En karakteristik arıza bu.\n\nGerçek veri çok modlu: rakam veri kümesinde on rakam var. Generator bir modu keşfedip discriminator'ü onunla kandırabildiğini görürse, geri kalan modları ihmal etmeye başlıyor. Zamanla yalnızca bir veya iki rakam üretir hale geliyor.\n\nAsıl sinsi tarafı şu: bu durumda loss değerleri gayet makul görünebiliyor. Generator işini yapıyor — sadece çeşitliliği kaybetti, ve loss fonksiyonunda çeşitliliği ölçen hiçbir terim yok.\n\nTeşhis için eğitim boyunca discriminator'ün gerçek ve sahte görüntülere verdiği değerleri izle. Gerçeklerde bire, sahtelerde sıfıra sabitlenip kalıyorsa ya mode collapse ya da genel çöküş var.\n\nKarşı önlemler: discriminator'e batch içindeki çeşitliliği görme imkanı vermek, Wasserstein biçimine geçerek daha düzgün gradient almak, discriminator'ün fonksiyonunu spektral normalizasyonla dizginlemek, öğrenme oranını düşürmek. Hiçbiri kesin çözüm değil — mode collapse GAN'ların yapısal riski."
         },
         {
           "type": "text",
           "heading": "8. DCGAN: mimariyi oturtan tasarım kuralları",
-          "text": "İlk GAN'lar tam bağlantılı katmanlarla kuruluyordu ve zor eğitiliyordu. DCGAN, konvolüsyonel yapıyı GAN'a oturtan tasarım kurallarını verdi.\n\nÜretici, düşük boyutlu gürültüyü küçük bir öznitelik haritasına açıyor, sonra adım adım büyütüyor. Havuzlama katmanı yok — büyütme ve küçültme adımlı konvolüsyonlarla yapılıyor. Üreticide ReLU, ayırt edicide sızıntılı ReLU kullanılıyor; giriş ve çıkış katmanları dışında batch normalizasyon var.\n\nBu kuralların tek tek matematiksel gerekçesi yok, ampirik olarak bulundular. Ama etkisi büyüktü: güvenilir biçimde tanınabilir görüntü üreten ilk GAN ailesi bu.\n\nBir yan bulgu da buradan çıktı: latent uzayda aritmetik çalışıyor. Vektörleri toplayıp çıkarmak görüntüde anlamlı değişikliklere karşılık geliyor."
+          "text": "İlk GAN'lar tam bağlantılı katmanlarla kuruluyordu ve zor eğitiliyordu. DCGAN, konvolüsyonel yapıyı GAN'a oturtan tasarım kurallarını verdi.\n\nGenerator, düşük boyutlu gürültüyü küçük bir öznitelik haritasına açıyor, sonra adım adım büyütüyor. Havuzlama katmanı yok — büyütme ve küçültme adımlı konvolüsyonlarla yapılıyor. Generator'de ReLU, discriminator'de sızıntılı ReLU kullanılıyor; giriş ve çıkış katmanları dışında batch normalizasyon var.\n\nBu kuralların tek tek matematiksel gerekçesi yok, ampirik olarak bulundular. Ama etkisi büyüktü: güvenilir biçimde tanınabilir görüntü üreten ilk GAN ailesi bu.\n\nBir yan bulgu da buradan çıktı: latent uzayda aritmetik çalışıyor. Vektörleri toplayıp çıkarmak görüntüde anlamlı değişikliklere karşılık geliyor."
         },
         {
           "type": "text",
           "heading": "9. StyleGAN: kontrolü ayırmak",
-          "text": "StyleGAN'ın getirdiği fikir, gürültüyü doğrudan üreticiye vermeyi bırakmak.\n\nÖnce gürültü, birkaç tam bağlantılı katmandan oluşan bir eşleme ağından geçiyor ve bir stil vektörüne dönüşüyor. Bu ara uzay, orijinal gürültü uzayından daha az dolaşık — yani boyutları görüntüdeki değişim eksenleriyle daha temiz örtüşüyor.\n\nSonra stil vektörü, üretimin her çözünürlük seviyesinde ayrı ayrı enjekte ediliyor. Enjeksiyon biçimi uyarlanabilir örnek normalizasyonu: öznitelik haritası normalize ediliyor, sonra stilden gelen ölçek ve kaydırma uygulanıyor.\n\nSonucu şu: kaba çözünürlükteki stil poz ve genel yapıyı, ince çözünürlüktekiler renk ve doku gibi ayrıntıları belirliyor. Yüzün duruşunu değiştirmeden saç rengini değiştirebiliyorsun.\n\nAyrıca her katmana bağımsız gürültü ekleniyor; saç telleri, gözenekler gibi tamamen rastlantısal ayrıntılar oradan geliyor — üretici bunları stil vektöründe taşımak zorunda kalmıyor."
+          "text": "StyleGAN'ın getirdiği fikir, gürültüyü doğrudan generator'e vermeyi bırakmak.\n\nÖnce gürültü, birkaç tam bağlantılı katmandan oluşan bir eşleme ağından geçiyor ve bir stil vektörüne dönüşüyor. Bu ara uzay, orijinal gürültü uzayından daha az dolaşık — yani boyutları görüntüdeki değişim eksenleriyle daha temiz örtüşüyor.\n\nSonra stil vektörü, üretimin her çözünürlük seviyesinde ayrı ayrı enjekte ediliyor. Enjeksiyon biçimi uyarlanabilir örnek normalizasyonu: öznitelik haritası normalize ediliyor, sonra stilden gelen ölçek ve kaydırma uygulanıyor.\n\nSonucu şu: kaba çözünürlükteki stil poz ve genel yapıyı, ince çözünürlüktekiler renk ve doku gibi ayrıntıları belirliyor. Yüzün duruşunu değiştirmeden saç rengini değiştirebiliyorsun.\n\nAyrıca her katmana bağımsız gürültü ekleniyor; saç telleri, gözenekler gibi tamamen rastlantısal ayrıntılar oradan geliyor — generator bunları stil vektöründe taşımak zorunda kalmıyor."
         },
         {
           "type": "text",
           "heading": "10. CycleGAN: eşleşmemiş veriyle çeviri",
-          "text": "Görüntüden görüntüye çeviride doğal yaklaşım eşleşmiş veri istiyor: aynı sahnenin iki versiyonu. Pratikte bunu toplamak çoğu zaman imkansız — aynı atın zebra hali yok.\n\nCycleGAN iki ayrı koleksiyonla çalışıyor: bir yığın at fotoğrafı, bir yığın zebra fotoğrafı, eşleşme yok.\n\nİki üretici kuruluyor, biri ileri biri geri yönde çeviriyor. Her yönün kendi ayırt edicisi var; bu kadarı \"çıktı zebra gibi görünsün\" baskısını sağlıyor.\n\nAma bu tek başına yetmiyor: üretici, girdiyle hiç ilgisi olmayan bir zebra üretse de ayırt ediciyi memnun edebilir. Eksik olan kısıt, içeriğin korunması.\n\nÇevrim tutarlılığı bunu sağlıyor: bir görüntüyü çevirip geri çevirdiğinde başladığın yere dönmelisin. Geri dönebilmesi için ileri çevirinin içeriği taşıması gerekiyor.\n\nBu fikir GAN'ların ötesine geçti — difüzyon tabanlı eşleşmemiş çeviri modelleri de aynı çevrim kısıtını kullanıyor."
+          "text": "Görüntüden görüntüye çeviride doğal yaklaşım eşleşmiş veri istiyor: aynı sahnenin iki versiyonu. Pratikte bunu toplamak çoğu zaman imkansız — aynı atın zebra hali yok.\n\nCycleGAN iki ayrı koleksiyonla çalışıyor: bir yığın at fotoğrafı, bir yığın zebra fotoğrafı, eşleşme yok.\n\nİki generator kuruluyor, biri ileri biri geri yönde çeviriyor. Her yönün kendi discriminator'ü var; bu kadarı \"çıktı zebra gibi görünsün\" baskısını sağlıyor.\n\nAma bu tek başına yetmiyor: generator, girdiyle hiç ilgisi olmayan bir zebra üretse de discriminator'ü memnun edebilir. Eksik olan kısıt, içeriğin korunması.\n\nÇevrim tutarlılığı bunu sağlıyor: bir görüntüyü çevirip geri çevirdiğinde başladığın yere dönmelisin. Geri dönebilmesi için ileri çevirinin içeriği taşıması gerekiyor.\n\nBu fikir GAN'ların ötesine geçti — diffusion tabanlı eşleşmemiş çeviri modelleri de aynı çevrim kısıtını kullanıyor."
         },
         {
           "type": "text",
           "heading": "11. Wasserstein biçimi ne düzeltti",
-          "text": "Orijinal GAN kaybının bir yapısal sorunu var: iki dağılım birbirinden yeterince uzaksa, aralarındaki uzaklığın gradyanı neredeyse sıfır oluyor. Üretici tam da en çok yön bilgisine ihtiyaç duyduğu anda sinyalsiz kalıyor.\n\nWasserstein biçimi, dağılımlar arasındaki uzaklığı başka bir ölçüyle tanımlıyor — kabaca \"bir yığını diğerine dönüştürmek için ne kadar kütle taşımak gerekir\". Bu ölçü, dağılımlar ayrıkken bile anlamlı ve düzgün bir gradyan veriyor.\n\nBedeli, ayırt edicinin fonksiyonunun fazla dik olmaması gerekmesi; bu da gradyan cezası veya spektral normalizasyon gibi ek kısıtlarla sağlanıyor.\n\nPratik sonucu: eğitim belirgin biçimde daha kararlı, ve ayırt edicinin kaybı ilk kez kalite ile gerçekten ilişkili bir sayı haline geliyor."
+          "text": "Orijinal GAN loss'unun bir yapısal sorunu var: iki dağılım birbirinden yeterince uzaksa, aralarındaki uzaklığın gradient'i neredeyse sıfır oluyor. Generator tam da en çok yön bilgisine ihtiyaç duyduğu anda sinyalsiz kalıyor.\n\nWasserstein biçimi, dağılımlar arasındaki uzaklığı başka bir ölçüyle tanımlıyor — kabaca \"bir yığını diğerine dönüştürmek için ne kadar kütle taşımak gerekir\". Bu ölçü, dağılımlar ayrıkken bile anlamlı ve düzgün bir gradient veriyor.\n\nBedeli, discriminator'ün fonksiyonunun fazla dik olmaması gerekmesi; bu da gradient cezası veya spektral normalizasyon gibi ek kısıtlarla sağlanıyor.\n\nPratik sonucu: eğitim belirgin biçimde daha kararlı, ve discriminator'ün loss'u ilk kez kalite ile gerçekten ilişkili bir sayı haline geliyor."
         },
         {
           "type": "text",
-          "heading": "12. Neden difüzyon devraldı",
-          "text": "GAN'lar 2016-2021 arasında görüntü üretiminin standardıydı. Difüzyonun onları geçmesinin sebebi tek tek kalite değil, karakter.\n\nDifüzyonun eğitimi stabil: ayırt edici yok, denge yok, izlenebilir tek bir kayıp var ve düştükçe iyiye gidiyor. Mod kapsaması daha iyi: veri dağılımının tamamını öğrenmeye çalışıyor, bir köşesine sıkışmıyor. Koşullama daha kolay takılıyor.\n\nBuna karşılık GAN'ın tek büyük üstünlüğü hâlâ duruyor: tek adımda üretiyor. Difüzyonun onlarca adımına karşılık bir ileri geçiş.\n\nİronik son şu: GAN ortadan kalkmadı, modern boru hatlarının içine yerleşti. Latent difüzyon mimarilerinde görüntüyü sıkıştıran çözücüyü keskin tutan şey bir GAN ayırt edicisi. Ve difüzyon damıtma yöntemlerinin bir kısmı, çok adımlı öğretmeni tek adımlı öğrenciye sıkıştırmak için yine adversarial kayıp kullanıyor."
+          "heading": "12. Neden diffusion devraldı",
+          "text": "GAN'lar 2016-2021 arasında görüntü üretiminin standardıydı. diffusion'ın onları geçmesinin sebebi tek tek kalite değil, karakter.\n\ndiffusion'ın eğitimi stabil: discriminator yok, denge yok, izlenebilir tek bir loss var ve düştükçe iyiye gidiyor. Mod kapsaması daha iyi: veri dağılımının tamamını öğrenmeye çalışıyor, bir köşesine sıkışmıyor. Koşullama daha kolay takılıyor.\n\nBuna karşılık GAN'ın tek büyük üstünlüğü hâlâ duruyor: tek adımda üretiyor. diffusion'ın onlarca adımına karşılık bir ileri geçiş.\n\nİronik son şu: GAN ortadan kalkmadı, modern boru hatlarının içine yerleşti. Latent diffusion mimarilerinde görüntüyü sıkıştıran çözücüyü keskin tutan şey bir GAN discriminator'ü. Ve diffusion damıtma yöntemlerinin bir kısmı, çok adımlı öğretmeni tek adımlı öğrenciye sıkıştırmak için yine adversarial loss kullanıyor."
         },
         {
           "type": "insight",
           "heading": "Geriye ne kalsın",
-          "text": "GAN olasılık hesaplamayı bırakıp yalnızca örnekleyebilen bir model kuruyor; kazandığı şey basitlik, kaybettiği şey izlenebilir tek bir hedef. Kayıp fonksiyonu elle yazılmıyor, ayırt edici tarafından öğreniliyor — keskinliğin sebebi bu, kırılganlığın da. Aradığın şey minimum değil denge, o yüzden kayıp eğrileri kalite hakkında bilgi vermiyor. Mode collapse yapısal bir risk, çünkü kayıpta çeşitliliği ölçen hiçbir terim yok. DCGAN mimariyi, StyleGAN kontrolü, CycleGAN eşleşmemiş veriyi çözdü. Difüzyon stabilite ve mod kapsaması sayesinde devraldı, ama GAN tek adımda üretmenin ve keskin çözücülerin aracı olarak boru hattının içinde kaldı."
+          "text": "GAN olasılık hesaplamayı bırakıp yalnızca örnekleyebilen bir model kuruyor; kazandığı şey basitlik, kaybettiği şey izlenebilir tek bir hedef. Loss fonksiyonu elle yazılmıyor, discriminator tarafından öğreniliyor — keskinliğin sebebi bu, kırılganlığın da. Aradığın şey minimum değil denge, o yüzden loss eğrileri kalite hakkında bilgi vermiyor. Mode collapse yapısal bir risk, çünkü loss'ta çeşitliliği ölçen hiçbir terim yok. DCGAN mimariyi, StyleGAN kontrolü, CycleGAN eşleşmemiş veriyi çözdü. Diffusion stabilite ve mod kapsaması sayesinde devraldı, ama GAN tek adımda üretmenin ve keskin çözücülerin aracı olarak boru hattının içinde kaldı."
         },
         {
           "type": "note",
           "heading": "Nereye bakılır",
-          "text": "Üretici ve ayırt edicinin kurulumu, PyTorch uygulaması ve normalizasyon detayı lab06'da; mode collapse belirtileri ve karşı önlemler yine lab06'da; DCGAN ve StyleGAN mimari kararları ile GAN döneminin özeti cs13'te; CycleGAN ve çevrim tutarlılığı lab06'da; üretici model taksonomisi cs12'de. VAE ile karşılaştırma için VAE konu anlatımına, difüzyonla karşılaştırma için DDPM konu anlatımına bak."
+          "text": "Generator ve discriminator'ün kurulumu, PyTorch uygulaması ve normalizasyon detayı lab06'da; mode collapse belirtileri ve karşı önlemler yine lab06'da; DCGAN ve StyleGAN mimari kararları ile GAN döneminin özeti cs13'te; CycleGAN ve çevrim tutarlılığı lab06'da; generative model taksonomisi cs12'de. VAE ile karşılaştırma için VAE konu anlatımına, diffusion'la karşılaştırma için DDPM konu anlatımına bak."
         }
       ]
     },
@@ -25948,12 +25948,12 @@
         "mlo21"
       ],
       "anim": "ddpm",
-      "summary": "Difüzyon modellerinin neden ortaya çıktığından latent diffusion'a kadar tek akış: hangi eksikliği kapattı, forward/reverse süreç, ELBO'nun neden MSE'ye çöktüğü, U-Net'in içi, classifier-free guidance ve sonrası. Kartlar tek tek bilgi verir, bu metin sırayı verir.",
+      "summary": "Diffusion modellerinin neden ortaya çıktığından latent diffusion'a kadar tek akış: hangi eksikliği kapattı, forward/reverse süreç, ELBO'nun neden MSE'ye çöktüğü, U-Net'in içi, classifier-free guidance ve sonrası. Kartlar tek tek bilgi verir, bu metin sırayı verir.",
       "sections": [
         {
           "type": "text",
           "heading": "Bu metin ne için",
-          "text": "Sitedeki difüzyon kartları tek tek doğru ama her biri tek bir şeyi anlatıyor: biri forward process'i, biri ELBO'yu, biri U-Net'in boyutlarını. Arama çubuğundan bir şey bulmak için bu iyi. Konuyu sıfırdan kurmak için değil.\n\nBu metin baştan sona okunmak için yazıldı. Sonunda şunu yapabiliyor olman lazım: boş bir kağıda difüzyonun neden var olduğunu, nasıl eğitildiğini ve nasıl örnek ürettiğini, formülleri hatırlamadan da anlatabilmek. Formülleri sonra hatırlarsın; anlatıyı hatırlamazsan formül işe yaramıyor."
+          "text": "Sitedeki diffusion kartları tek tek doğru ama her biri tek bir şeyi anlatıyor: biri forward process'i, biri ELBO'yu, biri U-Net'in boyutlarını. Arama çubuğundan bir şey bulmak için bu iyi. Konuyu sıfırdan kurmak için değil.\n\nBu metin baştan sona okunmak için yazıldı. Sonunda şunu yapabiliyor olman lazım: boş bir kağıda diffusion'ın neden var olduğunu, nasıl eğitildiğini ve nasıl örnek ürettiğini, formülleri hatırlamadan da anlatabilmek. Formülleri sonra hatırlarsın; anlatıyı hatırlamazsan formül işe yaramıyor."
         },
         {
           "type": "text",
@@ -25963,12 +25963,12 @@
         {
           "type": "text",
           "heading": "2. Öncekiler neyi beceremedi",
-          "text": "Difüzyondan önce bu işin iki ana yolu vardı ve ikisinin de karakteristik bir arızası vardı.\n\nGAN: bir üretici ile bir ayırt edici yarışıyor. Görüntü kalitesi yüksek, tek adımda üretiyor — ama eğitim bir denge arayışı, ve o denge kolayca bozuluyor. En bilinen arızası mode collapse: üretici, ayırt ediciyi kandıran birkaç görüntüyü bulup ömür boyu onları üretmeye başlıyor. Veri kümesinde on rakam var, model üç tanesini üretiyor ve kaybı gayet iyi görünüyor. Ayrıca ne kadar iyi gittiğini söyleyen tek bir sayı yok; loss eğrisine bakarak eğitimin iyi gidip gitmediğini anlayamıyorsun.\n\nVAE: eğitimi stabil, elinde optimize ettiğin dürüst bir alt sınır var. Ama üretilen görüntüler bulanık. Sebebi mimari değil, kayıp fonksiyonunun kendisi: karesel hata, belirsizlik karşısında ortalamayı seçer. Model bir kenarın tam olarak nerede olduğundan emin değilse, iki olasılığın ortasını basar — ve iki keskin kenarın ortalaması bulanık bir kenardır.\n\nDifüzyonun kapattığı boşluk tam burası: GAN'ın keskinliği, VAE'nin stabilitesi. Ne ayırt edici var, ne de bir denge arayışı; geriye kalan şey düpedüz bir regresyon problemi."
+          "text": "diffusion'dan önce bu işin iki ana yolu vardı ve ikisinin de karakteristik bir arızası vardı.\n\nGAN: bir generator ile bir discriminator yarışıyor. Görüntü kalitesi yüksek, tek adımda üretiyor — ama eğitim bir denge arayışı, ve o denge kolayca bozuluyor. En bilinen arızası mode collapse: generator, discriminator'ü kandıran birkaç görüntüyü bulup ömür boyu onları üretmeye başlıyor. Veri kümesinde on rakam var, model üç tanesini üretiyor ve loss'u gayet iyi görünüyor. Ayrıca ne kadar iyi gittiğini söyleyen tek bir sayı yok; loss eğrisine bakarak eğitimin iyi gidip gitmediğini anlayamıyorsun.\n\nVAE: eğitimi stabil, elinde optimize ettiğin dürüst bir alt sınır var. Ama üretilen görüntüler bulanık. Sebebi mimari değil, loss fonksiyonunun kendisi: karesel hata, belirsizlik karşısında ortalamayı seçer. Model bir kenarın tam olarak nerede olduğundan emin değilse, iki olasılığın ortasını basar — ve iki keskin kenarın ortalaması bulanık bir kenardır.\n\ndiffusion'ın kapattığı boşluk tam burası: GAN'ın keskinliği, VAE'nin stabilitesi. Ne discriminator var, ne de bir denge arayışı; geriye kalan şey düpedüz bir regresyon problemi."
         },
         {
           "type": "text",
           "heading": "3. Tek cümlelik fikir",
-          "text": "Zor olan şey gürültüden görüntü üretmek. Kolay olan şey görüntüye gürültü eklemek.\n\nO halde zor yönü doğrudan öğrenme: kolay yönü sen kur, ve ağdan sadece onu bir adım geri almasını iste.\n\nBir fotoğrafa binde bir oranında gürültü ekle. Sonuç hâlâ fotoğraf, sadece biraz kirli. Şimdi bunu bin kez tekrarla. Sonunda elinde saf gürültü var, içinde fotoğraftan eser yok. Bu yolu tersine yürüyebilseydin, saf gürültüden başlayıp bir fotoğraf üretebilirdin.\n\nDifüzyon modelinin öğrendiği şey bu yolun tamamı değil, tek bir adımı: bana biraz kirli bir görüntü ver, sana eklenmiş olan kiri söyleyeyim. Üretim sırasında bu tek adım bin kez tekrarlanıyor.\n\nDönüm noktası şu cümlede: model görüntüyü tahmin etmiyor, gürültüyü tahmin ediyor. Neden böyle yaptığı aşağıda, ama şimdiden aklında dursun — konunun yarısı bu tercihte."
+          "text": "Zor olan şey gürültüden görüntü üretmek. Kolay olan şey görüntüye gürültü eklemek.\n\nO halde zor yönü doğrudan öğrenme: kolay yönü sen kur, ve ağdan sadece onu bir adım geri almasını iste.\n\nBir fotoğrafa binde bir oranında gürültü ekle. Sonuç hâlâ fotoğraf, sadece biraz kirli. Şimdi bunu bin kez tekrarla. Sonunda elinde saf gürültü var, içinde fotoğraftan eser yok. Bu yolu tersine yürüyebilseydin, saf gürültüden başlayıp bir fotoğraf üretebilirdin.\n\nDiffusion modelinin öğrendiği şey bu yolun tamamı değil, tek bir adımı: bana biraz kirli bir görüntü ver, sana eklenmiş olan kiri söyleyeyim. Üretim sırasında bu tek adım bin kez tekrarlanıyor.\n\nDönüm noktası şu cümlede: model görüntüyü tahmin etmiyor, gürültüyü tahmin ediyor. Neden böyle yaptığı aşağıda, ama şimdiden aklında dursun — konunun yarısı bu tercihte."
         },
         {
           "type": "text",
@@ -25983,12 +25983,12 @@
         {
           "type": "text",
           "heading": "5. Kapalı formun neden bu kadar önemli olduğu",
-          "text": "Yukarıdaki üçüncü satır, difüzyonun eğitilebilir olmasının tek sebebi.\n\nDüşün: t = 500'deki gürültülü görüntüyü elde etmek için 500 kez döngü döndürmen gerekseydi, her eğitim örneği için 500 adım atman gerekirdi. Eğitim pratikte imkansız olurdu.\n\nAma arka arkaya eklenen Gaussian gürültüler yine Gaussian veriyor, ve varyansları toplanıyor. Bu yüzden 500 adımın tamamı tek bir formüle çöküyor: bir kere karekök(alpha_bar_500) ile çarp, üstüne karekök(1 - alpha_bar_500) kadar gürültü ekle. Bitti.\n\nSomut olarak: eğitim sırasında her görüntü için rastgele bir t seçiyorsun (mesela 500), tek satırda x_500'ü üretiyorsun, ağa veriyorsun. Sıralı hiçbir şey yok. Eğitim tamamen paralel.\n\nBuna reparameterization trick deniyor ve aynı numarayı VAE'de de görmüştün: rastgeleliği, gradyanın akabileceği bir toplam-çarpım biçiminde yazmak.\n\nDikkat: bu kolaylık sadece forward yönde var. Üretim (sampling) hâlâ adım adım, ve yavaşlığın sebebi bu."
+          "text": "Yukarıdaki üçüncü satır, diffusion'ın eğitilebilir olmasının tek sebebi.\n\nDüşün: t = 500'deki gürültülü görüntüyü elde etmek için 500 kez döngü döndürmen gerekseydi, her eğitim örneği için 500 adım atman gerekirdi. Eğitim pratikte imkansız olurdu.\n\nAma arka arkaya eklenen Gaussian gürültüler yine Gaussian veriyor, ve varyansları toplanıyor. Bu yüzden 500 adımın tamamı tek bir formüle çöküyor: bir kere karekök(alpha_bar_500) ile çarp, üstüne karekök(1 - alpha_bar_500) kadar gürültü ekle. Bitti.\n\nSomut olarak: eğitim sırasında her görüntü için rastgele bir t seçiyorsun (mesela 500), tek satırda x_500'ü üretiyorsun, ağa veriyorsun. Sıralı hiçbir şey yok. Eğitim tamamen paralel.\n\nBuna reparameterization trick deniyor ve aynı numarayı VAE'de de görmüştün: rastgeleliği, gradient'in akabileceği bir toplam-çarpım biçiminde yazmak.\n\nDikkat: bu kolaylık sadece forward yönde var. Üretim (sampling) hâlâ adım adım, ve yavaşlığın sebebi bu."
         },
         {
           "type": "text",
           "heading": "6. Schedule'ın kendisi bir tasarım tercihi",
-          "text": "Doğrusal schedule'ın bir kusuru var: alpha_bar erken adımlarda çok hızlı düşüyor. Yani görüntü daha sürecin başında neredeyse tamamen yok oluyor, ve geri kalan yüzlerce adım zaten gürültü olan bir şeyi biraz daha gürültülemekle geçiyor. Eğitim bütçesinin bir kısmı boşa gidiyor.\n\nNichol ve Dhariwal (2021) yerine cosine schedule önerdi: alpha_bar daha yavaş ve daha yumuşak düşüyor, yapı orta gürültü seviyelerinde daha uzun süre korunuyor. Örnek kalitesi belirgin şekilde artıyor.\n\nBuradan çıkan genel ders, difüzyonun tamamında geçerli: forward process öğrenilmiyor ama tasarlanıyor, ve nasıl tasarladığın sonucu doğrudan etkiliyor."
+          "text": "Doğrusal schedule'ın bir kusuru var: alpha_bar erken adımlarda çok hızlı düşüyor. Yani görüntü daha sürecin başında neredeyse tamamen yok oluyor, ve geri kalan yüzlerce adım zaten gürültü olan bir şeyi biraz daha gürültülemekle geçiyor. Eğitim bütçesinin bir kısmı boşa gidiyor.\n\nNichol ve Dhariwal (2021) yerine cosine schedule önerdi: alpha_bar daha yavaş ve daha yumuşak düşüyor, yapı orta gürültü seviyelerinde daha uzun süre korunuyor. Örnek kalitesi belirgin şekilde artıyor.\n\nBuradan çıkan genel ders, diffusion'ın tamamında geçerli: forward process öğrenilmiyor ama tasarlanıyor, ve nasıl tasarladığın sonucu doğrudan etkiliyor."
         },
         {
           "type": "text",
@@ -26008,7 +26008,7 @@
         {
           "type": "text",
           "heading": "9. KL neden MSE'ye çöküyor",
-          "text": "Bu, konunun en çok gözden kaçan adımı, ve anlatıyı tamamlayan yer.\n\nL_{t-1} terimindeki iki dağılım da Gaussian: gerçek ters adım Gaussian (yukarıda türetildi), ağın ürettiği ters adım da Gaussian olarak tanımlandı. İki Gaussian arasındaki KL'nin kapalı formu var. Varyansları sabit seçersen, o kapalı formdan geriye sadece ortalamaların farkının karesi kalıyor.\n\nYani KL kaybolmuyor — Gaussian varsayımı altında karesel hataya dönüşüyor.\n\nÜstüne bir sadeleştirme daha geliyor. Ortalamayı x_0 cinsinden değil epsilon cinsinden yazarsan, ağın tahmin etmesi gereken şey doğrudan eklenen gürültü oluyor. ELBO'dan gelen zamana bağlı ağırlık katsayıları da atılınca geriye kalan şu:\n\nkayıp = eklenen gürültü ile tahmin edilen gürültü arasındaki ortalama karesel hata.\n\nBu kadar. Sekiz satırlık bir türetmenin sonunda elinde kalan şey, bir regresyon kaybı."
+          "text": "Bu, konunun en çok gözden kaçan adımı, ve anlatıyı tamamlayan yer.\n\nL_{t-1} terimindeki iki dağılım da Gaussian: gerçek ters adım Gaussian (yukarıda türetildi), ağın ürettiği ters adım da Gaussian olarak tanımlandı. İki Gaussian arasındaki KL'nin kapalı formu var. Varyansları sabit seçersen, o kapalı formdan geriye sadece ortalamaların farkının karesi kalıyor.\n\nYani KL kaybolmuyor — Gaussian varsayımı altında karesel hataya dönüşüyor.\n\nÜstüne bir sadeleştirme daha geliyor. Ortalamayı x_0 cinsinden değil epsilon cinsinden yazarsan, ağın tahmin etmesi gereken şey doğrudan eklenen gürültü oluyor. ELBO'dan gelen zamana bağlı ağırlık katsayıları da atılınca geriye kalan şu:\n\nloss = eklenen gürültü ile tahmin edilen gürültü arasındaki ortalama karesel hata.\n\nBu kadar. Sekiz satırlık bir türetmenin sonunda elinde kalan şey, bir regresyon loss'u."
         },
         {
           "type": "formula",
@@ -26018,7 +26018,7 @@
         {
           "type": "text",
           "heading": "10. Neden gürültüyü tahmin ediyoruz, görüntüyü değil",
-          "text": "Matematiksel olarak üç seçenek de eşdeğer: ağ temiz görüntüyü (x_0), ters adımın ortalamasını (mu) ya da eklenen gürültüyü (epsilon) tahmin edebilir. Birinden diğerine cebirle geçiliyor. Tam ELBO kullanıldığında üçü de birbirine yakın sonuç veriyor.\n\nFark, basitleştirilmiş kayba geçince ortaya çıkıyor. DDPM makalesinin ablasyonu (CIFAR-10, FID; düşük daha iyi):\n\n  mu tahmini, tam ELBO: 13.22 — basit kayıpla: kararsız\n  epsilon tahmini, tam ELBO: 13.51 — basit kayıpla: 3.17\n\nDört kattan fazla bir iyileşme, ve sebebi ilginç: atılan zaman katsayıları aslında bir yeniden ağırlıklandırma yapıyor. Katsayılar atılınca küçük t'ler (neredeyse temiz görüntüler, kolay iş) göreli olarak daha az ağırlık alıyor, ağ zor işe — büyük gürültüde kaba yapıyı kurtarmaya — odaklanıyor.\n\nPratik sezgi de aynı yöne çalışıyor: epsilon'un dağılımı her zaman N(0, I). Hedef sabit ölçekli ve sabit istatistikli. x_0 ise veri kümesine göre değişiyor. Sabit hedefe regresyon her zaman daha stabildir.\n\nBunu şöyle hatırla: basit kayba geçmek bedava değildi, bedeli bir yeniden ağırlıklandırmaydı, ve o ağırlıklandırma tesadüfen işe yarayan bir ağırlıklandırmaydı."
+          "text": "Matematiksel olarak üç seçenek de eşdeğer: ağ temiz görüntüyü (x_0), ters adımın ortalamasını (mu) ya da eklenen gürültüyü (epsilon) tahmin edebilir. Birinden diğerine cebirle geçiliyor. Tam ELBO kullanıldığında üçü de birbirine yakın sonuç veriyor.\n\nFark, basitleştirilmiş loss'a geçince ortaya çıkıyor. DDPM makalesinin ablasyonu (CIFAR-10, FID; düşük daha iyi):\n\n  mu tahmini, tam ELBO: 13.22 — basit loss'la: kararsız\n  epsilon tahmini, tam ELBO: 13.51 — basit loss'la: 3.17\n\nDört kattan fazla bir iyileşme, ve sebebi ilginç: atılan zaman katsayıları aslında bir yeniden ağırlıklandırma yapıyor. Katsayılar atılınca küçük t'ler (neredeyse temiz görüntüler, kolay iş) göreli olarak daha az ağırlık alıyor, ağ zor işe — büyük gürültüde kaba yapıyı kurtarmaya — odaklanıyor.\n\nPratik sezgi de aynı yöne çalışıyor: epsilon'un dağılımı her zaman N(0, I). Hedef sabit ölçekli ve sabit istatistikli. x_0 ise veri kümesine göre değişiyor. Sabit hedefe regresyon her zaman daha stabildir.\n\nBunu şöyle hatırla: basit loss'a geçmek bedava değildi, bedeli bir yeniden ağırlıklandırmaydı, ve o ağırlıklandırma tesadüfen işe yarayan bir ağırlıklandırmaydı."
         },
         {
           "type": "text",
@@ -26053,7 +26053,7 @@
         {
           "type": "text",
           "heading": "15. Classifier-free guidance: neden gerekti",
-          "text": "Koşulu verdin, model koşula uyuyor — ama zayıf uyuyor. Üretilen görüntü sınıfa ait, ancak o sınıfın tipik, belirgin bir örneği olmak zorunda değil.\n\nİlk çözüm classifier guidance'tı: ayrı bir sınıflandırıcı eğitiliyor ve örnekleme sırasında onun gradyanı, üretimi doğru sınıfa doğru itiyor. Çalışıyor ama pahalı — her gürültü seviyesinde çalışabilen ayrı bir sınıflandırıcı eğitmen ve bakımını yapman gerekiyor.\n\nClassifier-free guidance bu sınıflandırıcıyı tamamen ortadan kaldırıyor, ve yöntem şaşırtıcı derecede ucuz: eğitim sırasında koşulu belirli bir olasılıkla düşür. Aynı ağ hem koşullu hem koşulsuz tahmin yapmayı öğreniyor.\n\nÖrnekleme sırasında ağı iki kez çalıştırıyorsun — bir kez koşulla, bir kez koşulsuz — ve ikisinin farkını abartıyorsun. Koşulsuz tahmin \"genel olarak bir görüntü\" yönünü, koşullu tahmin \"bu koşula uyan bir görüntü\" yönünü gösteriyor. Aradaki fark, koşulun tek başına katkısı. O farkı w katsayısıyla büyütüp koşullu tahminin ötesine geçiyorsun."
+          "text": "Koşulu verdin, model koşula uyuyor — ama zayıf uyuyor. Üretilen görüntü sınıfa ait, ancak o sınıfın tipik, belirgin bir örneği olmak zorunda değil.\n\nİlk çözüm classifier guidance'tı: ayrı bir classifier eğitiliyor ve örnekleme sırasında onun gradient'i, üretimi doğru sınıfa doğru itiyor. Çalışıyor ama pahalı — her gürültü seviyesinde çalışabilen ayrı bir classifier eğitmen ve bakımını yapman gerekiyor.\n\nClassifier-free guidance bu classifier'ı tamamen ortadan kaldırıyor, ve yöntem şaşırtıcı derecede ucuz: eğitim sırasında koşulu belirli bir olasılıkla düşür. Aynı ağ hem koşullu hem koşulsuz tahmin yapmayı öğreniyor.\n\nÖrnekleme sırasında ağı iki kez çalıştırıyorsun — bir kez koşulla, bir kez koşulsuz — ve ikisinin farkını abartıyorsun. Koşulsuz tahmin \"genel olarak bir görüntü\" yönünü, koşullu tahmin \"bu koşula uyan bir görüntü\" yönünü gösteriyor. Aradaki fark, koşulun tek başına katkısı. O farkı w katsayısıyla büyütüp koşullu tahminin ötesine geçiyorsun."
         },
         {
           "type": "formula",
@@ -26063,17 +26063,17 @@
         {
           "type": "note",
           "heading": "CFG'nin bedeli",
-          "text": "Her örnekleme adımında ağ iki kez çalışıyor — üretim maliyeti iki katına çıkıyor. Bu, difüzyon damıtma (distillation) çalışmalarının bir kısmının doğrudan hedefi: öğrenci modele CFG kalitesini tek geçişte ürettirmek."
+          "text": "Her örnekleme adımında ağ iki kez çalışıyor — üretim maliyeti iki katına çıkıyor. Bu, diffusion damıtma (distillation) çalışmalarının bir kısmının doğrudan hedefi: öğrenci modele CFG kalitesini tek geçişte ürettirmek."
         },
         {
           "type": "text",
           "heading": "16. Bundan sonra ne oldu",
-          "text": "DDPM 2020'de kurdu, sonraki beş yıl aynı iskeletin üstüne kuruldu. Dört ana yön:\n\nDaha az adım. DDIM örneklemeyi deterministik yapıp 50-200 adıma indirdi. Damıtma yöntemleri (progressive distillation, consistency models, adversarial diffusion distillation) bunu tek haneli adıma kadar düşürdü.\n\nDaha iyi tasarım. Cosine schedule, v-prediction, gürültü seviyesi örnekleme dağılımları — hepsi \"aynı çerçeve, daha iyi ayar\".\n\nDaha büyük çözünürlük: latent diffusion. Ham pikselde difüzyon yüksek çözünürlükte çalışmıyor, çünkü model kapasitesinin çoğu piksel düzeyindeki ayrıntıya gidiyor. Çözüm iki aşamalı: önce bir VAE (keskinlik için GAN ayırt edicisiyle desteklenmiş) görüntüyü küçük bir latent uzaya sıkıştırıyor — tipik olarak 256x256x3'ten 32x32x16'ya, yani yaklaşık 128 kat daha az boyut. Sonra difüzyon o latentlerin üzerinde çalışıyor; encoder donuk, üretim sonunda decoder latenti görüntüye çeviriyor. Stable Diffusion, DALL-E 3, FLUX — hepsi bu mimari.\n\nDaha genel çerçeve. Aynı süreç üç farklı dille yazılabiliyor: gizli değişkenli model (DDPM'in kendisi), skor fonksiyonu (yoğunluğun gradyanını öğrenmek), ve stokastik diferansiyel denklem (sürekli zamanlı gürültüleme ve onun ters çözümü). Rectified flow ise gürültü ile veri arasında düz bir doğru kurup hız vektörünü öğreniyor — pratikte daha az adım, daha basit türetme. Üçü de aynı ailenin farklı koordinat sistemleri."
+          "text": "DDPM 2020'de kurdu, sonraki beş yıl aynı iskeletin üstüne kuruldu. Dört ana yön:\n\nDaha az adım. DDIM örneklemeyi deterministik yapıp 50-200 adıma indirdi. Damıtma yöntemleri (progressive distillation, consistency models, adversarial diffusion distillation) bunu tek haneli adıma kadar düşürdü.\n\nDaha iyi tasarım. Cosine schedule, v-prediction, gürültü seviyesi örnekleme dağılımları — hepsi \"aynı çerçeve, daha iyi ayar\".\n\nDaha büyük çözünürlük: latent diffusion. Ham pikselde diffusion yüksek çözünürlükte çalışmıyor, çünkü model kapasitesinin çoğu piksel düzeyindeki ayrıntıya gidiyor. Çözüm iki aşamalı: önce bir VAE (keskinlik için GAN discriminator'üyle desteklenmiş) görüntüyü küçük bir latent uzaya sıkıştırıyor — tipik olarak 256x256x3'ten 32x32x16'ya, yani yaklaşık 128 kat daha az boyut. Sonra diffusion o latentlerin üzerinde çalışıyor; encoder donuk, üretim sonunda decoder latenti görüntüye çeviriyor. Stable Diffusion, DALL-E 3, FLUX — hepsi bu mimari.\n\nDaha genel çerçeve. Aynı süreç üç farklı dille yazılabiliyor: gizli değişkenli model (DDPM'in kendisi), skor fonksiyonu (yoğunluğun gradient'ini öğrenmek), ve stokastik diferansiyel denklem (sürekli zamanlı gürültüleme ve onun ters çözümü). Rectified flow ise gürültü ile veri arasında düz bir doğru kurup hız vektörünü öğreniyor — pratikte daha az adım, daha basit türetme. Üçü de aynı ailenin farklı koordinat sistemleri."
         },
         {
           "type": "insight",
           "heading": "Geriye ne kalsın",
-          "text": "Kolay yönü sen kur, ağa sadece bir adım geri almayı öğret. Forward süreç kapalı forma çöktüğü için eğitim paralel; üretim sıralı olduğu için yavaş. ELBO türetmesi VAE'nin aynısı, ama forward süreç sabit olduğu için bütün terimler eriyip tek bir regresyon kaybı kalıyor. Ağ gürültüyü tahmin ediyor, çünkü hedefin dağılımı sabit ve basitleştirilmiş kaybın getirdiği yeniden ağırlıklandırma zor gürültü seviyelerine odaklanmayı sağlıyor. Koşul, timestep ile aynı kapıdan girerse global kalıyor; cross-attention ile girerse konuma duyarlı oluyor. CFG ayrı bir sınıflandırıcı olmadan koşulun etkisini büyütüyor, bedeli çift geçiş."
+          "text": "Kolay yönü sen kur, ağa sadece bir adım geri almayı öğret. Forward süreç kapalı forma çöktüğü için eğitim paralel; üretim sıralı olduğu için yavaş. ELBO türetmesi VAE'nin aynısı, ama forward süreç sabit olduğu için bütün terimler eriyip tek bir regresyon loss'u kalıyor. Ağ gürültüyü tahmin ediyor, çünkü hedefin dağılımı sabit ve basitleştirilmiş loss'un getirdiği yeniden ağırlıklandırma zor gürültü seviyelerine odaklanmayı sağlıyor. Koşul, timestep ile aynı kapıdan girerse global kalıyor; cross-attention ile girerse konuma duyarlı oluyor. CFG ayrı bir classifier olmadan koşulun etkisini büyütüyor, bedeli çift geçiş."
         },
         {
           "type": "note",
