@@ -25542,6 +25542,396 @@
           "text": "Bu metin sırayı verir, ayrıntı kartlarda: Gaussian türetmesi ve varyansın yanlılığı ch03'te; Bernoulli, Exponential ve Uniform çalışılmış örnekleri math06'da; MLE'den MSE ve BCE'ye adım adım türetmeler vs04'te; MLE-MAP-Bayesian geçişi, prior kimin üzerinde tartışması, MAP ile regularizasyon bağlantısı ve LMMSE tarafı vs03'te; üretici modeller için MLE ve KL yorumu cs12'de; ELBO'nun difüzyondaki hali ida11'de."
         }
       ]
+    },
+    "vae": {
+      "title": "VAE — Baştan Sona Konu Anlatımı",
+      "cat": "Konu Anlatımı",
+      "context": "Variational Autoencoder · CS231n 12 · ML-OVERALL 19 — tek oturumda okunmak için",
+      "chapters": [
+        "cs12",
+        "mlo19"
+      ],
+      "summary": "Sıradan autoencoder'ın neden üretemediğinden başlayıp, hesaplanamayan integrale, encoder'ın neden denklemden türetilmeyip dışarıdan eklendiğine, ELBO'nun iki teriminin neden zıt yönde çektiğine, reparameterization trick'e ve VAE'nin neden bulanık ürettiğine kadar tek akış.",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Bu metin ne için",
+          "text": "VAE, tek tek bakıldığında her parçası anlaşılır ama birleştirilince kayıp giden konulardan biri: encoder, decoder, KL terimi, reparameterization, ELBO. Kartlar bunları ayrı ayrı anlatıyor.\n\nBurada amaç sıra: hangi problem hangi parçayı doğurdu. VAE'nin her bileşeni bir zorunluluktan çıkmış, hiçbiri süs değil. O zinciri görürsen formülleri ezberlemene gerek kalmıyor."
+        },
+        {
+          "type": "text",
+          "heading": "1. Nereden başladık: sıkıştırma",
+          "text": "Amaç yeni görüntü üretmek. Ama 28x28'lik bir görüntü 784 boyutlu bir uzayda bir nokta, ve o uzayın neredeyse tamamı gürültü.\n\nÖnce şunu fark et: üretmek için küçük bir kontrol paneline ihtiyacın var. 784 sayıyı elle ayarlayarak yüz çizemezsin, ama elinde yirmi düğme olsa — yaş, poz, saç rengi, ifade — her kombinasyon bir yüz verirdi.\n\nO düğme takımına latent uzay, tek bir ayara z diyoruz. Üretim demek, z seçip görüntüye çevirmek demek.\n\nDikkat: z'nin dar olması şart. Geniş bırakırsan model hiçbir şey öğrenmez, girdiyi olduğu gibi kopyalar. Darlık, modeli gerçek yapıyı bulmaya zorlayan basıncın kendisi."
+        },
+        {
+          "type": "text",
+          "heading": "2. Sıradan autoencoder neden üretemiyor",
+          "text": "Autoencoder tam olarak bunu yapıyor: encoder görüntüyü dar bir z'ye sıkıştırıyor, decoder z'den geri açıyor, kayıp da yeniden kurulum hatası. Etiket gerekmiyor.\n\nEğitim biter, yeniden kurulum güzel. Şimdi yeni bir görüntü üretmeyi dene: rastgele bir z seç, decoder'a ver.\n\nÇıkan şey çöp.\n\nSebebi şu: encoder z'leri istediği yere koymakta serbest. Bir resmin z'sini 50 civarına, başkasınınkini eksi 30'a koyabilir. Arada kocaman boşluklar kalıyor, ve o boşluklar decoder'ın hiç görmediği bölgeler. Ayrıca hangi z'lerin geçerli olduğunu bilmiyorsun — nereden örnekleyeceğini söyleyen hiçbir şey yok.\n\nEksik olan tek şey bu: latent uzayın bir yapısı yok.\n\nVAE'nin tamamı bu cümleye verilen cevap."
+        },
+        {
+          "type": "text",
+          "heading": "3. Fikir: z'nin nereden geldiğini sen söyle",
+          "text": "Madem z'nin yapısı yok, onu bir dağılımdan geliyormuş gibi modelle. Seçim standart normal: p(z) = N(0, I).\n\nArtık z'nin nerede olması gerektiği belli. Üretim zamanında nereden örnekleyeceğini de biliyorsun: standart normalden çek, decoder'a ver.\n\nAma bu bir dilek. Encoder'ı gerçekten oraya uymaya zorlayan bir şey gerekiyor — ve o zorlama, birazdan çıkacak KL terimi olacak. Önce hedefin kendisini yazalım."
+        },
+        {
+          "type": "text",
+          "heading": "4. Hedef yine maximum likelihood",
+          "text": "Yeni bir ilke yok. Eğitim verisini en olası kılan parametreleri arıyoruz; parametreler decoder ve encoder ağırlıkları.\n\nz'leri bilseydik iş kolay olurdu: her görüntü için z'si elimizde olurdu, doğrudan log olabilirliği maksimize ederdik.\n\nAma z gizli. Dolayısıyla onun üzerinden integral almamız gerekiyor: bir görüntünün olasılığı, bütün olası z'ler üzerinden, o z'den bu görüntüyü üretme olasılığının prior ile ağırlıklı toplamı."
+        },
+        {
+          "type": "formula",
+          "heading": "Marjinal olabilirlik",
+          "text": "$$p_\\theta(x) = \\int p_\\theta(x \\mid z)\\, p(z)\\, dz$$"
+        },
+        {
+          "type": "text",
+          "heading": "5. İntegral neden hesaplanamıyor",
+          "text": "Bu integral kapalı formda yok, ve sayısal olarak da alınamıyor.\n\nSezgisi şu: decoder bir sinir ağı, ve ona hangi z'yi verirsen bir şey üretiyor. Hangi z'lerin bu görüntüyü üretmeye aday olduğunu önceden bilmiyorsun — z sürekli ve yüksek boyutlu, sınır yok. Hepsini toplaman gerekiyor ama toplanacak kümenin kendisi belirsiz.\n\nBayes kuralıyla dolaşmayı dene: marjinal, pay bölü payda biçiminde yazılabiliyor. Pay hesaplanabilir — decoder ve prior elinde. Ama paydada gerçek posterior var, yani \"bu görüntüyü hangi z üretmiş olabilir\" dağılımı, ve onu hesaplamak için yine aynı integrale ihtiyacın var.\n\nYol kapalı. İşte VAE'nin karakteristik hamlesi tam burada geliyor."
+        },
+        {
+          "type": "text",
+          "heading": "6. Encoder denklemden türetilmedi, dışarıdan eklendi",
+          "text": "Bu ayrımı kaçırmak çok kolay ve kaçırınca VAE hiç oturmuyor.\n\nGerçek posterior, denklemin içinde olması gereken matematiksel parça. Denklemi açınca karşına çıkıyor, ve hesaplanamıyor.\n\nEncoder ise bir karar: madem denklemden türetemiyorum, dışarıdan ayrı bir ağ koyayım, o yaklaşsın. Türetilmiş bir şey değil, eklenmiş bir şey. Yaptığı iş tek bir ileri geçiş — x giriyor, z'nin dağılımının parametreleri çıkıyor. İntegral yok.\n\nBu, VAE'deki iki ağın rollerinin neden asimetrik olduğunu da açıklıyor. Decoder modelin kendisi; encoder eğitimi mümkün kılmak için kurulmuş bir yardımcı."
+        },
+        {
+          "type": "text",
+          "heading": "7. Ağlar olasılık üretemez, parametre üretir",
+          "text": "Bir sinir ağına \"bana bir dağılım ver\" diyemezsin. Verebileceği şey sayılar.\n\nO yüzden her iki ağ da dağılımların parametrelerini üretiyor. Encoder, z için bir ortalama ve bir standart sapma çıkarıyor — yani \"bu görüntünün z'si şurada, şu kadar belirsizlikle\". Decoder, x için bir ortalama çıkarıyor.\n\nBu küçük detay ileride iki şeyi birden açıklayacak: reconstruction teriminin neden kareler toplamına indiğini, ve reparameterization trick'e neden ihtiyaç duyulduğunu."
+        },
+        {
+          "type": "text",
+          "heading": "8. ELBO: hesaplanabilir bir alt sınır",
+          "text": "Doğrudan tırmanamadığın bir tepe var. Altında, hesaplanabilen bir merdiven kuruyorsun ve onu tırmanıyorsun. O merdivenin adı ELBO.\n\nTüretmenin mekaniği şu: yardımcı dağılımı (encoder) denkleme sokuyorsun, logaritmayı açıyorsun, ve ortaya çıkan üç terimden biri negatif olamayacağı bilinen bir KL. Onu atınca elinde bir alt sınır kalıyor.\n\nAtılan terim, encoder'ın gerçek posteriordan ne kadar saptığı. Onu hesaplayamıyorsun, ama işareti bilindiği için atmakta serbestsin. Encoder ne kadar iyiyse alt sınır gerçek hedefe o kadar yakın oturuyor.\n\nGeriye iki terim kalıyor, ve ikisi de anlamlı."
+        },
+        {
+          "type": "formula",
+          "heading": "ELBO",
+          "text": "$$\\log p_\\theta(x) \\ \\ge\\ \\underbrace{\\mathbb{E}_{z \\sim q_\\phi}\\bigl[\\log p_\\theta(x \\mid z)\\bigr]}_{\\text{yeniden kurulum}} \\ -\\ \\underbrace{D_{KL}\\bigl(q_\\phi(z \\mid x)\\,\\|\\,p(z)\\bigr)}_{\\text{prior'a çekme}}$$"
+        },
+        {
+          "type": "text",
+          "heading": "9. İki terim zıt yönde çekiyor",
+          "text": "Yeniden kurulum terimi diyor ki: her görüntünün z'si ayırt edilebilir olsun, yoksa decoder hangi görüntüyü kuracağını bilemez. Bu terim tek başına kalsa encoder z'leri birbirinden olabildiğince uzağa iterdi — yani sıradan autoencoder'ın hatasına geri dönerdik.\n\nKL terimi diyor ki: bütün z dağılımları standart normalin etrafında toplansın. Bu terim tek başına kalsa encoder bütün görüntüler için aynı dağılımı üretir, z hiçbir bilgi taşımaz, decoder da ortalama bir bulanıklık basar.\n\nDenge ikisinin arasında. Sonuç, hem dolu hem ayırt edici bir latent uzay: boşluk yok ki örneklediğin z çöpe düşsün, ama z'ler birbirine de yapışmamış.\n\nVAE'yi bir cümlede anlatman gerekse bu cümle olurdu."
+        },
+        {
+          "type": "text",
+          "heading": "10. Yeniden kurulum terimi neden MSE'ye iniyor",
+          "text": "Decoder'ın çıktısını sabit varyanslı bir Gaussian'ın ortalaması olarak modellediğimizi hatırla. O Gaussian'ın logaritmasını alınca üstel kayboluyor ve geriye görüntü ile decoder çıktısı arasındaki farkın karesi kalıyor.\n\nYani ELBO'nun ilk terimini maksimize etmek, kareler toplamını minimize etmekle aynı şey.\n\nBu bir tesadüf değil, MLE konu anlatımındaki genel kuralın buradaki görünüşü: Gaussian varsayarsan MSE çıkar. Decoder'ı Bernoulli olarak modelleseydin (siyah-beyaz görüntülerde yapılır) aynı yerden cross-entropy çıkardı."
+        },
+        {
+          "type": "text",
+          "heading": "11. Reparameterization trick: neden mecburuz",
+          "text": "Bir sorun var. ELBO'nun ilk terimi, encoder'ın ürettiği dağılımdan z çekmeyi gerektiriyor. Ama örnekleme rastgele bir işlem ve gradyan onun içinden geçemiyor — \"bu örneklemeyi biraz değiştirsem kayıp nasıl değişirdi\" sorusunun türevi yok.\n\nÇözüm, rastgeleliği yoldan çekmek: z'yi doğrudan çekmek yerine, standart normalden bir gürültü çek ve z'yi encoder'ın ürettiği ortalama artı standart sapma çarpı o gürültü olarak yaz.\n\nArtık rastgelelik, parametrelere bağlı olmayan ayrı bir girdi. Ortalama ve standart sapma ise sıradan cebirsel işlemlerle z'ye bağlı, gradyan rahatça akıyor.\n\nAynı numarayı difüzyonda da görmüştün: orada da x_t, x_0 ile gürültünün ağırlıklı toplamı olarak yazılıyordu. İki yerde de yapılan şey aynı — rastgeleliği, gradyanın akabileceği bir biçime sokmak."
+        },
+        {
+          "type": "formula",
+          "heading": "Reparameterization",
+          "text": "$$z = \\mu_\\phi(x) + \\sigma_\\phi(x) \\odot \\epsilon, \\qquad \\epsilon \\sim \\mathcal{N}(0, I)$$"
+        },
+        {
+          "type": "text",
+          "heading": "12. Eğitim ile üretim farkı",
+          "text": "Eğitimde zincir şu: görüntü gelir, encoder z dağılımını verir, reparameterization ile bir z çekilir, decoder görüntüyü kurar, iki terimli kayıp hesaplanır.\n\nÜretimde encoder hiç kullanılmıyor. Doğrudan standart normalden bir z çekip decoder'a veriyorsun.\n\nBu, KL teriminin neden var olduğunun pratik kanıtı: üretimde çektiğin z'nin decoder'ın tanıdığı bir bölgeye düşmesi gerekiyor, ve onu oraya çeken tek şey o terim.\n\nEncoder atılmıyor ama — bir görüntüyü latent koda çevirmek istersen (arama, düzenleme, anomali tespiti) hâlâ elinde."
+        },
+        {
+          "type": "text",
+          "heading": "13. Latent boyutların anlam kazanması",
+          "text": "Seçilen prior köşegen, yani boyutları bağımsız. KL terimi encoder'ı buna uymaya ittiği için z'nin boyutları da bağımsızlaşma eğilimi gösteriyor.\n\nSonuç: tek bir boyutu değiştirince görüntüde tek bir şey değişiyor. Rakam veri kümesinde bir boyut rakamın kendisini, başka biri yazı kalınlığını ya da eğimini değiştirebiliyor.\n\nBu tam olarak garanti edilen bir şey değil, bir eğilim. Ama VAE'nin GAN'a göre daha okunaklı bir latent uzay üretmesinin sebebi bu."
+        },
+        {
+          "type": "text",
+          "heading": "14. Neden bulanık üretiyor",
+          "text": "VAE'nin bilinen kusuru bulanıklık, ve sebebi mimari değil kayıp fonksiyonu.\n\nDecoder Gaussian varsayıldığı için kayıp karesel. Karesel hata, belirsizlik karşısında ortalamayı seçer. Model bir kenarın tam olarak nerede olduğundan emin değilse iki olasılığın ortasını basar — ve iki keskin kenarın ortalaması bulanık bir kenardır.\n\nGAN bu sorunu kayıp fonksiyonunu değiştirerek çözüyor: bir ayırt edici, ortalama görüntüleri sahte diye yakalıyor, dolayısıyla ortalama almak artık ödüllendirilmiyor. Difüzyon ise sorunu başka yoldan çözüyor — tek adımda tüm belirsizliği çözmek zorunda kalmıyor, belirsizliği bin küçük adıma yayıyor.\n\nModern latent diffusion mimarileri ikisini birden kullanıyor: sıkıştırma için VAE, keskin çözücü için GAN ayırt edicisi, üretim için difüzyon."
+        },
+        {
+          "type": "text",
+          "heading": "15. VAE MLE mi yapıyor, MAP mi",
+          "text": "Sık sorulan soru: içinde p(z) = N(0, I) var, bu bir prior değil mi, o halde VAE MAP yapmıyor mu?\n\nAyırt edici tek test şu: prior, tahmin ettiğin şeyin üzerinde mi?\n\nVAE'de tahmin ettiğin şey ağırlıklar. Onların üzerinde bir prior yok. p(z) gerçekten bir prior ama z'nin üzerinde, ve z tahmin edilmiyor — üzerinden integral alınıyor.\n\nDolayısıyla VAE, adında variational geçmesine rağmen ağırlıklar açısından maximum likelihood yapıyor. Gerçekten MAP yapmak isteseydin ağırlıklara prior koyman gerekirdi, ki onun adı weight decay."
+        },
+        {
+          "type": "insight",
+          "heading": "Geriye ne kalsın",
+          "text": "Üretmek için yapılandırılmış bir latent uzay lazım; sıradan autoencoder'ın latent uzayında delikler var, o yüzden üretemiyor. Hedef yine maximum likelihood, ama z gizli olduğu için marjinal integral alınamıyor. Encoder bu yüzden var — denklemden türetilmedi, hesaplanamayan posteriorun yerine dışarıdan kondu. ELBO iki terim: yeniden kurulum z'leri ayırır, KL onları prior'a toplar; denge dolu ve ayırt edici bir uzay verir. Reparameterization gradyanın örneklemenin içinden geçebilmesi için. Üretimde encoder yok. Bulanıklık mimariden değil karesel kayıptan geliyor."
+        },
+        {
+          "type": "note",
+          "heading": "Nereye bakılır",
+          "text": "Kurulum, latent uzay ve Bayes formülasyonu ile ELBO'nun tam tablosu cs12'de; VAE ile DDPM'in ELBO türetmelerinin satır satır karşılaştırması ida11'de; MLE-MAP ayrımı ve prior kimin üzerinde tartışması vs03'te. Aynı zincirin difüzyondaki hali için DDPM konu anlatımına bak."
+        }
+      ]
+    },
+    "gan": {
+      "title": "GAN — Baştan Sona Konu Anlatımı",
+      "cat": "Konu Anlatımı",
+      "context": "Generative Adversarial Networks · IDA 10 · Lab 6 · CS231n 13 · ML-OVERALL 20",
+      "chapters": [
+        "ida10",
+        "lab06",
+        "mlo20"
+      ],
+      "summary": "GAN'ın neden olasılık hesaplamayı tamamen bıraktığından başlayıp, iki ağın yarışına, eğitimin neden kırılgan olduğuna, mode collapse'e, DCGAN ve StyleGAN tasarım kararlarına, CycleGAN'ın eşleşmemiş veri numarasına ve difüzyonun neden devraldığına kadar tek akış.",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Bu metin ne için",
+          "text": "GAN, VAE ve difüzyonla aynı işi yapıyor ama tamamen farklı bir felsefeyle. O felsefeyi görmeden ne neden iyi çalıştığı ne de neden eğitiminin bu kadar zor olduğu anlaşılıyor.\n\nBu metin oradan başlıyor: GAN'ın neyi yapmayı reddettiği."
+        },
+        {
+          "type": "text",
+          "heading": "1. Üretici modellerin ikiye ayrıldığı yer",
+          "text": "Bir üretici modelden iki ayrı şey isteyebilirsin.\n\nBirincisi: bana verdiğim görüntünün ne kadar olası olduğunu söyle. Bu, modelin bir olasılık hesaplayabilmesini gerektiriyor. Autoregressive modeller bunu tam olarak yapıyor, VAE ise yaklaşık olarak — bir alt sınır üzerinden.\n\nİkincisi: bana yeni bir görüntü üret. Bunun için olasılık hesaplamana gerek yok. Sadece örnek verebilmen yeterli.\n\nGAN tam olarak bu ayrımı kullanıyor. Olasılık hesaplamayı tamamen bırakıyor, sadece örnekleyebilen bir model kuruyor. Adı implicit density: dağılımı yazamıyorsun ama ondan çekebiliyorsun.\n\nKazandığı şey büyük — artık integral, alt sınır, hesaplanamayan posterior gibi dertler yok. Kaybettiği şey de büyük: elinde optimize ettiğin dürüst bir sayı kalmıyor, ve bütün sorunları buradan çıkıyor."
+        },
+        {
+          "type": "text",
+          "heading": "2. Kalpazan ve polis",
+          "text": "İki ağ var.\n\nÜretici, rastgele bir gürültü vektöründen görüntü üretiyor. Kalpazan: sahte para basmaya çalışıyor.\n\nAyırt edici, kendisine verilen görüntünün gerçek veri kümesinden mi yoksa üreticiden mi geldiğine karar veriyor. Polis.\n\nİkisi birbirini eğitiyor. Kalpazan daha iyi sahte üretince polisin daha iyi bakması gerekiyor; polis keskinleşince kalpazanın daha gerçekçi olması gerekiyor.\n\nBuradaki gerçek yenilik şu: kayıp fonksiyonu elle yazılmıyor, öğreniliyor. VAE'de \"iyi görüntü ne demek\" sorusunun cevabını sen kareler toplamı diye sabitliyorsun. GAN'da o cevabı ayırt edici üretiyor ve eğitim boyunca değişiyor."
+        },
+        {
+          "type": "text",
+          "heading": "3. İki kayıp, tek yarış",
+          "text": "Ayırt edicinin işi sıradan bir ikili sınıflandırma: gerçeklere 1, sahtelere 0 demeye çalışıyor. Kaybı da tanıdık, binary cross-entropy.\n\nÜreticinin işi bunun tersi: ayırt ediciyi yanıltmak.\n\nİlk yazılışında üretici, ayırt edicinin sahte deme olasılığını minimize ediyordu. Pratikte bu çalışmıyor: eğitimin başında üretici çok kötü, ayırt edici onu kolayca yakalıyor, ve o bölgede gradyan neredeyse sıfır — yani üretici en çok öğrenmesi gereken anda hiçbir sinyal alamıyor.\n\nÇözüm basit bir yeniden yazım: minimize etmek yerine, ayırt edicinin gerçek deme olasılığını maksimize et. Aynı yöne itiyor ama gradyanı eğitim başında güçlü. Uygulamaların tamamı bunu kullanıyor.\n\nBu detay, GAN literatüründeki genel kalıbın ilk örneği: yöntem doğru, ama işe yaraması için bir sürü pratik düzeltme gerekiyor."
+        },
+        {
+          "type": "code",
+          "heading": "Eğitim döngüsü",
+          "text": "for her batch:\n    # 1) Ayirt ediciyi guncelle\n    gercek  = batch\n    sahte   = G(z),  z ~ N(0, I)\n    kayip_D = BCE(D(gercek), 1) + BCE(D(sahte.detach()), 0)\n    kayip_D geri yayilir, yalniz D guncellenir\n\n    # 2) Ureticiyi guncelle\n    sahte   = G(z)\n    kayip_G = BCE(D(sahte), 1)        # non-saturating bicim\n    kayip_G geri yayilir, yalniz G guncellenir\n\nDikkat: D guncellenirken sahte goruntu grafikten kopariliyor (detach),\nyoksa D'nin kaybi G'yi de gunceller — yanlis yone."
+        },
+        {
+          "type": "text",
+          "heading": "4. Küçük ama öğretici bir detay: neden tanh",
+          "text": "Üreticinin son katmanı tanh, ve gerçek veri de eksi bir ile bir arasına normalize ediliyor. Bunun sebebi estetik değil.\n\nAyırt ediciye iki tür girdi geliyor: gerçek görüntüler ve üretilmiş görüntüler. Eğer gerçek veri sıfır ile bir arasında, üretilenler eksi bir ile bir arasında olsaydı, ayırt edici içeriğe hiç bakmadan sadece sayı aralığına bakarak ikisini ayırırdı. Öğrenecek hiçbir şeyi kalmazdı ve üreticiye hiçbir faydalı sinyal gitmezdi.\n\nİki girdi aynı aralıkta olunca ayırt edici gerçek farkı — yapıyı ve içeriği — öğrenmek zorunda kalıyor.\n\nBu, GAN'larla çalışırken tekrar tekrar karşına çıkacak bir düşünme biçiminin örneği: ayırt ediciye bedava bir ipucu bırakıp bırakmadığını her zaman kontrol et."
+        },
+        {
+          "type": "text",
+          "heading": "5. Neden keskin üretiyor",
+          "text": "VAE'nin bulanıklığının sebebi karesel kayıptı: belirsizlik karşısında ortalama alıyordu.\n\nGAN'da ortalama almanın bir bedeli var. İki olası kenarın ortasını basarsan ortaya gerçek veride hiç görülmeyen bir görüntü çıkar, ve ayırt edici tam olarak bunu yakalamak için eğitiliyor. Yani bulanıklık doğrudan cezalandırılıyor.\n\nGAN'ın keskinliği buradan geliyor: kayıp fonksiyonu, ortalama almayı ödüllendirmiyor."
+        },
+        {
+          "type": "text",
+          "heading": "6. Neden kırılgan",
+          "text": "Sıradan bir ağ eğitirken tek bir sayıyı aşağı indiriyorsun ve o sayıya bakarak iyi gidip gitmediğini anlıyorsun.\n\nGAN'da öyle bir sayı yok. İki ağ zıt yönde çekiyor ve aradığın şey bir minimum değil, bir denge. Ayırt edicinin kaybının düşmesi iyi haber de olabilir kötü haber de: ya kendisi iyileşti ya da üretici çöktü. Üreticinin kaybına bakarak da görüntü kalitesini kestiremezsin.\n\nÜstelik denge kırılgan. Ayırt edici fazla güçlenirse üreticiye giden gradyan kuruyor. Üretici fazla güçlenirse ayırt edici rastgele tahmine düşüyor ve yön bilgisi kalmıyor.\n\nGAN eğitiminin \"sanat gibi\" diye anılmasının sebebi bu: izleyeceğin güvenilir tek bir gösterge yok, bu yüzden üretilen görüntülere gözle bakmak fiilen bir ölçüm aracı."
+        },
+        {
+          "type": "text",
+          "heading": "7. Mode collapse",
+          "text": "En karakteristik arıza bu.\n\nGerçek veri çok modlu: rakam veri kümesinde on rakam var. Üretici bir modu keşfedip ayırt ediciyi onunla kandırabildiğini görürse, geri kalan modları ihmal etmeye başlıyor. Zamanla yalnızca bir veya iki rakam üretir hale geliyor.\n\nAsıl sinsi tarafı şu: bu durumda kayıp değerleri gayet makul görünebiliyor. Üretici işini yapıyor — sadece çeşitliliği kaybetti, ve kayıp fonksiyonunda çeşitliliği ölçen hiçbir terim yok.\n\nTeşhis için eğitim boyunca ayırt edicinin gerçek ve sahte görüntülere verdiği değerleri izle. Gerçeklerde bire, sahtelerde sıfıra sabitlenip kalıyorsa ya mode collapse ya da genel çöküş var.\n\nKarşı önlemler: ayırt ediciye batch içindeki çeşitliliği görme imkanı vermek, Wasserstein biçimine geçerek daha düzgün gradyan almak, ayırt edicinin fonksiyonunu spektral normalizasyonla dizginlemek, öğrenme oranını düşürmek. Hiçbiri kesin çözüm değil — mode collapse GAN'ların yapısal riski."
+        },
+        {
+          "type": "text",
+          "heading": "8. DCGAN: mimariyi oturtan tasarım kuralları",
+          "text": "İlk GAN'lar tam bağlantılı katmanlarla kuruluyordu ve zor eğitiliyordu. DCGAN, konvolüsyonel yapıyı GAN'a oturtan tasarım kurallarını verdi.\n\nÜretici, düşük boyutlu gürültüyü küçük bir öznitelik haritasına açıyor, sonra adım adım büyütüyor. Havuzlama katmanı yok — büyütme ve küçültme adımlı konvolüsyonlarla yapılıyor. Üreticide ReLU, ayırt edicide sızıntılı ReLU kullanılıyor; giriş ve çıkış katmanları dışında batch normalizasyon var.\n\nBu kuralların tek tek matematiksel gerekçesi yok, ampirik olarak bulundular. Ama etkisi büyüktü: güvenilir biçimde tanınabilir görüntü üreten ilk GAN ailesi bu.\n\nBir yan bulgu da buradan çıktı: latent uzayda aritmetik çalışıyor. Vektörleri toplayıp çıkarmak görüntüde anlamlı değişikliklere karşılık geliyor."
+        },
+        {
+          "type": "text",
+          "heading": "9. StyleGAN: kontrolü ayırmak",
+          "text": "StyleGAN'ın getirdiği fikir, gürültüyü doğrudan üreticiye vermeyi bırakmak.\n\nÖnce gürültü, birkaç tam bağlantılı katmandan oluşan bir eşleme ağından geçiyor ve bir stil vektörüne dönüşüyor. Bu ara uzay, orijinal gürültü uzayından daha az dolaşık — yani boyutları görüntüdeki değişim eksenleriyle daha temiz örtüşüyor.\n\nSonra stil vektörü, üretimin her çözünürlük seviyesinde ayrı ayrı enjekte ediliyor. Enjeksiyon biçimi uyarlanabilir örnek normalizasyonu: öznitelik haritası normalize ediliyor, sonra stilden gelen ölçek ve kaydırma uygulanıyor.\n\nSonucu şu: kaba çözünürlükteki stil poz ve genel yapıyı, ince çözünürlüktekiler renk ve doku gibi ayrıntıları belirliyor. Yüzün duruşunu değiştirmeden saç rengini değiştirebiliyorsun.\n\nAyrıca her katmana bağımsız gürültü ekleniyor; saç telleri, gözenekler gibi tamamen rastlantısal ayrıntılar oradan geliyor — üretici bunları stil vektöründe taşımak zorunda kalmıyor."
+        },
+        {
+          "type": "text",
+          "heading": "10. CycleGAN: eşleşmemiş veriyle çeviri",
+          "text": "Görüntüden görüntüye çeviride doğal yaklaşım eşleşmiş veri istiyor: aynı sahnenin iki versiyonu. Pratikte bunu toplamak çoğu zaman imkansız — aynı atın zebra hali yok.\n\nCycleGAN iki ayrı koleksiyonla çalışıyor: bir yığın at fotoğrafı, bir yığın zebra fotoğrafı, eşleşme yok.\n\nİki üretici kuruluyor, biri ileri biri geri yönde çeviriyor. Her yönün kendi ayırt edicisi var; bu kadarı \"çıktı zebra gibi görünsün\" baskısını sağlıyor.\n\nAma bu tek başına yetmiyor: üretici, girdiyle hiç ilgisi olmayan bir zebra üretse de ayırt ediciyi memnun edebilir. Eksik olan kısıt, içeriğin korunması.\n\nÇevrim tutarlılığı bunu sağlıyor: bir görüntüyü çevirip geri çevirdiğinde başladığın yere dönmelisin. Geri dönebilmesi için ileri çevirinin içeriği taşıması gerekiyor.\n\nBu fikir GAN'ların ötesine geçti — difüzyon tabanlı eşleşmemiş çeviri modelleri de aynı çevrim kısıtını kullanıyor."
+        },
+        {
+          "type": "text",
+          "heading": "11. Wasserstein biçimi ne düzeltti",
+          "text": "Orijinal GAN kaybının bir yapısal sorunu var: iki dağılım birbirinden yeterince uzaksa, aralarındaki uzaklığın gradyanı neredeyse sıfır oluyor. Üretici tam da en çok yön bilgisine ihtiyaç duyduğu anda sinyalsiz kalıyor.\n\nWasserstein biçimi, dağılımlar arasındaki uzaklığı başka bir ölçüyle tanımlıyor — kabaca \"bir yığını diğerine dönüştürmek için ne kadar kütle taşımak gerekir\". Bu ölçü, dağılımlar ayrıkken bile anlamlı ve düzgün bir gradyan veriyor.\n\nBedeli, ayırt edicinin fonksiyonunun fazla dik olmaması gerekmesi; bu da gradyan cezası veya spektral normalizasyon gibi ek kısıtlarla sağlanıyor.\n\nPratik sonucu: eğitim belirgin biçimde daha kararlı, ve ayırt edicinin kaybı ilk kez kalite ile gerçekten ilişkili bir sayı haline geliyor."
+        },
+        {
+          "type": "text",
+          "heading": "12. Neden difüzyon devraldı",
+          "text": "GAN'lar 2016-2021 arasında görüntü üretiminin standardıydı. Difüzyonun onları geçmesinin sebebi tek tek kalite değil, karakter.\n\nDifüzyonun eğitimi stabil: ayırt edici yok, denge yok, izlenebilir tek bir kayıp var ve düştükçe iyiye gidiyor. Mod kapsaması daha iyi: veri dağılımının tamamını öğrenmeye çalışıyor, bir köşesine sıkışmıyor. Koşullama daha kolay takılıyor.\n\nBuna karşılık GAN'ın tek büyük üstünlüğü hâlâ duruyor: tek adımda üretiyor. Difüzyonun onlarca adımına karşılık bir ileri geçiş.\n\nİronik son şu: GAN ortadan kalkmadı, modern boru hatlarının içine yerleşti. Latent difüzyon mimarilerinde görüntüyü sıkıştıran çözücüyü keskin tutan şey bir GAN ayırt edicisi. Ve difüzyon damıtma yöntemlerinin bir kısmı, çok adımlı öğretmeni tek adımlı öğrenciye sıkıştırmak için yine adversarial kayıp kullanıyor."
+        },
+        {
+          "type": "insight",
+          "heading": "Geriye ne kalsın",
+          "text": "GAN olasılık hesaplamayı bırakıp yalnızca örnekleyebilen bir model kuruyor; kazandığı şey basitlik, kaybettiği şey izlenebilir tek bir hedef. Kayıp fonksiyonu elle yazılmıyor, ayırt edici tarafından öğreniliyor — keskinliğin sebebi bu, kırılganlığın da. Aradığın şey minimum değil denge, o yüzden kayıp eğrileri kalite hakkında bilgi vermiyor. Mode collapse yapısal bir risk, çünkü kayıpta çeşitliliği ölçen hiçbir terim yok. DCGAN mimariyi, StyleGAN kontrolü, CycleGAN eşleşmemiş veriyi çözdü. Difüzyon stabilite ve mod kapsaması sayesinde devraldı, ama GAN tek adımda üretmenin ve keskin çözücülerin aracı olarak boru hattının içinde kaldı."
+        },
+        {
+          "type": "note",
+          "heading": "Nereye bakılır",
+          "text": "Üretici ve ayırt edicinin kurulumu, PyTorch uygulaması ve normalizasyon detayı lab06'da; mode collapse belirtileri ve karşı önlemler yine lab06'da; DCGAN ve StyleGAN mimari kararları ile GAN döneminin özeti cs13'te; CycleGAN ve çevrim tutarlılığı lab06'da; üretici model taksonomisi cs12'de. VAE ile karşılaştırma için VAE konu anlatımına, difüzyonla karşılaştırma için DDPM konu anlatımına bak."
+        }
+      ]
+    },
+    "attention": {
+      "title": "Attention ve Transformer — Baştan Sona Konu Anlatımı",
+      "cat": "Konu Anlatımı",
+      "context": "Attention · ML ch12 · CS231n 7 · IDA 7 · Lab TC · ML-OVERALL 16-17",
+      "chapters": [
+        "ch12",
+        "cs07",
+        "ida07",
+        "labtc",
+        "mlo16",
+        "mlo17"
+      ],
+      "summary": "RNN'in darboğazından başlayıp, ilk attention'a, h'ın neden kaldırıldığına, Q-K-V'nin neden üç ayrı vektör olduğuna, ölçekleme ve pozisyon kodlamanın neden gerektiğine, çok kafalı yapıya, maskelemeye ve tam Transformer bloğuna kadar tek akış.",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Bu metin ne için",
+          "text": "Attention, sitedeki en çok kart ayrılmış konu — ve her kart doğru bir açıdan bakıyor. Ama attention'ı gerçekten anlamak, formülü değil doğuş sırasını bilmek demek: hangi sorun hangi parçayı doğurdu.\n\nBu metin o sırayı takip ediyor. Sonunda Transformer'ın hiçbir parçası keyfi görünmemeli."
+        },
+        {
+          "type": "text",
+          "heading": "1. Başlangıç: RNN'in darboğazı",
+          "text": "Bir cümleyi başka bir dile çeviren klasik kurulumu düşün. Encoder cümleyi kelime kelime okuyor ve tek bir gizli vektörde özetliyor. Decoder o vektörden çeviriyi üretiyor.\n\nİki ayrı sorun var.\n\nBirincisi darboğaz: kırk kelimelik bir cümlenin tamamı tek bir vektöre sıkıştırılıyor. Cümle uzadıkça baştaki bilgi eziliyor.\n\nİkincisi sıralılık: her adım bir öncekini beklemek zorunda. Uzun bir diziyi işlemek uzun bir zincir demek, ve gradyan o zincir boyunca geriye akarken ya sönüyor ya patlıyor.\n\nAttention önce birinci soruna cevap olarak doğdu. İkincisini çözmesi sonradan, ve bir yan etki olarak geldi."
+        },
+        {
+          "type": "text",
+          "heading": "2. İlk attention: her adımda yeniden bak",
+          "text": "Fikir şu: tek bir özet vektörle yetinme, decoder her kelimeyi üretirken kaynağın tamamına geri bak ve o an hangi kısmının önemli olduğuna karar ver.\n\nMekanizma üç adım. Decoder'ın o andaki durumu ile kaynaktaki her konum karşılaştırılıp bir uyum skoru çıkarılıyor. Skorlar softmax ile ağırlıklara çevriliyor. Kaynak vektörlerin bu ağırlıklarla toplamı alınıyor — bağlam vektörü.\n\nGörüntü altyazılamada da aynısı: encoder görüntüden bölge öznitelikleri üretiyor, decoder her kelimeyi üretirken hangi bölgeye bakacağına karar veriyor.\n\nAma burada gizli bir bağımlılık var: üç adımın hepsi decoder'ın o anki durumuna bağlı. O durum olmadan uyum skoru hesaplanamıyor, skor olmadan bağlam vektörü çıkmıyor. Sistem hâlâ sıralı decoder'a muhtaç."
+        },
+        {
+          "type": "text",
+          "heading": "3. Dönüm noktası: sorgulayan şeyi de girdiden üret",
+          "text": "Kritik soru şu: decoder'ın durumuna neden ihtiyacımız var? O da sonuçta bir vektör. Onu da doğrudan girdiden üretemez miyiz?\n\nÜretebiliriz. Ve ürettiğin anda decoder'a olan bağımlılık ortadan kalkıyor.\n\nHer konum artık kendi sorusunu kendisi üretiyor. Her konum aynı anda, birbirinden bağımsız olarak, dizinin tamamına bakabiliyor. Sıralılık kayboluyor.\n\nBuna self-attention deniyor, ve eski attention'dan farkı tek bir şey: sorgu dışarıdan gelmiyor, girdinin kendisinden üretiliyor.\n\nEşleştirme şöyle: eskiden decoder durumunun yaptığı işi artık sorgu yapıyor; uyum fonksiyonunun yerini nokta çarpımı ve anahtar aldı; kaynak vektörlerin ağırlıklı toplamdaki rolünü değer üstlendi."
+        },
+        {
+          "type": "text",
+          "heading": "4. Neden üç ayrı vektör",
+          "text": "Her konum için üç vektör üretiliyor — sorgu, anahtar, değer — ve üçü de aynı girdiden, üç ayrı öğrenilen matrisle çıkıyor. Neden üç?\n\nSorgu açık: ne arıyorum.\n\nAsıl soru anahtar ile değerin neden ayrı olduğu. Ayrı olmasalardı aynı vektör hem \"ben nasıl aranırım\" hem \"bulununca ne veririm\" demek zorunda kalırdı.\n\nTelefon rehberi analojisi bunu tam oturtuyor: isimle ararsın, numarayı alırsın. İkisi aynı olsaydı, \"Ahmet\" diye arayıp \"Ahmet\" alırdın — işe yaramaz.\n\nSomut örnek: \"The cat sat on the mat\" cümlesinde \"sat\" kelimesi şunu soruyor — benim öznem kim? \"cat\" kelimesinin iki ayrı vektörü var. Anahtarı şunu söylüyor: ben bir isimim, cümlenin başındayım, büyük ihtimalle özneyim. Değeri ise bambaşka bir şey söylüyor: ben kediyim, canlıyım, tekilim, şu semantik özelliklere sahibim.\n\nArama kriteri ile taşınan içerik farklı şeyler. Ayrı tutunca model ikisini bağımsız optimize edebiliyor."
+        },
+        {
+          "type": "formula",
+          "heading": "Self-attention",
+          "text": "$$\\text{Attention}(Q,K,V) = \\text{softmax}\\!\\left(\\frac{QK^\\top}{\\sqrt{d_k}}\\right) V$$\n\nTek bir konum için: $e_{ij} = q_i \\cdot k_j / \\sqrt{d_k}$, ardından $a = \\text{softmax}(e)$ ve $y_i = \\sum_j a_{ij} v_j$."
+        },
+        {
+          "type": "text",
+          "heading": "5. Neden boyutun kareköküne bölüyoruz",
+          "text": "Bu, formüldeki en çok ezberlenen ve en az anlaşılan parça.\n\nSorgu ve anahtar bileşenleri kabaca bağımsız ve birim ölçekliyse, nokta çarpımı d_k tane terimin toplamı olduğu için varyansı d_k ile büyüyor. Yani boyut arttıkça skorlar büyük sayılara savruluyor.\n\nSoftmax'a çok büyük sayılar girdiğinde çıktı neredeyse tek bir konuma bir, kalanlara sıfır veriyor. Bu iki şeyi birden bozuyor: dikkat keskinleşip bilgi taşımaz hale geliyor, ve o doygun bölgede softmax'ın gradyanı sıfıra yaklaşıyor — öğrenme duruyor.\n\nKareköküne bölmek varyansı bire geri çekiyor. Yani ölçekleme bir güzellik değil, eğitimin çalışması için gerekli."
+        },
+        {
+          "type": "text",
+          "heading": "6. Asıl kazanç: paralellik",
+          "text": "Bütün hesap matris çarpımlarıyla yazılabiliyor: sorgular ile anahtarların çarpımı bütün konum çiftlerinin skorlarını tek seferde veriyor.\n\nBu, RNN'e göre karakteristik farkın kendisi. RNN'de kırk kelimelik cümle kırk sıralı adım demek. Self-attention'da bütün konumlar aynı anda hesaplanıyor.\n\nBir başka kazanç daha: iki konum arasındaki mesafe artık önemli değil. RNN'de birinci kelime ile kırkıncı kelime arasında kırk adımlık bir yol vardı ve bilgi o yolda eziliyordu. Self-attention'da her ikisi arasında tek bir bağlantı var.\n\nBedeli de burada: bütün çiftler hesaplandığı için maliyet dizi uzunluğunun karesiyle büyüyor. Uzun bağlam çalışmalarının tamamı bu terimle uğraşıyor."
+        },
+        {
+          "type": "text",
+          "heading": "7. Pozisyon bilgisi neden kayboluyor",
+          "text": "Self-attention'ın bir yan etkisi var ve kritik: sıra bilgisini tamamen yok ediyor.\n\nKonumları karıştırırsan çıktı da aynı şekilde karışıyor, ama içerik değişmiyor. Yani mekanizma dizi olarak değil küme olarak bakıyor.\n\nSomut kanıt: \"cat bites dog\" ile \"dog bites cat\" cümlelerinde \"cat\" kelimesinin gömülmesi aynı, dolayısıyla anahtarı da aynı. \"bites\" kelimesi sorusunu sorduğunda \"cat benden önce mi sonra mı\" bilgisi hiçbir yerde yok. İki cümlede de aynı skorlar çıkıyor.\n\nAma anlam tamamen farklı: birinde cat özne, diğerinde nesne.\n\nÇözüm, konum bilgisini gömülmeye eklemek. \"cat\" birinci sıradayken farklı, üçüncü sıradayken farklı bir vektör oluyor; anahtarı da ona göre değişiyor. Artık skorlar ayrışıyor ve sözdizimsel rol öğrenilebilir hale geliyor.\n\nDikkat: anahtar zaten \"ben hangi kelimeyim\" belirsizliğini çözüyordu. Pozisyon kodlaması farklı bir belirsizliği çözüyor — \"kaçıncı sıradaki hangi kelimeyim\"."
+        },
+        {
+          "type": "text",
+          "heading": "8. Çok kafalı attention",
+          "text": "Tek bir attention hesabı, her konum için tek bir ağırlık dağılımı üretiyor — yani tek tür ilişki.\n\nAma bir kelimenin aynı anda birden çok ilişkisi var: fiilinin öznesi, bağlı olduğu edat, gönderme yaptığı zamir, konusal bağlamı. Tek dağılım bunları aynı anda taşıyamıyor; hepsinin ortalamasını alıyor.\n\nÇözüm, aynı hesabı paralel olarak birkaç kez yapmak. Her kafa kendi sorgu, anahtar ve değer matrislerine sahip; her biri farklı türde bir ilişkiye uzmanlaşabiliyor. Çıktılar birleştirilip tek bir doğrusal katmandan geçiriliyor.\n\nMaliyeti artmıyor, çünkü her kafanın boyutu toplam boyutun kafaya bölünmüş hali. Yani aynı hesap bütçesini tek geniş ilişki yerine birkaç dar ilişkiye bölüyorsun."
+        },
+        {
+          "type": "text",
+          "heading": "9. Maskeleme: iki ayrı iş",
+          "text": "Maskeleme iki farklı amaçla kullanılıyor ve karıştırılıyorlar.\n\nNedensel maske. Metin üreten bir modelde her konum yalnızca kendinden öncekilere bakabilmeli; sonrasını görürse eğitimde cevabı kopyalar ve üretim zamanında çöker. Bunu sağlamak için gelecekteki konumların skorları softmax öncesinde eksi sonsuza çekiliyor, ağırlıkları sıfırlanıyor. GPT ailesinin tamamı böyle çalışıyor.\n\nDolgu maskesi. Bir yığında cümleler farklı uzunlukta olduğu için kısa olanlar doldurularak eşitleniyor. O dolgu konumları gerçek veri değil, dolayısıyla dikkat onlara ağırlık vermemeli.\n\nİkisi de aynı teknikle yapılıyor ama amaçları farklı: biri bilgi sızıntısını, diğeri anlamsız girdiyi engelliyor."
+        },
+        {
+          "type": "text",
+          "heading": "10. Cross-attention: sorgu bir yerden, anahtar başka yerden",
+          "text": "Şimdiye kadar üç vektör de aynı diziden geliyordu. Sorguyu bir kaynaktan, anahtar ve değeri başka bir kaynaktan alırsan cross-attention elde edersin.\n\nÇeviride decoder bunu kullanıyor: sorgular üretilen çeviriden, anahtar ve değerler encoder'ın çıktısından. Yani \"şu an ürettiğim kelime için kaynak cümlenin neresine bakmalıyım\".\n\nAynı mekanizma modaliteler arasında da çalışıyor. Görüntü altyazılamada sorgular metinden, anahtar ve değerler görüntü özniteliklerinden geliyor. Metinden görüntü üreten difüzyon modellerinde ise yön tersine dönüyor: sorgular görüntüden, anahtar ve değerler metinden — her piksel hangi kelimenin kendisini ilgilendirdiğini seçiyor.\n\nYani \"koşulu modele nasıl veririm\" sorusunun en genel cevabı bu mekanizma."
+        },
+        {
+          "type": "text",
+          "heading": "11. Bloğun geri kalanı süs değil",
+          "text": "Transformer bloğu yalnızca attention'dan ibaret değil; her biri belirli bir arızayı çözen üç parça daha var.\n\nArtık bağlantı. Attention çıktısı girdiye ekleniyor. Bu, derin yığınlarda gradyanın kestirme bir yoldan geriye akmasını sağlıyor; onsuz derin Transformer eğitilemiyor.\n\nKatman normalizasyonu. Attention ve toplama sonrası ölçekler kayıyor; normalizasyon aktivasyonları sabit bir bantta tutuyor.\n\nİleri beslemeli katman. Attention aslında sadece bir ağırlıklı ortalama — konumlar arasında bilgi taşıyor ama tek bir konumun içinde doğrusal olmayan bir işlem yapmıyor. O işi bu katman yapıyor: her konuma ayrı ayrı uygulanan, genişletip daraltan küçük bir ağ.\n\nİkisinin iş bölümü net: attention konumlar arasında karıştırır, ileri beslemeli katman konumun içinde işler."
+        },
+        {
+          "type": "text",
+          "heading": "12. Encoder-only, decoder-only, ikisi birden",
+          "text": "Aynı bloktan üç farklı mimari çıkıyor.\n\nEncoder-decoder. Orijinal çeviri mimarisi. Encoder kaynağı maskesiz okuyor, decoder nedensel maskeyle üretiyor ve cross-attention ile encoder'a bakıyor.\n\nEncoder-only. Maskeleme yok, her konum her konumu görüyor. Üretim için uygun değil ama anlama için ideal: sınıflandırma, etiketleme, gömülme çıkarma. BERT ailesi böyle, ve eğitim hedefi de buna göre — cümledeki bazı kelimeleri gizleyip tahmin ettirmek.\n\nDecoder-only. Yalnızca nedensel maskeli bloklar. Hedef basit: bir sonraki kelimeyi tahmin et. GPT ailesi bu, ve bugünkü büyük dil modellerinin neredeyse tamamı bu biçimde.\n\nAynı mekanizma görüntüye de taşındı: görüntüyü yamalara bölüp her yamayı bir konum gibi ele alırsan Vision Transformer çıkıyor. Konvolüsyonun yerel önyargısını bırakıp her şeyi veriden öğrenmeyi seçiyor — bu yüzden çok veri istiyor."
+        },
+        {
+          "type": "insight",
+          "heading": "Geriye ne kalsın",
+          "text": "Attention, sabit bir özet yerine her adımda yeniden bakma fikri olarak doğdu. Self-attention, sorguyu da girdiden üreterek sıralı decoder bağımlılığını kaldırdı — paralellik ve mesafeden bağımsız erişim buradan geliyor, bedeli dizi uzunluğunun karesi. Anahtar ile değer ayrıdır çünkü nasıl bulunduğun ile ne taşıdığın farklı şeylerdir. Karekök ölçekleme softmax'ı doygunluktan korur. Pozisyon kodlaması olmadan mekanizma diziyi küme olarak görür. Çok kafalılık tek bir ilişki yerine birkaç ilişki türü taşımak içindir. Artık bağlantı, normalizasyon ve ileri beslemeli katman süs değil, her biri belirli bir arızanın çözümü. Cross-attention ise koşulu modele vermenin en genel yolu."
+        },
+        {
+          "type": "note",
+          "heading": "Nereye bakılır",
+          "text": "Sorgu-anahtar-değer ayrımı, pozisyon kodlamasının gerekçesi, çok kafalı yapının matematiği ve encoder-decoder boyut akışı ch12'de; RNN attention'dan self-attention'a geçişin adım adım eşleştirmesi yine ch12'de; CS231n tarafı cs07'de; görüntü tarafı (ViT, Swin, DETR) ida07 ve ida08'de; uygulama için labtc altyazılama oturumunda. Metin koşullamasının difüzyondaki hali için DDPM konu anlatımına bak."
+        }
+      ]
+    },
+    "backprop": {
+      "title": "Backpropagation — Baştan Sona Konu Anlatımı",
+      "cat": "Konu Anlatımı",
+      "context": "Backprop · ML ch07 · Lab 3 · CS231n 3 · ML-OVERALL 12",
+      "chapters": [
+        "ch07",
+        "lab03",
+        "cs03",
+        "mlo12"
+      ],
+      "summary": "Tek bir kayıp sayısından milyonlarca gradyanın nasıl çıktığı: neden sonlu fark işe yaramıyor, hesaplama grafiği ve zincir kuralı, upstream çarpı local kuralı, bir doğrusal katmanın backward'ı boyutlarıyla, ve gradyanların neden sönüp patladığı.",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Bu metin ne için",
+          "text": "Backprop, zincir kuralından ibaret ve tam da bu yüzden yanlış anlaşılıyor: formülü bilmek onu anlamak değil.\n\nAsıl soru şu — kayıp tek bir sayı. Bir tek sayıdan milyonlarca ağırlığın her biri için ayrı bir yön bilgisi nasıl çıkıyor?\n\nBu metin o soruyu takip ediyor, ve sonunda bir katmanın backward'ını boyutlarıyla yazabiliyor olman lazım."
+        },
+        {
+          "type": "text",
+          "heading": "1. Problem",
+          "text": "Ağın milyonlarca ağırlığı var. Her biri için şunu bilmek istiyorsun: bu ağırlığı azıcık artırsam kayıp ne kadar değişirdi?\n\nBu sayının adı o ağırlığın gradyanı. Elinde bütün gradyanlar olsa, her ağırlığı kaybı düşüren yönde küçük bir adım kaydırırsın. Öğrenme tam olarak bu.\n\nSoru, o sayıları nasıl elde edeceğin."
+        },
+        {
+          "type": "text",
+          "heading": "2. Neden akla ilk gelen yöntem işe yaramıyor",
+          "text": "En doğrudan yol: bir ağırlığı azıcık değiştir, ağı baştan çalıştır, kaybın ne kadar değiştiğine bak. Sonra eski haline getir, sıradakine geç.\n\nMatematiksel olarak doğru, pratikte imkansız. Yüz milyon parametreli bir ağda tek bir gradyan adımı için yüz milyon ileri geçiş gerekir.\n\nBackprop ise bütün gradyanları tek bir ileri artı tek bir geri geçişte hesaplıyor. Geri geçişin maliyeti ileri geçişin iki-üç katı, ve bu oran parametre sayısından bağımsız.\n\nDerin öğrenmeyi mümkün kılan şey bu ölçekleme farkı. Numaranın özü ise ara sonuçları yeniden kullanmak."
+        },
+        {
+          "type": "text",
+          "heading": "3. Hesaplama grafiği",
+          "text": "Ağı katmanlar yığını olarak değil, işlemler grafiği olarak düşün. Düğümler işlemler — çarp, topla, maksimum al, sigmoid uygula. Kenarlar veri akışı.\n\nİleri geçiş grafiği baştan sona yürüyüp kaybı hesaplıyor, ve yol boyunca ara değerleri saklıyor.\n\nGeri geçiş aynı grafiği tersten yürüyor.\n\nBu bakışın gücü şurada: her düğümün yalnızca kendi yerel türevini bilmesi yeterli. Grafiğin tamamını kimse bilmek zorunda değil. Modülerlik buradan geliyor — bu yüzden PyTorch'ta kendi katmanını yazabiliyorsun."
+        },
+        {
+          "type": "text",
+          "heading": "4. Tek kural: upstream çarpı local",
+          "text": "Bir düğüme geri geçişte yukarıdan bir gradyan geliyor: \"senin çıktın azıcık değişseydi kayıp şu kadar değişirdi.\"\n\nDüğüm kendi yerel türevini biliyor: \"benim çıktım, girdim değişince şu kadar değişir.\"\n\nİkisini çarpıyorsun, aşağıya iletiyorsun. Zincir kuralının tamamı bu.\n\nSık kullanılan düğümlerin davranışı ezberlenecek kadar basit. Toplama düğümü gelen gradyanı iki girdisine olduğu gibi dağıtıyor. Çarpma düğümü gradyanı diğer girdiyle takas ediyor. Maksimum düğümü gradyanın tamamını kazanan girdiye gönderiyor, diğerine sıfır. ReLU pozitif bölgede geçiriyor, negatifte kesiyor."
+        },
+        {
+          "type": "text",
+          "heading": "5. Tek sayıdan milyonlarca gradyana",
+          "text": "Kayıp tek bir sayı, mesela 2.3. Ama kaybın çıktı vektörüne göre türevi bir vektör.\n\nÜç sınıflı bir problemde ağ şunu demiş olsun: kedi 0.72, köpek 0.20, kuş 0.08. Gerçek etiket kedi. Kaybın çıktıya göre türevi kabaca şunu söylüyor: kedi tahminini artırırsan kayıp azalır, diğer ikisini azaltırsan kayıp azalır.\n\nBilgi ilk kez burada açılıyor: tek sayı, sınıf sayısı kadar bileşenli bir vektöre dönüştü.\n\nSonra backprop bu vektörü alıp katman katman geriye yürüyor. Her katmanda gradyan, o katmanın girdi boyutuna göre yeniden şekilleniyor ve genişliyor. Son katmanda üç bileşendi, bir önceki katmanda yüzlerce, daha öncekinde binlerce.\n\nHer katman yalnızca iki şeye bakıyor: yukarıdan gelen gradyan ve ileri geçişte sakladığı kendi girdisi."
+        },
+        {
+          "type": "code",
+          "heading": "Bir doğrusal katmanın backward'ı",
+          "text": "# ileri:  x_out = x_in @ w.T + b\n\ndef backward(self, d_out):\n    d_in    = d_out @ self.w                      # (batch, n_in)\n    self.dw = d_out.T @ self.x_in                 # (n_out, n_in)\n    self.db = d_out.sum(axis=0, keepdims=True)    # (1, n_out)\n    return d_in\n\n# boyutlar\n# d_out : (batch, n_out)   yukaridan gelen\n# d_in  : (batch, n_in)    asagiya giden\n# dw    : w ile ayni sekil\n# db    : b ile ayni sekil"
+        },
+        {
+          "type": "text",
+          "heading": "6. O üç satırın neden böyle olduğu",
+          "text": "Transpozlar ezberlenmez, boyutlardan çıkar. İleri geçişte girdi (yığın, giriş) boyutunda, ağırlık (çıkış, giriş) boyutunda ve çarpımın sonucu (yığın, çıkış). Geri geçişte elindeki (yığın, çıkış), üretmen gereken (yığın, giriş). Aradaki tek uyumlu çarpım, gelen gradyan ile ağırlığın kendisi. Transpoz, boyutların oturması için doğal olarak çıkıyor.\n\nAğırlığın gradyanı, gelen gradyan ile ileri geçişte saklanan girdinin çarpımı — yığındaki her örneğin katkısı toplanarak. Matris çarpımı zaten o toplamayı yapıyor.\n\nBias'ın gradyanı ise yığın boyunca toplam, ve sebebi öğretici: ileri geçişte bias yayımlanarak her satıra kopyalanmıştı. Yani kayba her satırdan ayrı bir yoldan katkı verdi. Zincir kuralı, bir değer birden çok yoldan kullanıldığında katkıların toplanmasını söylüyor.\n\nEzberlenecek kural şu: ileri geçişte yayım varsa, geri geçişte toplama vardır."
+        },
+        {
+          "type": "text",
+          "heading": "7. Katman özyinelemesi",
+          "text": "Aynı şeyi katman diliyle de yazabilirsin. Her katman için bir hata sinyali tanımla: kaybın o katmanın doğrusal çıktısına göre türevi.\n\nSon katmanda bu sinyal doğrudan kayıptan geliyor. Geriye doğru her katmanda iki şeyle çarpılıyor: bir sonraki katmanın ağırlık matrisinin transpozu, ve kendi aktivasyon fonksiyonunun türevi.\n\nAğırlık gradyanları da bu sinyal ile katmanın girdisinin çarpımından çıkıyor.\n\nBu formül, bir sonraki bölümün tamamını açıklıyor — çünkü gradyanın her katmanda neyle çarpıldığını açıkça gösteriyor."
+        },
+        {
+          "type": "text",
+          "heading": "8. Aktivasyon fonksiyonu neden var",
+          "text": "Bir ara verip temel bir noktayı yerine oturtalım.\n\nHer katman doğrusal bir dönüşüm yapıyor. Ama iki doğrusal dönüşümün bileşkesi yine doğrusaldır. Yani aktivasyon olmadan on katman koysan da model matematiksel olarak tek katmana eşdeğer olur — derinliğin hiçbir anlamı kalmaz.\n\nAktivasyon, katmanların arasına doğrusal olmayan bir adım sokarak üst üste yığmayı anlamlı kılıyor.\n\nAma hangi aktivasyonu seçtiğin, yukarıdaki özyineleme yüzünden doğrudan eğitilebilirliği belirliyor."
+        },
+        {
+          "type": "text",
+          "heading": "9. Sönen ve patlayan gradyanlar",
+          "text": "Gradyan her katmanda aktivasyonun türeviyle çarpılıyor.\n\nSigmoid'in türevi en fazla 0.25. On katmanlı bir ağda gradyan, en iyi ihtimalle 0.25'in onuncu kuvvetiyle çarpılıyor — yani milyonda bir mertebesine iniyor. İlk katmanlara ulaşan sinyal pratikte sıfır, o katmanlar öğrenemiyor. Sönen gradyan bu.\n\nReLU'da pozitif bölgede türev tam olarak bir. Gradyan aktivasyondan hiç zayıflamadan geçiyor, ilk katmanlara kendi büyüklüğünde ulaşıyor.\n\n\"Ama nöronların yarısı sıfır üretmiyor mu\" sorusunun cevabı: evet, ve bu aslında istenen bir şey. Farklı nöronlar farklı örüntülere uzmanlaşıyor; yatay kenar arayan bir nöronun her girdide ateşlenmesi gerekmiyor.\n\nDiğer yönde, ağırlıkların normu büyükse aynı çarpım zinciri gradyanı patlatıyor. Karşı önlemler: gradyan kırpma, dikkatli ilklendirme, normalizasyon katmanları, ve artık bağlantılar — sonuncusu gradyana katmanları atlayan kestirme bir yol açtığı için özellikle etkili."
+        },
+        {
+          "type": "text",
+          "heading": "10. Öğrenme tam olarak nerede oluyor",
+          "text": "Sıra şu: ileri geçiş tahmin üretir ve ara değerleri saklar. Kayıp tek bir sayı verir. Backprop o sayıyı her ağırlık için bir gradyana açar. Güncelleme adımı ağırlıkları gradyanın ters yönünde kaydırır.\n\nÖğrenme yalnızca son adımda oluyor. Backprop hiçbir şey öğrenmiyor — sadece yön bilgisi üretiyor.\n\nTek bir adım anlamsız görünür, ağırlıklar minicik kayar. Ama binlerce adım sonra her ağırlık doğru yönde birikmiş olur.\n\nBir de bedeli var: ileri geçişte saklanan ara değerler bellekte duruyor. Derin ağlarda eğitim sırasındaki bellek tüketiminin büyük kısmı ağırlıklardan değil, geri geçişte lazım olacak bu ara değerlerden geliyor."
+        },
+        {
+          "type": "insight",
+          "heading": "Geriye ne kalsın",
+          "text": "Gradyanları tek tek ölçmek imkansız; backprop hepsini tek ileri artı tek geri geçişte üretir ve maliyeti parametre sayısından bağımsızdır. Ağı işlemler grafiği olarak gör; her düğüm yalnızca kendi yerel türevini bilir, kural upstream çarpı local. Kayıp tek sayıdır ama çıktıya göre türevi vektördür, ve geriye doğru her katmanda genişler. Transpozlar ezber değil, boyut uyumundan çıkar. İleri geçişte yayım varsa geri geçişte toplama vardır. Gradyan her katmanda ağırlık ve aktivasyon türeviyle çarpıldığı için sigmoid derinlikte söner, ReLU sönmez. Öğrenme backprop'ta değil, güncelleme adımında olur."
+        },
+        {
+          "type": "note",
+          "heading": "Nereye bakılır",
+          "text": "Hesaplama grafiği, delta kuralı ve verimlilik analizi ch07'de; aktivasyondan gradyana, backprop'tan eğitim döngüsüne uzanan anlatım yine ch07'de; katman katman uygulama, boyutlar ve zincir kuralı sezgisi lab03'te; düğüm bazlı gradyan kuralları cs03'te. Optimizasyon adımının kendisi (SGD, momentum, Adam) ch08'de."
+        }
+      ]
     }
   },
   "mlo": [

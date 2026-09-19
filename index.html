@@ -332,6 +332,9 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .sec-anim .lbl{font-size:12px}
 .sec-anim .hi{stroke:var(--accent)}
 .sec-anim text.hi{fill:var(--accent);stroke:none}
+.home-guides{margin:34px auto 0;max-width:560px}
+.home-guides h3{font-size:13.5px;font-weight:700;letter-spacing:.06em;color:var(--muted);margin:0 0 4px}
+.home-guides-sub{font-size:14px;color:var(--muted);margin:0 0 10px}
 .home-search{margin:22px auto 0;max-width:560px;position:relative}
 .home-search input{width:100%;font-family:var(--serif);font-size:17px;padding:11px 14px 11px 32px;background:transparent;color:var(--text);border:none;border-bottom:1px solid var(--border);border-radius:0;outline:none;transition:border-color .15s}
 .home-search input:focus{border-bottom-color:var(--find)}
@@ -408,7 +411,7 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .ch-ov-body p{font-size:16px;line-height:1.85;color:var(--overview-text);margin-bottom:1.6em}
 .ch-ov-body p:last-child{margin-bottom:0}
 .ch-ov-body strong{font-weight:700;color:var(--text)}
-.guide-btn{display:block;width:100%;text-align:left;margin:1.6em 0 0;padding:14px 18px;
+.guide-btn{display:block;width:100%;text-align:left;margin:1.1em 0 0;padding:14px 18px;
   font:inherit;font-size:16px;font-weight:700;color:var(--accent);
   background:transparent;border:1px solid var(--accent);border-radius:2px;cursor:pointer}
 .guide-btn:hover{background:var(--accent);color:var(--bg)}
@@ -1842,10 +1845,16 @@ function switchSection(sec){
 }
 
 /* Bu bolume bagli konu anlatimi var mi? guides.json -> chapters[] */
-function guideFor(sec){
+function guidesFor(sec){
+  const out = [];
   for(const k in GUIDES){ const g = GUIDES[k];
-    if(g && Array.isArray(g.chapters) && g.chapters.includes(sec)) return k; }
-  return null;
+    if(g && Array.isArray(g.chapters) && g.chapters.includes(sec)) out.push(k); }
+  return out;
+}
+function guideButtons(sec){
+  return guidesFor(sec).map(k =>
+    `<button class="guide-btn" onclick="showGuide('${k}')">Konu Anlatımı — ${esc(GUIDES[k].title.replace(/ — .*$/,''))} &rarr;</button>`
+  ).join('');
 }
 /* Konu anlatimini kart popup'inda goster — sections semasi ayni, yeni renderer yok */
 function showGuide(key){
@@ -1866,9 +1875,7 @@ function showOverview(sec){
              ? (OVERVIEWS._anims || {})[ov.anim] : null;
   if(text){
     const paras = text.split('\n\n').filter(p=>p.trim()).map(p=>`<p>${esc(p.trim()).replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')}</p>`).join('');
-    const gk = guideFor(sec);
-    const gbtn = gk ? `<button class="guide-btn" onclick="showGuide('${gk}')">Konu Anlatımı — ${esc(GUIDES[gk].title)} &rarr;</button>` : '';
-    body.innerHTML = paras + gbtn + (anim ? `<div class="ch-ov-anim">${renderSection(anim)}</div>` : '');
+    body.innerHTML = paras + guideButtons(sec) + (anim ? `<div class="ch-ov-anim">${renderSection(anim)}</div>` : '');
     panel.style.display = '';
     if(typeof renderMathInElement === 'function'){
       renderMathInElement(panel,{
@@ -1879,13 +1886,9 @@ function showOverview(sec){
     if(anim) initAnims(panel);   // KaTeX'ten SONRA — adim metinleri formul icerebiliyor
   } else {
     // Giris metni yok ama konu anlatimi varsa panel yine acilir (lab*/cs* bolumleri)
-    const gk = guideFor(sec);
-    if(gk){
-      body.innerHTML = `<button class="guide-btn" onclick="showGuide('${gk}')">Konu Anlatımı — ${esc(GUIDES[gk].title)} &rarr;</button>`;
-      panel.style.display = '';
-    } else {
-      panel.style.display = 'none';
-    }
+    const gb = guideButtons(sec);
+    if(gb){ body.innerHTML = gb; panel.style.display = ''; }
+    else { panel.style.display = 'none'; }
   }
 }
 
@@ -2432,6 +2435,23 @@ function homeSearch(q){
   });
 }
 
+/* Ana sayfadaki konu anlatimi listesi — guides.json'dan uretilir */
+function guideIndexHTML(){
+  const keys = Object.keys(GUIDES || {});
+  if(!keys.length) return '';
+  const rows = keys.map(k => {
+    const g = GUIDES[k];
+    const name = (g.title||k).replace(/ — .*$/,'');
+    const n = (g.sections||[]).length;
+    return `<button class="toc-row" data-guide="${esc(k)}">` +
+      `<span class="toc-name">${esc(name)}</span>` +
+      `<span class="toc-dots"></span><span class="toc-meta">${n} bölüm</span></button>`;
+  }).join('');
+  return `<div class="home-guides"><h3>KONU ANLATIMLARI</h3>
+    <div class="home-guides-sub">Kartlar tek bilgiye ulaşmak için; bunlar konuyu baştan sona kurmak için.</div>
+    ${rows}</div>`;
+}
+
 function buildHome(){
   const host = $('home-page'); if(!host) return;
   const src   = CHAPTERS.filter(c => !c.startsWith('mlo'));   // mlo* ayni kartlara referans, iki kez sayma
@@ -2469,10 +2489,12 @@ function buildHome(){
        <div class="home-col"><h3>BY CONCEPT</h3>${left}</div>
        <div class="home-col"><h3>BY SOURCE</h3>${right}</div>
      </div>
+     ${guideIndexHTML()}
      <div class="home-search"><input id="home-q" type="search" placeholder="Search every card…" autocomplete="off"></div>
      <div class="home-hint" id="home-hint">Titles, keywords, headings and body text &middot; click a result to open the card, &rarr; to go to its section</div>
      <div id="home-results"></div>`;
   host.querySelectorAll('[data-go]').forEach(el => el.onclick = () => switchSection(el.dataset.go));
+  host.querySelectorAll('[data-guide]').forEach(el => el.onclick = () => showGuide(el.dataset.guide));
   const qi = $('home-q');
   if(qi){ let t; qi.oninput = () => { clearTimeout(t); t = setTimeout(() => homeSearch(qi.value), 130); };
           qi.onkeydown = e => { if(e.key === 'Escape'){ qi.value=''; homeSearch(''); qi.blur(); } }; }
@@ -2607,7 +2629,7 @@ function applyData(d){
 }
 
 
-fetch('./data/unified.json?v=20260919175346')
+fetch('./data/unified.json?v=20260919180403')
   .then(r => { if(!r.ok) throw new Error(r.status); return r.json() })
   .then(applyData)
   .catch(() => {
