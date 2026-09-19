@@ -25225,6 +25225,153 @@
       ]
     }
   ],
+  "guides": {
+    "ddpm": {
+      "title": "DDPM — Baştan Sona Konu Anlatımı",
+      "cat": "Konu Anlatımı",
+      "context": "Diffusion · IDA 11 · Lab 7 · CS231n 13 — tek oturumda okunmak için",
+      "chapters": [
+        "ida11",
+        "lab07",
+        "cs13",
+        "mlo21"
+      ],
+      "anim": "ddpm",
+      "summary": "Difüzyon modellerinin neden ortaya çıktığından latent diffusion'a kadar tek akış: hangi eksikliği kapattı, forward/reverse süreç, ELBO'nun neden MSE'ye çöktüğü, U-Net'in içi, classifier-free guidance ve sonrası. Kartlar tek tek bilgi verir, bu metin sırayı verir.",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Bu metin ne için",
+          "text": "Sitedeki difüzyon kartları tek tek doğru ama her biri tek bir şeyi anlatıyor: biri forward process'i, biri ELBO'yu, biri U-Net'in boyutlarını. Arama çubuğundan bir şey bulmak için bu iyi. Konuyu sıfırdan kurmak için değil.\n\nBu metin baştan sona okunmak için yazıldı. Sonunda şunu yapabiliyor olman lazım: boş bir kağıda difüzyonun neden var olduğunu, nasıl eğitildiğini ve nasıl örnek ürettiğini, formülleri hatırlamadan da anlatabilmek. Formülleri sonra hatırlarsın; anlatıyı hatırlamazsan formül işe yaramıyor."
+        },
+        {
+          "type": "text",
+          "heading": "1. Problem: bir dağılımdan örnek üretmek neden zor",
+          "text": "Elinde 60.000 el yazısı rakam var. İstediğin şey 60.001'inci rakamı üretmek — veri kümesinde olmayan ama ondan gelmiş gibi duran bir görüntü.\n\nBunun zor olmasının sebebi şu: 28x28'lik bir görüntü 784 boyutlu bir uzayda bir nokta. Bu uzayın neredeyse tamamı gürültü. Rakam gibi görünen noktalar çok ince, çok kıvrımlı bir yüzey üzerinde duruyor. Sen o yüzeyin denklemini bilmiyorsun, elinde sadece üzerindeki 60.000 örnek var.\n\nÜretmek demek, o yüzeyin üstüne yeni bir nokta koyabilmek demek. Dağılımın kendisini yazamıyorsan, ondan örnek almayı başka bir yoldan öğrenmen gerekiyor."
+        },
+        {
+          "type": "text",
+          "heading": "2. Öncekiler neyi beceremedi",
+          "text": "Difüzyondan önce bu işin iki ana yolu vardı ve ikisinin de karakteristik bir arızası vardı.\n\nGAN: bir üretici ile bir ayırt edici yarışıyor. Görüntü kalitesi yüksek, tek adımda üretiyor — ama eğitim bir denge arayışı, ve o denge kolayca bozuluyor. En bilinen arızası mode collapse: üretici, ayırt ediciyi kandıran birkaç görüntüyü bulup ömür boyu onları üretmeye başlıyor. Veri kümesinde on rakam var, model üç tanesini üretiyor ve kaybı gayet iyi görünüyor. Ayrıca ne kadar iyi gittiğini söyleyen tek bir sayı yok; loss eğrisine bakarak eğitimin iyi gidip gitmediğini anlayamıyorsun.\n\nVAE: eğitimi stabil, elinde optimize ettiğin dürüst bir alt sınır var. Ama üretilen görüntüler bulanık. Sebebi mimari değil, kayıp fonksiyonunun kendisi: karesel hata, belirsizlik karşısında ortalamayı seçer. Model bir kenarın tam olarak nerede olduğundan emin değilse, iki olasılığın ortasını basar — ve iki keskin kenarın ortalaması bulanık bir kenardır.\n\nDifüzyonun kapattığı boşluk tam burası: GAN'ın keskinliği, VAE'nin stabilitesi. Ne ayırt edici var, ne de bir denge arayışı; geriye kalan şey düpedüz bir regresyon problemi."
+        },
+        {
+          "type": "text",
+          "heading": "3. Tek cümlelik fikir",
+          "text": "Zor olan şey gürültüden görüntü üretmek. Kolay olan şey görüntüye gürültü eklemek.\n\nO halde zor yönü doğrudan öğrenme: kolay yönü sen kur, ve ağdan sadece onu bir adım geri almasını iste.\n\nBir fotoğrafa binde bir oranında gürültü ekle. Sonuç hâlâ fotoğraf, sadece biraz kirli. Şimdi bunu bin kez tekrarla. Sonunda elinde saf gürültü var, içinde fotoğraftan eser yok. Bu yolu tersine yürüyebilseydin, saf gürültüden başlayıp bir fotoğraf üretebilirdin.\n\nDifüzyon modelinin öğrendiği şey bu yolun tamamı değil, tek bir adımı: bana biraz kirli bir görüntü ver, sana eklenmiş olan kiri söyleyeyim. Üretim sırasında bu tek adım bin kez tekrarlanıyor.\n\nDönüm noktası şu cümlede: model görüntüyü tahmin etmiyor, gürültüyü tahmin ediyor. Neden böyle yaptığı aşağıda, ama şimdiden aklında dursun — konunun yarısı bu tercihte."
+        },
+        {
+          "type": "text",
+          "heading": "4. Forward process: gürültü nasıl ekleniyor",
+          "text": "Her adımda görüntüye biraz Gaussian gürültü ekliyoruz. Ne kadar ekleneceğini önceden belirlenmiş bir liste söylüyor: beta_1'den beta_T'ye kadar T tane sayı. Bu listeye variance schedule deniyor ve öğrenilmiyor, elle seçiliyor. Ho ve arkadaşlarının 2020'deki orijinal seçimi: T = 1000 adım, beta 0.0001'den 0.02'ye doğrusal olarak artıyor.\n\nHer adımda iki şey oluyor aynı anda: gürültü ekleniyor, ve mevcut görüntü biraz küçültülüyor. Küçültme çarpanı karekök(1 - beta_t).\n\nKüçültme neden var? Çünkü sadece gürültü eklersen toplam varyans her adımda büyür ve süreç patlar. Küçültme, eklenen gürültünün getirdiği varyansı tam olarak dengeliyor: girdinin varyansı 1 ise çıktının varyansı da 1 kalıyor. Bu yüzden bu ailenin adı variance preserving. Alternatifi de var (variance exploding, gürültü sınırsız büyür), ama DDPM bunu kullanıyor."
+        },
+        {
+          "type": "formula",
+          "heading": "Forward process — adım adım ve kapalı form",
+          "text": "Tek adım:\n$$q(x_t \\mid x_{t-1}) = \\mathcal{N}\\bigl(x_t;\\ \\sqrt{1-\\beta_t}\\,x_{t-1},\\ \\beta_t I\\bigr)$$\n\nKısaltmalar: $\\alpha_t = 1-\\beta_t$ ve $\\bar{\\alpha}_t = \\prod_{s=1}^{t}\\alpha_s$ (kümülatif çarpım).\n\nHerhangi bir $t$ anına tek hamlede:\n$$q(x_t \\mid x_0) = \\mathcal{N}\\bigl(x_t;\\ \\sqrt{\\bar{\\alpha}_t}\\,x_0,\\ (1-\\bar{\\alpha}_t) I\\bigr)$$\n\nÖrnekleme biçiminde yazılışı:\n$$x_t = \\sqrt{\\bar{\\alpha}_t}\\,x_0 + \\sqrt{1-\\bar{\\alpha}_t}\\,\\epsilon, \\qquad \\epsilon \\sim \\mathcal{N}(0, I)$$\n\nHarfler: $x_0$ gerçek görüntü, $x_t$ onun $t$ adım gürültülenmiş hali, $\\epsilon$ eklenen gürültü, $\\bar{\\alpha}_t$ görüntüden geriye ne kaldığının ölçüsü."
+        },
+        {
+          "type": "text",
+          "heading": "5. Kapalı formun neden bu kadar önemli olduğu",
+          "text": "Yukarıdaki üçüncü satır, difüzyonun eğitilebilir olmasının tek sebebi.\n\nDüşün: t = 500'deki gürültülü görüntüyü elde etmek için 500 kez döngü döndürmen gerekseydi, her eğitim örneği için 500 adım atman gerekirdi. Eğitim pratikte imkansız olurdu.\n\nAma arka arkaya eklenen Gaussian gürültüler yine Gaussian veriyor, ve varyansları toplanıyor. Bu yüzden 500 adımın tamamı tek bir formüle çöküyor: bir kere karekök(alpha_bar_500) ile çarp, üstüne karekök(1 - alpha_bar_500) kadar gürültü ekle. Bitti.\n\nSomut olarak: eğitim sırasında her görüntü için rastgele bir t seçiyorsun (mesela 500), tek satırda x_500'ü üretiyorsun, ağa veriyorsun. Sıralı hiçbir şey yok. Eğitim tamamen paralel.\n\nBuna reparameterization trick deniyor ve aynı numarayı VAE'de de görmüştün: rastgeleliği, gradyanın akabileceği bir toplam-çarpım biçiminde yazmak.\n\nDikkat: bu kolaylık sadece forward yönde var. Üretim (sampling) hâlâ adım adım, ve yavaşlığın sebebi bu."
+        },
+        {
+          "type": "text",
+          "heading": "6. Schedule'ın kendisi bir tasarım tercihi",
+          "text": "Doğrusal schedule'ın bir kusuru var: alpha_bar erken adımlarda çok hızlı düşüyor. Yani görüntü daha sürecin başında neredeyse tamamen yok oluyor, ve geri kalan yüzlerce adım zaten gürültü olan bir şeyi biraz daha gürültülemekle geçiyor. Eğitim bütçesinin bir kısmı boşa gidiyor.\n\nNichol ve Dhariwal (2021) yerine cosine schedule önerdi: alpha_bar daha yavaş ve daha yumuşak düşüyor, yapı orta gürültü seviyelerinde daha uzun süre korunuyor. Örnek kalitesi belirgin şekilde artıyor.\n\nBuradan çıkan genel ders, difüzyonun tamamında geçerli: forward process öğrenilmiyor ama tasarlanıyor, ve nasıl tasarladığın sonucu doğrudan etkiliyor."
+        },
+        {
+          "type": "text",
+          "heading": "7. Ters yön: neden öğrenilmek zorunda",
+          "text": "Forward yönde tam olarak ne yaptığını biliyorsun. Peki ters yön neden bedava değil?\n\nÇünkü x_t'yi gören biri x_{t-1}'i kesin olarak bilemez. Gürültülü bir görüntüden geriye gitmenin birden çok makul yolu var — hangi temiz görüntüden geldiğini bilmiyorsun. Bu dağılım, veri dağılımının tamamına bağlı, ve onu bilmiyorsun. Zaten bilseydin üretmeyi de bilirdin.\n\nAma bir kurtuluş var: gerçek x_0'ı biliyorsan, ters adım analitik olarak hesaplanabiliyor. Yani q(x_{t-1} | x_t, x_0) kapalı formda bir Gaussian, ortalaması ve varyansı schedule'dan çıkıyor.\n\nEğitimde x_0 elinde. Üretimde değil. Bütün mesele, eğitimde bilinen bu hedefi, üretimde x_0 olmadan taklit edebilecek bir ağa öğretmek."
+        },
+        {
+          "type": "text",
+          "heading": "8. ELBO: VAE ile birebir aynı hareket",
+          "text": "Bu noktada matematiksel çerçeve VAE'yle aynı yerden başlıyor ve aynı adımları izliyor. Hedef maksimum olabilirlik: eğitim verisini en olası kılan theta'yı bul.\n\nİkisinde de doğrudan marjinal hesaplanamıyor — VAE'de z üzerinden integral, DDPM'de T boyutlu bir yol üzerinden integral. İkisinde de aynı çare uygulanıyor: bir yardımcı dağılım sokup, logaritmayı üç terime ayırıp, negatif olamayacağı bilinen bir KL terimini atıp alt sınıra (ELBO) geçmek.\n\nİki gerçek fark var, ve ikisi de DDPM'in lehine.\n\nBirincisi: VAE'de sokulan yardımcı dağılım encoder, yani öğreniliyor (phi parametreleri). DDPM'de sokulan şey forward process — sabit, parametresiz. Öğrenilecek bir encoder yok.\n\nİkincisi: VAE'de prior KL terimi encoder'ı düzenleyen gerçek bir ceza, optimize edilmek zorunda. DDPM'de karşılığı olan terim, x_T'nin dağılımı ile N(0, I) arasındaki KL — ama T yeterince büyükse forward process bunu zaten garantiliyor ve terimde öğrenilecek hiçbir parametre yok. Sabit, dolayısıyla atılıyor.\n\nGeriye T tane denoising terimi kalıyor: her adımda, bilinen gerçek ters adım ile ağın tahmin ettiği ters adım arasındaki KL."
+        },
+        {
+          "type": "formula",
+          "heading": "DDPM ELBO — üç parça",
+          "text": "$$\\log p_\\theta(x_0) \\ \\ge\\ \\underbrace{\\mathbb{E}_q[\\log p_\\theta(x_0|x_1)]}_{L_0}\\ -\\ \\underbrace{D_{KL}\\bigl(q(x_T|x_0)\\,\\|\\,p(x_T)\\bigr)}_{L_T}\\ -\\ \\underbrace{\\textstyle\\sum_{t>1} D_{KL}\\bigl(q(x_{t-1}|x_t,x_0)\\,\\|\\,p_\\theta(x_{t-1}|x_t)\\bigr)}_{L_{t-1}}$$\n\n$L_T$ sabittir, atılır. $L_0$ son adımın yeniden kurulumudur. İşin tamamı $L_{t-1}$ toplamındadır."
+        },
+        {
+          "type": "text",
+          "heading": "9. KL neden MSE'ye çöküyor",
+          "text": "Bu, konunun en çok gözden kaçan adımı, ve anlatıyı tamamlayan yer.\n\nL_{t-1} terimindeki iki dağılım da Gaussian: gerçek ters adım Gaussian (yukarıda türetildi), ağın ürettiği ters adım da Gaussian olarak tanımlandı. İki Gaussian arasındaki KL'nin kapalı formu var. Varyansları sabit seçersen, o kapalı formdan geriye sadece ortalamaların farkının karesi kalıyor.\n\nYani KL kaybolmuyor — Gaussian varsayımı altında karesel hataya dönüşüyor.\n\nÜstüne bir sadeleştirme daha geliyor. Ortalamayı x_0 cinsinden değil epsilon cinsinden yazarsan, ağın tahmin etmesi gereken şey doğrudan eklenen gürültü oluyor. ELBO'dan gelen zamana bağlı ağırlık katsayıları da atılınca geriye kalan şu:\n\nkayıp = eklenen gürültü ile tahmin edilen gürültü arasındaki ortalama karesel hata.\n\nBu kadar. Sekiz satırlık bir türetmenin sonunda elinde kalan şey, bir regresyon kaybı."
+        },
+        {
+          "type": "formula",
+          "heading": "L_simple",
+          "text": "$$\\mathcal{L}_{\\text{simple}} = \\mathbb{E}_{t,\\,x_0,\\,\\epsilon}\\bigl[\\ \\|\\ \\epsilon - \\epsilon_\\theta(x_t, t)\\ \\|^2\\ \\bigr]$$"
+        },
+        {
+          "type": "text",
+          "heading": "10. Neden gürültüyü tahmin ediyoruz, görüntüyü değil",
+          "text": "Matematiksel olarak üç seçenek de eşdeğer: ağ temiz görüntüyü (x_0), ters adımın ortalamasını (mu) ya da eklenen gürültüyü (epsilon) tahmin edebilir. Birinden diğerine cebirle geçiliyor. Tam ELBO kullanıldığında üçü de birbirine yakın sonuç veriyor.\n\nFark, basitleştirilmiş kayba geçince ortaya çıkıyor. DDPM makalesinin ablasyonu (CIFAR-10, FID; düşük daha iyi):\n\n  mu tahmini, tam ELBO: 13.22 — basit kayıpla: kararsız\n  epsilon tahmini, tam ELBO: 13.51 — basit kayıpla: 3.17\n\nDört kattan fazla bir iyileşme, ve sebebi ilginç: atılan zaman katsayıları aslında bir yeniden ağırlıklandırma yapıyor. Katsayılar atılınca küçük t'ler (neredeyse temiz görüntüler, kolay iş) göreli olarak daha az ağırlık alıyor, ağ zor işe — büyük gürültüde kaba yapıyı kurtarmaya — odaklanıyor.\n\nPratik sezgi de aynı yöne çalışıyor: epsilon'un dağılımı her zaman N(0, I). Hedef sabit ölçekli ve sabit istatistikli. x_0 ise veri kümesine göre değişiyor. Sabit hedefe regresyon her zaman daha stabildir.\n\nBunu şöyle hatırla: basit kayba geçmek bedava değildi, bedeli bir yeniden ağırlıklandırmaydı, ve o ağırlıklandırma tesadüfen işe yarayan bir ağırlıklandırmaydı."
+        },
+        {
+          "type": "text",
+          "heading": "11. Ağ: neden U-Net",
+          "text": "Ağın işi şu: gürültülü görüntüyü al, üstündeki gürültüyü aynı boyutta bir görüntü olarak çıkar. Girdi ve çıktı aynı boyutta, ve çıktının her pikseli hem çevresindeki dokuya hem görüntünün genel yapısına bağlı. Bu, segmentasyonla aynı şekilli bir problem — o yüzden aynı mimari kullanılıyor.\n\nU-Net'in üç parçası bu işe birebir oturuyor:\n\nEncoder aşağı iniyor, çözünürlük düşüyor, alıcı alan büyüyor. Derinlerde her konum görüntünün büyük bir bölgesini özetliyor.\n\nDecoder yukarı çıkıyor, ve skip bağlantılarıyla encoder'ın erken katmanlarından gelen ince detayı geri alıyor. Bu olmasaydı çıktı, aşağıda kaybolan yüksek frekansları geri getiremezdi.\n\nAttention blokları, düşük çözünürlüklü katmanlarda. Konvolüsyon yereldir; görüntünün iki ucunun birbiriyle tutarlı olması için her konumun her konumu görebileceği bir katman gerekiyor. Tam çözünürlükte konmuyor çünkü attention maliyeti konum sayısının karesiyle büyüyor — 28x28'te uygun, 256x256'da değil. Bu yüzden ilk blok düz, derin bloklar attention'lı.\n\nDikkat: buradaki attention self-attention. Metinle ilgisi yok. Metin koşullaması aynı slota cross-attention olarak eklenir, ama o ayrı bir konu ve aşağıda."
+        },
+        {
+          "type": "code",
+          "heading": "U-Net akışı, boyutlarıyla (MNIST örneği)",
+          "text": "x_t  (B, 1, 28, 28)\n\n── Encoder ──────────────────────────────\nconv1x1:              (B, 32, 28, 28)\nResBlock + time:      (B, 32, 28, 28)\nResBlock + time:      (B, 32, 28, 28)\nDownsample:           (B, 32, 14, 14)\nResBlock + time:      (B, 64, 14, 14)\nAttention:            (B, 64, 14, 14)\nDownsample:           (B, 64,  7,  7)\n\n── Bottleneck ───────────────────────────\nResBlock + time:      (B, 64,  7,  7)\nAttention:            (B, 64,  7,  7)\nResBlock + time:      (B, 64,  7,  7)\n\n── Decoder ──────────────────────────────\nUpsample:             (B, 64, 14, 14)\nResBlock + skip+time: (B, 64, 14, 14)\nAttention:            (B, 64, 14, 14)\nUpsample:             (B, 32, 28, 28)\nResBlock + skip+time: (B, 32, 28, 28)\nResBlock + time:      (B, 32, 28, 28)\nconv1x1:              (B,  1, 28, 28)\n\nÇıktı: eps_theta — tahmin edilen gürültü, girdiyle aynı şekil."
+        },
+        {
+          "type": "text",
+          "heading": "12. Timestep ağa nasıl giriyor",
+          "text": "Tek bir ağ bütün gürültü seviyelerinden sorumlu. t = 10'da yapılacak iş ince detay temizlemek, t = 900'de kaba yapıyı kurtarmak. Ağın hangi durumda olduğunu bilmesi gerekiyor.\n\nYol, Transformer'daki konum kodlamasının aynısı: t bir tam sayı, önce sinüzoidal gömülmeye çevriliyor (tipik olarak 256 boyut), sonra küçük bir MLP'den geçiyor. Ortaya çıkan vektör her ResBlock'un içinde, o bloğun kanal sayısına bir doğrusal katmanla indirgenip özellik haritalarına ekleniyor.\n\nEkleme (B, C) boyutundan (B, C, 1, 1)'e genişletilip tüm piksellere yayılıyor. Bunun bir anlamı var: \"şu an ne kadar gürültülüyüz\" sorusu tüm görüntü için aynı cevabı verir, konuma göre değişmez. O yüzden koşul uzamsal değil, global olarak enjekte ediliyor.\n\nBu detayı aklında tut — birazdan metin koşullamasında tam olarak bu yetmeyecek."
+        },
+        {
+          "type": "code",
+          "heading": "Eğitim ve üretim döngüleri",
+          "text": "# Eğitim — sıralı hiçbir şey yok, tamamen paralel\nfor x0 in dataset:                      # (B, C, H, W)\n    t   = randint(1, T, size=B)         # her örneğe rastgele adım\n    eps = randn_like(x0)                # gerçek gürültü\n    xt  = sqrt(abar[t])*x0 + sqrt(1-abar[t])*eps\n    loss = mse(eps, unet(xt, t))\n\n# Üretim — burası sıralı, yavaşlığın sebebi bu\nxt = randn(shape)                       # saf gürültüden başla\nfor t in range(T, 0, -1):\n    eps_th = unet(xt, t)\n    mu = (1/sqrt(alpha[t])) * (xt - (beta[t]/sqrt(1-abar[t])) * eps_th)\n    z  = randn_like(xt) if t > 1 else 0\n    xt = mu + sigma[t] * z\nreturn xt"
+        },
+        {
+          "type": "text",
+          "heading": "13. Son adımdaki gürültü neden ekleniyor",
+          "text": "Üretim döngüsünde ortalamayı hesapladıktan sonra üstüne bir daha gürültü ekleniyor (sigma_t * z). İlk bakışta ters geliyor: gürültü temizlemeye çalışıyoruz, neden geri koyuyoruz?\n\nÇünkü örnekliyoruz, optimize etmiyoruz. Her adımda ters dağılımın ortalamasını alıp devam edersen, her seferinde aynı yolu yürürsün ve her çalıştırmada aynı görüntüyü üretirsin. Çeşitlilik tam olarak o eklenen gürültüden geliyor.\n\nSon adımda (t = 1) eklenmiyor, çünkü orada artık örnek değil nihai çıktı üretiliyor.\n\nBu tercihin kendisi bir ayar noktası: gürültüyü tamamen kaldırıp süreci deterministik hale getirirsen DDIM elde edersin — aynı eğitilmiş ağ, farklı örnekleme kuralı, 1000 yerine 50-200 adımda benzer kalite."
+        },
+        {
+          "type": "text",
+          "heading": "14. Koşullama: istediğin şeyi nasıl söylersin",
+          "text": "Şu ana kadar anlatılan model veri dağılımından rastgele örnek üretiyor. İşe yarar olması için istediğini söyleyebilmen lazım: bu sınıf, bu metin, bu kaynak görüntü.\n\nEn basit yol: koşulu da ağa girdi olarak ver. Sınıf etiketini bir gömülmeye çevir, timestep gömülmesiyle aynı yerden ekle. CS231n ödevinde yapılan şey tam olarak bu — orada koşul bir CLIP gömülmesiydi ve tek satırda bağlama vektörüne ekleniyordu.\n\nBunun sınırı şu: koşul tek bir vektöre havuzlanıyor ve tüm görüntüye aynı şekilde etki ediyor. \"Kedi\" demek için yeter. \"Sol altta küçük bir kedi, sağda masa\" demek için yetmez.\n\nDaha güçlü yol, koşulu bir dizi olarak tutup U-Net'in attention slotlarına cross-attention olarak bağlamak: sorgu görüntüden, anahtar ve değer metinden. O zaman her konum hangi kelimenin kendisini ilgilendirdiğini seçebiliyor. Metinden görüntü üreten modellerin tamamı bunu kullanıyor."
+        },
+        {
+          "type": "text",
+          "heading": "15. Classifier-free guidance: neden gerekti",
+          "text": "Koşulu verdin, model koşula uyuyor — ama zayıf uyuyor. Üretilen görüntü sınıfa ait, ancak o sınıfın tipik, belirgin bir örneği olmak zorunda değil.\n\nİlk çözüm classifier guidance'tı: ayrı bir sınıflandırıcı eğitiliyor ve örnekleme sırasında onun gradyanı, üretimi doğru sınıfa doğru itiyor. Çalışıyor ama pahalı — her gürültü seviyesinde çalışabilen ayrı bir sınıflandırıcı eğitmen ve bakımını yapman gerekiyor.\n\nClassifier-free guidance bu sınıflandırıcıyı tamamen ortadan kaldırıyor, ve yöntem şaşırtıcı derecede ucuz: eğitim sırasında koşulu belirli bir olasılıkla düşür. Aynı ağ hem koşullu hem koşulsuz tahmin yapmayı öğreniyor.\n\nÖrnekleme sırasında ağı iki kez çalıştırıyorsun — bir kez koşulla, bir kez koşulsuz — ve ikisinin farkını abartıyorsun. Koşulsuz tahmin \"genel olarak bir görüntü\" yönünü, koşullu tahmin \"bu koşula uyan bir görüntü\" yönünü gösteriyor. Aradaki fark, koşulun tek başına katkısı. O farkı w katsayısıyla büyütüp koşullu tahminin ötesine geçiyorsun."
+        },
+        {
+          "type": "formula",
+          "heading": "CFG",
+          "text": "$$\\hat{\\epsilon} = (1+w)\\,\\epsilon_\\theta(x_t, y, t) \\ -\\ w\\,\\epsilon_\\theta(x_t, \\varnothing, t)$$\n\n$w = 0$ sıradan koşullu üretim. $w$ büyüdükçe çıktı koşula daha sadık, daha keskin, ama daha az çeşitli olur; aşırıya kaçınca doygun ve klişe görüntüler üretir."
+        },
+        {
+          "type": "note",
+          "heading": "CFG'nin bedeli",
+          "text": "Her örnekleme adımında ağ iki kez çalışıyor — üretim maliyeti iki katına çıkıyor. Bu, difüzyon damıtma (distillation) çalışmalarının bir kısmının doğrudan hedefi: öğrenci modele CFG kalitesini tek geçişte ürettirmek."
+        },
+        {
+          "type": "text",
+          "heading": "16. Bundan sonra ne oldu",
+          "text": "DDPM 2020'de kurdu, sonraki beş yıl aynı iskeletin üstüne kuruldu. Dört ana yön:\n\nDaha az adım. DDIM örneklemeyi deterministik yapıp 50-200 adıma indirdi. Damıtma yöntemleri (progressive distillation, consistency models, adversarial diffusion distillation) bunu tek haneli adıma kadar düşürdü.\n\nDaha iyi tasarım. Cosine schedule, v-prediction, gürültü seviyesi örnekleme dağılımları — hepsi \"aynı çerçeve, daha iyi ayar\".\n\nDaha büyük çözünürlük: latent diffusion. Ham pikselde difüzyon yüksek çözünürlükte çalışmıyor, çünkü model kapasitesinin çoğu piksel düzeyindeki ayrıntıya gidiyor. Çözüm iki aşamalı: önce bir VAE (keskinlik için GAN ayırt edicisiyle desteklenmiş) görüntüyü küçük bir latent uzaya sıkıştırıyor — tipik olarak 256x256x3'ten 32x32x16'ya, yani yaklaşık 128 kat daha az boyut. Sonra difüzyon o latentlerin üzerinde çalışıyor; encoder donuk, üretim sonunda decoder latenti görüntüye çeviriyor. Stable Diffusion, DALL-E 3, FLUX — hepsi bu mimari.\n\nDaha genel çerçeve. Aynı süreç üç farklı dille yazılabiliyor: gizli değişkenli model (DDPM'in kendisi), skor fonksiyonu (yoğunluğun gradyanını öğrenmek), ve stokastik diferansiyel denklem (sürekli zamanlı gürültüleme ve onun ters çözümü). Rectified flow ise gürültü ile veri arasında düz bir doğru kurup hız vektörünü öğreniyor — pratikte daha az adım, daha basit türetme. Üçü de aynı ailenin farklı koordinat sistemleri."
+        },
+        {
+          "type": "insight",
+          "heading": "Geriye ne kalsın",
+          "text": "Kolay yönü sen kur, ağa sadece bir adım geri almayı öğret. Forward süreç kapalı forma çöktüğü için eğitim paralel; üretim sıralı olduğu için yavaş. ELBO türetmesi VAE'nin aynısı, ama forward süreç sabit olduğu için bütün terimler eriyip tek bir regresyon kaybı kalıyor. Ağ gürültüyü tahmin ediyor, çünkü hedefin dağılımı sabit ve basitleştirilmiş kaybın getirdiği yeniden ağırlıklandırma zor gürültü seviyelerine odaklanmayı sağlıyor. Koşul, timestep ile aynı kapıdan girerse global kalıyor; cross-attention ile girerse konuma duyarlı oluyor. CFG ayrı bir sınıflandırıcı olmadan koşulun etkisini büyütüyor, bedeli çift geçiş."
+        },
+        {
+          "type": "note",
+          "heading": "Nereye bakılır",
+          "text": "Bu metin sırayı verir, ayrıntı kartlarda: forward/reverse türetmesinin tamamı ve VAE ile satır satır karşılaştırması ida11'de; U-Net'in içi, ResBlock ve boyut akışı yine ida11 ile lab07'de; kod tarafı (corruption, training loop, DDPMScheduler, UNet2DModel) lab07'de; CFG, latent diffusion, SDE/skor bakışı ve rectified flow cs13'te."
+        }
+      ]
+    }
+  },
   "mlo": [
     {
       "key": "mlo01",
