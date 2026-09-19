@@ -25310,6 +25310,323 @@
         }
       ]
     },
+    "optim": {
+      "title": "Optimizasyon — Baştan Sona Konu Anlatımı",
+      "cat": "Konu Anlatımı",
+      "context": "SGD · Momentum · Adam · AdamW · ML ch08 · CS231n 2 ve 5 · ML-OVERALL 5 ve 13",
+      "chapters": [
+        "ch08",
+        "cs02",
+        "cs05",
+        "mlo05",
+        "mlo13"
+      ],
+      "summary": "Batch, SGD ve mini-batch farkından başlayıp, düz gradient descent'in iki yapısal sorununa, momentum ve adaptive rate'in bunları nasıl ayrı ayrı çözdüğüne, Adam'ın formülüne ve bias düzeltmesine, AdamW'nin neyi onardığına, learning rate programına ve normalizasyonun buradaki rolüne kadar tek akış.",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Bu metin ne için",
+          "text": "Optimizer seçimi genelde ezberle yapılıyor: \"Adam kullan, lr 3e-4\". Bu çoğu zaman işe yarıyor ama ne olduğunu anlatmıyor.\n\nBu metin her optimizer'ı çözdüğü sorunla eşleştiriyor. Zincir kısa: iki sorun var, momentum birini çözüyor, adaptive rate diğerini, Adam ikisini birleştiriyor, AdamW birleştirmenin bozduğu şeyi onarıyor."
+        },
+        {
+          "type": "text",
+          "heading": "1. Önce: gradient kaç örnekten hesaplanıyor",
+          "text": "Bin veri noktan var diyelim.\n\nTam batch. Bininin hepsini ağdan geçiriyorsun, hatalarını topluyorsun, tek bir gradient hesaplayıp tek bir adım atıyorsun. Gradient mümkün olan en doğru yön, ama bin örnek için tek adım — çok yavaş.\n\nSaf SGD. Her örnekten sonra güncelliyorsun. Bin örnek için bin adım. Hızlı ama her adım tek bir örneğe dayandığı için noisy; o örnek temsili olmayabilir.\n\nMini-batch. Otuz iki örneği geçirip ortalamasını alıyor, sonra güncelliyorsun. Bin örnek için otuz küsur adım. Otuz iki örneğin ortalaması tek örnekten çok daha güvenilir, ama bin örneği beklemek zorunda da değilsin. Pratikte kullanılan bu.\n\nNoise'un tamamen zararlı olmadığını not et: kötü bir yerel minimumdan çıkmaya yardım edebiliyor. Yani mini-batch bir uzlaşma değil, çoğu zaman doğrudan tercih."
+        },
+        {
+          "type": "text",
+          "heading": "2. Düz gradient descent'in iki sorunu",
+          "text": "Bu iki sorunu ayrı tutmak, geri kalan her şeyi anlaşılır kılıyor.\n\nSorun bir: zigzag. Loss yüzeyi düzgün bir kase değil. Bazı yönlerde çok dik, bazılarında neredeyse düz. Dik yönde gradient sürekli işaret değiştirip sağa sola sallanıyor, düz yönde ise çok yavaş ilerliyor. Hedefe doğru düz gidemiyorsun.\n\nSorun iki: tek learning rate herkese uymuyor. Bazı weight'ler sürekli büyük gradient alıyor — sık aktive olan nöronlar, yaygın kelimeler. Bazıları nadiren ve küçük gradient alıyor — nadir kelimeler, az tetiklenen filtreler. İkisine aynı adım boyunu uygulamak, birini fırlatırken diğerini yerinde saydırıyor.\n\nMomentum birinciyi çözüyor. Adaptive rate ikinciyi. İkisi bağımsız."
+        },
+        {
+          "type": "text",
+          "heading": "3. Momentum",
+          "text": "Fikir, anlık gradient yerine gradient'in üstel hareketli ortalamasıyla adım atmak. Tipik katsayı 0.9 — yani yeni gradient'in ağırlığı onda bir, geçmişin dokuzda dokuz.\n\nNeden zigzag'ı söndürdüğü doğrudan görünüyor: sallanan yönde gradient sürekli artı eksi değişiyor, ortalamada birbirini götürüyor, o yöndeki adım küçülüyor. Tutarlı yönde ise gradient hep aynı tarafı gösteriyor, ortalamada birikiyor, o yönde hızlanıyorsun.\n\nFiziksel karşılığı, yamaçtan yuvarlanan bir top: her an eğime göre yön değiştirmiyor, hızını taşıyor.\n\nDikkat: momentum ikinci soruna dokunmuyor. Bütün weight'ler hâlâ aynı learning rate ile güncelleniyor."
+        },
+        {
+          "type": "formula",
+          "heading": "SGD + Momentum",
+          "text": "$$m \\leftarrow \\beta m + g, \\qquad x \\leftarrow x - \\alpha\\, m$$"
+        },
+        {
+          "type": "text",
+          "heading": "4. Adaptive rate ve Adam",
+          "text": "İkinci soruna çözüm, her weight'in kendi geçmişine bakmak. Gradient'in karesinin hareketli ortalaması tutuluyor; bu, o weight'in ne kadar büyük gradient aldığının ölçüsü.\n\nAdım boyu bu ölçünün kareköküne bölünüyor. Sürekli büyük gradient alan weight'in adımı küçülüyor, nadiren güncellenen weight'in adımı büyüyor. Yani tek bir global learning rate, weight başına efektif bir learning rate'e dönüşüyor.\n\nAdam ikisini birleştiriyor: birinci moment momentum'u, ikinci moment adaptive rate'i taşıyor."
+        },
+        {
+          "type": "formula",
+          "heading": "Adam",
+          "text": "$$m \\leftarrow \\beta_1 m + (1-\\beta_1) g, \\qquad v \\leftarrow \\beta_2 v + (1-\\beta_2) g^2$$\n$$\\hat{m} = \\frac{m}{1-\\beta_1^t}, \\qquad \\hat{v} = \\frac{v}{1-\\beta_2^t}$$\n$$x \\leftarrow x - \\alpha\\,\\frac{\\hat{m}}{\\sqrt{\\hat{v}} + \\varepsilon}$$\n\nTipik değerler: $\\beta_1 = 0.9$, $\\beta_2 = 0.999$, $\\varepsilon = 10^{-8}$."
+        },
+        {
+          "type": "text",
+          "heading": "5. Bias düzeltmesi neden var",
+          "text": "Küçük ama unutulan bir ayrıntı, ve mantığı temiz.\n\nHer iki hareketli ortalama da sıfırdan başlıyor. İlk adımlarda gerçek gradient büyük olsa bile ortalama sıfıra yakın çıkıyor, çünkü geçmiş yok ve sıfırlar ortalamayı aşağı çekiyor. Bu, training'in başında yapay olarak küçük adımlar demek.\n\nBölen olarak konan terim tam olarak bu sapmayı düzeltiyor. Adım sayısı arttıkça düzeltme çarpanı bire yaklaşıyor ve etkisi kayboluyor — yani yalnızca başlangıçta çalışan bir yama.\n\nPaydadaki küçük sabit ise sadece sıfıra bölmeyi engelliyor."
+        },
+        {
+          "type": "text",
+          "heading": "6. Peki neden hâlâ SGD+momentum kullanılıyor",
+          "text": "Adam daha hızlı yakınsıyor, bu tartışmasız. Ama vision tarafında birçok güçlü sonuç hâlâ SGD ve momentum ile alınıyor, ve sebebi ilginç.\n\nAdam'da her weight kendi geçmişine göre ölçekleniyor; bu, bazı weight'lerin adımını yapay olarak bastırmak anlamına da geliyor. Daha hızlı düşen bir training loss, her zaman daha iyi genelleyen bir çözüm demek değil.\n\nSGD+momentum'da böyle bir ölçekleme yok — her weight kendi gradient'i kadar güncelleniyor. Daha yavaş, ama ulaştığı minimum sıklıkla daha iyi genelliyor.\n\nPratik özet: Transformer ve dil modellerinde AdamW neredeyse standart; convolutional vision modellerinde SGD+momentum hâlâ rekabetçi."
+        },
+        {
+          "type": "text",
+          "heading": "7. AdamW: weight decay'in bozulması",
+          "text": "Weight decay, weight'lerin büyümesini cezalandırıyor. Klasik uygulaması cezayı loss'a eklemek: bu da gradient'e weight ile orantılı bir terim ekliyor.\n\nSorun, o terimin Adam'ın içine girmesi. Ceza gradient'e karıştığı için ikinci momente de karışıyor, yani adaptive ölçekleme cezayı da ölçekliyor. Sonuç bozuk: büyük gradient alan weight'lerin decay'i zayıflıyor, az güncellenenlerinki güçleniyor. Oysa istediğin şey her weight'e eşit uygulanan bir çekim.\n\nAdamW'nin düzeltmesi basit: decay'i gradient'ten tamamen ayır, doğrudan weight'e uygula. Adaptive ölçekleme yalnızca görev gradient'ine bakıyor, decay herkese aynı şekilde işliyor.\n\nBu, Transformer eğitiminde AdamW'nin standart hale gelmesinin doğrudan sebebi."
+        },
+        {
+          "type": "code",
+          "heading": "Zincir",
+          "text": "Duz GD        sabit adim, ham gradient      -> zigzag + tek hiz\nSGD+Momentum  gradient ortalamasi (m)       -> zigzag soner\nAdam          m + gradient kare ort. (v)    -> zigzag soner + weight basina hiz\nAdamW         Adam, decay gradientten ayri  -> decay her weight'e esit\n\nGradient salliniyor        -> momentum ekle\nHer weight farkli hiz ister-> adaptive rate ekle\nWeight decay bozuldu       -> gradientten ayir"
+        },
+        {
+          "type": "text",
+          "heading": "8. Learning rate: asıl hiperparametre",
+          "text": "Optimizer seçiminden daha çok fark yaratan şey learning rate.\n\nÇok büyükse loss patlıyor ya da bir yerde takılıp salınıyor. Çok küçükse training ilerlemiyor ve kötü bir bölgede kalıyor.\n\nİki standart pratik var. Birincisi ısınma: ilk birkaç yüz adımda learning rate'i sıfırdan hedef değere çıkarmak. Sebebi Adam'ın başlangıçtaki moment tahminlerinin güvenilmez olması; ısınma o dönemde büyük adım atılmasını engelliyor. Transformer eğitiminde neredeyse zorunlu.\n\nİkincisi azaltma: training ilerledikçe learning rate'i düşürmek — kosinüs eğrisiyle ya da basamaklı. Mantığı basit: başta kaba arama, sonra ince ayar.\n\nPratik teşhis: loss patlıyorsa learning rate yüksek; loss düşüyor ama çok yavaşsa düşük; training loss düşerken validation yükseliyorsa sorun optimizer'da değil, genelleme tarafında."
+        },
+        {
+          "type": "text",
+          "heading": "9. Normalizasyonun buradaki rolü",
+          "text": "Batch normalization genelde ayrı bir konu gibi anlatılıyor ama optimizasyon problemine doğrudan müdahale ediyor.\n\nYaptığı şey, her layer'ın girdisini mini-batch içinde sıfır ortalama birim varyansa çekmek, sonra öğrenilen bir ölçek ve kaydırma ile modele istediği distribution'u geri kurma imkanı bırakmak.\n\nKazancı üç kalemde toplanıyor: çok daha büyük learning rate kullanılabiliyor, training weight ilklendirmesine karşı duyarsızlaşıyor, ve mini-batch istatistiklerinden gelen noise hafif bir düzenleyici etki yapıyor.\n\nBir tuzağı var ve pratikte sık ısırıyor: training sırasında mini-batch istatistikleri kullanılıyor, test sırasında ise training'de biriktirilen hareketli ortalamalar. Modeli değerlendirme moduna almayı unutmak, tek görüntüyle anlamsız istatistik hesaplamaya yol açıyor.\n\nBatch boyutu küçükse istatistikler güvenilmez hale geliyor; orada layer normalization tercih ediliyor — Transformer'ların batch norm yerine onu kullanmasının sebebi de bu."
+        },
+        {
+          "type": "insight",
+          "heading": "Geriye ne kalsın",
+          "text": "Mini-batch, tam batch'in doğruluğu ile saf SGD'nin hızı arasındaki pratik nokta, ve noise'u bazen faydalı. Düz gradient descent'in iki ayrı sorunu var: zigzag ve tek learning rate'in herkese uymaması. Momentum birincisini, adaptive rate ikincisini çözüyor; Adam ikisi. Bias düzeltmesi yalnızca ilk adımlar için bir yama. AdamW, decay'i gradient'ten ayırarak Adam'ın bozduğu düzenlemeyi onarıyor. Learning rate hâlâ en belirleyici hiperparametre; ısınma ve azaltma standart. Normalizasyon bir optimizasyon aracı, ve değerlendirme modunu unutmak klasik hata."
+        },
+        {
+          "type": "note",
+          "heading": "Nereye bakılır",
+          "text": "Batch/SGD/mini-batch karşılaştırması somut sayılarla, Adam ve AdamW'nin tam açıklaması, batch normalization ve ilklendirme ch08'de; düzenleme (L1, L2, elastic net) cs02'de; dropout, ilklendirme ve normalizasyon layer'ları cs05'te. Gradient'in nereden geldiği için backprop anlatımına, weight decay'in neden bir prior olduğu için MLE anlatımına bak."
+        }
+      ]
+    },
+    "cnn": {
+      "title": "CNN — Baştan Sona Konu Anlatımı",
+      "cat": "Konu Anlatımı",
+      "context": "Convolutional Networks · ML ch09 · CS231n 4-5 · Lab 4 · ML-OVERALL 14",
+      "chapters": [
+        "ch09",
+        "cs04",
+        "cs05",
+        "lab04",
+        "mlo14"
+      ],
+      "summary": "Fully connected bir ağın görüntüde neden çöktüğünden başlayıp, convolution'ın hangi üç varsayımı mimariye gömdüğüne, receptive field'ın derinlikle nasıl büyüdüğüne, pooling ve stride tercihine, LeNet'ten ViT'e mimari çizgisine ve pratikte training'i ayakta tutan bileşenlere kadar tek akış.",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Bu metin ne için",
+          "text": "CNN'i \"filtre gezdiriyoruz\" diye anlatmak kolay, ama o cümle hiçbir şeyi açıklamıyor. Asıl soru şu: neden filtre gezdiriyoruz, ve bunu yapmayan bir ağ tam olarak neyi kaybediyor?\n\nBu metin oradan başlıyor ve mimarinin her parçasını bir varsayıma bağlıyor."
+        },
+        {
+          "type": "text",
+          "heading": "1. Fully connected ağ görüntüde neden çöküyor",
+          "text": "İki ayrı sebep var ve ikincisi daha derin.\n\nBirincisi sayı. 224x224x3'lük bir görüntü 150 binin üzerinde girdi demek. Buna bağlanan bin nöronluk tek bir fully connected layer 150 milyon weight taşıyor — tek layer için. Elindeki veriyle bunu eğitmek ezberden başka bir şey üretmiyor.\n\nİkincisi ve asıl olanı: fully connected layer'ın uzamsal yapı diye bir kavramı yok. Görüntüyü düz bir vektöre açtığın an, hangi pikselin hangisinin yanında olduğu bilgisi siliniyor. Model için 37. piksel ile 38. piksel, 37. piksel ile 900. piksel kadar ilgisiz.\n\nSonucu şu: kediyi sol üst köşede görmeyi öğrenen ağ, aynı kediyi sağ altta göremiyor. Her konum için baştan öğrenmesi gerekiyor.\n\nDerin öğrenmeden önceki çözüm, bu yapıyı elle kodlamaktı: renk histogramları, yönlü gradient histogramları, görsel kelime torbaları. İnsan tasarımı özniteliklerin üstüne basit bir classifier konuyordu. Zor iş modelde değil, öznitelik mühendisliğindeydi."
+        },
+        {
+          "type": "text",
+          "heading": "2. Görüntülerin üç özelliği",
+          "text": "CNN, doğal görüntülerin üç gözlemlenebilir özelliğini mimariye gömüyor.\n\nYerellik. Yakın pikseller birbiriyle güçlü ilişkili, uzak pikseller neredeyse bağımsız. Bir kenarı görmek için bütün görüntüye bakman gerekmiyor, küçük bir komşuluk yetiyor.\n\nÖtelemeye eşdeğerlik. Kedi, sol üstte de sağ altta da kedidir. Bir yerde kenar bulan filtre, başka yerde de kenar bulur.\n\nHiyerarşi. Kenarlar birleşip köşeleri, köşeler birleşip parçaları, parçalar birleşip nesneleri veriyor. Bu, biyolojiden gelen bir gözlem — görsel korteksteki hücrelerin de böyle layer'lı çalıştığı 1959'da gösterilmişti.\n\nÜçünün mimarideki karşılığı doğrudan: yerellik için küçük filtreler, ötelemeye eşdeğerlik için aynı filtrenin her yerde kullanılması, hiyerarşi için layer'ları üst üste yığmak."
+        },
+        {
+          "type": "text",
+          "heading": "3. Convolution tam olarak ne yapıyor",
+          "text": "Küçük bir filtre — tipik olarak 3x3 — görüntünün üzerinde kaydırılıyor ve her konumda bir iç çarpım alınıyor. Çıkan sayı şunu söylüyor: bu filtrenin aradığı örüntü, burada ne kadar var?\n\nSonuç bir öznitelik haritası: filtrenin yanıtının uzamsal distribution'u. Tek bir sayı değil, bir harita — konum bilgisi korunuyor.\n\nKritik nokta weight paylaşımı. 3x3'lük bir filtrenin parametre sayısı, girdi görüntüsünün boyutundan bağımsız: dokuz sayı çarpı girdi kanal sayısı. Aynı dokuz sayı bütün konumlarda kullanılıyor.\n\nBunun iki sonucu var. Parametre sayısı çöküyor, ve ötelemeye eşdeğerlik öğrenilmesi gereken bir şey olmaktan çıkıp mimarinin garantisi haline geliyor. Fully connected ağ bunu veriden öğrenmeye çalışıyordu; CNN hiç öğrenmiyor, çünkü yapısı gereği zaten öyle.\n\nBir CNN layer'ı tek filtre değil, çok sayıda filtre taşıyor. Her biri farklı bir örüntüye uzmanlaşıyor; çıktı, kanal sayısı kadar öznitelik haritası."
+        },
+        {
+          "type": "formula",
+          "heading": "Boyut hesabı",
+          "text": "$$o[i,j] = \\sum_m \\sum_n f[m,n] \\cdot I[i+m,\\ j+n]$$\n\nÇıktı boyutu (her uzamsal eksen için):\n$$H_{out} = \\left\\lfloor \\frac{H_{in} + 2p - k}{s} \\right\\rfloor + 1$$\n\n$k$ filtre boyutu, $s$ stride, $p$ padding. Boyutu korumak için 3x3 filtrede $p=1$, $s=1$."
+        },
+        {
+          "type": "text",
+          "heading": "4. Receptive field: derinlik neyi satın alıyor",
+          "text": "Tek bir 3x3 filtre girdinin sadece 3x3'lük bir parçasını görüyor. Bu çok dar.\n\nAma iki tane 3x3 layer üst üste koyduğunda, ikinci layer'ın baktığı her nokta birinci layer'ın 3x3'lük bir komşuluğunu özetliyor ve o noktaların her biri girdinin 3x3'ünü görmüştü. Sonuçta ikinci layer girdinin 5x5'ini görüyor. Üçüncüde 7x7.\n\nYani derinlik, görme alanını büyütmenin ucuz yolu. İki tane 3x3 layer, tek bir 5x5 layer ile aynı alanı kapsıyor — ama daha az parametreyle ve arada bir nonlineerlik daha var. VGG'nin \"sadece 3x3 kullan, bunun yerine derinleş\" tercihi tam olarak bu hesaba dayanıyor.\n\nStride ve pooling bu büyümeyi hızlandırıyor: uzamsal çözünürlüğü yarıya indirdiğinde, aynı filtre girdinin iki katı alanını kapsar hale geliyor. Tipik CNN'in \"çözünürlük düşerken kanal sayısı artar\" profili buradan çıkıyor — uzamsal ayrıntı azalırken semantik bilgi artıyor."
+        },
+        {
+          "type": "text",
+          "heading": "5. Pooling: ne kazandırıyor, ne kaybettiriyor",
+          "text": "Pooling, komşu değerleri tek bir değere indiriyor — genellikle maksimumunu alarak.\n\nKazandırdığı şey küçük ötelemelere karşı duyarsızlık: kenar bir piksel sağa kaysa da maksimum aynı kalıyor. Ayrıca hesabı ucuzlatıyor ve receptive field'ı büyütüyor.\n\nKaybettirdiği şey tam konum bilgisi. Sınıflandırmada bu sorun değil, hatta istenen şey. Ama segmentasyonda her pikselin label'ını üretmen gerekiyor; orada pooling ile atılan konum bilgisini geri getirmek ayrı bir iş — segmentasyon anlatımının tamamı bu sorunun etrafında dönüyor.\n\nModern mimarilerin bir kısmı pooling'i tamamen bırakıp stride'lı convolution kullanıyor: aynı küçültmeyi öğrenilebilir bir işlemle yapmak."
+        },
+        {
+          "type": "text",
+          "heading": "6. Mimari çizgisi",
+          "text": "1998, LeNet: ilk çalışan CNN, rakam tanıma. Fikir doğruydu ama ne yeterli veri ne yeterli hesap gücü vardı.\n\n2012, AlexNet: ImageNet'te en iyi CNN dışı yöntemin hatasını yaklaşık on puan geriye attı. Getirdikleri mimariden çok pratikti — ReLU, dropout, veri çoğaltma, ve iki GPU üzerinde training. Aradaki fark o kadar büyüktü ki tartışmayı bitirdi.\n\n2014, VGG: sadece 3x3 filtre, ama on altı-on dokuz layer. Derinliğin kendisinin işe yaradığını gösterdi.\n\n2014, GoogLeNet: farklı filtre boyutlarını paralel çalıştıran modüller, çok daha az parametreyle.\n\n2015, ResNet: artık bağlantılar. Asıl kırılma bu — layer'ı atlayan kestirme yollar sayesinde yüzlerce layer eğitilebilir hale geldi. Sebebi doğrudan backprop'ta: gradient o kestirme yoldan zayıflamadan geriye akıyor.\n\n2021, ViT: görüntüyü 16x16 yamalara böl, her yamayı bir token gibi ele al, standart Transformer'a ver. Yerellik ve weight paylaşımı varsayımlarını mimariden çıkarıp veriden öğrenmeyi seçiyor — bu yüzden çok veri istiyor, ve yeterli veri varken CNN'i yakalayıp geçiyor."
+        },
+        {
+          "type": "text",
+          "heading": "7. Pratikte training'i ayakta tutan bileşenler",
+          "text": "Convolution tek başına yetmiyor; bir CNN'in çalışır hale gelmesi birkaç standart parçaya bağlı.\n\nNormalizasyon layer'ları aktivasyonları sabit bir bantta tutuyor, böylece daha büyük learning rate kullanılabiliyor ve training weight ilklendirmesine daha az duyarlı hale geliyor.\n\nDropout, training sırasında nöronların rastgele bir kısmını kapatarak ağın tek bir yola bağımlı kalmasını engelliyor. Convolutional kısımda daha az, fully connected kısımda daha çok kullanılıyor.\n\nWeight ilklendirmesi, sinyalin derinlikte ne sönmesine ne patlamasına izin verecek ölçekte seçiliyor — layer genişliğine bağlı bir varyans kuralı.\n\nVeri çoğaltma neredeyse bedava bir kazanç: rastgele kırpma, yatay çevirme, renk oynatma. Modelin zaten bildiği değişmezlikleri veriye enjekte ediyor.\n\nTransfer öğrenme ise pratikte en çok kullanılan şey: büyük bir veri kümesinde eğitilmiş ağın erken layer'ları genel kenar ve doku detektörleri olduğu için yeniden kullanılabiliyor; yalnızca son kısmı yeni göreve göre eğitiliyor. Küçük veri kümesinde sıfırdan eğitmenin neredeyse hiçbir zaman doğru olmamasının sebebi bu."
+        },
+        {
+          "type": "insight",
+          "heading": "Geriye ne kalsın",
+          "text": "Fully connected ağ görüntüde hem parametre sayısı yüzünden hem de uzamsal yapıyı sildiği için çöküyor. CNN üç varsayımı mimariye gömüyor: yerellik (küçük filtre), ötelemeye eşdeğerlik (weight paylaşımı), hiyerarşi (derinlik). Weight paylaşımı sayesinde parametre sayısı görüntü boyutundan bağımsız. Receptive field derinlikle büyüyor, bu yüzden iki 3x3 bir 5x5'ten iyi. Pooling öteleme duyarsızlığı kazandırır, konum bilgisi kaybettirir — segmentasyonun bütün derdi o kaybı geri almak. ResNet'in artık bağlantıları derinliği mümkün kıldı; ViT ise varsayımları çıkarıp yerine veri koydu."
+        },
+        {
+          "type": "note",
+          "heading": "Nereye bakılır",
+          "text": "Motivasyon, convolution ve pooling mekaniği ch09'da; el yapımı özniteliklerden CNN'e geçiş ve mimari tarihi cs04'te; normalizasyon, dropout, ilklendirme, veri çoğaltma ve transfer öğrenme cs05'te; PyTorch uygulaması ve boyut akışı lab04'te. Devamı: segmentasyon anlatımı (konum bilgisini geri almak) ve attention anlatımı (ViT'in dayandığı mekanizma)."
+        }
+      ]
+    },
+    "segmentation": {
+      "title": "Segmentasyon — Baştan Sona Konu Anlatımı",
+      "cat": "Konu Anlatımı",
+      "context": "Semantic Segmentation · IDA 5 · Lab 5 · CS231n 8 · ML-OVERALL 24",
+      "chapters": [
+        "ida05",
+        "lab05",
+        "cs08",
+        "mlo24"
+      ],
+      "summary": "Piksel başına label üretmenin sınıflandırmadan farkından başlayıp, CNN'in attığı konum bilgisini geri almanın yollarına, transposed convolution ve checkerboard artefaktına, skip bağlantılarına, U-Net'e, instance segmentasyona ve neden pixel accuracy yerine mIoU kullanıldığına kadar tek akış.",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Bu metin ne için",
+          "text": "Segmentasyon, CNN anlatımının bıraktığı yerden başlıyor. Orada pooling ve stride'ın konum bilgisini attığını, bunun sınıflandırmada sorun olmadığını söylemiştik.\n\nBurada sorun tam olarak o: her piksel için ayrı bir label üretmen gerekiyor. Metnin tamamı, atılan konum bilgisini geri almanın yolları üzerine."
+        },
+        {
+          "type": "text",
+          "heading": "1. Üç farklı görev",
+          "text": "Karıştırılan üç şey var.\n\nSemantic segmentasyon: her piksele bir sınıf label'ı. İki bitişik koyun tek bir koyun bölgesi olarak çıkıyor — nesneler ayrılmıyor, yalnızca sınıflar.\n\nInstance segmentasyon: her nesne ayrı ayrı. İki koyun iki ayrı maske. Yalnızca sayılabilir nesneler için anlamlı — gökyüzünün örneği olmaz.\n\nPanoptik: ikisinin birleşimi. Sayılabilir nesneler ayrı ayrı, geri kalan alanlar sınıf düzeyinde.\n\nBu metnin çatısı semantic segmentasyon; instance tarafına sonda değiniyorum."
+        },
+        {
+          "type": "text",
+          "heading": "2. Neden sınıflandırma ağı doğrudan kullanılamıyor",
+          "text": "Sınıflandırma ağı görüntüyü alıp tek bir vektör üretiyor. Segmentasyonda istediğin şey girdiyle aynı uzamsal boyutta, kanal sayısı sınıf sayısı kadar olan bir çıktı.\n\nİlk akla gelen çözüm — her piksel için etrafındaki yamayı kesip classifier'dan geçirmek — çalışıyor ama absürt derecede pahalı: komşu yamalar neredeyse aynı hesabı tekrar tekrar yapıyor.\n\nDoğru fikir, sınıflandırma ağının sonundaki fully connected layer'ları convolution'a çevirmek. Fully connected layer, girdisinin tamamını gören bir convolution olarak yazılabiliyor. Bunu yapınca ağ sabit boyutlu bir vektör yerine bir harita üretmeye başlıyor — ve girdi boyutu da artık sabit olmak zorunda değil.\n\nBu, tam convolutional ağ fikri. Ama bir sorun bırakıyor: çıkan harita çok kaba."
+        },
+        {
+          "type": "text",
+          "heading": "3. Asıl sorun: çözünürlük kaybı",
+          "text": "Tipik bir sınıflandırma omurgası uzamsal boyutu otuz iki kat küçültüyor. 320x320'lik bir görüntü, 10x10'luk bir haritaya iniyor.\n\nO haritadaki her hücre, girdideki 32x32 piksellik bir alanı temsil ediyor. Yani elindeki bilgi \"bu 32x32'lik bölge büyük ihtimalle koyun\" düzeyinde. Nesne sınırları bu çözünürlükte yok.\n\nİki şeye birden ihtiyacın var ve bunlar çelişiyor: sınıfı bilmek için geniş bağlam, yani derin ve küçültülmüş özellikler; sınırı bilmek için ince ayrıntı, yani yüksek çözünürlüklü erken özellikler.\n\nSegmentasyon mimarilerinin tamamı bu çelişkinin çözümü."
+        },
+        {
+          "type": "text",
+          "heading": "4. Büyütmenin yolları",
+          "text": "Kaba haritayı girdi boyutuna geri çıkarmak gerekiyor.\n\nEn basit yol interpolasyon: bilinear büyütme. Öğrenilecek parametresi yok, hızlı, ama sadece yumuşatıyor — kaybolan ayrıntıyı geri getirmiyor.\n\nÖğrenilebilir yol transposed convolution. Mekanizması convolution'ın tersi gibi çalışıyor: girdi değerlerinin arasına sıfırlar serpiliyor, kenarlara dolgu ekleniyor ve normal bir convolution uygulanıyor. Sonuçta çıktı girdiden büyük oluyor ve büyütme işleminin kendisi öğreniliyor.\n\nBir de girdiyi hiç küçültmeme yolu var: dilated convolution. Filtrenin elemanları arasına boşluk koyarak receptive field'ı çözünürlük kaybetmeden büyütüyor."
+        },
+        {
+          "type": "formula",
+          "heading": "Transposed convolution çıktı boyutu",
+          "text": "$$H_{out} = (H_{in} - 1)\\cdot s - 2p + k$$\n\nÖrnek: 10'dan 320'ye, $s = 32$ ile. $k = 64$ ve $p = 16$ seçilirse $(10-1)\\cdot 32 - 32 + 64 = 320$."
+        },
+        {
+          "type": "text",
+          "heading": "5. Checkerboard artefaktı",
+          "text": "Transposed convolution'ın klasik arızası, ve sebebi tamamen aritmetik.\n\nFiltre boyutu stride'a eşit seçilirse, her çıktı pikseli yalnızca tek bir girdi hücresinden etkileniyor. Komşu hücrelerin katkıları hiç örtüşmüyor, aralarında keskin geçişler oluşuyor ve büyütülmüş görüntüde orijinal kaba ızgara dama tahtası deseni olarak görünüyor.\n\nÇözüm örtüşmeyi garantilemek: filtre boyutunu stride'ın iki katı seçmek. O zaman her çıktı pikseli en az iki komşu hücreyi görüyor ve geçişler yumuşuyor.\n\nStandart pratik bu: filtre boyutu stride'ın iki katı, dolgu stride'ın yarısı. Bu değerlerle çıktı boyutu da tam olarak girdi çarpı stride çıkıyor.\n\nBir de ilklendirme detayı var: transposed convolution'ın weight'lerini rastgele başlatmak yerine bilinear interpolasyona karşılık gelen değerlerle başlatmak, training'in başında makul bir büyütme davranışı veriyor — model sıfırdan öğrenmek yerine iyi bir noktadan başlıyor."
+        },
+        {
+          "type": "text",
+          "heading": "6. Skip bağlantıları: kaybolan ayrıntıyı geri almak",
+          "text": "Sadece en derin haritayı otuz iki kat büyütünce sınırlar bulanık çıkıyor. Ayrıntı orada değil ki büyütme onu üretebilsin.\n\nÇözüm, erken layer'lardan gelen yüksek çözünürlüklü özellikleri de kullanmak. Derin harita \"bu ne\" bilgisini, erken harita \"sınır tam olarak nerede\" bilgisini taşıyor; ikisini birleştiriyorsun.\n\nFCN ailesinde bu kademeli yapılıyor: önce en derin harita iki kat büyütülüp bir önceki havuzlama çıktısıyla toplanıyor, sonra bu toplam yine büyütülüp daha erken bir çıktıyla toplanıyor, ve en son kalan kat bir kerede büyütülüyor. Yalnızca en derin haritayı kullanan sürümle karşılaştırıldığında sınırlar belirgin biçimde keskinleşiyor.\n\nİki farklı birleştirme biçimi var ve karıştırılıyorlar: toplama ile birleştirme (ResNet tarzı kestirme) ve kanal ekleyerek birleştirme (U-Net tarzı). FCN toplama kullanıyor, U-Net kanal ekleme."
+        },
+        {
+          "type": "text",
+          "heading": "7. U-Net",
+          "text": "U-Net, aynı fikri simetrik bir mimariye oturtuyor: inen bir yol, çıkan bir yol, ve aynı çözünürlükteki seviyeler arasında bağlantılar.\n\nİnen yolda çözünürlük düşerken kanal sayısı artıyor — bağlam toplanıyor. Çıkan yolda tersi oluyor, ve her seviyede inen yoldan gelen özellikler kanal olarak ekleniyor.\n\nBiyomedikal görüntüleme için tasarlandı ve o alanda hâlâ varsayılan mimari. Sebebi kısmen veri: tıbbi veri kümeleri küçük, U-Net az veriyle çalışabiliyor, ve güçlü veri çoğaltmayla iyi genelliyor.\n\nDikkat: U-Net'in bu iskeleti segmentasyonun dışında da her yerde. Diffusion modellerinin noise tahmin ağı da aynı yapıdır — girdi ve çıktı aynı uzamsal boyutta, ve her piksel hem yerel hem küresel bağlama ihtiyaç duyuyor. Aynı problem şekli, aynı mimari."
+        },
+        {
+          "type": "text",
+          "heading": "8. Loss: piksel başına sınıflandırma",
+          "text": "Segmentasyonun loss'u sınıflandırmanınkiyle aynı, sadece her piksel için ayrı hesaplanıp ortalanıyor.\n\nPratikteki fark boyutlarda: sınıflandırmada tahmin (batch, sınıf) boyutunda ve hedef (batch,) boyutunda; segmentasyonda tahmin (batch, sınıf, H, W) ve hedef (batch, H, W). Hedef, her piksel için sınıf indeksi taşıyan bir harita.\n\nİki pratik ayrıntı: label'sız ya da belirsiz pikseller için ayrılmış bir indeks loss'tan dışlanıyor; ve sınıf dengesizliği ağırsa piksel başına loss ağırlıklandırılıyor, ya da küme örtüşmesini doğrudan optimize eden Dice tabanlı bir loss ekleniyor."
+        },
+        {
+          "type": "text",
+          "heading": "9. Neden pixel accuracy yetmiyor",
+          "text": "Bu, segmentasyonun en öğretici ölçüm dersi.\n\nTipik bir veri kümesinde piksellerin büyük çoğunluğu arka plan. Her şeye arka plan diyen bir model yüzde yetmişin üzerinde piksel doğruluğu alabiliyor — hiçbir şey yapmadan.\n\nBu yüzden asıl metrik kesişimin birleşime oranı: her sınıf için, tahmin ile gerçek maskenin kesişiminin birleşime bölümü. Sınıf başına hesaplanıp ortalanıyor.\n\nKritik nokta ortalamanın sınıf başına alınması: nadir bir sınıfı hiç bulamazsan o sınıfın oranı sıfır çıkıyor ve ortalamayı doğrudan aşağı çekiyor. Piksel doğruluğunun gizlediği başarısızlığı görünür kılan şey bu.\n\nİlgili bir ölçü de Dice katsayısı — kesişimi iki katıyla, toplam büyüklüğe bölüyor. Tıbbi görüntülemede daha yaygın; küçük yapılarda daha bağışlayıcı davranıyor."
+        },
+        {
+          "type": "text",
+          "heading": "10. Instance tarafı",
+          "text": "Semantic segmentasyon nesneleri ayırmıyor. Ayırmak için iki yaklaşım var.\n\nÖnce tespit, sonra maske. Nesne tespit ağının bulduğu her kutu için küçük bir maske dalı çalıştırılıyor. Mask R-CNN bu çizgide, ve kutu koordinatlarının tam sayıya yuvarlanmasından doğan hizalama hatasını düzelten bir kırpma layer'ı getirdi — maske işinde birkaç pikselin kayması doğrudan kaliteye yansıyor.\n\nDoğrudan örnek ayırma. Nesne sayısının çok olduğu alanlarda — hücre görüntüleme gibi — kutu tabanlı yaklaşım tıkanıyor. Bunun yerine her piksel için nesne merkezine doğru bir akış alanı tahmin edip aynı merkeze akan pikselleri gruplamak, ya da nesneleri yıldız biçimli çokgenlerle temsil etmek gibi alana özgü yöntemler kullanılıyor.\n\nGüncel yön ise görevleri birleştirmek: maskeyi doğrudan üretmek yerine, sorgu vektörleriyle çalışan Transformer tabanlı mimariler semantic, instance ve panoptik segmentasyonu tek bir çerçevede ele alıyor."
+        },
+        {
+          "type": "insight",
+          "heading": "Geriye ne kalsın",
+          "text": "Segmentasyon, CNN'in attığı konum bilgisini geri alma problemidir. Sınıflandırma omurgası bağlamı toplar ama çözünürlüğü otuz iki kat düşürür; sınıfı bilmek için derin özellik, sınırı bilmek için erken özellik gerekir ve mimariler bu çelişkiyi çözer. Büyütme ya interpolasyonla ya öğrenilebilir transposed convolution ile yapılır; ikincisinde filtre boyutu stride'ın iki katı seçilmezse checkerboard çıkar. Skip bağlantıları ayrıntıyı geri getirir — FCN toplayarak, U-Net kanal ekleyerek. Loss piksel başına cross-entropy'dir. Pixel accuracy yanıltır, çünkü arka plan baskındır; sınıf başına ortalanan IoU kullanılır."
+        },
+        {
+          "type": "note",
+          "heading": "Nereye bakılır",
+          "text": "Semantic ve instance ayrımı, U-Net, Mask R-CNN ve biyolojiye özgü yöntemler ida05'te; FCN'e dönüştürme, transposed convolution mekaniği, checkerboard, bilinear ilklendirme, FCN-8s skip bağlantıları, piksel başına loss ve IoU-mIoU lab05'te; tespit ile segmentasyonun karşılaştırması cs08'de. Omurganın kendisi için CNN anlatımına, U-Net'in diffusion'daki kullanımı için DDPM anlatımına bak."
+        }
+      ]
+    },
+    "rnn": {
+      "title": "RNN ve LSTM — Baştan Sona Konu Anlatımı",
+      "cat": "Konu Anlatımı",
+      "context": "Sequence Modelling · ML ch11 · CS231n 6 · ML-OVERALL 16",
+      "chapters": [
+        "ch11",
+        "cs06",
+        "mlo16"
+      ],
+      "summary": "Dizilerin neden ayrı bir mimari gerektirdiğinden başlayıp, vanilla RNN'in yapısına, zaman içinde backprop'un neden gradient'i söndürdüğüne, LSTM'in kapılarının bu sorunu nasıl çözdüğüne, GRU'ya ve Transformer'ın neden devraldığına kadar tek akış.",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Bu metin ne için",
+          "text": "RNN bugün çoğu yerde yerini Transformer'a bıraktı. Yine de anlatılmaya değer, çünkü attention'ın hangi soruna cevap olarak doğduğunu ancak RNN'in nerede tıkandığını görünce anlıyorsun.\n\nBu metin o tıkanmayı ve LSTM'in ona verdiği cevabı kuruyor."
+        },
+        {
+          "type": "text",
+          "heading": "1. Diziler neden ayrı bir mimari istiyor",
+          "text": "Fully connected bir ağın girdi boyutu sabit. Ama cümleler farklı uzunlukta, ses kayıtları farklı uzunlukta, video farklı uzunlukta.\n\nDahası, sıra bilgi taşıyor: \"köpek adamı ısırdı\" ile \"adam köpeği ısırdı\" aynı kelimeler, farklı anlam.\n\nÜçüncü olarak, aynı örüntü dizinin her yerinde çıkabiliyor. Tıpkı görüntüde olduğu gibi, burada da paylaşılan parametre istiyorsun: bir kelimeyi işlemeyi öğrenen mekanizma, onuncu kelimede de aynı şekilde çalışmalı.\n\nRNN'in cevabı: tek bir hücreyi zaman boyunca tekrar tekrar uygula, ve geçmişi tek bir vektörde taşı. O vektöre gizli durum deniyor, ve her adımda hem girdiye hem kendi önceki haline bakılarak güncelleniyor.\n\nAynı weight'ler her adımda kullanılıyor — yani CNN'in weight paylaşımının zaman eksenindeki karşılığı."
+        },
+        {
+          "type": "formula",
+          "heading": "Vanilla RNN",
+          "text": "$$h_t = \\tanh\\bigl(W_{hh} h_{t-1} + W_{xh} x_t + b\\bigr), \\qquad y_t = W_{hy} h_t$$"
+        },
+        {
+          "type": "text",
+          "heading": "2. Gizli durum tam olarak ne taşıyor",
+          "text": "Gizli durum, dizinin o ana kadarki özeti. Sabit boyutlu bir vektör — yani otuz kelimelik bir cümlenin geçmişi de, üç kelimelik bir cümleninki de aynı boyutta.\n\nBurada daha sonra patlayacak bir gerilim var: sabit boyutlu bir vektör, keyfi uzunlukta bir geçmişi taşımak zorunda. Dizi uzadıkça sıkıştırma kaybı büyüyor.\n\nKullanım kalıpları girdi-çıktı eşleşmesine göre değişiyor: her adımda çıktı üreten labeling, dizinin tamamından tek çıktı üreten sınıflandırma, ve bir diziyi başka bir diziye çeviren encoder-decoder kurulumu. Sonuncusunda encoder cümleyi tek bir vektöre indiriyor, decoder oradan üretiyor — ve o tek vektör, attention'ın doğmasına sebep olan darboğazın kendisi."
+        },
+        {
+          "type": "text",
+          "heading": "3. Zaman içinde backprop",
+          "text": "Training, ağı zaman boyunca açıp sıradan backprop uygulamak demek. Otuz adımlık bir dizi, otuz layer derinliğinde bir ağ gibi davranıyor — ama bütün layer'lar aynı weight'i paylaşıyor.\n\nUzun dizilerde bu pratikte kesiliyor: ağ belirli bir pencere kadar açılıp gradient orada durduruluyor, yoksa hem bellek yetmiyor hem hesap katlanıyor.\n\nAsıl sorun ise hesap maliyeti değil, gradient'in kendisi."
+        },
+        {
+          "type": "text",
+          "heading": "4. Gradient neden sönüyor",
+          "text": "Uzak bir adımdan gelen hata sinyali, aradaki her adımda iki şeyle çarpılıyor: tekrarlayan weight matrisi, ve aktivasyonun türevi.\n\nBu bir çarpım zinciri, ve çarpım zincirleri üstel davranır. Aktivasyon tanh ise türevi en fazla bir, tipik olarak çok daha küçük. Weight matrisinin büyüklüğü birden küçükse çarpım hızla sıfıra iniyor.\n\nSayıyla bakınca vahim görünüyor: otuz adım geriye giden bir bağımlılıkta, adım başına 0.25 mertebesinde bir zayıflama bile sinyali yirmi basamak aşağı indiriyor. Etkin olarak sıfır.\n\nPratik sonucu şu: \"Although ...\" diye başlayıp otuz kelime sonra \"but ...\" ile devam eden bir cümlede, ağın bu uzun mesafeli ilişkiyi öğrenmesi için gereken gradient ona hiç ulaşmıyor. RNN yakın geçmişi öğreniyor, uzak geçmişi öğrenemiyor.\n\nTers yönde de bir arıza var: weight matrisi büyükse aynı çarpım gradient'i patlatıyor. Bu daha kolay çözülüyor — gradient'in normu bir eşiği aşarsa kırpılıyor. Sönme ise kırpmayla çözülmüyor, mimari değişikliği gerektiriyor."
+        },
+        {
+          "type": "text",
+          "heading": "5. LSTM: gradient'e bir otoyol açmak",
+          "text": "LSTM'in getirdiği şey, gizli durumun yanına ikinci bir hat eklemek: hücre durumu.\n\nHücre durumu boyunca ana işlem çarpma değil toplama. Her adımda eskisinin bir kısmı korunuyor ve üstüne yeni bilgi ekleniyor. Korunacak kısmı da yeni bilginin ne kadar yazılacağını da öğrenilen kapılar belirliyor.\n\nÜç kapı var. Unutma kapısı hücre belleğinden neyin silineceğine karar veriyor — sıfıra yakınsa unut, bire yakınsa sakla. Girdi kapısı yeni adayın ne kadarının yazılacağını belirliyor. Çıktı kapısı belleğin ne kadarının dışarıya, gizli duruma yansıyacağını seçiyor.\n\nÇözümün özü tek bir yerde: hücre durumu boyunca gradient, unutma kapısının değeriyle çarpılarak geçiyor. Kapı açıkken bu çarpan bire yakın — yani gradient zayıflamadan akıyor. Vanilla RNN'de her adımda hem aktivasyon doygunluğundan hem weight çarpımından geçmesi gerekiyordu.\n\nBu, ResNet'in artık bağlantılarıyla aynı fikir: gradient'e layer'ları atlayan toplamalı bir yol açmak. İkisi de \"derinlikte gradient nasıl korunur\" sorusunun aynı cevabı."
+        },
+        {
+          "type": "formula",
+          "heading": "LSTM",
+          "text": "$$f_t = \\sigma(W_f [h_{t-1}, x_t]), \\quad i_t = \\sigma(W_i [h_{t-1}, x_t]), \\quad o_t = \\sigma(W_o [h_{t-1}, x_t])$$\n$$g_t = \\tanh(W_g [h_{t-1}, x_t]), \\qquad C_t = f_t \\odot C_{t-1} + i_t \\odot g_t, \\qquad h_t = o_t \\odot \\tanh(C_t)$$\n\nKritik satır: $\\partial C_t / \\partial C_{t-1} = f_t$ — kapı açıkken gradient sönmeden geçer."
+        },
+        {
+          "type": "text",
+          "heading": "6. Kapılar pratikte ne öğreniyor",
+          "text": "Kapılar elle ayarlanmıyor, veriden öğreniliyor, ve öğrendikleri şey yorumlanabiliyor.\n\nÖzne-yüklem uyumu gibi bir ilişkide ağ, özneyi gördüğünde onun tekil-çoğul bilgisini belleğe yazıp cümle boyunca koruyor, yükleme geldiğinde kullanıyor.\n\nCümle sonuna gelindiğinde unutma kapısı birçok boyutu sıfırlıyor — bir tür sıfırlama. Yeni cümlenin eski cümlenin öznesiyle işi yok.\n\nLSTM'in uygun kapı ayarlarında yüzlerce adım bilgi taşıyabildiği gösterildi. 2014'ten 2018'e kadar dizi modellemesinin standardıydı.\n\nGRU ise aynı fikrin sadeleştirilmiş hali: iki kapı, ayrı bir hücre durumu yok. Daha az parametre, çoğu görevde benzer başarı."
+        },
+        {
+          "type": "text",
+          "heading": "7. LSTM neyi çözmedi",
+          "text": "Sönen gradient çözüldü. Ama iki sorun olduğu yerde kaldı, ve Transformer'ın devralmasının sebebi bunlar.\n\nSıralılık. Her adım bir öncekini beklemek zorunda. Bu, modern donanımın paralel yapısıyla doğrudan çelişiyor: yüzlerce adımlık bir diziyi işlemek yüzlerce sıralı hesap demek. Attention'da bütün konumlar aynı anda işleniyor.\n\nDarboğaz. Encoder-decoder kurulumunda kaynak cümlenin tamamı tek bir vektöre sıkışıyor. Cümle uzadıkça bu sıkıştırma kayıp veriyor.\n\nİkinci sorunun ilk çözümü attention oldu — ve dikkat çekici olan şu: attention önce RNN'in üstüne bir yama olarak eklendi. Decoder her kelimeyi üretirken kaynağın tamamına geri bakıyordu. Sonradan fark edildi ki, sorgulayan vektörü de girdiden üretebilirsen RNN'e hiç gerek kalmıyor. Transformer tam olarak bu adımla doğdu.\n\nRNN tamamen ölmedi: çok uzun akışlarda, gömülü sistemlerde ve düşük gecikme gereken yerlerde hâlâ kullanılıyor. Ayrıca modern durum uzayı modelleri (Mamba ailesi) aynı tekrarlayan yapıyı, paralel eğitilebilir bir biçimde geri getiriyor."
+        },
+        {
+          "type": "insight",
+          "heading": "Geriye ne kalsın",
+          "text": "RNN, weight paylaşımını zaman eksenine taşıyor ve geçmişi sabit boyutlu bir vektörde tutuyor — bütün gerilim o sabit boyutta. Zaman içinde backprop bir çarpım zinciri olduğu için gradient üstel olarak sönüyor; patlama kırpmayla çözülür, sönme çözülmez. LSTM, hücre durumu boyunca toplamalı bir yol açıp gradient'i unutma kapısının değeriyle çarparak geçiriyor — kapı açıkken zayıflama yok. Bu, ResNet'in artık bağlantısıyla aynı fikirdir. LSTM sönmeyi çözdü ama sıralılığı ve tek vektör darboğazını çözmedi; attention ve Transformer o iki sorunun cevabı."
+        },
+        {
+          "type": "note",
+          "heading": "Nereye bakılır",
+          "text": "RNN mimarisi, zaman içinde backprop ve sönen gradient analizi ch11'de; LSTM kapıları ve GRU yine ch11 ile cs06'da; RNN attention'ın adım adım akışı ve vanilla RNN ile karşılaştırması ch11'de. Devamı doğrudan attention anlatımı — bu metnin bittiği yerden başlıyor. Sönen gradient'in genel hali için backprop anlatımına bak."
+        }
+      ]
+    },
     "attention": {
       "title": "Attention ve Transformer — Baştan Sona Konu Anlatımı",
       "cat": "Konu Anlatımı",
@@ -25403,6 +25720,83 @@
           "type": "note",
           "heading": "Nereye bakılır",
           "text": "Sorgu-anahtar-değer ayrımı, pozisyon kodlamasının gerekçesi, çok kafalı yapının matematiği ve encoder-decoder boyut akışı ch12'de; RNN attention'dan self-attention'a geçişin adım adım eşleştirmesi yine ch12'de; CS231n tarafı cs07'de; görüntü tarafı (ViT, Swin, DETR) ida07 ve ida08'de; uygulama için labtc altyazılama oturumunda. Metin koşullamasının diffusion'daki hali için DDPM konu anlatımına bak."
+        }
+      ]
+    },
+    "pca": {
+      "title": "PCA — Baştan Sona Konu Anlatımı",
+      "cat": "Konu Anlatımı",
+      "context": "Principal Component Analysis · EE499 vs01 · ML-OVERALL 11",
+      "chapters": [
+        "vs01",
+        "mlo11"
+      ],
+      "summary": "Boyut indirgemenin neden gerektiğinden başlayıp, encode-decode kurulumuna, yeniden kurulum hatasını minimize etmenin neden varyansı maksimize etmekle aynı şey olduğuna, eigenvector çözümünün türetmesine, sıradaki bileşenlerin residual mantığına, SVD bağlantısına ve pratikteki tuzaklara kadar tek akış.",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Bu metin ne için",
+          "text": "PCA çoğu yerde tarif olarak anlatılıyor: kovaryans matrisini kur, eigenvector'ları bul, en büyük eigenvalue'lulardan başlayarak seç. Tarif doğru ama hiçbir şeyi açıklamıyor.\n\nAsıl anlaşılması gereken iki şey var: neden eigenvector, ve neden \"en az bilgi kaybet\" ile \"varyansı en çok koru\" aynı problem.\n\nBu metin o ikisini türetiyor."
+        },
+        {
+          "type": "text",
+          "heading": "1. Problem",
+          "text": "Elinde m tane veri noktası var, her biri n boyutlu. n büyük — görselleştiremiyorsun, saklamak pahalı, işlemek yavaş, ve yüksek boyutta neredeyse her şey birbirinden eşit uzaklıkta görünüyor.\n\nİstediğin şey: veriyi l boyuta indir, l çok daha küçük olsun, ve mümkün olduğunca az bilgi kaybet.\n\nBurada \"bilgi kaybı\" tanımlanmaya muhtaç, ve PCA'nın tanımı şu: sıkıştırıp geri açtığında orijinaline ne kadar yakın çıkıyorsun."
+        },
+        {
+          "type": "text",
+          "heading": "2. Kurulum: encode ve decode",
+          "text": "İki işlem tanımlıyorsun.\n\nEncode: n boyutlu noktayı l boyutlu bir koordinat vektörüne indir. Bunu bir matrisle yapıyorsun — o matrisin sütunları, seçtiğin temel yönler.\n\nDecode: l boyutlu koordinatlardan n boyutlu uzaya geri çık. Aynı yönlerin o koordinatlarla ağırlıklı toplamı.\n\nGeri döndüğün nokta orijinaliyle aynı olmayacak, çünkü arada bilgi attın. Aradaki fark yeniden kurulum hatası, ve minimize etmek istediğin şey bu.\n\nSeçtiğin yönlerin birim uzunlukta ve birbirine dik olmasını istiyorsun. Dik olmaları önemli: aksi halde iki yön aynı bilgiyi tekrar taşır ve boyut bütçeni israf edersin."
+        },
+        {
+          "type": "text",
+          "heading": "3. İki hedefin aynı hedef olduğu yer",
+          "text": "Tek yönle başla, yani l = 1. Her noktayı tek bir doğru üzerine izdüşürüyorsun.\n\nPisagor devreye giriyor: noktanın orijine uzaklığının karesi, izdüşümünün karesi artı izdüşüme dik kalan artığın karesi. Birinci terim veriye bağlı, yön seçiminden bağımsız — sabit.\n\nDolayısıyla artığı küçültmek ile izdüşümü büyütmek aynı şeyin iki ifadesi. Veri merkezlenmişse izdüşümlerin karelerinin toplamı tam olarak o yöndeki varyans.\n\nDönüm noktası tek cümlede: en az bilgi kaybeden yön, verinin en çok yayıldığı yöndür. \"Bilgi kaybını minimize et\" ile \"varyansı maksimize et\" aynı optimizasyon problemi.\n\nBuradan bir uyarı da çıkıyor: veriyi merkezlemeyi unutursan birinci bileşen çoğu zaman sadece ortalamanın yönünü gösterir ve PCA anlamsızlaşır."
+        },
+        {
+          "type": "formula",
+          "heading": "Problem",
+          "text": "$$\\max_{d}\\ d^\\top A d \\quad \\text{öyle ki} \\quad d^\\top d = 1, \\qquad A = X^\\top X$$\n\n$X$ satırları merkezlenmiş veri noktaları olan $m \\times n$ matris; $A$ simetrik ve pozitif yarı tanımlı (ölçeklenince kovaryans matrisi)."
+        },
+        {
+          "type": "text",
+          "heading": "4. Neden eigenvector: türetme",
+          "text": "A simetrik olduğu için ortonormal bir eigenvector tabanı var ve eigenvalue'ları negatif değil. Bu tabanı sırala: en büyük eigenvalue başta.\n\nAradığın birim vektörü bu tabanda yaz — yani eigenvector'ların bir kombinasyonu olarak. Katsayılarının karelerinin toplamı bire eşit, çünkü vektör birim ve taban ortonormal.\n\nŞimdi hedef ifadesini bu tabanda aç. Çapraz terimler ortonormallik sayesinde sıfırlanıyor ve geriye tek bir şey kalıyor: eigenvalue'ların, katsayıların kareleriyle ağırlıklı ortalaması.\n\nSoru artık çok basit bir hale geldi: toplamı bir olan negatif olmayan ağırlıkları, sabit sayıların ağırlıklı ortalamasını en büyük yapacak şekilde dağıt. Cevap açık — bütün ağırlığı en büyük sayıya ver.\n\nYani aradığın yön, en büyük eigenvalue'ya karşılık gelen eigenvector. Eigenvector burada bir tarif değil, bir kısıtlı optimizasyon probleminin çözümü.\n\nVe eigenvalue'nun kendisi anlam kazanıyor: o yöndeki varyansın ta kendisi."
+        },
+        {
+          "type": "text",
+          "heading": "5. Sıradaki bileşenler: residual mantığı",
+          "text": "Birinci yönü buldun. İkincisi için aynı problemi baştan çözmüyorsun; önce birincinin taşıdığı bilgiyi veriden çıkarıyorsun.\n\nHer noktadan o yöndeki izdüşümü çıkarınca kalan artık, birinci yöne dik oluyor — o yönde varyans kalmadı.\n\nArtık veri üzerinde aynı problemi çözdüğünde, matrisin eigenvector'ları aynı kalıyor ama birincinin eigenvalue'su sıfırlanmış oluyor. Dolayısıyla maksimumu veren şey ikinci en büyük eigenvalue'nun eigenvector'u.\n\nTümevarımla devam ediyor: l boyutlu en iyi altuzay, en büyük l eigenvalue'ya karşılık gelen eigenvector'ların gerdiği altuzay.\n\nGüzel olan şu: bileşenler iç içe geçiyor. İki bileşenle çalışıp sonra üçe çıkarmak, ilk ikisini yeniden hesaplamayı gerektirmiyor."
+        },
+        {
+          "type": "text",
+          "heading": "6. Koordinatlar nereden geliyor",
+          "text": "Ortonormal bir tabanda bir noktanın bir yöndeki koordinatı, o yönle iç çarpımıdır. Tek nokta için bu bir iç çarpım.\n\nBütün noktalar için aynı anda: veri matrisini o yönle çarptığında, her satır o noktanın o yöndeki koordinatını veriyor. Yani tek bir matris-vektör çarpımı bütün izdüşümleri üretiyor.\n\nSeçtiğin l yönü yan yana koyup çarptığında, elinde m x l boyutunda bir matris oluyor: her satır bir noktanın indirgenmiş temsili. Aradığın sıkıştırılmış veri bu."
+        },
+        {
+          "type": "text",
+          "heading": "7. SVD ile bağlantı",
+          "text": "Pratikte PCA genellikle kovaryans matrisini kurup ayrıştırarak değil, doğrudan veri matrisinin tekil değer ayrışımıyla hesaplanıyor.\n\nSebebi sayısal: kovaryans matrisini kurmak için veri matrisini kendisiyle çarpman gerekiyor, ve bu çarpım koşul sayısını kareliyor — yani küçük hatalar büyüyor. SVD veri matrisi üzerinde doğrudan çalışıyor.\n\nBağlantı birebir: sağ tekil vektörler eigenvector'lara karşılık geliyor, tekil değerlerin kareleri de eigenvalue'lara. Aynı sonuç, daha kararlı hesap."
+        },
+        {
+          "type": "text",
+          "heading": "8. Kaç bileşen seçilir",
+          "text": "Eigenvalue'lar o yöndeki varyans olduğu için, ilk l bileşenin toplam varyansın ne kadarını koruduğu doğrudan hesaplanabiliyor.\n\nYaygın pratikler: varyansın belirli bir oranını (mesela yüzde doksan beş) koruyan en küçük l'yi seçmek, ya da eigenvalue'ları büyükten küçüğe çizip eğrinin kırıldığı yeri almak.\n\nİkisi de kesin kural değil. Seçim, PCA'dan sonra ne yapacağına bağlı: görselleştirme için iki ya da üç, noise azaltma için kırılma noktası, bir modele girdi hazırlıyorsan doğrudan o modelin doğruluğuna bakmak en dürüstü."
+        },
+        {
+          "type": "text",
+          "heading": "9. Ne zaman işe yaramaz",
+          "text": "PCA'nın üç yapısal sınırı var ve üçü de sık ısırıyor.\n\nÖlçeğe duyarlı. Bir öznitelik metre, diğeri milimetre cinsindense, ikincisinin varyansı milyon kat büyük çıkar ve birinci bileşen sadece onu gösterir. Birimleri farklı verilerde standartlaştırma şart.\n\nYalnızca doğrusal. Veri eğri bir yüzey üzerinde duruyorsa — sarmal, halka — PCA o yapıyı göremez, doğrusal izdüşüm onu ezer. Bu durumlar için çekirdekli PCA ya da manifold yöntemleri var.\n\nVaryans her zaman faydalı bilgi değil. PCA denetimsizdir, label'ları görmez. Sınıfları ayıran yön düşük varyanslı bir yön olabilir; PCA onu attığında sınıflandırma başarısı düşer. Ayrım hedefliyorsan doğru araç lineer diskriminant analizi.\n\nSon olarak yorumlanabilirlik: bileşenler orijinal özniteliklerin karışımı, dolayısıyla \"bu bileşen neyi ölçüyor\" sorusunun cevabı çoğu zaman yok."
+        },
+        {
+          "type": "insight",
+          "heading": "Geriye ne kalsın",
+          "text": "PCA, sıkıştırıp geri açtığında orijinaline en yakın kalan altuzayı arıyor. Pisagor sayesinde bu, verinin en çok yayıldığı yönleri aramakla aynı problem — yeter ki veri merkezlenmiş olsun. Eigenvector bir tarif değil, kısıtlı bir maksimizasyonun çözümü: hedef, eigenvalue'ların ağırlıklı ortalamasına indirgeniyor ve bütün ağırlığı en büyüğe vermek en iyisi. Eigenvalue, o yöndeki varyansın kendisi. Sonraki bileşenler artık veri üzerinde aynı problemi çözerek çıkıyor, bu yüzden iç içe geçiyorlar. Pratikte SVD ile hesaplanır. Ölçeğe duyarlıdır, doğrusaldır ve label'ları görmez."
+        },
+        {
+          "type": "note",
+          "heading": "Nereye bakılır",
+          "text": "PCA'nın tam türetmesi, eigenvector kanıtı ve residual mantığı vs01'de; eigendecomposition'ın kendisi, ortonormal taban, projeksiyon teoremi ve SVD yine vs01'de; kovaryans ile Gram matrisi bağlantısı vs03'te. Denetimsiz öğrenme çerçevesi için generative models anlatımına bak — autoencoder, PCA'nın doğrusal olmayan akrabası sayılabilir."
         }
       ]
     },
