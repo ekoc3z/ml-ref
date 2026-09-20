@@ -2520,12 +2520,11 @@ function paperRow(k){
   const p = PAPERS[k];
   const name = (p.title||k).replace(/ — .*$/,'');
   const sub  = (p.title||'').includes(' — ') ? (p.title.split(' — ')[1]||'') : '';
-  const read = /okunmadı/i.test(p.status||'') ? 'okunmadı' : 'okundu';
   return `<button class="toc-row paper-row" data-paper="${esc(k)}">` +
     `<span class="toc-name">${esc(name)}</span>` +
     (sub ? `<span class="toc-sub">${esc(sub)}</span>` : '') +
     `<span class="toc-dots"></span>` +
-    `<span class="toc-meta">${esc(p.cat||'')} · ${(p.sections||[]).length} bölüm · ${read}</span></button>`;
+    `<span class="toc-meta">${esc(p.cat||'')} · ${(p.sections||[]).length} bölüm</span></button>`;
 }
 function buildPapers(){
   const host = $('papers-page'); if(!host) return;
@@ -2554,7 +2553,7 @@ function papersFilter(q){
   if(!q){ box.innerHTML = keys.map(paperRow).join(''); bindPaperRows(); return; }
   const hits = keys.filter(k => {
     const p = PAPERS[k];
-    const blob = [p.title, p.cat, p.context, p.summary, p.status,
+    const blob = [p.title, p.cat, p.context, p.summary,
       ...(p.sections||[]).map(x => [x.heading||'', secBody(x)].join(' '))].join(' ').toLowerCase();
     return blob.includes(q);
   });
@@ -2767,7 +2766,7 @@ function applyData(d){
 }
 
 
-fetch('./data/unified.json?v=20260920190103')
+fetch('./data/unified.json?v=20260920190344')
   .then(r => { if(!r.ok) throw new Error(r.status); return r.json() })
   .then(applyData)
   .catch(() => {
