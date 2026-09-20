@@ -333,6 +333,10 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .sec-anim .hi{stroke:var(--accent)}
 .sec-anim text.hi{fill:var(--accent);stroke:none}
 .sr-src{color:var(--muted);font-weight:400}
+#papers-page{display:none;max-width:940px;margin:0 auto;padding:72px 32px 88px}
+.papers-list{margin:30px auto 0;max-width:720px}
+.paper-row .toc-meta{font-size:12.5px}
+@media(max-width:760px){#papers-page{padding:44px 22px 62px}}
 .home-guides{margin:34px auto 0;max-width:560px}
 .home-guides h3{font-size:13.5px;font-weight:700;letter-spacing:.06em;color:var(--muted);margin:0 0 4px}
 .home-guides-sub{font-size:14px;color:var(--muted);margin:0 0 10px}
@@ -606,6 +610,12 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
     <h2 onclick="switchSection('home')" title="Ana sayfa">ML Reference</h2>
     <button id="sidebar-close" onclick="closeSidebar()">&#10005;</button>
   </div>
+
+  <div class="nav-group-label" style="margin-top:10px;border-top:1px solid var(--border);padding-top:16px">PAPERS</div>
+  <button class="nav-btn" onclick="switchSection('papers');closeSidebar()" style="border-left:3px solid var(--accent);margin-bottom:8px">
+    <span class="nav-icon">🗂</span><span class="nav-num" style="font-size:.6rem">PPR</span>
+    <span class="nav-label">Paper Progress</span>
+  </button>
 
   <div class="nav-group-label" style="margin-top:10px;border-top:1px solid var(--border);padding-top:16px">COURSES</div>
   <div class="course-divider">ML · Machine Learning</div>
@@ -1680,6 +1690,7 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 <div id="ida-summary-page" style="display:none"></div>
 <div id="vs-summary-page" style="display:none"></div>
 <div id="home-page"></div>
+<div id="papers-page" style="display:none"></div>
 <div id="card-grid"></div>
 <div id="tx-tree-view" style="display:none"><div id="tx-container"></div></div>
 <div class="footer-text">Kart = detay popup &bull; <kbd>/</kbd> arama &bull; <kbd>ESC</kbd> kapat</div>
@@ -1732,7 +1743,8 @@ let DATA = {};
 CHAPTERS.forEach(c => DATA[c] = []);
 let OVERVIEWS = {};
 let GUIDES = {};
-let MLO_ONLY = [];   // yalnizca ML-OVERALL'da gorunen kartlar (arama + sayim icin lazim)
+let MLO_ONLY = [];
+let PAPERS = {};   // yalnizca ML-OVERALL'da gorunen kartlar (arama + sayim icin lazim)
 let SUMMARY = null;
 let IDA_SUMMARY = null;
 let VS_SUMMARY = null;
@@ -1806,11 +1818,20 @@ function toggleMathGroup(){
 }
 
 function switchSection(sec){
-  if(sec === SEC && sec !== 'home'){ const tc = $('toc-'+sec); if(tc) tc.classList.toggle('open'); return; }
+  if(sec === SEC && sec !== 'home' && sec !== 'papers'){ const tc = $('toc-'+sec); if(tc) tc.classList.toggle('open'); return; }
   SEC = sec;
-  const isHome = sec === 'home';
+  const isHome = sec === 'home', isPapers = sec === 'papers';
   $('home-page').style.display = isHome ? 'block' : 'none';
-  $('hdr-root').style.display = isHome ? 'none' : '';
+  const pp = $('papers-page'); if(pp) pp.style.display = isPapers ? 'block' : 'none';
+  $('hdr-root').style.display = (isHome || isPapers) ? 'none' : '';
+  if(isPapers){
+    document.querySelectorAll('.nav-btn[data-sec]').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.section-header').forEach(h => h.classList.remove('active'));
+    document.querySelectorAll('.toc.open').forEach(t => t.classList.remove('open'));
+    ['overview-panel','card-grid','summary-page','ida-summary-page','vs-summary-page','tx-tree-view']
+      .forEach(id => { const e = $(id); if(e) e.style.display = 'none'; });
+    buildPapers(); closeSidebar(); window.scrollTo(0,0); return;
+  }
   if(isHome){
     document.querySelectorAll('.nav-btn[data-sec]').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.section-header').forEach(h => h.classList.remove('active'));
@@ -2455,6 +2476,59 @@ function homeSearch(q){
   });
 }
 
+/* ==================== PAPER PROGRESS ==================== */
+function paperRow(k){
+  const p = PAPERS[k];
+  const name = (p.title||k).replace(/ — .*$/,'');
+  const sub  = (p.title||'').includes(' — ') ? (p.title.split(' — ')[1]||'') : '';
+  const read = /okunmadı/i.test(p.status||'') ? 'okunmadı' : 'okundu';
+  return `<button class="toc-row paper-row" data-paper="${esc(k)}">` +
+    `<span class="toc-name">${esc(name)}</span>` +
+    (sub ? `<span class="toc-sub">${esc(sub)}</span>` : '') +
+    `<span class="toc-dots"></span>` +
+    `<span class="toc-meta">${esc(p.cat||'')} · ${(p.sections||[]).length} bölüm · ${read}</span></button>`;
+}
+function buildPapers(){
+  const host = $('papers-page'); if(!host) return;
+  const keys = Object.keys(PAPERS||{});
+  host.innerHTML =
+    `<div class="home-hero">
+       <h1>Paper Progress</h1>
+       <div class="home-rule"><div class="home-rule-in"></div></div>
+       <div class="home-meta">${keys.length} paper &middot; okuma notları, tam analiz ve arka plan teorisi</div>
+     </div>
+     <div class="home-search"><input id="paper-q" type="search" placeholder="Paper, yöntem, kavram ara…" autocomplete="off"></div>
+     <div class="papers-list" id="papers-list">${keys.map(paperRow).join('')}</div>`;
+  bindPaperRows();
+  const qi = $('paper-q');
+  if(qi){ let t; qi.oninput = () => { clearTimeout(t); t = setTimeout(() => papersFilter(qi.value), 120); };
+          qi.onkeydown = e => { if(e.key === 'Escape'){ qi.value=''; papersFilter(''); qi.blur(); } }; }
+}
+function bindPaperRows(){
+  document.querySelectorAll('[data-paper]').forEach(el =>
+    el.onclick = () => showPaper(el.dataset.paper));
+}
+function papersFilter(q){
+  q = (q||'').trim().toLowerCase();
+  const box = $('papers-list'); if(!box) return;
+  const keys = Object.keys(PAPERS||{});
+  if(!q){ box.innerHTML = keys.map(paperRow).join(''); bindPaperRows(); return; }
+  const hits = keys.filter(k => {
+    const p = PAPERS[k];
+    const blob = [p.title, p.cat, p.context, p.summary, p.status,
+      ...(p.sections||[]).map(x => [x.heading||'', secBody(x)].join(' '))].join(' ').toLowerCase();
+    return blob.includes(q);
+  });
+  box.innerHTML = hits.length ? hits.map(paperRow).join('')
+    : `<div class="sr-empty">“${esc(q)}” için sonuç yok.</div>`;
+  bindPaperRows();
+}
+function showPaper(k){
+  const p = PAPERS[k]; if(!p) return;
+  showPopup({title:p.title, cat:p.cat||'Paper', context:p.context,
+             summary:p.summary, sections:p.sections});
+}
+
 /* Ana sayfadaki konu anlatimi listesi — guides.json'dan uretilir */
 function guideIndexHTML(){
   const keys = Object.keys(GUIDES || {});
@@ -2635,6 +2709,7 @@ function applyData(d){
   });
   if(d.overviews) OVERVIEWS = d.overviews;
   if(d.guides) GUIDES = d.guides;
+  if(d.papers) PAPERS = d.papers;
   if(d.summary) SUMMARY = d.summary;
   if(d.ida_summary) IDA_SUMMARY = d.ida_summary;
   if(d.vs_summary) VS_SUMMARY = d.vs_summary;
@@ -2652,7 +2727,7 @@ function applyData(d){
 }
 
 
-fetch('./data/unified.json?v=20260920161704')
+fetch('./data/unified.json?v=20260920184652')
   .then(r => { if(!r.ok) throw new Error(r.status); return r.json() })
   .then(applyData)
   .catch(() => {

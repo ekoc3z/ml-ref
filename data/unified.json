@@ -25482,6 +25482,245 @@
       ]
     }
   ],
+  "papers": {
+    "output_steering": {
+      "title": "Output Steering — Latent Diffusion ile MRI'dan CT Sentezi",
+      "cat": "Paper · SIU 2026",
+      "context": "Özdilek, Arslan, Macun, Nezhad, Çukur · 2026/02_synthesis-translation/Output_Steering...pdf",
+      "status": "okunmadı — Claude anlattı, Erdem henüz okumadı",
+      "summary": "Diffusion stokastik olduğu için aynı MRI'dan her çalıştırmada farklı bir CT çıkıyor. Bu paper modeli değiştirmiyor; sekiz aday üretip, o hastanın gerçek CT'sine bakmadan aralarından en iyisini seçen bir mekanizma ekliyor. Asıl kazanç ortalamada değil, sapmada.",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Tek cümle",
+          "text": "Modeli değiştirmeden, sampling sonrasında seçimle kalite kazanmak. Diffusion'ın stokastikliğini bastırmak yerine kullanıyorlar: madem birden çok makul çıktı üretiyor, havuzdan hedefe en uygun olanı seçen bir katman kur. Yeniden training yok, mimari değişikliği yok — tamamen inference tarafında."
+        },
+        {
+          "type": "text",
+          "heading": "Problem neden var",
+          "text": "Klinik hedef: T2 ağırlıklı pelvis MRI'dan CT üretmek. Gerekçe, CT'nin ek maliyet, iş akışı yükü ve iyonlaştırıcı radyasyon demesi. MRI zaten çekiliyorsa CT'yi ondan sentezleyebilirsen hasta o dozu almıyor.\n\nAma diffusion stokastik. Aynı MRI'ı farklı başlangıç noise'uyla çalıştırınca birbirinden farklı, hepsi makul görünen CT'ler çıkıyor. Paperin cümlesi: hepsi eşit güvenilir değil — bazıları anatomik yapıyı ve CT'ye özgü görünümü belirgin biçimde daha iyi koruyor.\n\nDoğal görüntüde bu mesele değil, çeşitlilik zaten istenen şey. Tıpta tersi: hangi örneğin eline geçtiği şansa kalamaz."
+        },
+        {
+          "type": "code",
+          "heading": "Yöntem, dört adım",
+          "text": "1. LATENT DIFFUSION\n   autoencoder (VQ):  256x256  ->  64x64 latent\n   kosullama: kaynak latent, gurultulu hedef latentin yanina\n              KANAL olarak ekleniyor (concat)\n   loss: eps-prediction MSE, latent uzayda\n\n2. ADAY HAVUZU  (K = 8)\n   cesitlilik iki kaynaktan:\n     - farkli seed\n     - farkli DDIM ayari:  eta in {0, 0.2, ... 1.0}\n                           adim sayisi in {100, 150, 200}\n   yani deterministikten stokastige yayilmis bir havuz\n\n3. KADEMELI SECIM\n   asama 1: goruntu kalite skoru -> belirgin kotuleri ele\n   asama 2: AYRI TUTULMUS gercek CT kumesiyle\n            dagilimsal benzerlik -> aralarindan sec\n   iki skor agirlikli toplanip en yuksek secliyor\n\n4. KRITIK ILKE\n   o hastanin GERCEK CT'si secimde KULLANILMIYOR\n   sadece sonradan olcumde"
+        },
+        {
+          "type": "text",
+          "heading": "Arka plan: latent diffusion nedir, DDPM'den farkı",
+          "text": "DDPM piksel uzayında çalışıyor. 256x256'lık bir görüntü 65 bin boyut, ve her denoising adımı bu tensörün tamamına dokunuyor. İki bedeli var: pahalı, ve model kapasitesinin büyük kısmı algısal olarak önemsiz yüksek frekanslı detaya gidiyor.\n\nLatent diffusion iş bölümü yapıyor. Önce bir autoencoder görüntüyü küçük bir latent'e indiriyor (bu paperda 256x256 → 64x64), sonra bütün diffusion o küçük uzayda dönüyor. Üretim bitince decoder latenti görüntüye açıyor.\n\nSezgi: dev bir tuvale her fırça darbesini atmak yerine küçük bir eskiz üzerinde çalışmak. Eskiz neyin nerede olduğunu taşıyor, dokuyu decoder biliyor.\n\nTek cümlelik iş bölümü: autoencoder algısal detaydan, diffusion anlamsal içerikten sorumlu.\n\nBedeli: sistemin kalite tavanı artık autoencoder'ın reconstruction kalitesi. Encoder'ın attığı bilgi geri gelmiyor — medikalde küçük bir lezyon sıkıştırmada kaybolursa diffusion onu üretemez."
+        },
+        {
+          "type": "text",
+          "heading": "Arka plan: neden VAE değil VQ",
+          "text": "İlk aşamaya herkes VAE diyor ama pratikte değil. KL terimi latent'i örneklenebilir yapmak içindi — VAE'de latent'i prior'dan çekip decoder'a veriyordun.\n\nLatent diffusion'da latent'i prior'dan çekmiyorsun; latent'in distribution'unu diffusion öğreniyor. Dolayısıyla KL'in tek etkisi reconstruction kalitesini düşürmek olurdu.\n\nAma tamamen serbest AE de olmuyor: latent'in ölçeği kayarsa diffusion'ın noise schedule'ı bozulur. O yüzden hafif bir düzenleme konuyor — ya çok küçük ağırlıklı KL (Stable Diffusion) ya da VQ (bu paper).\n\nVQ: encoder'ın her konumda ürettiği vektör, 1024 vektörlük bir codebook'taki en yakınıyla değiştiriliyor. Seçim konum başına — 64x64 latent'te 4096 ayrı seçim. Codebook küçük diye ifade gücü kısıtlanmıyor: olasılık sayısı 1024 üzeri 4096.\n\nDetay için ML-OVERALL 19'daki VQ kartına bak."
+        },
+        {
+          "type": "text",
+          "heading": "Arka plan: DDIM ve η — aday havuzunun asıl mekanizması",
+          "text": "Adaylar sadece seed'le değil, DDIM ayarlarıyla da çeşitleniyor. DDIM'i bilmeden bu ızgaranın ne yaptığı anlaşılmıyor.\n\nDDIM yeni bir model değil, aynı eğitilmiş ağ için farklı bir sampling kuralı. DDPM her adımda öğrenilmiş bir Gaussian'dan örnek çekiyor; DDIM bunun yerine ağın tahmininden temiz görüntüyü cebirle çıkarıp onu doğrudan istediği noise seviyesine yerleştiriyor. Sonuç: adım atlayabiliyor (1000 yerine 50-200) ve süreç deterministik olabiliyor.\n\nη düğmesi ne kadar taze rastgelelik ekleneceğini ayarlıyor: η=0 tamamen deterministik, η=1 DDPM'in kendisi (ama yalnızca tam takvimde).\n\nBu paperin ızgarası iki ekseni birden tarıyor. ⚠️ Ve dikkat: bu ızgara yalnızca çeşitlilik değil, aynı zamanda bir KALİTE GRADIENT'İ üretiyor. Az adım + yüksek η kombinasyonu sistematik olarak daha zayıf olmalı, çünkü orada Gaussian varsayımı çatlıyor.\n\nDetay için ML-OVERALL 21'deki DDIM kartına bak."
+        },
+        {
+          "type": "table",
+          "heading": "Sayılar",
+          "rows": [
+            [
+              "Yöntem",
+              "PSNR",
+              "SSIM (%)"
+            ],
+            [
+              "LDM (baseline)",
+              "25.83",
+              "82.13 ± 6.23"
+            ],
+            [
+              "+ sadece kalite skoru",
+              "26.47",
+              "87.02 ± 7.15"
+            ],
+            [
+              "+ sadece dağılımsal",
+              "26.49",
+              "87.69 ± 3.02"
+            ],
+            [
+              "Önerilen (ikisi)",
+              "26.49",
+              "87.89 ± 2.59"
+            ],
+            [
+              "Oracle best-of-K",
+              "26.60",
+              "85.95 ± 7.55"
+            ],
+            [
+              "pix2pix",
+              "25.22",
+              "87.88 ± 2.23"
+            ]
+          ]
+        },
+        {
+          "type": "insight",
+          "heading": "Asıl hikâye ortalamada değil, sapmada",
+          "text": "SSIM ortalaması 82'den 88'e çıkıyor, ama standart sapma 6.23'ten 2.59'a düşüyor.\n\nYöntem modeli daha iyi yapmıyor — daha ÖNGÖRÜLEBİLİR yapıyor. Klinikte değerli olan da bu: hangi örneğin eline geçtiğinin şansa kalmaması.\n\nPaper bunu öne çıkarmıyor. Okurken çıkarılacak asıl sonuç bu."
+        },
+        {
+          "type": "list",
+          "heading": "Eleştiri ve açık sorular",
+          "items": [
+            "İki aşama gerçekten gerekli mi? PSNR'da ikincisinin katkısı sıfır (26.47 → 26.49); kazanç yalnızca SSIM ve sapmada.",
+            "Oracle sadece PSNR'ın oracle'ı — SSIM'i 85.95, yani önerilen yöntemden düşük, çünkü adayı PSNR'a göre seçiyor. 'Üst sınır' sanılan satır tek metrikte üst sınır.",
+            "pix2pix SSIM'de başa baş (87.88 ↔ 87.89). Kazanç PSNR'da.",
+            "4 test deneği. 0.66 dB fark, ±2 sapmayla, dört denekte. SIU bildirisi için normal ama istatistiksel dayanak zayıf.",
+            "K = 8 nereden geldi? Ablasyon yok. Kazancın çoğu ilk üç adayda doluyorsa maliyet tartışması kapanır.",
+            "Kazananlar hep η ≈ 0 tarafından mı geliyor? Öyleyse ızgaranın yarısı boşuna hesaplanıyor.",
+            "Maliyet hiç raporlanmamış — ne süre ne hesap."
+          ]
+        },
+        {
+          "type": "note",
+          "heading": "Maliyet tartışmasının doğru hâli",
+          "text": "\"8 aday = 8 kat yavaş\" yanlış ifade. İki şeyi ayır:\n\nHesap (FLOP) gerçekten 8 kat — paralellik bunu değiştirmiyor.\n\nDuvar saati 8 kat değil. Sekiz aday tek batch'te çalıştırılabilir ve latent 64x64 olduğu için bellek yükü önemsiz; diffusion sampling'de batch=1 GPU'yu zaten doldurmuyor, toplu çalıştırmak neredeyse bedava. Tek incelik adım sayılarının farklı olması — gruplayarak çözülür, duvar saati en uzun grubun süresi kadar olur.\n\nDolayısıyla eleştirinin doğru hâli: maliyet gecikmede değil VERİMDE. Vaka başına GPU-saati sekize katlanıyor."
+        },
+        {
+          "type": "text",
+          "heading": "Pazartesi için çıkarılacak sorular",
+          "text": "Efe Özdilek birinci yazar ve 501'de aynı sınıftasın. İki soru hem ilgi hem dikkatli okuma gösteriyor:\n\n\"K'yı nasıl seçtiniz, doyum noktası var mı?\"\n\n\"Seçici hep ızgaranın aynı bölgesinden mi seçiyor — kazananlar η dağılımında nerede yoğunlaşıyor?\"\n\nİkisi de paperin gerçekten cevaplamadığı şeyler."
+        }
+      ]
+    },
+    "selfrdb": {
+      "title": "SelfRDB — Kendiyle Tutarlı Özyinelemeli Diffusion Bridge",
+      "cat": "Paper · MedIA 2025",
+      "context": "Fuat Arslan, Bilal Kabaş, Onat Dalmaz, Muzaffer Özbey, Tolga Çukur · 2025/SelfRDB_translation_diffusion-bridge_2405.06789.pdf",
+      "status": "okunmadı — Claude anlattı, Erdem henüz okumadı",
+      "summary": "Diffusion bridge'in ucuna temiz kaynak görüntü yerine noise eklenmiş kaynak koyarak genellemeyi artıran, ve her ters adımda hedef tahminini kendiyle tutarlı hale gelene kadar özyineleyerek sampling doğruluğunu artıran translation yöntemi. Eğitim EŞLEŞMİŞ veri gerektiriyor.",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Neden diffusion bridge — DDM'in translation'daki zaafı",
+          "text": "Klasik DDM'de forward süreç hedef görüntüden saf noise'a gidiyor. Dolayısıyla ağın öğrendiği dönüşüm 'noise → hedef'. Ama istenen dönüşüm 'kaynak → hedef'.\n\nKaynak görüntü yalnızca yan girdi olarak veriliyor — paperin deyimiyle 'stationary guidance', yani t ile değişmeyen sabit bir koşul. Yönlendirme örtük ve zayıf; ağın tersine çevirmeyi öğrendiği yol kaynaktan hiç haberdar değil.\n\nBridge bunu doğrudan çözüyor: sürecin ucuna saf noise yerine kaynak görüntüyü koy. Artık forward süreç hedefle kaynak arasında gidiyor, ve ağın öğrendiği ters dönüşüm tam olarak istenen dönüşüm."
+        },
+        {
+          "type": "text",
+          "heading": "Ara adımlar neden sadece karışım — imaging operator meselesi",
+          "text": "Reconstruction'da ölçümden görüntüye giden fiziksel operatör biliniyor (Fourier, örnekleme maskesi, bobin duyarlılıkları). Bu yüzden ara adımlar fizikle tanımlanabiliyor — FDB'de olduğu gibi, k-space'ten giderek daha çok frekans silinerek.\n\nTranslation'da böyle bir operatör YOK. T1'i alıp 'şu denklemi uygula, T2 çıkar' diyebileceğin bir şey mevcut değil.\n\nO yüzden ara adımlar fizikle değil, en basit yolla tanımlanıyor: iki ucun ağırlıklı ortalaması (convex combination) artı noise.\n\n⚠️ Dürüst not: T1 ile T2'nin yarı yarıya karışımı gerçekte var olan bir görüntü değil. Fiziksel anlamı yok, sadece iki ucu birleştiren en basit patika. Reconstruction bridge'lerinde ara adımlar anlamlı, translation bridge'lerinde değil."
+        },
+        {
+          "type": "code",
+          "heading": "Üç sürecin iki ucu ve varyans şekli",
+          "text": "BASLANGIC (t=0) ucunde de ayni:  HEDEF goruntu\n\nUC (t=T):\n  DDPM           saf noise\n  klasik bridge  temiz KAYNAK goruntu\n  SelfRDB        noise eklenmis KAYNAK goruntu\n\nVARYANS SEKLI:\n  DDPM           0 ----------> 1     monoton artiyor\n  klasik bridge  0 --> tepe --> 0     ortada tepe\n  SelfRDB        0 ----------> gamma  monoton artiyor\n\nSelfRDB, DDPM'den varyansin SEKLINI,\nbridge'den ortalamanin YOLUNU aliyor."
+        },
+        {
+          "type": "text",
+          "heading": "Klasik bridge'in iki kusuru",
+          "text": "KUSUR 1 — uçta varyansın sıfır olması.\n\nKlasik bridge'de uç, eğitim kümesindeki tam olarak o kaynak görüntü. Tek bir nokta, etrafında hiçbir yayılım yok. Paper buna 'kaynak modalitesi üzerinde sert prior' diyor.\n\nModel yalnızca o noktalardan geri dönmeyi öğreniyor. Test zamanında görülmemiş bir kaynak görüntü geldiğinde, modelin etrafında hiç yoğunluk olmayan bir noktadan başlamak zorunda kalıyor — ters yol güvenilmez.\n\nKUSUR 2 — ortada varyansın tepe yapması.\n\nİki ucun da tam olarak belirli bir görüntüye oturması isteniyorsa, iki uçta da noise sıfır olmak zorunda. O zaman eğri zorunlu olarak çıkıp iniyor, tepe ortada oluşuyor.\n\nAma sürecin ortası, kaynak ile hedefin karışımının en dengeli olduğu yer — yani bilgi aktarımının asıl gerçekleştiği yer. Tam orada noise maksimum, doku detayı maskeleniyor."
+        },
+        {
+          "type": "insight",
+          "heading": "Tek değişiklik, iki sorun",
+          "text": "SelfRDB uçtaki sıfır şartını kaldırıyor: uçta bir miktar noise olmasına izin veriyor (miktarı γ ile ayarlanıyor, deneylerde 2.2).\n\nUç artık temiz kaynak değil, noise eklenmiş kaynak. Model tek bir noktayı değil, o kaynağın ÇEVRESİNDEKİ BULUTU öğreniyor — sert prior yumuşak prior'a dönüşüyor, veri uzayı daha düzgün kapsanıyor, görülmemiş kaynaklara genelleme artıyor.\n\nVe eğrinin inmesi gerekmediği için ortadaki değer daha düşük — doku maskelenmesi azalıyor.\n\nTek bir takvim değişikliği, iki ayrı kusuru birden kapatıyor. Paperin en zarif yeri bu."
+        },
+        {
+          "type": "text",
+          "heading": "Uca noise eklemenin bedeli ve nasıl ödendiği",
+          "text": "Uca eklenen noise, kaynak görüntüdeki doku bilgisinin bir kısmını siliyor. Ve üretim tam oradan başlıyor.\n\nÇözüm: ağa TEMİZ kaynak görüntüyü de ayrıca ver, her adımda. Paperin deyimiyle 'stationary guidance from the original source image'.\n\nYani kaynak görüntü iki ayrı rolde:\n\nnoise eklenmiş hali (y_e) — sürecin ucu, yolu tanımlıyor, yumuşak prior'ı sağlıyor\ntemiz hali (y) — her adımda yandan verilen sabit girdi, silinen detayı geri getiriyor\n\n⭐ Anlaşılması gereken ayrım: 'sürecin ucu olmak' ile 'ağın girdisi olmak' aynı şey değil. Forward süreç yolu tanımlar, ağın girdileri ayrı bir tasarım tercihidir."
+        },
+        {
+          "type": "text",
+          "heading": "Kendiyle tutarlı özyineleme — nerede ve neden",
+          "text": "Her ters adımda x_{t-1}'i hesaplayan formül, temiz hedef görüntüyü istiyor. O elinde yok — zaten onu üretmeye çalışıyorsun. O yüzden tahmin ediyorsun.\n\nDiğer yöntemler bunu TEK ATIŞTA yapıyor: ağı bir kez çalıştır, çıkan tahmin neyse kullan. Yanlışsa düzeltme şansı yok, hata sonraki adımlara taşınıp birikiyor.\n\nSelfRDB tahmini ağa geri besliyor:\n\n  x̂_0 = 0 ile başla\n  tekrarla: x̂_0 ← G(x_t, t, y, x̂_0)\n  değişim %1'in altına inince dur\n\nDurduğu nokta şunu sağlıyor: tahmini geri verdiğinde aynı tahmin çıkıyor. Sabit nokta — 'kendiyle tutarlı' ifadesi buradan.\n\nBenzetme: ressam bulanık fotoğraftan kaba bir taslak çizer, sonra taslağıyla fotoğrafı yan yana koyup yeniden çizer, düzeltecek bir şey kalmayınca durur. İkinci turdan itibaren iş kolaylaşıyor — sıfırdan üretmiyor, taslağı düzeltiyor."
+        },
+        {
+          "type": "text",
+          "heading": "Neden training'de değil de sampling'de gerekiyor",
+          "text": "Training'de CEVAP ANAHTARI elinde: gerçek x_0 eğitim verisi. Ağ yanlış tahmin ederse loss büyür, gradient akar, ağ düzeltilir. Düzeltmeyi yapan şey gerçek cevap.\n\nSampling'de gerçek x_0 YOK — üretmeye çalıştığın şey o. Loss yok, gradient yok, kontrol eden kimse yok. Tahmin kötüyse kötü kalıyor ve birikiyor.\n\nÖzyineleme tam bu boşluğu dolduruyor: dışarıdan düzeltecek biri olmadığına göre, ağ kendi kendini düzeltsin. Zayıf bir ikame ama tek atışta düzeltme ihtimali sıfırken burada bir ihtimal var.\n\n⚠️ Not: paperin generator loss'u yakınsamış tahminle yazılmış, yani özyineleme training'de de görünüyor. Tam yakınsama mı bekleniyor yoksa sabit küçük bir tur sayısı mı kullanılıyor — uygulama detaylarında doğrula."
+        },
+        {
+          "type": "table",
+          "heading": "Training ve sampling, girdiler",
+          "rows": [
+            [
+              "",
+              "Training",
+              "Sampling"
+            ],
+            [
+              "x_t",
+              "rastgele t'den üretiliyor",
+              "sıralı yürüyüşten geliyor"
+            ],
+            [
+              "t",
+              "rastgele",
+              "T'den 1'e"
+            ],
+            [
+              "y (kaynak)",
+              "var",
+              "var"
+            ],
+            [
+              "x̂_0",
+              "ağın kendi tahmini",
+              "ağın kendi tahmini"
+            ],
+            [
+              "gerçek x_0",
+              "yalnızca loss'ta",
+              "hiç yok"
+            ]
+          ]
+        },
+        {
+          "type": "text",
+          "heading": "Generator neden 'generator' — DDPM'de ε_θ idi",
+          "text": "İki sebep.\n\nÜRETTİĞİ ŞEY DEĞİŞMİŞ. DDPM'de ağ eklenen noise'u tahmin ediyordu; burada doğrudan temiz hedef görüntüyü üretiyor. Bridge'de uçta saf noise olmadığı için 'eklenen noise neydi' sorusu doğal değil; ayrıca özyineleme geri beslenecek bir görüntü gerektiriyor.\n\nADVERSARIAL EĞİTİLİYOR. Yanında bir discriminator var, GAN dilinde ağa generator denir. Bu miras SynDiff'ten geliyor ve gerekçesi şu: ters adımı Gaussian varsaymak ancak adım minikken doğru. Bu yöntemler büyük adımlarla çalışıyor, orada gerçek ters dağılım çok modlu.\n\nİki farklı cevap var: DDIM dağılımı hiç modellemiyor (deterministik gidiyor), SynDiff/SelfRDB dağılımı GAN'la modelliyor."
+        },
+        {
+          "type": "insight",
+          "heading": "Neden x_0 biliniyorken kesin, bilinmezken hesaplanamaz",
+          "text": "q(x_{t-1} | x_t, x_0) ∝ q(x_t | x_{t-1}) · q(x_{t-1} | x_0)\n\nSağdaki iki çarpan da senin kurduğun forward sürecin parçası, ikisi de bilinen Gaussian. İki Gaussian'ın çarpımı yine Gaussian — ortalamasını ve varyansını açıkça yazabiliyorsun.\n\nq(x_{t-1} | x_t) ∝ q(x_t | x_{t-1}) · q(x_{t-1})\n\nİkinci çarpan 't-1 seviyesindeki bütün gürültülü görüntülerin dağılımı' demek, ve içinden veri distribution'u çıkıyor. Yani zaten öğrenmeye çalıştığın şey.\n\nSezgi: çok gürültülü bir leke, biraz daha az gürültülü bir 3'ten de gelmiş olabilir bir 8'den de — dağılım çok modlu. Ama x_0'ı söylersem belirsizlik yok oluyor; soru artık dünya hakkında değil, iki bilinen nokta arasında geometri.\n\n⭐ Tekrar eden kalıp: gizli değişkene koşullandığında hesaplanabiliyor, onun üzerinden marjinalleştirdiğinde çöküyor. VAE'de de aynıydı."
+        },
+        {
+          "type": "text",
+          "heading": "Kapanan açık soru: veri EŞLEŞMİŞ",
+          "text": "İndekste 'eğitim eşleşmiş veri gerektiriyor mu, deney bölümünden teyit et' diye açık bir soru duruyordu.\n\nCevap: GEREKTİRİYOR. Paperin kendi cümlesi — 'Given a training set of target-source image pairs'. Ve rakipler için: 'All competing methods were trained via supervised learning on paired source and target modalities'.\n\nBu SynDiff'ten temel farkı. SynDiff'in bütün varlık sebebi eşleşmiş veri olmamasıydı, cycle consistency oradan geliyordu. SelfRDB denetimli bir yöntem.\n\nEşleşmiş = aynı hastanın hem T1'i hem T2'si var, dolayısıyla piksel piksel karşılaştırılacak doğru cevap elinde. Eşleşmemiş = bir yığın T1, bir yığın T2, ama hiçbir hastada ikisi birden yok."
+        },
+        {
+          "type": "list",
+          "heading": "Kurulum ve deneyler",
+          "items": [
+            "Generator: residual U-Net, 12 residual kademe, time embedding her kademeye ekleniyor.",
+            "Discriminator: konvolüsyonel, 6 kademe, o da zamana koşullu.",
+            "Loss: pixel-wise L1 + adversarial.",
+            "IXI (T1/T2/PD, 40 sağlıklı) · BRATS (T1/T2/FLAIR, 55 glioma) · MRI-CT pelvis (15 denek).",
+            "Rakipler: SynDiff, DDPM, I²SB (başka bir bridge), pix2pix.",
+            "T=1000, γ=2.2, lr 1e-4, RTX 4090. Yakınsama: ardışık turlar arası değişim %1'in altına inince."
+          ]
+        },
+        {
+          "type": "list",
+          "heading": "Okurken doğrulanacaklar",
+          "items": [
+            "Maliyet: her ters adımda R ekstra ileri geçiş, toplam T × R. Sonuçlarda ortalama R kaç çıkmış, rakiplere göre süre farkı ne?",
+            "Kazanç hangisinden geliyor — noise takvimi mi, özyineleme mi? İkisi ayrı ayrı ölçülmüş mü, ablasyon var mı?",
+            "γ ne kadar hassas? Yumuşak prior'ın tamamı o tek katsayıya bağlı; duyarlılık analizi var mı?",
+            "Adversarial gerilim: paper DDM'lerin GAN'lara göre kararlılık avantajıyla başlıyor ama kendisi discriminator kullanıyor. Bunu nasıl ele alıyor?",
+            "Genelleme iddiası sayısal olarak izole edilmiş mi, yoksa sadece genel sonuç tablolarına mı dayanıyor?",
+            "Training'de özyineleme tam yakınsıyor mu, yoksa kısaltılmış mı?"
+          ]
+        },
+        {
+          "type": "note",
+          "heading": "Neden bu paper öncelikli",
+          "text": "Fuat Arslan birinci yazar ve Stanford'a gidiyor — hat boşalıyor. İndeksteki 'sahipsiz alanlar' listesinde 'difüzyon köprüsü / çeviri hattı' ilk sırada, gerekçesi bu.\n\nGitmeden konuşulması gereken kişi, ve konuşmanın zemini bu paper."
+        }
+      ]
+    }
+  },
   "guides": {
     "backprop": {
       "title": "Backpropagation — Baştan Sona Konu Anlatımı",
