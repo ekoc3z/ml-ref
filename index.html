@@ -333,6 +333,13 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .sec-anim .hi{stroke:var(--accent)}
 .sec-anim text.hi{fill:var(--accent);stroke:none}
 .sr-src{color:var(--muted);font-weight:400}
+.sec-ref{display:flex;flex-wrap:wrap;gap:8px}
+.ref-btn{font:inherit;font-size:14.5px;font-weight:600;color:var(--accent);background:transparent;
+  border:1px solid var(--border);border-radius:2px;padding:7px 12px;cursor:pointer;text-align:left}
+.ref-btn:hover{border-color:var(--accent);background:var(--accent);color:var(--bg)}
+.popup-back{font:inherit;font-size:13.5px;font-weight:600;color:var(--muted);background:transparent;
+  border:none;padding:0 0 10px;cursor:pointer}
+.popup-back:hover{color:var(--accent)}
 #papers-page{display:none;max-width:940px;margin:0 auto;padding:72px 32px 88px}
 .papers-list{margin:30px auto 0;max-width:720px}
 .paper-row .toc-meta{font-size:12.5px}
@@ -1744,7 +1751,10 @@ CHAPTERS.forEach(c => DATA[c] = []);
 let OVERVIEWS = {};
 let GUIDES = {};
 let MLO_ONLY = [];
-let PAPERS = {};   // yalnizca ML-OVERALL'da gorunen kartlar (arama + sayim icin lazim)
+let PAPERS = {};
+let CARD_BY_ID = {};     // id -> kart (capraz referanslar icin)
+let POPUP_STACK = [];    // acik popup gecmisi (geri butonu)
+let CURRENT_POPUP = null;   // yalnizca ML-OVERALL'da gorunen kartlar (arama + sayim icin lazim)
 let SUMMARY = null;
 let IDA_SUMMARY = null;
 let VS_SUMMARY = null;
@@ -2161,6 +2171,14 @@ function renderSection(s){
         <div class="sec-cmp-box"><div class="sec-cmp-title">${esc(R.title||'')}</div><ul class="sec-cmp-pts">${rpts}</ul></div>
       </div></div>`;
     }
+    case 'ref': {
+      const btns = (s.items||[]).map(it => {
+        const id = (typeof it === 'string') ? it : it.id;
+        const lb = (typeof it === 'string') ? it : (it.label || it.id);
+        return `<button class="ref-btn" data-card-ref="${esc(id)}">${esc(lb)} &nearr;</button>`;
+      }).join('');
+      return `<div class="sec-block sec-ref">${h}${btns}</div>`;
+    }
     case 'code': {
       const hq = s.heading ? `<div class="sec-heading"><span class="qa-mark">▶</span>${esc(s.heading)}</div>` : '';
       return `<div class="sec-block sec-block-qa">${hq}<code class="sec-code">${esc(s.text||'')}</code></div>`;
@@ -2224,7 +2242,11 @@ function showPopup(item, cc){
         `<span class="mlo-badge" data-go-sec="${esc(m.key)}" title="${esc(m.title)}">◆ ML-OVERALL ${esc(m.num)} · ${m.i}/${m.n}</span>`).join('');
   const psrc = (item._home && !item.mlo_only)
         ? `<span class="mlo-badge" data-go-sec="${esc(item._home)}" title="Bu kartın ders bölümündeki yeri">↳ kaynak: ${esc(famLabel(item._home))}</span>` : '';
+  CURRENT_POPUP = item;
+  const backBtn = POPUP_STACK.length
+    ? `<button class="popup-back" onclick="popupBack()">&larr; geri</button>` : '';
   $('popupBox').innerHTML = `
+    ${backBtn}
     <div class="popup-title">${esc(item.title)}</div>
     <div class="popup-meta">
       <span class="p-cat">${esc(item.cat)}</span>
@@ -2259,7 +2281,24 @@ function showPopup(item, cc){
 }
 
 /* ==================== POPUP ==================== */
-function hidePopup(){ $('popupOverlay').classList.remove('show') }
+function hidePopup(){ POPUP_STACK = []; CURRENT_POPUP = null; $('popupOverlay').classList.remove('show') }
+function popupBack(){
+  const prev = POPUP_STACK.pop();
+  if(prev) showPopup(prev, catClass(prev.cat, prev._home || ''));
+  else hidePopup();
+}
+/* Capraz referans: acik popup'i YIGINA AT, referans verilen karti ac.
+   Bolume gitmiyor — yanlislikla basinca geri donulebiliyor. */
+document.addEventListener('click', e => {
+  const el = e.target.closest && e.target.closest('[data-card-ref]');
+  if(!el) return;
+  e.preventDefault(); e.stopPropagation();
+  const card = CARD_BY_ID[el.dataset.cardRef];
+  if(!card){ return; }
+  if(CURRENT_POPUP) POPUP_STACK.push(CURRENT_POPUP);
+  showPopup(card, catClass(card.cat, card._home || ''));
+  $('popupBox').scrollTop = 0;
+});
 $('popupOverlay').onclick = e => { if(e.target === $('popupOverlay')) hidePopup() };
 
 /* ==================== TRANSFORMER LEARNING TREE ==================== */
@@ -2707,6 +2746,7 @@ function applyData(d){
       (card._mlo = card._mlo||[]).push({key:ch.key, num:nav?nav.num:'', title:nav?nav.title:(ch.title||''), i:list.length, n:ch.cards.length}); });
     DATA[ch.key] = list;
   });
+  CARD_BY_ID = IDX;
   if(d.overviews) OVERVIEWS = d.overviews;
   if(d.guides) GUIDES = d.guides;
   if(d.papers) PAPERS = d.papers;
@@ -2727,7 +2767,7 @@ function applyData(d){
 }
 
 
-fetch('./data/unified.json?v=20260920185702')
+fetch('./data/unified.json?v=20260920190103')
   .then(r => { if(!r.ok) throw new Error(r.status); return r.json() })
   .then(applyData)
   .catch(() => {
