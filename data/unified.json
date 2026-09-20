@@ -25746,17 +25746,43 @@
         },
         {
           "type": "insight",
-          "heading": "9. DİKKAT — buradaki \"generative\" ML'deki \"generative\" değil",
-          "text": "Bu tanım farkı kafa karıştırıyor ve tutorial bunu özellikle açıklıyor.\n\nGenel ML dilinde generative model, stokastik görüntü üretebilen her mimariyi kapsıyor. Burada ise ölçüt çıktının rastgele olup olmadığı DEĞİL, ağın koşullu olup olmadığı.\n\nYani içinde adversarial ya da variational bileşen taşıyan bir ağ bile, girdisinde undersampled veriyi alıyorsa burada generative sayılmıyor — data-driven ya da physics-guided oluyor. Bir modelin generative sayılması için undersampled veriyi hiç görmemesi, yalnızca hedef dağılımı öğrenmesi gerekiyor.\n\nGerekçesi şu: ters problem açısından belirleyici olan şey çıktının rastgeleliği değil, modelin imaging operator'le ne zaman karşılaştığı. Eğitimde karşılaşıyorsa o operatöre bağımlı hale geliyor; yalnızca inference'ta karşılaşıyorsa bağımsız kalıyor. Sınıflandırma bu bağımlılığı takip ediyor."
+          "heading": "9. Önce iki terimi ayır: koşullu olmak ve rastgele olmak",
+          "text": "Bu iki şey sürekli karıştırılıyor ama birbirinden tamamen bağımsız.\n\nKOŞULLU olmak, ağın dışarıdan bir ölçüm alması demek. Katlanmış görüntü $m_u$ içeri giriyor, çıkan şey o görüntünün temizlenmiş hali. Böyle bir ağa \"bana bir MR görüntüsü üret\" diyemezsin, girdi vermen gerekiyor. Modellediği şey $p(\\text{çıktı} \\mid \\text{girdi})$.\n\nKOŞULSUZ ağ ise hiçbir ölçüm almıyor. Elinde yalnızca rastgele bir $z$ var, ondan bir görüntü üretiyor. Hangi hastanın, hangi taramanın belli değil — yalnızca makul bir MR görüntüsü. Modellediği şey $p(\\text{çıktı})$, yani dağılımın kendisi.\n\nRASTGELE (stokastik) olmak bambaşka bir soru: aynı girdiyle iki kez çalıştırınca aynı sonucu alıyor musun? Düz bir U-Net deterministiktir, hep aynı çıktıyı verir. GAN'ın generator'ü, VAE'nin decoder'ı, diffusion sampler'ı içlerinde rastgelelik taşır, iki çalıştırma iki farklı görüntü verir.\n\nDikkat: bir ağ hem koşullu hem stokastik olabilir. Katlanmış görüntüyü girdi alan bir diffusion ağı tam olarak budur."
+        },
+        {
+          "type": "table",
+          "heading": "Dört kutu, ve iki dilin ayrıldığı tek hücre",
+          "rows": [
+            [
+              "",
+              "deterministik",
+              "stokastik"
+            ],
+            [
+              "koşullu",
+              "düz U-Net recon",
+              "conditional GAN / conditional diffusion recon"
+            ],
+            [
+              "koşulsuz",
+              "—",
+              "saf DDPM prior, saf GAN"
+            ]
+          ]
+        },
+        {
+          "type": "insight",
+          "heading": "10. İki dil satırlara ve sütunlara bakıyor",
+          "text": "Genel ML dili SÜTUNLARA bakıyor. Sağ sütundaki her şeye generative model der — GAN'dır, diffusion'dır, mimarisi budur, çıktısı rastgeledir.\n\nTutorial ise SATIRLARA bakıyor. Yalnızca alt satır generative. Üst sağ hücre — içinde diffusion ya da adversarial bileşen taşıyan ama girdisinde undersampled veriyi alan ağ — bu tasnifte generative değil; ölçümü $A$ ile birlikte kullanıyorsa physics-guided, kullanmıyorsa data-driven oluyor.\n\nYani çatışma tek bir hücrede: SAĞ ÜST. Diğer üçünde iki dil aynı şeyi söylüyor.\n\nSomut olarak: diffusion prior'ı yalnızca temiz MR görüntüleriyle eğitilen, ölçümü ancak inference'ta projeksiyon olarak gören bir yöntem her iki dilde de generative. Ama girdisinde katlanmış görüntüyü alan bir conditional diffusion recon ağı, ML dilinde \"diffusion modeli yani generative\" iken burada generative sayılmıyor.\n\nNEDEN bu eksen seçilmiş: pratikte belirleyici olan şey çıktının rastgeleliği değil, modelin imaging operator ile NE ZAMAN karşılaştığı. Eğitimde karşılaşıyorsa ona bağımlı hale geliyor — belirli bir örnekleme örüntüsüne ve hızlanma oranına alışıyor, test sırasında örüntü değişince zorlanıyor. Yalnızca inference'ta karşılaşıyorsa bağımsız kalıyor ve aynı prior farklı örüntülerle kullanılabiliyor. Genelleme davranışını ayıran şey bu, tasnif de onu takip ediyor."
         },
         {
           "type": "text",
-          "heading": "10. Unrolled ağ aşama aşama",
+          "heading": "11. Unrolled ağ aşama aşama",
           "text": "Physics-guided modelin nasıl çalıştığını adım adım takip etmek gerekiyor, çünkü \"unrolled\" kelimesi tek başına bir şey söylemiyor.\n\nBaşlangıçta elinde zero-filled reconstruction var, $m^{(0)} = m_u$ — katlanmış, kirli bir görüntü.\n\nSonra bir döngü başlıyor ve her turda iki şey oluyor. Önce ağ bloğu çalışıyor: $z^{(i+1)} = G_\\theta(m^{(i)})$. Bu blok öğrenilmiş prior'ın kendisi, görüntüyü daha makul bir MR görüntüsüne doğru itiyor. Ardından veri tutarlılığı bloğu çalışıyor: elde edilen görüntü k-space'e taşınıyor, GERÇEKTEN ölçülmüş olan noktalarda ağın tahmini atılıp ölçülen değer geri yazılıyor, sonra görüntüye dönülüyor.\n\nİkinci adım kritik. Ağ ne kadar özgür davranırsa davransın, ölçtüğün noktalarda gerçeğe geri çekiliyor. Ağın uydurabileceği yer yalnızca ölçmediğin noktalar.\n\nBu döngü sabit sayıda tur boyunca tekrarlanıyor, ve bütün zincir baştan sona birlikte eğitiliyor — yani ağ, kendisinden sonra bir veri tutarlılığı adımı geleceğini bilerek öğreniyor. Yapı, optimizasyondaki proximal splitting algoritmalarının sabit nokta iterasyonlarına birebir benziyor; aradaki tek fark, elle yazılmış prox adımının yerini öğrenilmiş bir bloğun almış olması."
         },
         {
           "type": "text",
-          "heading": "11. Generative prior ile reconstruction aşama aşama",
+          "heading": "12. Generative prior ile reconstruction aşama aşama",
           "text": "Burada sıra tersine dönüyor. Önce, undersampled veriden tamamen habersiz bir generative model eğitiliyor — yalnızca temiz MR görüntülerinin dağılımını öğreniyor. Diffusion ise eğitim hedefi tanıdık: görüntüye takvimle noise ekleniyor, ağ eklenen noise'u tahmin ediyor, MSE. Reconstruction diye bir şey bu aşamada yok.\n\nİş inference'ta başlıyor. Saf noise'tan başlanıyor ve normal diffusion sampling'i çalıştırılıyor, AMA her adımın arasına veri tutarlılığı sokuluyor: ağ bir adım denoise ediyor, ardından ölçülen k-space noktaları çıktıya geri yazılıyor. Ağ görüntüyü makul tutuyor, projeksiyon onu ölçüme bağlıyor.\n\nSonuçta ortaya çıkan şey, $T$ turluk bir unrolled ağa çok benziyor — ama zincir eğitimde değil, yalnızca inference'ta kuruluyor, ve ağ o zincirin varlığından habersiz eğitilmiş.\n\nGAN tabanlı eski yaklaşımlarda ise döngü yerine optimizasyon var: generator sabit tutulup latent kod, bazen de generator'ün kendisi, üretilen görüntünün k-space'i ölçülenle uyuşana kadar optimize ediliyor."
         },
         {
@@ -25772,22 +25798,22 @@
         },
         {
           "type": "insight",
-          "heading": "12. Burada bir şey dikkatini çekmeli — translation'da bu yok",
+          "heading": "13. Burada bir şey dikkatini çekmeli — translation'da bu yok",
           "text": "Yukarıdaki satırlarda $A$ var. Ölçümün fiziği biliniyor: hangi k-space noktaları toplandı, bobinler ne gördü. Bu yüzden üretilen görüntüyü ölçüme geri çekmek MÜMKÜN, ve projeksiyon tam olarak bunu yapıyor.\n\nTranslation'da ise böyle bir operatör YOK. Elinde T1 var, T2 istiyorsun; T2'nin hiçbir ölçümü yok, geri yazacağın bir k-space noktası yok. Bu yüzden orada kaynak görüntü ancak koşul olarak verilebiliyor — projeksiyonla değil, girdiyle.\n\nReconstruction ile translation arasındaki asıl fark bu. İkisi de diffusion kullanıyor olabilir, mimari bile aynı olabilir, ama birinde ölçümü zorlayan bir operatör var, diğerinde yok. Bir paperi okurken önce buna bak."
         },
         {
           "type": "text",
-          "heading": "13. Mimari üç eksende tarif ediliyor",
+          "heading": "14. Mimari üç eksende tarif ediliyor",
           "text": "Çerçeve seçildikten sonra sıra tek tek katmanlara geliyor, ve tutorial burayı üç eksene ayırıyor.\n\nOPERATÖR TİPİ — bir katmanın uzamsal bağımlılıkları nasıl kurduğu. Fully-connected: küresel ama sabit ağırlıklı filtreleme. Convolutional: yerel ve sabit, komşulukla sınırlı. Attentional: küresel ve girdiye uyarlanan, ağırlıklar token'lar arası benzerlikten hesaplanıyor. Recurrent (state-space dahil): yine küresel ve uyarlanan, ama diziyi tarayarak. Ayrım iki soruda toplanıyor — görüş alanı yerel mi küresel mi, ve ağırlıklar sabit mi girdiye göre mi değişiyor.\n\nGİRDİ ALANI — ağ neyin üzerinde çalışıyor. Görüntü uzayı en yaygın. Fourier uzayı doğrudan k-space üzerinde çalışıyor, veri tutarlılığı için doğal, ama enerji frekanslar arasında çok dengesiz dağıldığı için dikkat istiyor. Hibrit, ikisini dönüşümlü ya da paralel işliyor. Latent, önce sıkıştırıp orada çalışıyor — yüksek boyutlu ve çok kontrastlı veride verimli.\n\nKONTRAST YAPILANDIRMASI — protokoldeki kontrastların birlikte mi ayrı ayrı mı işlendiği. Bağımsız: her kontrast kendi başına, basit ama kontrastlar arası ortak anatomiyi çöpe atıyor. Ortak (joint): hepsi birlikte, yüksek hızlanmada belirgin kazanç, ama kontrastlar hizalı değilse artefakt ve kontrastlar arası sızıntı riski var. Prior-conditioned: biri tam örneklenmiş, diğeri ağır undersampled — tam olan diğerine rehberlik ediyor."
         },
         {
           "type": "text",
-          "heading": "14. Öğrenme paradigması: elinde ne veri var",
+          "heading": "15. Öğrenme paradigması: elinde ne veri var",
           "text": "Üçüncü eksen, eğitim verisinin ne olduğuna göre ayrılıyor.\n\nPOPÜLASYON DÜZEYİNDE — bir grup hastadan öğreniyorsun. Elinde eşleşmiş veri varsa, yani hem undersampled hem tam örneklenmiş hali, bu supervised öğrenme. Doğruluk yüksek ama tam örneklenmiş veri toplamak pahalı, bazı protokollerde klinik sürede mümkün bile değil.\n\nTam örneklenmiş veri yoksa self-supervised devreye giriyor, ve buradaki hile zarif: elindeki undersampled ölçümleri İKİYE BÖLÜYORSUN. Bir alt küme ağa girdi olarak veriliyor, diğer alt küme hedef olarak tutuluyor. Ağ, görmediği ölçümleri tahmin etmeyi öğreniyor. Hiç tam örnekleme olmadan denetim üretmiş oluyorsun.\n\nSCAN-SPECIFIC — eğitim verisi hiç yok, yalnızca test taraması var. Ağ o tek tarama üzerinde, inference sırasında sıfırdan eğitiliyor. Bir varyantta rastgele başlatılmış ağ sabit bir noise girdisini görüntüye eşliyor ve yalnızca ölçülen k-space'e uyacak şekilde optimize ediliyor (deep image prior). Tehlike şu: yeterince uzun eğitirsen ağ gürültüyü de ezberler. Bu yüzden ölçümlerin bir kısmı hiç kullanılmadan ayrılıp doğrulama olarak tutuluyor ve erken durdurmayı o belirliyor.\n\nHİBRİT — popülasyondan eğitilmiş bir ağ, test taramasının kendi verisiyle ince ayara sokuluyor. Farklı merkez, farklı protokol, farklı tarayıcı gibi dağılım kaymalarının cevabı bu."
         },
         {
           "type": "insight",
-          "heading": "15. Hallucination: kayıp mı, sızıntı mı",
+          "heading": "16. Hallucination: kayıp mı, sızıntı mı",
           "text": "Hızlanma arttıkça daha az veri topluyorsun, dolayısıyla prior'ın payı büyüyor. Ve prior'ın uydurduğu şey gerçek anatomiye benzediği için gözle yakalanamıyor. Tutorial bunu iki ayrı arıza olarak ayırıyor, ve ayrım hangi yöntemi kullandığınla doğrudan ilgili.\n\nKAYIP — gerçekten orada olan bir yapı geri getirilemiyor. Aşırı düzleştirme, ince yapıların sönmesi. Elle tasarlanmış prior kullanan yöntemlerin tipik arızası: regularization'ı zayıflatırsan düzelir, ama bu sefer artefakt bastırma gücünü kaybedersin.\n\nSIZINTI — orada OLMAYAN bir yapı görüntüde beliriyor. Popülasyondan öğrenen DL yöntemlerinin tipik arızası: eğitim kümesinde sık görülen bir doku, test hastasında yokken oraya taşınıyor.\n\nİkisi de tanıyı yanlış yöne çekebilir ama sızıntı daha sinsi, çünkü görüntü daha iyi görünür. Önerilen yönler: fiziksel sinyal modelinden gelen prior'larla melez kurulumlar, farklı ailelerden yöntemleri birleştiren topluluklar, çoklu kontrastı birlikte kullanıp anatomik tutarlılığı zorlamak, ve çıktının yanında belirsizlik haritası vermek.\n\nBuradaki ders reconstruction'la sınırlı değil: üretilen her medikal görüntüde aynı soru var — bu doku ölçümden mi geliyor, yoksa modelin önsel bilgisinden mi."
         },
         {
