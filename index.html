@@ -248,7 +248,7 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 
 /* Code block */
 /* ---- LaTeX algorithm float (type:'algo') ---- */
-.sec-algo{font-family:var(--serif-ui);font-size:15px;line-height:1.75;color:var(--text);margin:4px 0 2px;padding:0;overflow-x:auto}
+.sec-algo{font-family:var(--serif-ui);font-size:16.5px;line-height:1.75;color:var(--text);margin:4px 0 2px;padding:0;overflow-x:auto}
 .sec-algo .algo-rule-top{border-top:1.6px solid var(--text);margin:0}
 .sec-algo .algo-rule-mid{border-top:.8px solid var(--text);margin:0;opacity:.75}
 .sec-algo .algo-rule-bot{border-top:1.6px solid var(--text);margin:0}
@@ -262,8 +262,8 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .sec-algo .algo-kw{font-weight:700}
 .sec-algo .algo-cm{margin-left:2.2em;font-style:italic;color:var(--muted);white-space:nowrap}
 .sec-algo .algo-sp{height:.5em}
-.sec-algo .katex{font-size:1.02em}
-@media(max-width:640px){.sec-algo{font-size:13.5px}.sec-algo .algo-gd{flex-basis:1.1em}.sec-algo .algo-cm{margin-left:1.2em}}
+.sec-algo .katex{font-size:1.05em}
+@media(max-width:640px){.sec-algo{font-size:14.5px}.sec-algo .algo-gd{flex-basis:1.1em}.sec-algo .algo-cm{margin-left:1.2em}}
 .sec-code{background:var(--code-bg);border:1px solid var(--border);border-radius:6px;padding:12px 14px;font-family:'Fira Code','Cascadia Code','Courier New',monospace;font-size:14px;color:var(--sec-code-text);white-space:pre;overflow-x:auto;line-height:1.6;display:block;margin:0}
 .qa-mark{color:#38bdf8;margin-right:8px;font-size:10px;vertical-align:3px;opacity:1;letter-spacing:0}
 .sec-block-qa{border-left:2px solid rgba(56,189,248,.25);padding-left:10px;margin-left:-10px}
@@ -2818,7 +2818,7 @@ function applyData(d){
 }
 
 
-fetch('./data/unified.json?v=20260920220802')
+fetch('./data/unified.json?v=20260920221021')
   .then(r => { if(!r.ok) throw new Error(r.status); return r.json() })
   .then(applyData)
   .catch(() => {
