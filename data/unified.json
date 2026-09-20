@@ -6321,6 +6321,129 @@
       ]
     },
     {
+      "title": "DDIM — Aynı Ağ, Neden Atlayabiliyoruz ve η Tam Olarak Ne Yapıyor?",
+      "cat": "Theory",
+      "summary": "DDIM yeni bir model değil, aynı eğitilmiş ağ için farklı bir sampling kuralı. Kartın çatısı üç soru: training'de zincir neden hiç yok, Gaussian varsayımı tam olarak nerede duruyor, ve η ile adım sayısı düğmeleri neden bağımsız ayarlanıp bağımlı bozuluyor.",
+      "context": "Lecture 11 — DDPM sampling'in genellemesi (Song ve ark., 2020)",
+      "keywords": [
+        "implicit",
+        "deterministic sampling",
+        "eta",
+        "ancestral",
+        "respacing",
+        "step skipping"
+      ],
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Tek cümle",
+          "text": "DDIM yeni bir model değil, yeni bir sampler. Aynı eğitilmiş ağ, aynı weight'ler, aynı loss — değişen tek şey üretim döngüsü. Yeniden training yok, mimari değişikliği yok.\n\nKazandırdığı iki şey: 1000 adım yerine 50-200 adım, ve üretimi deterministik yapabilme imkanı."
+        },
+        {
+          "type": "text",
+          "heading": "Önce şunu gör: training'de zincir yok",
+          "text": "DDPM'i \"bin kez azar azar noise ekle, sonra bin kez azar azar temizle\" diye öğreniyoruz. Ama training döngüsüne bakınca o zincirin orada olmadığını görüyorsun.\n\nBir training adımı şu: veriden bir $x_0$ al, 1 ile 1000 arasında rastgele bir $t$ seç, bir noise $\\epsilon$ çek, ve $x_t$'yi tek satırda üret. $x_1$'den $x_2$'ye, ondan $x_3$'e diye ilerlemiyorsun — doğrudan $x_0$'dan $x_t$'ye atlıyorsun.\n\nSonuç: ağ hiçbir zaman ardışık iki adımı birlikte görmüyor. Öğrendiği tek şey şu — \"bana şu noise seviyesindeki bir görüntü ver, içindeki noise'u söyleyeyim.\" Seviye seviye çalışan bir temizleyici.\n\nDönüm noktası tek cümlede: ağ, adımlar arası geçiş hakkında hiçbir şey öğrenmiyor, çünkü öğretilmiyor.\n\nO halde \"bin adımlık zincir\" nedir? Formülü türetmek için kullanılan anlatı. Kapalı forma vardıktan sonra iskele sökülebiliyor. Sampling kuralı, training bittikten sonra verilen ayrı bir karar."
+        },
+        {
+          "type": "text",
+          "heading": "Benzetme",
+          "text": "Birisi sana bulanık fotoğrafları netleştirmeyi öğretiyor. Eğitim materyali olarak bin küçük adımda kademeli bulanıklaştırılmış fotoğraflar kullanıyor — ama sana hiçbir zaman ardışık kareleri yan yana göstermiyor. Her seferinde tek bir bulanık fotoğraf ve \"bu 7. seviye\" etiketi.\n\nEğitim bitti. Artık \"7. seviye bulanıklığı tanırım\" becerisine sahipsin. Bu beceri, o bin adımın nasıl atıldığını bilmiyor. Dolayısıyla seni kullanan kişi isterse bin küçük adımda, isterse elli büyük adımda ilerler. Senin işin değişmiyor."
+        },
+        {
+          "type": "table",
+          "heading": "p ve q — rolleri karışınca her şey karışıyor",
+          "rows": [
+            [
+              "Nesne",
+              "Ne",
+              "Durum"
+            ],
+            [
+              "$q(x_t \\mid x_{t-1})$",
+              "tek ileri adım",
+              "bilinen, $\\beta$ takviminden"
+            ],
+            [
+              "$q(x_t \\mid x_0)$",
+              "kapalı form, herhangi bir seviyeye atlama",
+              "bilinen, kesin"
+            ],
+            [
+              "$q(x_{t-1} \\mid x_t, x_0)$",
+              "ters adım, temiz görüntü biliniyorken",
+              "bilinen, tam olarak Gaussian"
+            ],
+            [
+              "$q(x_{t-1} \\mid x_t)$",
+              "ters adım, $x_0$ bilinmiyorken",
+              "HESAPLANAMAZ, çok modlu"
+            ],
+            [
+              "$p_\\theta(x_{t-1} \\mid x_t)$",
+              "modelin yaklaşımı",
+              "öğrenilen, Gaussian VARSAYILIYOR"
+            ]
+          ]
+        },
+        {
+          "type": "text",
+          "heading": "Son iki satır arasındaki fark tek bir şey",
+          "text": "$x_0$'ı biliyor musun, bilmiyor musun.\n\nBiliyorsan: \"bu görüntü bir önceki adımda neye benziyordu\" sorusunun cevabı tek tepeli ve tam olarak Gaussian. Belirsizlik minik.\n\nBilmiyorsan: \"bu gürültülü görüntü hangi temiz görüntüden geldi\" sorusunun birbirinden uzak birçok makul cevabı var. Dağılım çok modlu, ve bütün veri distribution'una bağlı. Bilseydin zaten üretmeyi de bilirdin.\n\nTraining'de $x_0$ elinde — eğitim verisi. Bu yüzden ELBO'daki hedef terim $x_0$-koşullu kesin dağılım. Üretimde $x_0$ elinde yok. Bütün mesele bu."
+        },
+        {
+          "type": "text",
+          "heading": "Gaussian varsayımı tam olarak nerede duruyor",
+          "text": "Sık yapılan hata, varsayımı training'de sanmak. Training hiçbir şey varsaymıyor; yaptığı iş düz bir regresyon.\n\nVarsayım sampler'ın iddiasında.\n\nDDPM sampler'ı diyor ki: \"$p_\\theta(x_{t-1} \\mid x_t)$ dağılımından örnek çekiyorum.\" Çekebilmek için o dağılımın şeklini bilmek zorundasın. Gaussian olduğunu varsayıyor, ağdan ortalamasını alıyor, üstüne taze noise ekleyip gerçekten çekiyor.\n\nVe bu varsayım ancak adım minikken doğru. Klasik difüzyon sonucu: adım boyu küçüldükçe ters geçiş de ileri geçişle aynı biçimi alıyor. DDPM'in $T = 1000$ ve $\\beta \\approx 10^{-4}$ seçmesinin tek sebebi bu.\n\nBüyük atlarsan gerçek ters dağılım çok modlu hale geliyor; tek bir Gaussian onu temsil edemiyor, tepeleri yakalamak yerine ortalamasını basıyor — bulanıklık buradan geliyor."
+        },
+        {
+          "type": "code",
+          "heading": "İki sampler yan yana",
+          "text": "DDPM adimi  (t -> t-1)\n  1. eps_hat = ag(x_t, t)\n  2. mu      = (1/sqrt(alpha_t)) * ( x_t - (beta_t/sqrt(1-abar_t)) * eps_hat )\n  3. z       = N(0,I)'dan TAZE noise\n  4. x_(t-1) = mu + sigma_t * z          <-- p_theta'dan CEKIM\n\nDDIM adimi  (t -> s,  s = t-1 de olabilir t-50 de)\n  1. eps_hat = ag(x_t, t)                <-- ayni ag, ayni cagri\n  2. x0_hat  = ( x_t - sqrt(1-abar_t) * eps_hat ) / sqrt(abar_t)\n  3. x_s     = sqrt(abar_s) * x0_hat + sqrt(1-abar_s) * eps_hat\n                                         <-- ileri formul, AYNI eps_hat"
+        },
+        {
+          "type": "text",
+          "heading": "DDIM'in numarası tek bir satırda",
+          "text": "Yukarıdaki 3. satıra dikkatle bak: o satır forward formülünün kendisi. $x_t = \\sqrt{\\bar{\\alpha}_t}\\,x_0 + \\sqrt{1-\\bar{\\alpha}_t}\\,\\epsilon$ denkleminde $x_0$ yerine $\\hat{x}_0$ koymuşsun, o kadar.\n\nVe o formül her atlama boyu için kesin — $\\bar{\\alpha}_s$ zaten kümülatif olduğu için 1 adım ile 50 adım arasında hiçbir fark yok. Atlamayı yapısal olarak mümkün kılan şey bu.\n\nKritik fark ise 3. satırın sonunda: DDPM taze bir $z$ çekiyor, DDIM çekmiyor — ağın az önce tahmin ettiği aynı $\\hat{\\epsilon}$'yı noise yönü olarak yeniden kullanıyor.\n\nDolayısıyla denklemde rastgele hiçbir şey kalmıyor. Rastgele sayı üreteci hiç çağrılmıyor; $x_s$ tamamen $x_t$ tarafından belirleniyor.\n\n\"$p$'den çekmeyi bırakmak\" bu demek. Ortada çekilecek bir dağılım olmadığı için, o dağılımın Gaussian olup olmadığı sorusu da sorulmuyor."
+        },
+        {
+          "type": "text",
+          "heading": "$\\hat{x}_0$ nereden geliyor — yeni bir ağ değil",
+          "text": "Sık karışan ikinci nokta: DDIM ayrıca \"temiz görüntüyü tahmin eden\" bir şey eğitmiyor. $\\hat{x}_0$ cebirle çıkıyor, bedava.\n\nForward formülünde $x_0$'ı yalnız bırakırsan:\n$$\\hat{x}_0 = \\frac{x_t - \\sqrt{1-\\bar{\\alpha}_t}\\,\\hat{\\epsilon}}{\\sqrt{\\bar{\\alpha}_t}}$$\n\nAğ sana $\\hat{\\epsilon}$'yı verdiği an $\\hat{x}_0$ zaten elinde. Yeni çıkış başlığı yok, yeni loss yok.\n\nBunu $x_0$-prediction ile karıştırma: ağı $\\epsilon$ yerine doğrudan $x_0$ üretmeye eğitmek ayrı bir parametrizasyon tercihi, ve DDPM'in ablasyonunda daha kötü çıkmıştı. DDIM parametrizasyonu değiştirmiyor; $\\hat{x}_0$'ı yalnızca sampling anında türetiyor."
+        },
+        {
+          "type": "text",
+          "heading": "Çok modluluk kayboldu mu? Hayır, yeri değişti",
+          "text": "DDPM'de rastgelelik yola dağılmış: her adımda biraz noise ekliyorsun, farklı çalıştırmalar yolun farklı yerlerinde farklı modlara sapabiliyor. Çok modlu dağılımı keşfeden şey o adım adım rastgelelik.\n\nDDIM'de ($\\eta = 0$) yolda hiç rastgelelik yok, tek bir belirlenmiş patika izleniyor. Bütün rastgelelik başa yüklenmiş: hangi $x_T$'den başladığın. Aynı $x_T$ her seferinde birebir aynı görüntüyü veriyor.\n\nBunun değerli bir yan etkisi var: başlangıç noise'u artık anlamlı bir kod haline geliyor. İki kod arasında interpolasyon yapabiliyorsun; bir görüntüyü süreçte ters çevirip kodunu bulup (inversion) kodu değiştirip geri üretebiliyorsun. Diffusion ile görüntü düzenlemenin temeli bu.\n\n⚠️ DDIM'in geçerliliğinin gerekçesi artık \"her adım Gaussian\" değil. Paper, bu deterministik yolun sürekli zamanlı bir denklemi çözmeye karşılık geldiğini ve marjinallerin korunduğunu gösteriyor. Gerekçe yok olmuyor, başka bir argümana devrediyor."
+        },
+        {
+          "type": "formula",
+          "heading": "η düğmesi — tek formül, iki uç",
+          "text": "$$x_s = \\sqrt{\\bar{\\alpha}_s}\\,\\hat{x}_0 \\ +\\ \\sqrt{1-\\bar{\\alpha}_s-\\sigma^2}\\,\\hat{\\epsilon} \\ +\\ \\sigma z$$\n\nNoise bütçesi ikiye bölünüyor: bir kısmı yeniden kullanılan $\\hat{\\epsilon}$, bir kısmı taze $z$. $\\sigma$'yı belirleyen katsayı $\\eta$.\n\n$\\eta = 0$ → taze $z$ yok, deterministik. $\\eta = 1$ → $\\sigma$, DDPM'in posterior standart sapmasına eşitleniyor."
+        },
+        {
+          "type": "text",
+          "heading": "η = 1 DDPM'e eşit — ama tek bir koşulla",
+          "text": "Bu eşitlik ancak tüm takvim kullanıldığında geçerli: $s = t-1$, bin adımın hepsi. O durumda güncelleme cebirsel olarak DDPM'in ancestral adımına indirgeniyor, ikisi birebir aynı şey oluyor.\n\n50 adımla $\\eta = 1$ kullanırsan bu DDPM değil — \"respaced\" stokastik sampling, yani DDPM'in mantığını daha kaba bir zincire uygulamak. Meşru bir sampler ama orijinali değil.\n\nVe burada Gaussian varsayımı geri geliyor: $\\eta > 0$ demek, \"bu büyük sıçramanın ters dağılımı Gaussian'dır, ondan çekiyorum\" demeye devam etmek demek."
+        },
+        {
+          "type": "insight",
+          "heading": "İki düğme ayrı ayarlanır, ama hataları bağımsız değil",
+          "text": "Adım sayısı ve $\\eta$ birbirinden bağımsız seçilebiliyor — 50 adım + $\\eta=1$ de mümkün, 1000 adım + $\\eta=0$ da. Ama kalite açısından bağımsız değiller.\n\nAdım sayısı yüksekken (≈1000) $\\eta$ ne olursa olsun sonuçlar birbirine yakın. Adım sayısı düştükçe (≈50) $\\eta$ büyüdükçe kalite düşüyor, ve $\\eta = 0$ en az zarar göreni oluyor. DDIM paperının deneysel tablosu tam olarak bunu gösteriyor: 10, 20, 50 adımda $\\eta=0$ açık ara önde; bine çıkıldıkça fark kapanıyor.\n\nDoğru okunuşu şu: deterministiklik bedava bir tercih değil, az adımda çalışabilmenin bedeli olarak ödenen şey. $\\eta$'yı sıfıra çekerek çeşitlilikten vazgeçip hızı satın alıyorsun."
+        },
+        {
+          "type": "text",
+          "heading": "Kalan tek yaklaşıklık ve sınırı",
+          "text": "DDIM Gaussian varsayımından kurtuluyor ama varsayımsız değil. Hata bütçesi yer değiştiriyor:\n\nDDPM soruyor — adım yeterince küçük mü?\nDDIM soruyor — ağın $\\hat{x}_0$ tahmini yeterince iyi mi?\n\nVe ikincisi sınırsız değil. Yüksek noise seviyesinde ağ gerçekten bilmiyor; koşullu ortalamayı basıyor, yani bulanık bir tahmin veriyor. O bulanık tahminden büyük bir sıçrama yaparsan hata taşınıyor.\n\nBu yüzden DDIM ile 3 adımda üretemiyorsun. 50-200 adım hâlâ gerekiyor — bin değil ama üç de değil."
+        },
+        {
+          "type": "note",
+          "heading": "Nerede karşına çıkıyor",
+          "text": "Pratik kütüphanelerde DDIM ayrı bir scheduler olarak geliyor; modeli değiştirmeden sampler'ı değiştiriyorsun. SIU 2026'daki Output Steering çalışması aday havuzunu tam da bu iki eksenin ızgarasıyla üretiyor — $\\eta \\in \\{0, 0.2, \\ldots, 1\\}$ ve adım sayısı $\\{100, 150, 200\\}$. Dikkat: o ızgara yalnızca çeşitlilik değil, aynı zamanda bir kalite gradyanı üretiyor; $\\eta=1$ ve 100 adımlı adaylar sistematik olarak daha zayıf olmalı."
+        }
+      ],
+      "id": "ida11-ddim-ayni-ag-neden-atlayabiliyoruz-ve-eta-ne-yapiyor"
+    },
+    {
       "title": "Conditional Diffusion and Text-to-Image Generation",
       "cat": "Applications",
       "summary": "Classifier-free guidance conditions the diffusion model on a signal (text, class, image) without needing a separate classifier. Combined with latent diffusion (compressing to a lower-dimensional space first), this enables practical text-to-image models like Stable Diffusion and DALL-E 2.",
@@ -26859,6 +26982,7 @@
         "ida11-denoising-diffusion-probabilistic-models-overview",
         "ida11-forward-diffusion-markov-chain-and-reparameterisation",
         "ida11-reverse-diffusion-and-training",
+        "ida11-ddim-ayni-ag-neden-atlayabiliyoruz-ve-eta-ne-yapiyor",
         "ida11-conditional-diffusion-and-text-to-image-generation",
         "ida11-vae-vs-ddpm-loss-goruntu-kalitesi-ve-training",
         "ida11-ddpm-vae-paraleli-ile-tam-matematiksel-akis",
