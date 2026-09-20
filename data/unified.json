@@ -25505,6 +25505,11 @@
           "text": "Stokastik üretimin tıbbi bağlamdaki asıl sorununa pratik bir cevap: hangi örneğin eline geçtiğinin şansa kalmaması.\n\nVe sonuçta görülen şey de bu — ortalama benzerlik birkaç puan artarken denekler arası standart sapma yarıdan fazla düşüyor. Yani yöntem modeli daha iyi değil, daha ÖNGÖRÜLEBİLİR yapıyor. Genel ders: stokastik bir yöntemi değerlendirirken ortalamaya bakmak yetmiyor, distribution'un genişliği çoğu zaman daha çok şey söylüyor."
         },
         {
+          "type": "text",
+          "heading": "Architecture — baştan sona akış",
+          "text": "Önceden eğitilmiş ve DONDURULMUŞ bir VQ autoencoder, hem kaynak MRI'ı hem hedef CT'yi latent'e indiriyor. Diffusion bundan sonra hep o küçük uzayda çalışıyor.\n\nKoşullama concat ile: kaynak latent, gürültülü hedef latent'in yanına KANAL olarak ekleniyor, ikisi birlikte koşullu bir U-Net'e giriyor. Ağ eklenen noise'u tahmin ediyor, loss da bu tahmin üzerinden — klasik ε-prediction, sadece latent uzayda.\n\nÜretimde DDIM sampler kullanılıyor, ve her aday için η ile adım sayısı farklı seçiliyor. Çıkan temiz latent decoder'dan geçirilip görüntüye dönüyor.\n\nSekiz aday böyle üretildikten sonra seçim katmanı devreye giriyor: önce kalite skoru, sonra gerçek CT'lerle distributional benzerlik, ikisi ağırlıklı toplanıp en yüksek seçiliyor.\n\nDikkat: ilk aşama (autoencoder) diffusion training'i boyunca donmuş durumda. Generative modelin parçası değil, altyapı.\n\nGAN yok. Bu paperde discriminator kullanılmıyor — seçim mekanizması adversarial değil, skor tabanlı."
+        },
+        {
           "type": "insight",
           "heading": "Çeşitlilik generation'da özellik, burada neden arıza",
           "text": "Koşullu generation'da koşul soyut ve düşük boyutlu — bir metin, bir sınıf. Binlerce geçerli cevap var, stokastiklik istenen şey.\n\nTranslation'da koşul aynı içeriğin başka bir görüntüsü: yüksek boyutlu, uzamsal olarak hizalı, cevabın neredeyse tamamını taşıyor. Anatomi sabit, o hastanın bir tane doğru CT'si var.\n\nÜç sonuç: ground truth VAR (o yüzden benzerlik metrikleriyle ölçülebiliyor) · çeşitlilik hedef değil SORUN · karakteristik başarısızlık kaynakta olmayan yapıyı uydurmak, yani halüsinasyon.\n\nPaperin varlık sebebi üçüncü satır."
@@ -25571,6 +25576,21 @@
           "type": "text",
           "heading": "Alana katkısı",
           "text": "Diffusion bridge'lerin medikal translation'a ilk uygulanması. DDM'lerde forward süreç hedeften saf noise'a gidiyor, dolayısıyla ağın öğrendiği dönüşüm 'noise → hedef'; oysa istenen 'kaynak → hedef'. Kaynak yalnızca yan girdi olarak duruyor, yönlendirme örtük ve zayıf.\n\nBridge kaynağı yan girdi olmaktan çıkarıp YOLUN KENDİSİNE koyuyor. Artık forward süreç doğrudan hedefle kaynak arasında gidiyor, ağın öğrendiği ters dönüşüm tam olarak istenen dönüşüm oluyor."
+        },
+        {
+          "type": "text",
+          "heading": "Architecture — baştan sona akış",
+          "text": "ÜRETİM sırasında sıra şu:\n\nKaynak görüntü $y$ alınıyor, üstüne noise eklenip sürecin ucu $y_e$ kuruluyor. Sampling oradan başlıyor: $x_T = y_e$.\n\nHer adımda ağa dört şey giriyor — o anki ara görüntü $x_t$, adım numarası $t$, TEMİZ kaynak $y$, ve ağın bir tur önceki tahmini $\\hat{x}_0$. Ağ, 12 residual kademeli bir U-Net; time embedding her kademeye ayrı ayrı ekleniyor.\n\nAğ temiz hedefin tahminini üretiyor. Bu tahmin geri besleniyor ve yakınsayana kadar tekrarlanıyor. Yakınsamış tahmin posterior formülüne konup bir sonraki ara görüntü $x_{t-1}$ örnekleniyor. Sonra tahmin atılıyor, bir sonraki durakta sıfırdan başlanıyor.\n\n$t = 1$'e varınca elindeki şey hedef görüntü.\n\nTRAINING'de aynı ağ var ama döngü yok: rastgele bir $t$ seçiliyor, forward formülüyle $x_t$ üretiliyor, aynı dört girdiyle tahmin yapılıyor, ve gerçek hedefle karşılaştırılıyor."
+        },
+        {
+          "type": "insight",
+          "heading": "GAN tam olarak nerede devrede",
+          "text": "Discriminator, üretilen GÖRÜNTÜYÜ değil, ARA ADIMI yargılıyor. Ve zamana koşullu.\n\nAkış şu: generator $\\hat{x}_0$'ı üretiyor, posteriordan $\\hat{x}_{t-1}$ örnekleniyor. Discriminator'a $x_t$ ile birlikte bir $x_{t-1}$ veriliyor ve şu soruluyor — bu, gerçek forward süreçten gelen bir ara adım mı, yoksa generator'ün ürettiği mi?\n\nYani GAN, ters adımın kendisini modelliyor. Loss iki parçalı: gerçek hedefle piksel bazında L1, artı bu adversarial terim.\n\n⭐ Neden gerekli: ters adımı Gaussian varsaymak ancak adım minikken doğru. Bu yöntem büyük adımlarla çalışıyor, orada gerçek ters distribution çok modlu ve tek bir Gaussian onu temsil edemiyor. GAN'ın varlık sebebi zaten distribution'un şeklini varsaymadan örnek üretebilmek. Miras SynDiff'ten geliyor.\n\nBir gerilim var, farkında ol: paperin girişi DDM'lerin GAN'lara göre training kararlılığı avantajıyla başlıyor, ama yöntemin kendisi discriminator kullanıyor."
+        },
+        {
+          "type": "text",
+          "heading": "Neden bu noise schedule — kararın gerekçesi",
+          "text": "Noise takvimi bu paperde rastgele bir ayar değil, iki kusurun çözümü olarak SEÇİLMİŞ bir tasarım kararı.\n\nKlasik bridge iki ucu da belirli bir görüntüye çiviliyor. \"Çivilemek\" demek o uçta noise'un sıfır olması demek. İki uç da sıfırsa ve arada noise varsa, eğri matematiksel olarak çıkıp inmek ZORUNDA — tepe kendiliğinden ortaya düşüyor. Yani tepe bir tercih değil, kısıtın sonucu.\n\nSelfRDB uçtaki sıfır şartını kaldırıyor. Bunu yapar yapmaz eğri monoton artabiliyor, ve iki şey birden değişiyor: uçta noise beliriyor (yumuşak prior, genelleme), ortada noise azalıyor (daha az maskeleme, daha iyi bilgi aktarımı).\n\nUçtaki noise miktarı tek bir katsayıyla ayarlanıyor. Yani \"ne kadar yumuşak prior\" istediğin ayarlanabilir bir büyüklük."
         },
         {
           "type": "table",
