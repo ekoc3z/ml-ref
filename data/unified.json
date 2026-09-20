@@ -25484,7 +25484,7 @@
   ],
   "papers": {
     "output_steering": {
-      "title": "Output Steering — Latent Diffusion ile MRI'dan CT Sentezi",
+      "title": "Output Steering for Latent Diffusion-Based MRI-to-CT Synthesis",
       "cat": "Paper · SIU 2026",
       "context": "Özdilek, Arslan, Macun, Nezhad, Çukur · 2026/02_synthesis-translation/Output_Steering...pdf",
       "status": "okunmadı — Claude anlattı, Erdem henüz okumadı",
@@ -25592,7 +25592,7 @@
       ]
     },
     "selfrdb": {
-      "title": "SelfRDB — Kendiyle Tutarlı Özyinelemeli Diffusion Bridge",
+      "title": "Self-Consistent Recursive Diffusion Bridge for Medical Image Translation",
       "cat": "Paper · MedIA 2025",
       "context": "Fuat Arslan, Bilal Kabaş, Onat Dalmaz, Muzaffer Özbey, Tolga Çukur · 2025/SelfRDB_translation_diffusion-bridge_2405.06789.pdf",
       "status": "okunmadı — Claude anlattı, Erdem henüz okumadı",
