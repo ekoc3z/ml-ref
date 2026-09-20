@@ -25554,8 +25554,8 @@
       "sections": [
         {
           "type": "text",
-          "heading": "1. Zemin: düz diffusion ne yapıyor",
-          "text": "İki yön var. FORWARD: görüntüye adım adım noise ekleniyor, sonunda saf noise kalıyor. REVERSE: saf noise'dan başlayıp adım adım temizleyerek görüntüye dönülüyor.\n\nForward öğrenilmiyor — sabit bir kural, kapalı formda cebir. Öğrenilen şey reverse.\n\nTRAINING şöyle: veriden bir görüntü al, 1 ile T arasında rastgele bir $t$ seç, tek satırda o seviyedeki noisy hali üret, ağa ver, \"içindeki noise neydi\" diye sor, tahminle gerçeği MSE ile karşılaştır. Sıralı hiçbir şey yok — rastgele $t$, tek adım, bitti.\n\nSAMPLING şöyle: saf noise'dan başla, $T$'den 1'e doğru sırayla yürü, her adımda ağın tahminini kullanarak bir önceki seviyeye geç. Burada döngü var, ve yavaşlığın sebebi bu.\n\nKöpek üretmek istiyorsan: training'de köpek fotoğrafları noise'a çevriliyor, sampling'de noise'dan köpek çıkıyor. Koşullu hale getirirsen — ağa \"köpek\" bilgisini de verirsen — noise'dan istediğin sınıfa uygun bir görüntü çıkıyor."
+          "heading": "1. Zemin: DDPM aşama aşama",
+          "text": "İki yön var. FORWARD görüntüye adım adım noise ekliyor, sonunda saf noise kalıyor. REVERSE saf noise'dan başlayıp adım adım temizleyerek görüntüye dönüyor. Forward öğrenilmiyor — sabit bir kural, kapalı formda cebir. Öğrenilen şey reverse.\n\nTRAINING'DE SIRA ŞU:\n\nRastgele bir $t$ seçilir. O seviyeye kadarki noise tek satırda eklenir, $x_t$ elde edilir. $x_t$ ve $t$ girdi olarak U-Net'e girer. Çıktı, o seviyedeki noise tahmini — girdiyle aynı boyutta bir tensör. Bu tahmin, gerçekten eklenmiş olan noise ile kıyaslanır, MSE ile loss hesaplanır, weight'ler güncellenir. Sonra yeni bir rastgele $t$, baştan.\n\nSıralı hiçbir şey yok — her örnek bağımsız bir $t$ görüyor, ağ ardışık iki adımı birlikte hiç görmüyor.\n\nSAMPLING'DE SIRA ŞU:\n\n$t = T$'de elinde saf noise var. $x_t$ ve $t$ U-Net'e girer, noise tahmini çıkar. O tahminden ortalama hesaplanır — bu ortalama hem \"bir önceki adımın beklenen değeri\" hem de \"$x_t$'den tahmin edilen noise'un ölçeklenmiş bir kısmının çıkarılmış hali\"; ikisi aynı formülün iki okunuşu. Üstüne variance eklenir ve $x_{t-1}$ örneklenir. Sonra $t-1$ için aynısı, 1'e kadar.\n\nKöpek üretmek istiyorsan: training'de köpek fotoğrafları noise'a çevriliyor, sampling'de noise'dan köpek çıkıyor. Koşullu hale getirirsen — ağa \"köpek\" bilgisini de verirsen — istediğin sınıfa uygun bir görüntü çıkıyor."
         },
         {
           "type": "insight",
@@ -25608,48 +25608,18 @@
           "text": "2. bölümde gördün: gerçek ters distribution hesaplanamaz ve çok modlu, yerine bir model konuyor. Ama o modelin hangi fonksiyon ailesinden olacağı ayrı bir seçim, ve üç farklı cevap var.\n\nDDPM: bir Gaussian olsun, ortalamasını ağ tahmin etsin. Bu ancak adım minikken doğru — büyük adımda gerçek distribution çok modlu hale geliyor ve tek bir Gaussian tepeleri yakalamak yerine ortalarını basıyor.\n\nDDIM: distribution'u hiç modelleme. Ağın tahmininden temiz görüntüyü cebirle çıkar, doğrudan istediğin noise seviyesine yerleştir. Yolda örnekleme yapmadığın için şekil sorusu hiç sorulmuyor.\n\nSelfRDB: GAN. Generator doğrudan bir ara görüntü üretsin, discriminator gerçek forward süreçten mi geldiğine karar versin. Biçim varsayımı yok.\n\n⚠️ Burada cevapsız bir soru var, farkında ol. GAN'lı ters adımın asıl gerekçesi SynDiff'te büyük adımlardı — orada Gaussian varsayımı gerçekten çöküyordu. SelfRDB'de adımlar minik, yani o gerekçe geçerli değil. Paper da zaten türetmiyor, \"adversarial diffusion modellerinin başarısından esinlenerek\" diyerek devralıyor. Üstelik metinde adım sayısının büyük olduğu varsayımı açıkça kullanılıyor — ki o varsayım altında Gaussian yeterli olurdu."
         },
         {
-          "type": "table",
-          "heading": "12. Ağa ne giriyor — üç kurulumun karşılaştırması",
-          "rows": [
-            [
-              "Kurulum",
-              "Ağın girdileri",
-              "Ne üretiyor",
-              "Ters adım nasıl modelleniyor"
-            ],
-            [
-              "Koşulsuz DDPM",
-              "$x_t$, $t$",
-              "noise tahmini",
-              "Gaussian, ortalaması ağdan"
-            ],
-            [
-              "Koşullu medikal DDM",
-              "$x_t$, $t$, kaynak",
-              "noise tahmini",
-              "Gaussian, ortalaması ağdan"
-            ],
-            [
-              "SelfRDB",
-              "$x_t$, $t$, kaynak, kendi tahmini",
-              "hedef tahmini",
-              "GAN, biçim varsayımı yok"
-            ]
-          ]
-        },
-        {
           "type": "insight",
-          "heading": "13. Gerçek hedef ağa giriyor mu — girdi olma kuralı",
+          "heading": "12. Gerçek hedef ağa giriyor mu — girdi olma kuralı",
           "text": "Hayır. Giren şey ağın KENDİ TAHMİNİ, gerçek hedef değil.\n\nKural basit: girdi olarak verilen her şey sampling'de de elinde olmalı. Sampling'de elinde olanlar ara görüntü, adım numarası, kaynak görüntü, ve ağın kendi ürettikleri. Gerçek hedef bu listede yok.\n\nGerçek hedef yalnızca training'de, yalnızca LOSS'ta karşılaştırma için kullanılıyor — bu DDPM'le birebir aynı.\n\nVe kaynak görüntü hem training'de hem sampling'de veriliyor; girdi imzaları özdeş olmasaydı model çöpe giderdi."
         },
         {
           "type": "text",
-          "heading": "14. Architecture — baştan sona akış",
-          "text": "SAMPLING: kaynak görüntü alınıyor, üstüne noise eklenip sürecin ucu kuruluyor, oradan başlanıyor. Adımlar BİRER BİRER iniyor — $T$'den 1'e, atlama yok. (Atlama DDIM'in işiydi, burada yok.)\n\nHer adımda ağa dört şey giriyor: o anki ara görüntü, adım numarası, temiz kaynak, ve bir tur önceki tahmin. Ağ residual kademeli bir U-Net; time embedding her kademeye ayrı ekleniyor. Tahmin yakınsayana kadar geri besleniyor, sonra posteriordan bir sonraki ara görüntü örnekleniyor. 1'e varınca elindeki şey hedef görüntü.\n\nTRAINING: döngü yok, rastgele bir adım seçiliyor. Ama tek bir tahminle bitmiyor — zincir şu:\n\nForward formülüyle o adımdaki ara görüntü üretiliyor. AYNI formülle bir önceki adımın GERÇEK ara görüntüsü de üretiliyor — bunu yapabiliyorsun çünkü training'de hedef elinde. Generator özyinelemeyle hedef tahminini üretiyor. O tahmin posteriora konup SENTETİK bir önceki ara görüntü örnekleniyor, yani sampling'deki adımın aynısı training'de de atılıyor.\n\nDISCRIMINATOR TAM BURADA: eline o anki ara görüntüyle birlikte bir önceki ara görüntü veriliyor ve soruluyor — bu gerçek forward süreçten gelen mi, yoksa generator'ün ürettiği mi? Zamana da koşullu.\n\nLoss iki parçalı: gerçek hedefle tahmin arasında piksel bazında L1, artı bu adversarial terim. Discriminator tarafında ayrıca bir gradient penalty var.\n\n⭐ Yani training \"x₀ tahmin et, MSE al\" değil: tahminden bir adım daha atılıyor ve o adım yargılanıyor."
+          "heading": "13. SelfRDB aşama aşama — DDPM ile aynı sırayla",
+          "text": "Şimdi aynı sırayı SelfRDB için yürü, farklar kendiliğinden görünecek.\n\nTRAINING'DE SIRA ŞU:\n\nRastgele bir $t$ seçilir. Forward formülüyle $x_t$ üretilir — ama bu sefer $x_t$ hedefle kaynağın ağırlıklı karışımı artı noise. Aynı formülle bir önceki adımın GERÇEK ara görüntüsü de üretilir; bunu yapabiliyorsun çünkü training'de hedef elinde.\n\nHedef tahmini sıfırlarla başlatılır. U-Net'e DÖRT şey girer: $x_t$, $t$, temiz kaynak görüntü, ve o anki hedef tahmini. Üçü kanal olarak birleştirilip giriyor, $t$ ise bloklara enjekte ediliyor.\n\nÇıktı noise tahmini DEĞİL — temiz hedef görüntünün tahmini. Yani bakınca \"bu bir CT görüntüsü\" diyebileceğin bir şey, gürültü deseni değil.\n\nO çıktı dördüncü yuvaya geri konur ve ağ yeniden çalıştırılır. Aynı ağ, aynı weight'ler, sadece o yuvanın içeriği değişir. Tahmin değişmeyi kesene kadar tekrarlanır.\n\nYakınsamış tahmin posterior formülüne konup SENTETİK bir önceki ara görüntü örneklenir — yani sampling'de atılan adımın aynısı training'de de atılır.\n\nLoss iki parçalıdır: gerçek hedefle tahmin arasında piksel bazında L1, artı discriminator terimi. DISCRIMINATOR TAM BURADADIR — eline $x_t$ ile birlikte bir önceki ara görüntü verilir ve sorulur: bu gerçek forward süreçten gelen mi, yoksa generator'ün ürettiği mi? Zamana da koşulludur. Ayrıca bir gradient penalty terimi vardır.\n\nWeight'ler güncellenir, yeni rastgele $t$, baştan.\n\nSAMPLING'DE SIRA ŞU:\n\n$t = T$'de elinde saf noise değil, NOISE EKLENMİŞ KAYNAK görüntü var. $x_t$, $t$, temiz kaynak ve sıfırlar U-Net'e girer, hedef tahmini çıkar, geri beslenir, yakınsar. Yakınsamış tahmin posteriora konup $x_{t-1}$ örneklenir. Sonra $t-1$ için aynısı — adımlar BİRER BİRER iner, atlama yoktur. 1'e varınca elindeki şey hedef görüntüdür.\n\n⭐ DDPM ile farkı dört yerde: girdi dört parçalı (iki değil) · çıktı görüntü (noise değil) · çıktı geri beslenip yakınsatılıyor (tek atış değil) · ve training'de tahminden bir adım daha atılıp o adım discriminator tarafından yargılanıyor (sadece MSE değil).\n\nTek cümlede: DDPM ağa \"şu görüntüdeki kiri söyle\" diyor; SelfRDB \"şu yarı yolda olan görüntüden, kaynağa da bakarak nihai halin ne olacağını çiz, sonra kendi çizimine bakıp düzelt\" diyor."
         },
         {
           "type": "text",
-          "heading": "15. Veri: eşleşmiş olmak zorunda",
+          "heading": "14. Veri: eşleşmiş olmak zorunda",
           "text": "Eşleşmiş demek, aynı hastanın hem T1'i hem T2'si var demek. Ağa T1'i verdiğinde o girdinin doğru cevabı elinde, piksel piksel karşılaştırabiliyorsun.\n\nEşleşmemiş olsaydı — bir yığın T1, bir yığın T2, ama hiçbir hastada ikisi birden yok — ağ bir T2 ürettiğinde neyle karşılaştıracağın belli olmazdı. O durumda dolaylı baskılar gerekiyor: discriminator (\"T2'ye benzesin\") artı cycle consistency (\"çevirip geri döndüğünde başladığın yere dön\").\n\nSelfRDB eşleşmiş veri istiyor, yani denetimli. SynDiff'ten temel farkı bu — SynDiff'in bütün varlık sebebi eşleşmenin olmamasıydı.\n\nPratikte: aynı seansta çekilen çok kontrastlı MRI genelde eşleşmiş, MRI-CT genelde değil."
         },
         {
