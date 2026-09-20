@@ -247,6 +247,23 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .card-cat-Optimization.vs03,.cat-hdr-Optimization.vs03         {--cc:#6ee7b7}
 
 /* Code block */
+/* ---- LaTeX algorithm float (type:'algo') ---- */
+.sec-algo{font-family:var(--serif-ui);font-size:15px;line-height:1.75;color:var(--text);margin:4px 0 2px;padding:0;overflow-x:auto}
+.sec-algo .algo-rule-top{border-top:1.6px solid var(--text);margin:0}
+.sec-algo .algo-rule-mid{border-top:.8px solid var(--text);margin:0;opacity:.75}
+.sec-algo .algo-rule-bot{border-top:1.6px solid var(--text);margin:0}
+.sec-algo .algo-title{padding:5px 2px 4px;font-weight:700;letter-spacing:.01em}
+.sec-algo .algo-title em{font-style:italic;font-weight:600}
+.sec-algo .algo-body{padding:6px 2px 7px;min-width:max-content}
+.sec-algo .algo-ln{display:flex;align-items:baseline;white-space:nowrap;min-height:1.75em}
+.sec-algo .algo-gd{flex:0 0 1.5em;align-self:stretch;border-left:1px solid var(--border);margin-right:0}
+.sec-algo .algo-gd.blank{border-left-color:transparent}
+.sec-algo .algo-tx{padding-left:.15em}
+.sec-algo .algo-kw{font-weight:700}
+.sec-algo .algo-cm{margin-left:2.2em;font-style:italic;color:var(--muted);white-space:nowrap}
+.sec-algo .algo-sp{height:.5em}
+.sec-algo .katex{font-size:1.02em}
+@media(max-width:640px){.sec-algo{font-size:13.5px}.sec-algo .algo-gd{flex-basis:1.1em}.sec-algo .algo-cm{margin-left:1.2em}}
 .sec-code{background:var(--code-bg);border:1px solid var(--border);border-radius:6px;padding:12px 14px;font-family:'Fira Code','Cascadia Code','Courier New',monospace;font-size:14px;color:var(--sec-code-text);white-space:pre;overflow-x:auto;line-height:1.6;display:block;margin:0}
 .qa-mark{color:#38bdf8;margin-right:8px;font-size:10px;vertical-align:3px;opacity:1;letter-spacing:0}
 .sec-block-qa{border-left:2px solid rgba(56,189,248,.25);padding-left:10px;margin-left:-10px}
@@ -2182,6 +2199,35 @@ function renderSection(s){
       }).join('');
       return `<div class="sec-block sec-ref">${h}${btns}</div>`;
     }
+    case 'algo': {
+      const KW = /\b(Input|Output|Girdi|Cikti|for|do|end for|end|while|repeat|until|if|then|else|return|to)\b/g;
+      // $...$ parcalari korunur; kod satirlarinda anahtar kelime kalinlasir, yorumlarda kalinlasmaz
+      const split = (raw, kw) => String(raw).split(/(\$[^$]*\$)/).map(seg =>
+        seg.startsWith('$') ? seg : (kw ? esc(seg).replace(KW, '<span class="algo-kw">$1</span>') : esc(seg))
+      ).join('');
+      const bodyHTML = raw => split(raw, true);
+      const cmHTML   = raw => split(raw, false);
+      const lines = (s.lines||[]).map(raw => {
+        if(String(raw).trim()==='') return '<div class="algo-sp"></div>';
+        const lead = (String(raw).match(/^ */)||[''])[0].length;
+        const lvl  = Math.floor(lead/2);
+        let rest   = String(raw).slice(lead);
+        let cm = '';
+        const cut = rest.indexOf('>>');           // '>>' -> LaTeX'teki \triangleright yorumu
+        if(cut >= 0){ cm = rest.slice(cut+2).trim(); rest = rest.slice(0,cut).trim(); }
+        const gd = Array.from({length:lvl}, () => '<span class="algo-gd"></span>').join('');
+        const cmh = cm ? `<span class="algo-cm">&#9655; ${cmHTML(cm)}</span>` : '';
+        return `<div class="algo-ln">${gd}<span class="algo-tx">${bodyHTML(rest)}</span>${cmh}</div>`;
+      }).join('');
+      const num = s.number ? `Algorithm ${esc(s.number)} ` : 'Algorithm ';
+      return `<div class="sec-block">${h}<div class="sec-algo">
+        <div class="algo-rule-top"></div>
+        <div class="algo-title">${num}<em>${esc(s.title||'')}</em></div>
+        <div class="algo-rule-mid"></div>
+        <div class="algo-body">${lines}</div>
+        <div class="algo-rule-bot"></div>
+      </div></div>`;
+    }
     case 'code': {
       const hq = s.heading ? `<div class="sec-heading"><span class="qa-mark">▶</span>${esc(s.heading)}</div>` : '';
       return `<div class="sec-block sec-block-qa">${hq}<code class="sec-code">${esc(s.text||'')}</code></div>`;
@@ -2772,7 +2818,7 @@ function applyData(d){
 }
 
 
-fetch('./data/unified.json?v=20260920220133')
+fetch('./data/unified.json?v=20260920220802')
   .then(r => { if(!r.ok) throw new Error(r.status); return r.json() })
   .then(applyData)
   .catch(() => {
