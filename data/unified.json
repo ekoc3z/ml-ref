@@ -25487,7 +25487,7 @@
       "title": "Output Steering for Latent Diffusion-Based MRI-to-CT Synthesis",
       "cat": "Paper · SIU 2026",
       "context": "Özdilek, Arslan, Macun, Nezhad, Çukur · 2026/02_synthesis-translation/Output_Steering...pdf",
-      "status": "okunmadı — Claude anlattı, Erdem henüz okumadı",
+      "status": "okunmadı",
       "summary": "Diffusion stokastik olduğu için aynı MRI'dan her çalıştırmada farklı bir CT çıkıyor. Bu paper modeli değiştirmiyor; sekiz aday üretip, o hastanın gerçek CT'sine bakmadan aralarından en iyisini seçen bir mekanizma ekliyor. Asıl kazanç ortalamada değil, sapmada.",
       "sections": [
         {
@@ -25573,9 +25573,9 @@
             "İki aşama gerçekten gerekli mi? PSNR'da ikincisinin katkısı sıfır (26.47 → 26.49); kazanç yalnızca SSIM ve sapmada.",
             "Oracle sadece PSNR'ın oracle'ı — SSIM'i 85.95, yani önerilen yöntemden düşük, çünkü adayı PSNR'a göre seçiyor. 'Üst sınır' sanılan satır tek metrikte üst sınır.",
             "pix2pix SSIM'de başa baş (87.88 ↔ 87.89). Kazanç PSNR'da.",
-            "4 test deneği. 0.66 dB fark, ±2 sapmayla, dört denekte. SIU bildirisi için normal ama istatistiksel dayanak zayıf.",
-            "K = 8 nereden geldi? Ablasyon yok. Kazancın çoğu ilk üç adayda doluyorsa maliyet tartışması kapanır.",
-            "Kazananlar hep η ≈ 0 tarafından mı geliyor? Öyleyse ızgaranın yarısı boşuna hesaplanıyor.",
+            "4 test deneği. 0.66 dB fark, ±2 sapmayla, dört denekte. İstatistiksel dayanak zayıf.",
+            "K = 8 nereden geldi? Ablasyon yok, doyum noktası bilinmiyor. Kazancın çoğu ilk üç adayda doluyorsa maliyet tartışması kapanır.",
+            "Kazanan adaylar η dağılımında nerede yoğunlaşıyor? Hep η ≈ 0 tarafındansa ızgaranın yarısı boşuna hesaplanıyor.",
             "Maliyet hiç raporlanmamış — ne süre ne hesap."
           ]
         },
@@ -25583,11 +25583,6 @@
           "type": "note",
           "heading": "Maliyet tartışmasının doğru hâli",
           "text": "\"8 aday = 8 kat yavaş\" yanlış ifade. İki şeyi ayır:\n\nHesap (FLOP) gerçekten 8 kat — paralellik bunu değiştirmiyor.\n\nDuvar saati 8 kat değil. Sekiz aday tek batch'te çalıştırılabilir ve latent 64x64 olduğu için bellek yükü önemsiz; diffusion sampling'de batch=1 GPU'yu zaten doldurmuyor, toplu çalıştırmak neredeyse bedava. Tek incelik adım sayılarının farklı olması — gruplayarak çözülür, duvar saati en uzun grubun süresi kadar olur.\n\nDolayısıyla eleştirinin doğru hâli: maliyet gecikmede değil VERİMDE. Vaka başına GPU-saati sekize katlanıyor."
-        },
-        {
-          "type": "text",
-          "heading": "Pazartesi için çıkarılacak sorular",
-          "text": "Efe Özdilek birinci yazar ve 501'de aynı sınıftasın. İki soru hem ilgi hem dikkatli okuma gösteriyor:\n\n\"K'yı nasıl seçtiniz, doyum noktası var mı?\"\n\n\"Seçici hep ızgaranın aynı bölgesinden mi seçiyor — kazananlar η dağılımında nerede yoğunlaşıyor?\"\n\nİkisi de paperin gerçekten cevaplamadığı şeyler."
         }
       ]
     },
@@ -25595,7 +25590,7 @@
       "title": "Self-Consistent Recursive Diffusion Bridge for Medical Image Translation",
       "cat": "Paper · MedIA 2025",
       "context": "Fuat Arslan, Bilal Kabaş, Onat Dalmaz, Muzaffer Özbey, Tolga Çukur · 2025/SelfRDB_translation_diffusion-bridge_2405.06789.pdf",
-      "status": "okunmadı — Claude anlattı, Erdem henüz okumadı",
+      "status": "okunmadı",
       "summary": "Diffusion bridge'in ucuna temiz kaynak görüntü yerine noise eklenmiş kaynak koyarak genellemeyi artıran, ve her ters adımda hedef tahminini kendiyle tutarlı hale gelene kadar özyineleyerek sampling doğruluğunu artıran translation yöntemi. Eğitim EŞLEŞMİŞ veri gerektiriyor.",
       "sections": [
         {
@@ -25686,8 +25681,8 @@
         },
         {
           "type": "text",
-          "heading": "Kapanan açık soru: veri EŞLEŞMİŞ",
-          "text": "İndekste 'eğitim eşleşmiş veri gerektiriyor mu, deney bölümünden teyit et' diye açık bir soru duruyordu.\n\nCevap: GEREKTİRİYOR. Paperin kendi cümlesi — 'Given a training set of target-source image pairs'. Ve rakipler için: 'All competing methods were trained via supervised learning on paired source and target modalities'.\n\nBu SynDiff'ten temel farkı. SynDiff'in bütün varlık sebebi eşleşmiş veri olmamasıydı, cycle consistency oradan geliyordu. SelfRDB denetimli bir yöntem.\n\nEşleşmiş = aynı hastanın hem T1'i hem T2'si var, dolayısıyla piksel piksel karşılaştırılacak doğru cevap elinde. Eşleşmemiş = bir yığın T1, bir yığın T2, ama hiçbir hastada ikisi birden yok."
+          "heading": "Eğitim verisi EŞLEŞMİŞ",
+          "text": "Paperin kendi cümlesi: 'Given a training set of target-source image pairs'. Rakipler için de: 'All competing methods were trained via supervised learning on paired source and target modalities'.\n\nBu, SynDiff'ten temel farkı. SynDiff'in bütün varlık sebebi eşleşmiş veri olmamasıydı, cycle consistency oradan geliyordu. SelfRDB denetimli bir yöntem.\n\nEşleşmiş = aynı hastanın hem T1'i hem T2'si var, dolayısıyla piksel piksel karşılaştırılacak doğru cevap elinde. Eşleşmemiş = bir yığın T1, bir yığın T2, ama hiçbir hastada ikisi birden yok."
         },
         {
           "type": "list",
@@ -25712,11 +25707,6 @@
             "Genelleme iddiası sayısal olarak izole edilmiş mi, yoksa sadece genel sonuç tablolarına mı dayanıyor?",
             "Training'de özyineleme tam yakınsıyor mu, yoksa kısaltılmış mı?"
           ]
-        },
-        {
-          "type": "note",
-          "heading": "Neden bu paper öncelikli",
-          "text": "Fuat Arslan birinci yazar ve Stanford'a gidiyor — hat boşalıyor. İndeksteki 'sahipsiz alanlar' listesinde 'difüzyon köprüsü / çeviri hattı' ilk sırada, gerekçesi bu.\n\nGitmeden konuşulması gereken kişi, ve konuşmanın zemini bu paper."
         }
       ]
     }
