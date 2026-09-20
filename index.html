@@ -337,9 +337,12 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .ref-btn{font:inherit;font-size:14.5px;font-weight:600;color:var(--accent);background:transparent;
   border:1px solid var(--border);border-radius:2px;padding:7px 12px;cursor:pointer;text-align:left}
 .ref-btn:hover{border-color:var(--accent);background:var(--accent);color:var(--bg)}
-.popup-back{font:inherit;font-size:13.5px;font-weight:600;color:var(--muted);background:transparent;
-  border:none;padding:0 0 10px;cursor:pointer}
-.popup-back:hover{color:var(--accent)}
+.popup-crumb{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  margin:-4px -4px 16px;padding:9px 14px;background:var(--accent);border-radius:2px}
+.popup-back{font:inherit;font-size:14px;font-weight:700;color:var(--bg);background:transparent;
+  border:none;padding:0;cursor:pointer;text-align:left}
+.popup-back:hover{text-decoration:underline}
+.popup-depth{font-size:12px;font-weight:600;color:var(--bg);opacity:.75;white-space:nowrap}
 #papers-page{display:none;max-width:940px;margin:0 auto;padding:72px 32px 88px}
 .papers-list{margin:30px auto 0;max-width:720px}
 .paper-row .toc-meta{font-size:12.5px}
@@ -619,7 +622,7 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
   </div>
 
   <div class="nav-group-label" style="margin-top:10px;border-top:1px solid var(--border);padding-top:16px">PAPERS</div>
-  <button class="nav-btn" onclick="switchSection('papers');closeSidebar()" style="border-left:3px solid var(--accent);margin-bottom:8px">
+  <button class="nav-btn" onclick="switchSection('papers');closeSidebar()" style="margin-bottom:8px">
     <span class="nav-icon">🗂</span><span class="nav-num" style="font-size:.6rem">PPR</span>
     <span class="nav-label">Paper Progress</span>
   </button>
@@ -2243,8 +2246,11 @@ function showPopup(item, cc){
   const psrc = (item._home && !item.mlo_only)
         ? `<span class="mlo-badge" data-go-sec="${esc(item._home)}" title="Bu kartın ders bölümündeki yeri">↳ kaynak: ${esc(famLabel(item._home))}</span>` : '';
   CURRENT_POPUP = item;
-  const backBtn = POPUP_STACK.length
-    ? `<button class="popup-back" onclick="popupBack()">&larr; geri</button>` : '';
+  const prev = POPUP_STACK[POPUP_STACK.length-1];
+  const prevName = prev ? String(prev.title||'').replace(/ — .*$/,'') : '';
+  const backBtn = prev
+    ? `<div class="popup-crumb"><button class="popup-back" onclick="popupBack()">&larr; ${esc(prevName)}</button>` +
+      `<span class="popup-depth">alt kart &middot; ${POPUP_STACK.length+1}. seviye</span></div>` : '';
   $('popupBox').innerHTML = `
     ${backBtn}
     <div class="popup-title">${esc(item.title)}</div>
@@ -2766,7 +2772,7 @@ function applyData(d){
 }
 
 
-fetch('./data/unified.json?v=20260920190344')
+fetch('./data/unified.json?v=20260920190930')
   .then(r => { if(!r.ok) throw new Error(r.status); return r.json() })
   .then(applyData)
   .catch(() => {
