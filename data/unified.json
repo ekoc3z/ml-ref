@@ -6214,7 +6214,7 @@
         {
           "type": "text",
           "heading": "S8. CLIP / DALL-E 2 / Imagen genel çalışma prensibi nedir? Imagen Video nasıl çalışır?",
-          "text": "CLIP (Contrastive Language-Image Pretraining), metni ve görüntüyü aynı embedding uzayına getirmeyi öğrenir. Milyarlarca (görüntü, metin açıklaması) çiftini contrastive loss ile eğitir: eşleşen çiftler birbirine yakın, eşleşmeyenler uzak olmalı. Sonuç olarak metinden görüntünün semantiğini anlayan evrensel bir encoder elde edersin. \"Bir çayırda koşan at\" yazısının embedding'i ile o sahneyi gösteren görüntünün embedding'i aynı uzayda yakın noktalar olur.\n\nDALL-E 2 CLIP üzerine inşa edilmiştir. Önce metin CLIP text encoder'dan geçer ve text embedding elde edilir. Ardından bir \"prior\" ağı bu text embedding'i image embedding'e dönüştürür. Son adımda bir diffusion model bu image embedding'den gerçek görüntü üretir. Yani sistem metin → CLIP semantik uzayı → görüntü pipeline'ını takip eder.\n\nImagen ise farklı bir yol izler ve CLIP kullanmaz; bunun yerine çok büyük frozen bir dil modeli (T5-XXL) ile metin embedding üretir. Bu dil modeli metni derin bir şekilde anlıyor ve bu temsilden yararlanarak üretim yapılıyor. Görüntü üretimi bir cascade ile yapılır: önce $64\\times 64$ çözünürlüklü görüntü üretilir, ardından iki ayrı super-resolution diffusion modeli $256\\times 256$'ya ve $1024\\times 1024$'e çıkarır. Classifier-free guidance her aşamada uygulanır.\n\nImagen Video aynı cascade mimarisini zaman boyutuna da genişletir. Spatial attention'ın yanına temporal attention blokları eklenir; bu sayede ardışık frame'ler birbiriyle tutarlı üretilir. Önce kısa, düşük çözünürlüklü videolar üretilir, ardından hem zamansal hem uzamsal super-resolution modellerle HD videoya ulaşılır.",
+          "text": "CLIP (Contrastive Language-Image Pretraining), metni ve görüntüyü aynı embedding uzayına getirmeyi öğrenir. Milyarlarca (görüntü, metin açıklaması) çiftini contrastive loss ile eğitir: eşleşen çiftler birbirine yakın, eşleşmeyenler uzak olmalı. Sonuç olarak metinden görüntünün semantiğini anlayan evrensel bir encoder elde edersin. \"Bir çayırda koşan at\" yazısının embedding'i ile o sahneyi gösteren görüntünün embedding'i aynı uzayda yakın noktalar olur.\n\nDALL-E 2 CLIP üzerine inşa edilmiştir. Önce metin CLIP text encoder'dan geçer ve text embedding elde edilir. Ardından bir \"prior\" ağı bu text embedding'i image embedding'e dönüştürür. Son adımda bir diffusion model bu image embedding'den gerçek görüntü üretir. Yani sistem metin → CLIP semantik uzayı → görüntü pipeline'ını takip eder.\n\nImagen ise farklı bir yol izler ve CLIP kullanmaz; bunun yerine çok büyük frozen bir dil modeli (T5-XXL) ile metin embedding üretir. Bu dil modeli metni derin bir şekilde anlıyor ve bu temsilden yararlanarak üretim yapılıyor. Görüntü üretimi bir cascade ile yapılır: önce $64\\times 64$ çözünürlüklü görüntü üretilir, ardından iki ayrı super-resolution diffusion modeli $256\\times 256$'ya ve $1024\\times 1024$'e çıkarır. Classifier-free guidance her aşamada uygulanır.\n\nImagen Video aynı cascade mimarisini zaman boyutuna da genişletir. Spatial attention'ın yanına temporal attention blokları eklenir; bu sayede ardışık frame'ler birbiriyle tutarlı üretilir. Önce kısa, düşük çözünürlüklü videolar üretilir, ardından hem zamansal hem spatial super-resolution modellerle HD videoya ulaşılır.",
           "qa": true
         }
       ],
@@ -6224,7 +6224,7 @@
         "variance",
         "mean",
         "beklenti",
-        "generative model",
+        "Generative model",
         "discriminative model"
       ]
     },
@@ -6267,7 +6267,7 @@
       "id": "ida11-denoising-diffusion-probabilistic-models-overview",
       "keywords": [
         "DDPM",
-        "noise schedule"
+        "Noise schedule"
       ]
     },
     {
@@ -6293,7 +6293,7 @@
         "transition",
         "DDPM",
         "denoising",
-        "noise schedule"
+        "Noise schedule"
       ]
     },
     {
@@ -6317,7 +6317,7 @@
       "keywords": [
         "DDPM",
         "denoising",
-        "noise schedule"
+        "Noise schedule"
       ]
     },
     {
@@ -6347,7 +6347,7 @@
         {
           "type": "text",
           "heading": "Benzetme",
-          "text": "Birisi sana bulanık fotoğrafları netleştirmeyi öğretiyor. Eğitim materyali olarak bin küçük adımda kademeli bulanıklaştırılmış fotoğraflar kullanıyor — ama sana hiçbir zaman ardışık kareleri yan yana göstermiyor. Her seferinde tek bir bulanık fotoğraf ve \"bu 7. seviye\" etiketi.\n\nEğitim bitti. Artık \"7. seviye bulanıklığı tanırım\" becerisine sahipsin. Bu beceri, o bin adımın nasıl atıldığını bilmiyor. Dolayısıyla seni kullanan kişi isterse bin küçük adımda, isterse elli büyük adımda ilerler. Senin işin değişmiyor."
+          "text": "Birisi sana bulanık fotoğrafları netleştirmeyi öğretiyor. Training materyali olarak bin küçük adımda kademeli bulanıklaştırılmış fotoğraflar kullanıyor — ama sana hiçbir zaman ardışık kareleri yan yana göstermiyor. Her seferinde tek bir bulanık fotoğraf ve \"bu 7. seviye\" label'ı.\n\nTraining bitti. Artık \"7. seviye bulanıklığı tanırım\" becerisine sahipsin. Bu beceri, o bin adımın nasıl atıldığını bilmiyor. Dolayısıyla seni kullanan kişi isterse bin küçük adımda, isterse elli büyük adımda ilerler. Senin işin değişmiyor."
         },
         {
           "type": "table",
@@ -6388,12 +6388,12 @@
         {
           "type": "text",
           "heading": "Son iki satır arasındaki fark tek bir şey",
-          "text": "$x_0$'ı biliyor musun, bilmiyor musun.\n\nBiliyorsan: \"bu görüntü bir önceki adımda neye benziyordu\" sorusunun cevabı tek tepeli ve tam olarak Gaussian. Belirsizlik minik.\n\nBilmiyorsan: \"bu gürültülü görüntü hangi temiz görüntüden geldi\" sorusunun birbirinden uzak birçok makul cevabı var. Dağılım çok modlu, ve bütün veri distribution'una bağlı. Bilseydin zaten üretmeyi de bilirdin.\n\nTraining'de $x_0$ elinde — eğitim verisi. Bu yüzden ELBO'daki hedef terim $x_0$-koşullu kesin dağılım. Üretimde $x_0$ elinde yok. Bütün mesele bu."
+          "text": "$x_0$'ı biliyor musun, bilmiyor musun.\n\nBiliyorsan: \"bu görüntü bir önceki adımda neye benziyordu\" sorusunun cevabı tek tepeli ve tam olarak Gaussian. Belirsizlik minik.\n\nBilmiyorsan: \"bu noisy görüntü hangi temiz görüntüden geldi\" sorusunun birbirinden uzak birçok makul cevabı var. Distribution çok modlu, ve bütün veri distribution'una bağlı. Bilseydin zaten üretmeyi de bilirdin.\n\nTraining'de $x_0$ elinde — training verisi. Bu yüzden ELBO'daki hedef terim $x_0$-koşullu kesin distribution. Üretimde $x_0$ elinde yok. Bütün mesele bu."
         },
         {
           "type": "text",
           "heading": "Gaussian varsayımı tam olarak nerede duruyor",
-          "text": "Sık yapılan hata, varsayımı training'de sanmak. Training hiçbir şey varsaymıyor; yaptığı iş düz bir regresyon.\n\nVarsayım sampler'ın iddiasında.\n\nDDPM sampler'ı diyor ki: \"$p_\\theta(x_{t-1} \\mid x_t)$ dağılımından örnek çekiyorum.\" Çekebilmek için o dağılımın şeklini bilmek zorundasın. Gaussian olduğunu varsayıyor, ağdan ortalamasını alıyor, üstüne taze noise ekleyip gerçekten çekiyor.\n\nVe bu varsayım ancak adım minikken doğru. Klasik difüzyon sonucu: adım boyu küçüldükçe ters geçiş de ileri geçişle aynı biçimi alıyor. DDPM'in $T = 1000$ ve $\\beta \\approx 10^{-4}$ seçmesinin tek sebebi bu.\n\nBüyük atlarsan gerçek ters dağılım çok modlu hale geliyor; tek bir Gaussian onu temsil edemiyor, tepeleri yakalamak yerine ortalamasını basıyor — bulanıklık buradan geliyor."
+          "text": "Sık yapılan hata, varsayımı training'de sanmak. Training hiçbir şey varsaymıyor; yaptığı iş düz bir regresyon.\n\nVarsayım sampler'ın iddiasında.\n\nDDPM sampler'ı diyor ki: \"$p_\\theta(x_{t-1} \\mid x_t)$ distribution'undan örnek çekiyorum.\" Çekebilmek için o distribution'un şeklini bilmek zorundasın. Gaussian olduğunu varsayıyor, ağdan ortalamasını alıyor, üstüne taze noise ekleyip gerçekten çekiyor.\n\nVe bu varsayım ancak adım minikken doğru. Klasik diffusion sonucu: adım boyu küçüldükçe ters geçiş de ileri geçişle aynı biçimi alıyor. DDPM'in $T = 1000$ ve $\\beta \\approx 10^{-4}$ seçmesinin tek sebebi bu.\n\nBüyük atlarsan gerçek ters distribution çok modlu hale geliyor; tek bir Gaussian onu temsil edemiyor, tepeleri yakalamak yerine ortalamasını basıyor — bulanıklık buradan geliyor."
         },
         {
           "type": "code",
@@ -6403,7 +6403,7 @@
         {
           "type": "text",
           "heading": "DDIM'in numarası tek bir satırda",
-          "text": "Yukarıdaki 3. satıra dikkatle bak: o satır forward formülünün kendisi. $x_t = \\sqrt{\\bar{\\alpha}_t}\\,x_0 + \\sqrt{1-\\bar{\\alpha}_t}\\,\\epsilon$ denkleminde $x_0$ yerine $\\hat{x}_0$ koymuşsun, o kadar.\n\nVe o formül her atlama boyu için kesin — $\\bar{\\alpha}_s$ zaten kümülatif olduğu için 1 adım ile 50 adım arasında hiçbir fark yok. Atlamayı yapısal olarak mümkün kılan şey bu.\n\nKritik fark ise 3. satırın sonunda: DDPM taze bir $z$ çekiyor, DDIM çekmiyor — ağın az önce tahmin ettiği aynı $\\hat{\\epsilon}$'yı noise yönü olarak yeniden kullanıyor.\n\nDolayısıyla denklemde rastgele hiçbir şey kalmıyor. Rastgele sayı üreteci hiç çağrılmıyor; $x_s$ tamamen $x_t$ tarafından belirleniyor.\n\n\"$p$'den çekmeyi bırakmak\" bu demek. Ortada çekilecek bir dağılım olmadığı için, o dağılımın Gaussian olup olmadığı sorusu da sorulmuyor."
+          "text": "Yukarıdaki 3. satıra dikkatle bak: o satır forward formülünün kendisi. $x_t = \\sqrt{\\bar{\\alpha}_t}\\,x_0 + \\sqrt{1-\\bar{\\alpha}_t}\\,\\epsilon$ denkleminde $x_0$ yerine $\\hat{x}_0$ koymuşsun, o kadar.\n\nVe o formül her atlama boyu için kesin — $\\bar{\\alpha}_s$ zaten kümülatif olduğu için 1 adım ile 50 adım arasında hiçbir fark yok. Atlamayı yapısal olarak mümkün kılan şey bu.\n\nKritik fark ise 3. satırın sonunda: DDPM taze bir $z$ çekiyor, DDIM çekmiyor — ağın az önce tahmin ettiği aynı $\\hat{\\epsilon}$'yı noise yönü olarak yeniden kullanıyor.\n\nDolayısıyla denklemde rastgele hiçbir şey kalmıyor. Rastgele sayı üreteci hiç çağrılmıyor; $x_s$ tamamen $x_t$ tarafından belirleniyor.\n\n\"$p$'den çekmeyi bırakmak\" bu demek. Ortada çekilecek bir distribution olmadığı için, o distribution'un Gaussian olup olmadığı sorusu da sorulmuyor."
         },
         {
           "type": "text",
@@ -6413,7 +6413,7 @@
         {
           "type": "text",
           "heading": "Çok modluluk kayboldu mu? Hayır, yeri değişti",
-          "text": "DDPM'de rastgelelik yola dağılmış: her adımda biraz noise ekliyorsun, farklı çalıştırmalar yolun farklı yerlerinde farklı modlara sapabiliyor. Çok modlu dağılımı keşfeden şey o adım adım rastgelelik.\n\nDDIM'de ($\\eta = 0$) yolda hiç rastgelelik yok, tek bir belirlenmiş patika izleniyor. Bütün rastgelelik başa yüklenmiş: hangi $x_T$'den başladığın. Aynı $x_T$ her seferinde birebir aynı görüntüyü veriyor.\n\nBunun değerli bir yan etkisi var: başlangıç noise'u artık anlamlı bir kod haline geliyor. İki kod arasında interpolasyon yapabiliyorsun; bir görüntüyü süreçte ters çevirip kodunu bulup (inversion) kodu değiştirip geri üretebiliyorsun. Diffusion ile görüntü düzenlemenin temeli bu.\n\n⚠️ DDIM'in geçerliliğinin gerekçesi artık \"her adım Gaussian\" değil. Paper, bu deterministik yolun sürekli zamanlı bir denklemi çözmeye karşılık geldiğini ve marjinallerin korunduğunu gösteriyor. Gerekçe yok olmuyor, başka bir argümana devrediyor."
+          "text": "DDPM'de rastgelelik yola dağılmış: her adımda biraz noise ekliyorsun, farklı çalıştırmalar yolun farklı yerlerinde farklı modlara sapabiliyor. Çok modlu distribution'u keşfeden şey o adım adım rastgelelik.\n\nDDIM'de ($\\eta = 0$) yolda hiç rastgelelik yok, tek bir belirlenmiş patika izleniyor. Bütün rastgelelik başa yüklenmiş: hangi $x_T$'den başladığın. Aynı $x_T$ her seferinde birebir aynı görüntüyü veriyor.\n\nBunun değerli bir yan etkisi var: başlangıç noise'u artık anlamlı bir kod haline geliyor. İki kod arasında interpolasyon yapabiliyorsun; bir görüntüyü süreçte ters çevirip kodunu bulup (inversion) kodu değiştirip geri üretebiliyorsun. Diffusion ile görüntü düzenlemenin temeli bu.\n\n⚠️ DDIM'in geçerliliğinin gerekçesi artık \"her adım Gaussian\" değil. Paper, bu deterministik yolun sürekli zamanlı bir denklemi çözmeye karşılık geldiğini ve marjinallerin korunduğunu gösteriyor. Gerekçe yok olmuyor, başka bir argümana devrediyor."
         },
         {
           "type": "formula",
@@ -6423,7 +6423,7 @@
         {
           "type": "text",
           "heading": "η = 1 DDPM'e eşit — ama tek bir koşulla",
-          "text": "Bu eşitlik ancak tüm takvim kullanıldığında geçerli: $s = t-1$, bin adımın hepsi. O durumda güncelleme cebirsel olarak DDPM'in ancestral adımına indirgeniyor, ikisi birebir aynı şey oluyor.\n\n50 adımla $\\eta = 1$ kullanırsan bu DDPM değil — \"respaced\" stokastik sampling, yani DDPM'in mantığını daha kaba bir zincire uygulamak. Meşru bir sampler ama orijinali değil.\n\nVe burada Gaussian varsayımı geri geliyor: $\\eta > 0$ demek, \"bu büyük sıçramanın ters dağılımı Gaussian'dır, ondan çekiyorum\" demeye devam etmek demek."
+          "text": "Bu eşitlik ancak tüm takvim kullanıldığında geçerli: $s = t-1$, bin adımın hepsi. O durumda güncelleme cebirsel olarak DDPM'in ancestral adımına indirgeniyor, ikisi birebir aynı şey oluyor.\n\n50 adımla $\\eta = 1$ kullanırsan bu DDPM değil — \"respaced\" stokastik sampling, yani DDPM'in mantığını daha kaba bir zincire uygulamak. Meşru bir sampler ama orijinali değil.\n\nVe burada Gaussian varsayımı geri geliyor: $\\eta > 0$ demek, \"bu büyük sıçramanın ters distribution'u Gaussian'dır, ondan çekiyorum\" demeye devam etmek demek."
         },
         {
           "type": "insight",
@@ -6438,7 +6438,7 @@
         {
           "type": "note",
           "heading": "Nerede karşına çıkıyor",
-          "text": "Pratik kütüphanelerde DDIM ayrı bir scheduler olarak geliyor; modeli değiştirmeden sampler'ı değiştiriyorsun. SIU 2026'daki Output Steering çalışması aday havuzunu tam da bu iki eksenin ızgarasıyla üretiyor — $\\eta \\in \\{0, 0.2, \\ldots, 1\\}$ ve adım sayısı $\\{100, 150, 200\\}$. Dikkat: o ızgara yalnızca çeşitlilik değil, aynı zamanda bir kalite gradyanı üretiyor; $\\eta=1$ ve 100 adımlı adaylar sistematik olarak daha zayıf olmalı."
+          "text": "Pratik kütüphanelerde DDIM ayrı bir scheduler olarak geliyor; modeli değiştirmeden sampler'ı değiştiriyorsun. SIU 2026'daki Output Steering çalışması aday havuzunu tam da bu iki eksenin grid'iyle üretiyor — $\\eta \\in \\{0, 0.2, \\ldots, 1\\}$ ve adım sayısı $\\{100, 150, 200\\}$. Dikkat: o grid yalnızca çeşitlilik değil, aynı zamanda bir kalite gradient'i üretiyor; $\\eta=1$ ve 100 adımlı adaylar sistematik olarak daha zayıf olmalı."
         }
       ],
       "id": "ida11-ddim-ayni-ag-neden-atlayabiliyoruz-ve-eta-ne-yapiyor",
@@ -6465,7 +6465,7 @@
       "keywords": [
         "DDPM",
         "denoising",
-        "noise schedule"
+        "Noise schedule"
       ]
     },
     {
@@ -6488,7 +6488,7 @@
         {
           "type": "text",
           "heading": "Training: t Nasıl Seçiliyor, Neye Göre Backprop?",
-          "text": "Her training step'te:\n\n1. $x_0$ al (dataset'ten)\n2. t ~ Uniform(1, T) örnekle   ← rastgele, sıralı değil\n3. $\\varepsilon \\sim \\mathcal{N}(0,I)$ örnekle          ← bu senin label'ın, sen ürettin\n4. $x_t = \\sqrt{\\bar{\\alpha }_t}\\cdot x_0 + \\sqrt{1-\\bar{\\alpha }_t}\\cdot \\varepsilon$   ← direkt atlıyorsun, 1'den t'ye teker teker gitmiyor\n5. ε_θ(x_t, t) çalıştır\n6. loss = ||ε - ε_θ||²  → backprop\n\nt rastgele seçiliyor çünkü network her noise seviyesini öğrenmeli.\nBackprop sadece bu tek adımın içinde — $x_t$ sabit input, gradient U-Net ağırlıklarına gidiyor. $x_{t-1}$ training'de yok.\n\nGeneration'da sıralı: T → T-1 → ... → 0, her adım ayrı forward pass.",
+          "text": "Her training step'te:\n\n1. $x_0$ al (dataset'ten)\n2. t ~ Uniform(1, T) örnekle   ← rastgele, sıralı değil\n3. $\\varepsilon \\sim \\mathcal{N}(0,I)$ örnekle          ← bu senin label'ın, sen ürettin\n4. $x_t = \\sqrt{\\bar{\\alpha }_t}\\cdot x_0 + \\sqrt{1-\\bar{\\alpha }_t}\\cdot \\varepsilon$   ← direkt atlıyorsun, 1'den t'ye teker teker gitmiyor\n5. ε_θ(x_t, t) çalıştır\n6. Loss = ||ε - ε_θ||²  → backprop\n\nt rastgele seçiliyor çünkü network her noise seviyesini öğrenmeli.\nBackprop sadece bu tek adımın içinde — $x_t$ sabit input, gradient U-Net ağırlıklarına gidiyor. $x_{t-1}$ training'de yok.\n\nGeneration'da sıralı: T → T-1 → ... → 0, her adım ayrı forward pass.",
           "qa": true
         },
         {
@@ -6522,10 +6522,10 @@
       "id": "ida11-vae-vs-ddpm-loss-goruntu-kalitesi-ve-training",
       "keywords": [
         "variational autoencoder",
-        "latent space",
+        "Latent space",
         "diffusion",
         "denoising",
-        "noise schedule"
+        "Noise schedule"
       ]
     },
     {
@@ -6607,10 +6607,10 @@
       "id": "ida11-ddpm-vae-paraleli-ile-tam-matematiksel-akis",
       "keywords": [
         "variational autoencoder",
-        "latent space",
+        "Latent space",
         "diffusion",
         "denoising",
-        "noise schedule"
+        "Noise schedule"
       ]
     },
     {
@@ -6682,16 +6682,16 @@
           "left": {
             "title": "VAE",
             "points": [
-              "reconstruction: E[log p_θ(x|z)]",
-              "prior KL: D_KL(q_φ(z|x) || p(z))",
-              "encoder φ her iki terimde aktif",
+              "Reconstruction: E[log p_θ(x|z)]",
+              "Prior KL: D_KL(q_φ(z|x) || p(z))",
+              "Encoder φ her iki terimde aktif",
               "KL ayrı regularization terimi olarak kalır"
             ]
           },
           "right": {
             "title": "DDPM",
             "points": [
-              "loss = ||ε - ε_θ(x_t, t)||²",
+              "Loss = ||ε - ε_θ(x_t, t)||²",
               "L_T ignore (parametresiz)",
               "L_{t-1} Gaussian → MSE'ye sadeleşti",
               "KL loss içine gömüldü, görünmez"
@@ -6728,7 +6728,7 @@
       "id": "ida11-vae-vs-ddpm-elbo-derivation-tam-karsilastirmasi",
       "keywords": [
         "variational autoencoder",
-        "latent space",
+        "Latent space",
         "evidence lower bound",
         "variational inference",
         "diffusion",
@@ -6768,7 +6768,7 @@
       "keywords": [
         "diffusion",
         "denoising",
-        "noise schedule"
+        "Noise schedule"
       ]
     },
     {
@@ -6833,7 +6833,7 @@
       "keywords": [
         "diffusion",
         "denoising",
-        "noise schedule",
+        "Noise schedule",
         "U-Net",
         "encoder-decoder",
         "skip connection"
@@ -6908,7 +6908,7 @@
       "keywords": [
         "diffusion",
         "denoising",
-        "noise schedule"
+        "Noise schedule"
       ]
     }
   ],
@@ -18251,9 +18251,9 @@
       "keywords": [
         "supervised learning",
         "reinforcement learning",
-        "generative model",
+        "Generative model",
         "discriminative model",
-        "density estimation"
+        "Density estimation"
       ]
     },
     {
@@ -18285,9 +18285,9 @@
       ],
       "id": "cs12-discriminative-vs-generative-the-density-competition",
       "keywords": [
-        "generative model",
+        "Generative model",
         "discriminative model",
-        "density estimation"
+        "Density estimation"
       ]
     },
     {
@@ -18315,9 +18315,9 @@
       ],
       "id": "cs12-taxonomy-of-generative-models-goodfellow-2017",
       "keywords": [
-        "generative model",
+        "Generative model",
         "discriminative model",
-        "density estimation"
+        "Density estimation"
       ]
     },
     {
@@ -18350,9 +18350,9 @@
       "id": "cs12-maximum-likelihood-estimation-for-generative-models",
       "keywords": [
         "MLE",
-        "generative model",
+        "Generative model",
         "discriminative model",
-        "density estimation"
+        "Density estimation"
       ]
     },
     {
@@ -18408,9 +18408,9 @@
       "keywords": [
         "joint probability",
         "factorization",
-        "generative model",
+        "Generative model",
         "discriminative model",
-        "density estimation",
+        "Density estimation",
         "sequential generation"
       ]
     },
@@ -18445,24 +18445,24 @@
       ],
       "id": "cs12-autoencoders-unsupervised-feature-learning",
       "keywords": [
-        "generative model",
+        "Generative model",
         "discriminative model",
-        "density estimation",
+        "Density estimation",
         "autoencoder",
         "AE",
         "reconstruction"
       ]
     },
     {
-      "title": "Latent Diffusion'da Neden VAE Değil AE? — Nicemleme, VQ ve Codebook",
+      "title": "Latent Diffusion'da Neden VAE Değil AE? — Quantization, VQ ve Codebook",
       "cat": "Theory",
-      "summary": "Latent diffusion'ın ilk aşaması neden düzgün bir VAE değil: KL terimi latent'i örneklenebilir yapmak için vardı ve burada o özelliğe ihtiyaç yok. Kartın ikinci yarısı VQ'yu sıfırdan kuruyor — nicemleme nedir, codebook nasıl öğreniliyor, seçim neden konum başına yapılıyor ve kod sözlüğünün küçük olması ifade gücünü neden kısıtlamıyor.",
+      "summary": "Latent diffusion'ın ilk aşaması neden düzgün bir VAE değil: KL terimi latent'i örneklenebilir yapmak için vardı ve burada o özelliğe ihtiyaç yok. Kartın ikinci yarısı VQ'yu sıfırdan kuruyor — quantization nedir, codebook nasıl öğreniliyor, seçim neden konum başına yapılıyor ve codebooknün küçük olması ifade gücünü neden kısıtlamıyor.",
       "context": "Latent diffusion ilk aşaması — VQ-VAE (van den Oord 2017), LDM (Rombach 2022)",
       "keywords": [
         "VQ-VAE",
         "straight-through",
         "k-means",
-        "codebook collapse",
+        "Codebook collapse",
         "ayrık token",
         "first-stage"
       ],
@@ -18476,37 +18476,37 @@
         {
           "type": "text",
           "heading": "1. KL ne satın alıyordu",
-          "text": "VAE'de KL terimi tek bir şey için vardı: latent'i örneklenebilir yapmak.\n\nÜretim zamanında encoder'ı kullanmıyordun. Doğrudan standart normalden bir $z$ çekip decoder'a veriyordun. Bunun çalışması için $z$'lerin o dağılımın etrafında toplanmış olması gerekiyordu — yoksa çektiğin nokta decoder'ın hiç görmediği bir bölgeye düşer, çıktı çöp olurdu. KL, encoder'ı oraya zorlayan şeydi.\n\nBedeli de biliniyor: reconstruction terimi ile KL zıt yönde çekiyor, ve KL ağır basınca yeniden kurulum bulanıklaşıyor."
+          "text": "VAE'de KL terimi tek bir şey için vardı: latent'i örneklenebilir yapmak.\n\nÜretim zamanında encoder'ı kullanmıyordun. Doğrudan standart normalden bir $z$ çekip decoder'a veriyordun. Bunun çalışması için $z$'lerin o distribution'un etrafında toplanmış olması gerekiyordu — yoksa çektiğin nokta decoder'ın hiç görmediği bir bölgeye düşer, çıktı çöp olurdu. KL, encoder'ı oraya zorlayan şeydi.\n\nBedeli de biliniyor: reconstruction terimi ile KL zıt yönde çekiyor, ve KL ağır basınca reconstruction bulanıklaşıyor."
         },
         {
           "type": "text",
           "heading": "2. Latent diffusion'da o ihtiyaç yok",
-          "text": "Burada latent'i prior'dan örneklemiyorsun. Latent'in distribution'unu ikinci aşama, yani diffusion modeli öğreniyor. \"Nereden örnekleyeceğim\" sorusunu o çözüyor.\n\nDolayısıyla KL koymanın geriye kalan tek etkisi var: yeniden kurulum kalitesini düşürmek.\n\nVe bu, sistemin tamamı için pahalı. Çünkü latent diffusion'da kalite tavanı diffusion'ın değil, autoencoder'ın yeniden kurulum kalitesi: encoder'ın attığı bilgi geri gelmiyor, diffusion mükemmel çalışsa bile decoder onu üretemez. Medikal görüntüde bu ciddi bir kısıt — sıkıştırmada kaybolan küçük bir lezyonu hiçbir şey kurtarmıyor.\n\nDönüm noktası tek cümlede: ihtiyaç duyulmayan bir özellik için sadakatten ödün verilmiyor."
+          "text": "Burada latent'i prior'dan örneklemiyorsun. Latent'in distribution'unu ikinci aşama, yani diffusion modeli öğreniyor. \"Nereden örnekleyeceğim\" sorusunu o çözüyor.\n\nDolayısıyla KL koymanın geriye kalan tek etkisi var: reconstruction kalitesini düşürmek.\n\nVe bu, sistemin tamamı için pahalı. Çünkü latent diffusion'da kalite tavanı diffusion'ın değil, autoencoder'ın reconstruction kalitesi: encoder'ın attığı bilgi geri gelmiyor, diffusion mükemmel çalışsa bile decoder onu üretemez. Medikal görüntüde bu ciddi bir kısıt — sıkıştırmada kaybolan küçük bir lezyonu hiçbir şey kurtarmıyor.\n\nDönüm noktası tek cümlede: ihtiyaç duyulmayan bir özellik için sadakatten ödün verilmiyor."
         },
         {
           "type": "text",
           "heading": "3. Ama tamamen serbest AE de kullanılmıyor",
-          "text": "Hiç kısıt koymazsan latent'in ölçeği training boyunca kayabiliyor — bir kanal $\\pm 0.5$ bandında kalırken başkası $\\pm 400$'e çıkabiliyor, aykırı değerler oluşabiliyor.\n\nDiffusion bundan doğrudan zarar görüyor, çünkü noise schedule belli bir ölçeğe göre ayarlı: her adımda eklenecek noise miktarı sabit. Veri o ölçekten saptıysa eklenen noise ya etkisiz kalıyor ya her şeyi siliyor.\n\nBu yüzden LDM iki hafif düzenleme sunuyor, ve ikisinin de amacı örneklenebilirlik değil, sınırlılık:\n\nÇok küçük ağırlıklı KL — adı VAE, davranışı AE. Stable Diffusion bunu kullanıyor.\n\nVQ, yani vektör nicemleme — latent sonlu bir kod sözlüğüne oturtuluyor.\n\nİkisi arasındaki seçim, latent diffusion'ın çalışıp çalışmaması değil, bir tasarım tercihi."
+          "text": "Hiç kısıt koymazsan latent'in ölçeği training boyunca kayabiliyor — bir kanal $\\pm 0.5$ bandında kalırken başkası $\\pm 400$'e çıkabiliyor, aykırı değerler oluşabiliyor.\n\nDiffusion bundan doğrudan zarar görüyor, çünkü noise schedule belli bir ölçeğe göre ayarlı: her adımda eklenecek noise miktarı sabit. Veri o ölçekten saptıysa eklenen noise ya etkisiz kalıyor ya her şeyi siliyor.\n\nBu yüzden LDM iki hafif düzenleme sunuyor, ve ikisinin de amacı örneklenebilirlik değil, sınırlılık:\n\nÇok küçük ağırlıklı KL — adı VAE, davranışı AE. Stable Diffusion bunu kullanıyor.\n\nVQ, yani vector quantization — latent sonlu bir codebook'a oturtuluyor.\n\nİkisi arasındaki seçim, latent diffusion'ın çalışıp çalışmaması değil, bir tasarım tercihi."
         },
         {
           "type": "text",
-          "heading": "4. Nicemleme nedir",
+          "heading": "4. Quantization nedir",
           "text": "Sürekli bir değeri, izin verilen sonlu bir kümeye yuvarlamak.\n\nGünlük örnek: markette hesap 37,2473 TL çıkamaz, kuruşa yuvarlanır.\n\nGörüntüde klasik örnek: milyonlarca renk içeren bir fotoğrafı 256 renklik bir paletle kaydetmek. Her piksel artık istediği rengi alamıyor, paletteki en yakınını seçmek zorunda. Dosya küçülüyor, karşılığında biraz sadakat gidiyor."
         },
         {
           "type": "text",
           "heading": "5. VQ: yuvarlanan şey bir vektör",
-          "text": "Yukarıdaki örnekte tek bir değer yuvarlanıyordu. VQ'da yuvarlanan şey bir vektörün tamamı.\n\nElinde 4 boyutlu bir vektör var, ve önceden hazırlanmış 1024 tane 4 boyutlu vektörden oluşan bir liste. VQ şunu yapıyor: seninkine en yakın olanı bul, ve seninkini onunla değiştir.\n\nO listeye codebook, yani kod sözlüğü deniyor. \"Sonlu\" olması şu demek: latent uzayda artık yalnızca 1024 farklı vektör var, arası yok."
+          "text": "Yukarıdaki örnekte tek bir değer yuvarlanıyordu. VQ'da yuvarlanan şey bir vektörün tamamı.\n\nElinde 4 boyutlu bir vektör var, ve önceden hazırlanmış 1024 tane 4 boyutlu vektörden oluşan bir liste. VQ şunu yapıyor: seninkine en yakın olanı bul, ve seninkini onunla değiştir.\n\nO listeye codebook deniyor. \"Sonlu\" olması şu demek: latent uzayda artık yalnızca 1024 farklı vektör var, arası yok."
         },
         {
           "type": "code",
           "heading": "Somut olarak",
-          "text": "Encoder bir konum icin uretti:   ( 2.99 , -1.20 ,  0.05 ,  3.71 )\n\ncodebook:\n  kod    1 : ( 0.20 , -1.10 ,  0.50 ,  2.00 )\n  kod    2 : ( 3.02 , -1.18 ,  0.00 ,  3.80 )   <-- en yakin\n  ...\n  kod 1024 : (-0.70 ,  0.40 ,  1.90 , -2.20 )\n\nsonuc:  o konumun degeri artik kod 2\n        saklanan sey sadece:  2\n\nDikkat: dort sayi AYRI AYRI yuvarlanmiyor.\nDordu birlikte, 1024 secenekten birine sicriyor.\n(Her sayiyi ayri yuvarlamak skaler nicemleme olurdu — farkli sey.)"
+          "text": "Encoder bir konum icin uretti:   ( 2.99 , -1.20 ,  0.05 ,  3.71 )\n\nCodebook:\n  kod    1 : ( 0.20 , -1.10 ,  0.50 ,  2.00 )\n  kod    2 : ( 3.02 , -1.18 ,  0.00 ,  3.80 )   <-- en yakin\n  ...\n  kod 1024 : (-0.70 ,  0.40 ,  1.90 , -2.20 )\n\nsonuc:  o konumun degeri artik kod 2\n        saklanan sey sadece:  2\n\nDikkat: dort sayi AYRI AYRI yuvarlanmiyor.\nDordu birlikte, 1024 secenekten birine sicriyor.\n(Her sayiyi ayri yuvarlamak skaler quantization olurdu — farkli sey.)"
         },
         {
           "type": "text",
-          "heading": "6. Latent bir ızgara, seçim konum başına",
-          "text": "Burada en çok karışan nokta bu.\n\nKonvolüsyonel bir autoencoder'da latent düz bir vektör değil, uzamsal bir tensör: $64 \\times 64 \\times C$. Yani 4096 konum, her konumda $C$ tane sayı. Uzamsal yapının korunması şart, çünkü ikinci aşamadaki U-Net konvolüsyon ve attention uygulayabilmek için komşuluğa ihtiyaç duyuyor.\n\nCodebook'taki kodlar, yalnızca tek bir konumun boyutu kadar uzunlukta — tüm latent kadar değil. Ve nicemleme her konum için ayrı ayrı yapılıyor: 4096 tane bağımsız seçim.\n\nTek görüntü için bir arama değil, 4096 arama."
+          "heading": "6. Latent bir grid, seçim konum başına",
+          "text": "Burada en çok karışan nokta bu.\n\nKonvolüsyonel bir autoencoder'da latent düz bir vektör değil, spatial bir tensör: $64 \\times 64 \\times C$. Yani 4096 konum, her konumda $C$ tane sayı. Spatial yapının korunması şart, çünkü ikinci aşamadaki U-Net konvolüsyon ve attention uygulayabilmek için komşuluğa ihtiyaç duyuyor.\n\nCodebook'taki kodlar, yalnızca tek bir konumun boyutu kadar uzunlukta — tüm latent kadar değil. Ve quantization her konum için ayrı ayrı yapılıyor: 4096 tane bağımsız seçim.\n\nTek görüntü için bir arama değil, 4096 arama."
         },
         {
           "type": "insight",
@@ -18516,13 +18516,13 @@
         {
           "type": "text",
           "heading": "7. Codebook nasıl öğreniliyor — hakem kim",
-          "text": "Codebook sabit değil, training'de öğreniliyor. Ve \"doğru\"yu söyleyen dışarıdan bir kaynak yok.\n\nZincir şu: encoder vektör üretir, vektör en yakın kodla değiştirilir, decoder kodlardan görüntüyü kurar, kurulan görüntü orijinaliyle karşılaştırılır. Sözlük kötüyse prototipler gerçek vektörleri temsil edemez, decoder'ın eline kötü girdi geçer, hata büyür.\n\nYani codebook'a not veren tek şey yeniden kurulum hatası.\n\nGüncelleme mantığı k-means'in aynısı: her vektör en yakın prototipe atanır, her prototip kendisine atanan vektörlerin ortalamasına doğru kaydırılır, atamalar değişir, tekrar.\n\nPalet örneğiyle: 1024 rastgele renkle başlarsın, her pikselin hangi rengi seçtiğine bakarsın, her palet rengini kendisini seçen piksellerin ortalamasına taşırsın. Birkaç tur sonra palet verinin gerçek dağılımına oturur."
+          "text": "Codebook sabit değil, training'de öğreniliyor. Ve \"doğru\"yu söyleyen dışarıdan bir kaynak yok.\n\nZincir şu: encoder vektör üretir, vektör en yakın kodla değiştirilir, decoder kodlardan görüntüyü kurar, kurulan görüntü orijinaliyle karşılaştırılır. Sözlük kötüyse prototipler gerçek vektörleri temsil edemez, decoder'ın eline kötü girdi geçer, hata büyür.\n\nYani codebook'a not veren tek şey reconstruction hatası.\n\nGüncelleme mantığı k-means'in aynısı: her vektör en yakın prototipe atanır, her prototip kendisine atanan vektörlerin ortalamasına doğru kaydırılır, atamalar değişir, tekrar.\n\nPalet örneğiyle: 1024 rastgele renkle başlarsın, her pikselin hangi rengi seçtiğine bakarsın, her palet rengini kendisini seçen piksellerin ortalamasına taşırsın. Birkaç tur sonra palet verinin gerçek distribution'una oturur."
         },
         {
           "type": "list",
           "heading": "Kayıptaki üç terim",
           "items": [
-            "Yeniden kurulum — bütün sistemi süren asıl sinyal.",
+            "Reconstruction — bütün sistemi süren asıl sinyal.",
             "Codebook terimi — seçilen prototipi, kendisini seçen encoder vektörüne doğru çeker. Yukarıdaki k-means adımının kendisi; encoder bu terimden etkilenmez.",
             "Commitment terimi — bunun aynası: encoder çıktısını seçtiği prototipe doğru çeker. Amacı encoder'ı sabitlemek; olmazsa encoder sürekli kayar, her adımda başka kod seçer, atamalar oturmaz.",
             "Pratikte codebook çoğu uygulamada gradient yerine hareketli ortalamayla güncelleniyor — k-means'e daha yakın ve daha kararlı."
@@ -18530,8 +18530,8 @@
         },
         {
           "type": "note",
-          "heading": "Nicemleme türevlenebilir değil — straight-through",
-          "text": "\"En yakın komşuyu bul ve değiştir\" ayrık bir işlem; gradient içinden geçemiyor. Backprop'un kuralı her düğümün yerel türevini istiyordu, burada yok.\n\nÇözüm kaba ama çalışıyor: gradient nicemleme adımının üstünden atlatılıyor — decoder'dan gelen gradient, o adım hiç yokmuş gibi doğrudan encoder'a kopyalanıyor. Codebook ise yukarıdaki ayrı terimle güncelleniyor."
+          "heading": "Quantization türevlenebilir değil — straight-through",
+          "text": "\"En yakın komşuyu bul ve değiştir\" ayrık bir işlem; gradient içinden geçemiyor. Backprop'un kuralı her düğümün yerel türevini istiyordu, burada yok.\n\nÇözüm kaba ama çalışıyor: gradient quantization adımının üstünden atlatılıyor — decoder'dan gelen gradient, o adım hiç yokmuş gibi doğrudan encoder'a kopyalanıyor. Codebook ise yukarıdaki ayrı terimle güncelleniyor."
         },
         {
           "type": "text",
@@ -18541,7 +18541,7 @@
         {
           "type": "text",
           "heading": "9. Bedeli sıfır değil",
-          "text": "Nicemleme küçük bir yuvarlama hatası getiriyor. Konumun gerçek vektörü $(2.99, -1.20, 0.05, 3.71)$ iken en yakın kod $(3.02, -1.18, 0.00, 3.80)$ ise, aradaki fark kalıcı olarak kayboluyor.\n\n1024 kodla bu hata küçük ama var. İddia \"hiç kayıp yok\" değil — az kayıpla sınırlılık satın alınıyor."
+          "text": "Quantization küçük bir yuvarlama hatası getiriyor. Konumun gerçek vektörü $(2.99, -1.20, 0.05, 3.71)$ iken en yakın kod $(3.02, -1.18, 0.00, 3.80)$ ise, aradaki fark kalıcı olarak kayboluyor.\n\n1024 kodla bu hata küçük ama var. İddia \"hiç kayıp yok\" değil — az kayıpla sınırlılık satın alınıyor."
         },
         {
           "type": "table",
@@ -18557,7 +18557,7 @@
               "Düz AE",
               "yüksek",
               "başıboş",
-              "diffusion training'i zorlar"
+              "Diffusion training'i zorlar"
             ],
             [
               "VQ",
@@ -18624,7 +18624,7 @@
         "Bayes theorem",
         "prior",
         "posterior",
-        "generative model",
+        "Generative model",
         "discriminative model"
       ]
     },
@@ -18642,7 +18642,7 @@
         {
           "type": "text",
           "heading": "L2 Nasıl Hesaplanıyor?",
-          "text": "x ve $\\mu$ aynı boyut (örn. 784 pixel):\n\nx    = [0.9,  0.1,  0.8,  ...]   (gerçek)\n$\\mu$    = [0.85, 0.15, 0.75, ...]   (decoder çıktısı)\n\nloss = $(0.9-0.85)^{2} + (0.1-0.15)^{2} + \\ldots \\to 1$ scalar\n\nHer pixel farkının karesi toplanır → tek loss → backprop.",
+          "text": "x ve $\\mu$ aynı boyut (örn. 784 pixel):\n\nx    = [0.9,  0.1,  0.8,  ...]   (gerçek)\n$\\mu$    = [0.85, 0.15, 0.75, ...]   (decoder çıktısı)\n\nLoss = $(0.9-0.85)^{2} + (0.1-0.15)^{2} + \\ldots \\to 1$ scalar\n\nHer pixel farkının karesi toplanır → tek loss → backprop.",
           "qa": true
         },
         {
@@ -18664,12 +18664,12 @@
       ],
       "id": "cs12-vae-decoder-predicted-mean-l2-ve-z-integral-sorunu",
       "keywords": [
-        "generative model",
+        "Generative model",
         "discriminative model",
-        "density estimation",
+        "Density estimation",
         "regularization",
         "L1",
-        "weight decay"
+        "Weight decay"
       ]
     },
     {
@@ -18700,11 +18700,11 @@
       ],
       "id": "cs12-vae-elbo-evidence-lower-bound-derivation",
       "keywords": [
-        "generative model",
+        "Generative model",
         "discriminative model",
-        "density estimation",
+        "Density estimation",
         "variational autoencoder",
-        "latent space",
+        "Latent space",
         "variational inference"
       ]
     },
@@ -18733,11 +18733,11 @@
       ],
       "id": "cs12-vae-training-reparameterization-trick-and-two-term-loss",
       "keywords": [
-        "generative model",
+        "Generative model",
         "discriminative model",
-        "density estimation",
+        "Density estimation",
         "variational autoencoder",
-        "latent space"
+        "Latent space"
       ]
     },
     {
@@ -18785,11 +18785,11 @@
       ],
       "id": "cs12-vae-tam-tablo",
       "keywords": [
-        "generative model",
+        "Generative model",
         "discriminative model",
-        "density estimation",
+        "Density estimation",
         "variational autoencoder",
-        "latent space"
+        "Latent space"
       ]
     },
     {
@@ -18832,11 +18832,11 @@
       ],
       "id": "cs12-vae-neden-boyle-calisir-anlama-zinciri",
       "keywords": [
-        "generative model",
+        "Generative model",
         "discriminative model",
-        "density estimation",
+        "Density estimation",
         "variational autoencoder",
-        "latent space"
+        "Latent space"
       ]
     },
     {
@@ -18883,11 +18883,11 @@
       ],
       "id": "cs12-vae-sampling-and-disentanglement",
       "keywords": [
-        "generative model",
+        "Generative model",
         "discriminative model",
-        "density estimation",
+        "Density estimation",
         "variational autoencoder",
-        "latent space"
+        "Latent space"
       ]
     },
     {
@@ -18968,9 +18968,9 @@
       ],
       "id": "cs12-kl-divergence-yonu-p-q-mass-covering-q-p-mode-seeking",
       "keywords": [
-        "generative model",
+        "Generative model",
         "discriminative model",
-        "density estimation",
+        "Density estimation",
         "Kullback-Leibler",
         "relative entropy"
       ]
@@ -19007,9 +19007,9 @@
       ],
       "id": "cs12-vae-de-kl-yonu-neden-d-kl-q-p-kullaniliyor",
       "keywords": [
-        "generative model",
+        "Generative model",
         "discriminative model",
-        "density estimation",
+        "Density estimation",
         "KL divergence",
         "Kullback-Leibler",
         "relative entropy"
@@ -25548,7 +25548,7 @@
         {
           "type": "text",
           "heading": "9. Sönen ve patlayan gradient'ler",
-          "text": "Gradient her layer'da aktivasyonun türeviyle çarpılıyor.\n\nSigmoid'in türevi en fazla 0.25. On layer'lı bir ağda gradient, en iyi ihtimalle 0.25'in onuncu kuvvetiyle çarpılıyor — yani milyonda bir mertebesine iniyor. İlk layer'lara ulaşan sinyal pratikte sıfır, o layer'lar öğrenemiyor. Sönen gradient bu.\n\nReLU'da pozitif bölgede türev tam olarak bir. Gradient aktivasyondan hiç zayıflamadan geçiyor, ilk layer'lara kendi büyüklüğünde ulaşıyor.\n\n\"Ama nöronların yarısı sıfır üretmiyor mu\" sorusunun cevabı: evet, ve bu aslında istenen bir şey. Farklı nöronlar farklı örüntülere uzmanlaşıyor; yatay kenar arayan bir nöronun her girdide ateşlenmesi gerekmiyor.\n\nDiğer yönde, weight'lerin normu büyükse aynı çarpım zinciri gradient'i patlatıyor. Karşı önlemler: gradient kırpma, dikkatli ilklendirme, normalizasyon layer'ları, ve artık bağlantılar — sonuncusu gradient'e layer'ları atlayan kestirme bir yol açtığı için özellikle etkili."
+          "text": "Gradient her layer'da aktivasyonun türeviyle çarpılıyor.\n\nSigmoid'in türevi en fazla 0.25. On layer'lı bir ağda gradient, en iyi ihtimalle 0.25'in onuncu kuvvetiyle çarpılıyor — yani milyonda bir mertebesine iniyor. İlk layer'lara ulaşan sinyal pratikte sıfır, o layer'lar öğrenemiyor. Sönen gradient bu.\n\nReLU'da pozitif bölgede türev tam olarak bir. Gradient aktivasyondan hiç zayıflamadan geçiyor, ilk layer'lara kendi büyüklüğünde ulaşıyor.\n\n\"Ama nöronların yarısı sıfır üretmiyor mu\" sorusunun cevabı: evet, ve bu aslında istenen bir şey. Farklı nöronlar farklı örüntülere uzmanlaşıyor; yatay kenar arayan bir nöronun her girdide ateşlenmesi gerekmiyor.\n\nDiğer yönde, weight'lerin normu büyükse aynı çarpım zinciri gradient'i patlatıyor. Karşı önlemler: gradient kırpma, dikkatli ilklendirme, normalizasyon layer'ları, ve residual connection'lar — sonuncusu gradient'e layer'ları atlayan kestirme bir yol açtığı için özellikle etkili."
         },
         {
           "type": "text",
@@ -25643,7 +25643,7 @@
         {
           "type": "text",
           "heading": "9. Normalizasyonun buradaki rolü",
-          "text": "Batch normalization genelde ayrı bir konu gibi anlatılıyor ama optimizasyon problemine doğrudan müdahale ediyor.\n\nYaptığı şey, her layer'ın girdisini mini-batch içinde sıfır ortalama birim varyansa çekmek, sonra öğrenilen bir ölçek ve kaydırma ile modele istediği distribution'u geri kurma imkanı bırakmak.\n\nKazancı üç kalemde toplanıyor: çok daha büyük learning rate kullanılabiliyor, training weight ilklendirmesine karşı duyarsızlaşıyor, ve mini-batch istatistiklerinden gelen noise hafif bir düzenleyici etki yapıyor.\n\nBir tuzağı var ve pratikte sık ısırıyor: training sırasında mini-batch istatistikleri kullanılıyor, test sırasında ise training'de biriktirilen hareketli ortalamalar. Modeli değerlendirme moduna almayı unutmak, tek görüntüyle anlamsız istatistik hesaplamaya yol açıyor.\n\nBatch boyutu küçükse istatistikler güvenilmez hale geliyor; orada layer normalization tercih ediliyor — Transformer'ların batch norm yerine onu kullanmasının sebebi de bu."
+          "text": "Batch normalization genelde ayrı bir konu gibi anlatılıyor ama optimizasyon problemine doğrudan müdahale ediyor.\n\nYaptığı şey, her layer'ın girdisini mini-batch içinde sıfır ortalama birim varyansa çekmek, sonra öğrenilen bir ölçek ve kaydırma ile modele istediği distribution'u geri kurma imkanı bırakmak.\n\nKazancı üç kalemde toplanıyor: çok daha büyük learning rate kullanılabiliyor, training weight ilklendirmesine karşı duyarsızlaşıyor, ve mini-batch istatistiklerinden gelen noise hafif bir regularization etki yapıyor.\n\nBir tuzağı var ve pratikte sık ısırıyor: training sırasında mini-batch istatistikleri kullanılıyor, test sırasında ise training'de biriktirilen hareketli ortalamalar. Modeli değerlendirme moduna almayı unutmak, tek görüntüyle anlamsız istatistik hesaplamaya yol açıyor.\n\nBatch boyutu küçükse istatistikler güvenilmez hale geliyor; orada layer normalization tercih ediliyor — Transformer'ların batch norm yerine onu kullanmasının sebebi de bu."
         },
         {
           "type": "insight",
@@ -25678,27 +25678,27 @@
         {
           "type": "text",
           "heading": "1. Fully connected ağ görüntüde neden çöküyor",
-          "text": "İki ayrı sebep var ve ikincisi daha derin.\n\nBirincisi sayı. 224x224x3'lük bir görüntü 150 binin üzerinde girdi demek. Buna bağlanan bin nöronluk tek bir fully connected layer 150 milyon weight taşıyor — tek layer için. Elindeki veriyle bunu eğitmek ezberden başka bir şey üretmiyor.\n\nİkincisi ve asıl olanı: fully connected layer'ın uzamsal yapı diye bir kavramı yok. Görüntüyü düz bir vektöre açtığın an, hangi pikselin hangisinin yanında olduğu bilgisi siliniyor. Model için 37. piksel ile 38. piksel, 37. piksel ile 900. piksel kadar ilgisiz.\n\nSonucu şu: kediyi sol üst köşede görmeyi öğrenen ağ, aynı kediyi sağ altta göremiyor. Her konum için baştan öğrenmesi gerekiyor.\n\nDerin öğrenmeden önceki çözüm, bu yapıyı elle kodlamaktı: renk histogramları, yönlü gradient histogramları, görsel kelime torbaları. İnsan tasarımı özniteliklerin üstüne basit bir classifier konuyordu. Zor iş modelde değil, öznitelik mühendisliğindeydi."
+          "text": "İki ayrı sebep var ve ikincisi daha derin.\n\nBirincisi sayı. 224x224x3'lük bir görüntü 150 binin üzerinde girdi demek. Buna bağlanan bin nöronluk tek bir fully connected layer 150 milyon weight taşıyor — tek layer için. Elindeki veriyle bunu eğitmek ezberden başka bir şey üretmiyor.\n\nİkincisi ve asıl olanı: fully connected layer'ın spatial yapı diye bir kavramı yok. Görüntüyü düz bir vektöre açtığın an, hangi pikselin hangisinin yanında olduğu bilgisi siliniyor. Model için 37. piksel ile 38. piksel, 37. piksel ile 900. piksel kadar ilgisiz.\n\nSonucu şu: kediyi sol üst köşede görmeyi öğrenen ağ, aynı kediyi sağ altta göremiyor. Her konum için baştan öğrenmesi gerekiyor.\n\nDerin öğrenmeden önceki çözüm, bu yapıyı elle kodlamaktı: renk histogramları, yönlü gradient histogramları, görsel kelime torbaları. İnsan tasarımı feature'ların üstüne basit bir classifier konuyordu. Zor iş modelde değil, feature mühendisliğindeydi."
         },
         {
           "type": "text",
           "heading": "2. Görüntülerin üç özelliği",
-          "text": "CNN, doğal görüntülerin üç gözlemlenebilir özelliğini mimariye gömüyor.\n\nYerellik. Yakın pikseller birbiriyle güçlü ilişkili, uzak pikseller neredeyse bağımsız. Bir kenarı görmek için bütün görüntüye bakman gerekmiyor, küçük bir komşuluk yetiyor.\n\nÖtelemeye eşdeğerlik. Kedi, sol üstte de sağ altta da kedidir. Bir yerde kenar bulan filtre, başka yerde de kenar bulur.\n\nHiyerarşi. Kenarlar birleşip köşeleri, köşeler birleşip parçaları, parçalar birleşip nesneleri veriyor. Bu, biyolojiden gelen bir gözlem — görsel korteksteki hücrelerin de böyle layer'lı çalıştığı 1959'da gösterilmişti.\n\nÜçünün mimarideki karşılığı doğrudan: yerellik için küçük filtreler, ötelemeye eşdeğerlik için aynı filtrenin her yerde kullanılması, hiyerarşi için layer'ları üst üste yığmak."
+          "text": "CNN, doğal görüntülerin üç gözlemlenebilir özelliğini mimariye gömüyor.\n\nYerellik. Yakın pikseller birbiriyle güçlü ilişkili, uzak pikseller neredeyse bağımsız. Bir kenarı görmek için bütün görüntüye bakman gerekmiyor, küçük bir komşuluk yetiyor.\n\nTranslation equivariance. Kedi, sol üstte de sağ altta da kedidir. Bir yerde kenar bulan filtre, başka yerde de kenar bulur.\n\nHiyerarşi. Kenarlar birleşip köşeleri, köşeler birleşip parçaları, parçalar birleşip nesneleri veriyor. Bu, biyolojiden gelen bir gözlem — görsel korteksteki hücrelerin de böyle layer'lı çalıştığı 1959'da gösterilmişti.\n\nÜçünün mimarideki karşılığı doğrudan: yerellik için küçük filtreler, translation equivariance için aynı filtrenin her yerde kullanılması, hiyerarşi için layer'ları üst üste yığmak."
         },
         {
           "type": "text",
           "heading": "3. Convolution tam olarak ne yapıyor",
-          "text": "Küçük bir filtre — tipik olarak 3x3 — görüntünün üzerinde kaydırılıyor ve her konumda bir iç çarpım alınıyor. Çıkan sayı şunu söylüyor: bu filtrenin aradığı örüntü, burada ne kadar var?\n\nSonuç bir öznitelik haritası: filtrenin yanıtının uzamsal distribution'u. Tek bir sayı değil, bir harita — konum bilgisi korunuyor.\n\nKritik nokta weight paylaşımı. 3x3'lük bir filtrenin parametre sayısı, girdi görüntüsünün boyutundan bağımsız: dokuz sayı çarpı girdi kanal sayısı. Aynı dokuz sayı bütün konumlarda kullanılıyor.\n\nBunun iki sonucu var. Parametre sayısı çöküyor, ve ötelemeye eşdeğerlik öğrenilmesi gereken bir şey olmaktan çıkıp mimarinin garantisi haline geliyor. Fully connected ağ bunu veriden öğrenmeye çalışıyordu; CNN hiç öğrenmiyor, çünkü yapısı gereği zaten öyle.\n\nBir CNN layer'ı tek filtre değil, çok sayıda filtre taşıyor. Her biri farklı bir örüntüye uzmanlaşıyor; çıktı, kanal sayısı kadar öznitelik haritası."
+          "text": "Küçük bir filtre — tipik olarak 3x3 — görüntünün üzerinde kaydırılıyor ve her konumda bir iç çarpım alınıyor. Çıkan sayı şunu söylüyor: bu filtrenin aradığı örüntü, burada ne kadar var?\n\nSonuç bir feature map: filtrenin yanıtının spatial distribution'u. Tek bir sayı değil, bir harita — konum bilgisi korunuyor.\n\nKritik nokta weight paylaşımı. 3x3'lük bir filtrenin parametre sayısı, girdi görüntüsünün boyutundan bağımsız: dokuz sayı çarpı girdi kanal sayısı. Aynı dokuz sayı bütün konumlarda kullanılıyor.\n\nBunun iki sonucu var. Parametre sayısı çöküyor, ve translation equivariance öğrenilmesi gereken bir şey olmaktan çıkıp mimarinin garantisi haline geliyor. Fully connected ağ bunu veriden öğrenmeye çalışıyordu; CNN hiç öğrenmiyor, çünkü yapısı gereği zaten öyle.\n\nBir CNN layer'ı tek filtre değil, çok sayıda filtre taşıyor. Her biri farklı bir örüntüye uzmanlaşıyor; çıktı, kanal sayısı kadar feature map."
         },
         {
           "type": "formula",
           "heading": "Boyut hesabı",
-          "text": "$$o[i,j] = \\sum_m \\sum_n f[m,n] \\cdot I[i+m,\\ j+n]$$\n\nÇıktı boyutu (her uzamsal eksen için):\n$$H_{out} = \\left\\lfloor \\frac{H_{in} + 2p - k}{s} \\right\\rfloor + 1$$\n\n$k$ filtre boyutu, $s$ stride, $p$ padding. Boyutu korumak için 3x3 filtrede $p=1$, $s=1$."
+          "text": "$$o[i,j] = \\sum_m \\sum_n f[m,n] \\cdot I[i+m,\\ j+n]$$\n\nÇıktı boyutu (her spatial eksen için):\n$$H_{out} = \\left\\lfloor \\frac{H_{in} + 2p - k}{s} \\right\\rfloor + 1$$\n\n$k$ filtre boyutu, $s$ stride, $p$ padding. Boyutu korumak için 3x3 filtrede $p=1$, $s=1$."
         },
         {
           "type": "text",
           "heading": "4. Receptive field: derinlik neyi satın alıyor",
-          "text": "Tek bir 3x3 filtre girdinin sadece 3x3'lük bir parçasını görüyor. Bu çok dar.\n\nAma iki tane 3x3 layer üst üste koyduğunda, ikinci layer'ın baktığı her nokta birinci layer'ın 3x3'lük bir komşuluğunu özetliyor ve o noktaların her biri girdinin 3x3'ünü görmüştü. Sonuçta ikinci layer girdinin 5x5'ini görüyor. Üçüncüde 7x7.\n\nYani derinlik, görme alanını büyütmenin ucuz yolu. İki tane 3x3 layer, tek bir 5x5 layer ile aynı alanı kapsıyor — ama daha az parametreyle ve arada bir nonlineerlik daha var. VGG'nin \"sadece 3x3 kullan, bunun yerine derinleş\" tercihi tam olarak bu hesaba dayanıyor.\n\nStride ve pooling bu büyümeyi hızlandırıyor: uzamsal çözünürlüğü yarıya indirdiğinde, aynı filtre girdinin iki katı alanını kapsar hale geliyor. Tipik CNN'in \"çözünürlük düşerken kanal sayısı artar\" profili buradan çıkıyor — uzamsal ayrıntı azalırken semantik bilgi artıyor."
+          "text": "Tek bir 3x3 filtre girdinin sadece 3x3'lük bir parçasını görüyor. Bu çok dar.\n\nAma iki tane 3x3 layer üst üste koyduğunda, ikinci layer'ın baktığı her nokta birinci layer'ın 3x3'lük bir komşuluğunu özetliyor ve o noktaların her biri girdinin 3x3'ünü görmüştü. Sonuçta ikinci layer girdinin 5x5'ini görüyor. Üçüncüde 7x7.\n\nYani derinlik, görme alanını büyütmenin ucuz yolu. İki tane 3x3 layer, tek bir 5x5 layer ile aynı alanı kapsıyor — ama daha az parametreyle ve arada bir nonlineerlik daha var. VGG'nin \"sadece 3x3 kullan, bunun yerine derinleş\" tercihi tam olarak bu hesaba dayanıyor.\n\nStride ve pooling bu büyümeyi hızlandırıyor: spatial çözünürlüğü yarıya indirdiğinde, aynı filtre girdinin iki katı alanını kapsar hale geliyor. Tipik CNN'in \"çözünürlük düşerken kanal sayısı artar\" profili buradan çıkıyor — spatial ayrıntı azalırken semantik bilgi artıyor."
         },
         {
           "type": "text",
@@ -25708,7 +25708,7 @@
         {
           "type": "text",
           "heading": "6. Mimari çizgisi",
-          "text": "1998, LeNet: ilk çalışan CNN, rakam tanıma. Fikir doğruydu ama ne yeterli veri ne yeterli hesap gücü vardı.\n\n2012, AlexNet: ImageNet'te en iyi CNN dışı yöntemin hatasını yaklaşık on puan geriye attı. Getirdikleri mimariden çok pratikti — ReLU, dropout, veri çoğaltma, ve iki GPU üzerinde training. Aradaki fark o kadar büyüktü ki tartışmayı bitirdi.\n\n2014, VGG: sadece 3x3 filtre, ama on altı-on dokuz layer. Derinliğin kendisinin işe yaradığını gösterdi.\n\n2014, GoogLeNet: farklı filtre boyutlarını paralel çalıştıran modüller, çok daha az parametreyle.\n\n2015, ResNet: artık bağlantılar. Asıl kırılma bu — layer'ı atlayan kestirme yollar sayesinde yüzlerce layer eğitilebilir hale geldi. Sebebi doğrudan backprop'ta: gradient o kestirme yoldan zayıflamadan geriye akıyor.\n\n2021, ViT: görüntüyü 16x16 yamalara böl, her yamayı bir token gibi ele al, standart Transformer'a ver. Yerellik ve weight paylaşımı varsayımlarını mimariden çıkarıp veriden öğrenmeyi seçiyor — bu yüzden çok veri istiyor, ve yeterli veri varken CNN'i yakalayıp geçiyor."
+          "text": "1998, LeNet: ilk çalışan CNN, rakam tanıma. Fikir doğruydu ama ne yeterli veri ne yeterli hesap gücü vardı.\n\n2012, AlexNet: ImageNet'te en iyi CNN dışı yöntemin hatasını yaklaşık on puan geriye attı. Getirdikleri mimariden çok pratikti — ReLU, dropout, veri çoğaltma, ve iki GPU üzerinde training. Aradaki fark o kadar büyüktü ki tartışmayı bitirdi.\n\n2014, VGG: sadece 3x3 filtre, ama on altı-on dokuz layer. Derinliğin kendisinin işe yaradığını gösterdi.\n\n2014, GoogLeNet: farklı filtre boyutlarını paralel çalıştıran modüller, çok daha az parametreyle.\n\n2015, ResNet: residual connection'lar. Asıl kırılma bu — layer'ı atlayan kestirme yollar sayesinde yüzlerce layer eğitilebilir hale geldi. Sebebi doğrudan backprop'ta: gradient o kestirme yoldan zayıflamadan geriye akıyor.\n\n2021, ViT: görüntüyü 16x16 yamalara böl, her yamayı bir token gibi ele al, standart Transformer'a ver. Yerellik ve weight paylaşımı varsayımlarını mimariden çıkarıp veriden öğrenmeyi seçiyor — bu yüzden çok veri istiyor, ve yeterli veri varken CNN'i yakalayıp geçiyor."
         },
         {
           "type": "text",
@@ -25718,12 +25718,12 @@
         {
           "type": "insight",
           "heading": "Geriye ne kalsın",
-          "text": "Fully connected ağ görüntüde hem parametre sayısı yüzünden hem de uzamsal yapıyı sildiği için çöküyor. CNN üç varsayımı mimariye gömüyor: yerellik (küçük filtre), ötelemeye eşdeğerlik (weight paylaşımı), hiyerarşi (derinlik). Weight paylaşımı sayesinde parametre sayısı görüntü boyutundan bağımsız. Receptive field derinlikle büyüyor, bu yüzden iki 3x3 bir 5x5'ten iyi. Pooling öteleme duyarsızlığı kazandırır, konum bilgisi kaybettirir — segmentasyonun bütün derdi o kaybı geri almak. ResNet'in artık bağlantıları derinliği mümkün kıldı; ViT ise varsayımları çıkarıp yerine veri koydu."
+          "text": "Fully connected ağ görüntüde hem parametre sayısı yüzünden hem de spatial yapıyı sildiği için çöküyor. CNN üç varsayımı mimariye gömüyor: yerellik (küçük filtre), translation equivariance (weight paylaşımı), hiyerarşi (derinlik). Weight paylaşımı sayesinde parametre sayısı görüntü boyutundan bağımsız. Receptive field derinlikle büyüyor, bu yüzden iki 3x3 bir 5x5'ten iyi. Pooling öteleme duyarsızlığı kazandırır, konum bilgisi kaybettirir — segmentasyonun bütün derdi o kaybı geri almak. ResNet'in residual connection'ları derinliği mümkün kıldı; ViT ise varsayımları çıkarıp yerine veri koydu."
         },
         {
           "type": "note",
           "heading": "Nereye bakılır",
-          "text": "Motivasyon, convolution ve pooling mekaniği ch09'da; el yapımı özniteliklerden CNN'e geçiş ve mimari tarihi cs04'te; normalizasyon, dropout, ilklendirme, veri çoğaltma ve transfer öğrenme cs05'te; PyTorch uygulaması ve boyut akışı lab04'te. Devamı: segmentasyon anlatımı (konum bilgisini geri almak) ve attention anlatımı (ViT'in dayandığı mekanizma)."
+          "text": "Motivasyon, convolution ve pooling mekaniği ch09'da; el yapımı feature'larden CNN'e geçiş ve mimari tarihi cs04'te; normalizasyon, dropout, ilklendirme, veri çoğaltma ve transfer öğrenme cs05'te; PyTorch uygulaması ve boyut akışı lab04'te. Devamı: segmentasyon anlatımı (konum bilgisini geri almak) ve attention anlatımı (ViT'in dayandığı mekanizma)."
         }
       ]
     },
@@ -25752,12 +25752,12 @@
         {
           "type": "text",
           "heading": "2. Neden sınıflandırma ağı doğrudan kullanılamıyor",
-          "text": "Sınıflandırma ağı görüntüyü alıp tek bir vektör üretiyor. Segmentasyonda istediğin şey girdiyle aynı uzamsal boyutta, kanal sayısı sınıf sayısı kadar olan bir çıktı.\n\nİlk akla gelen çözüm — her piksel için etrafındaki yamayı kesip classifier'dan geçirmek — çalışıyor ama absürt derecede pahalı: komşu yamalar neredeyse aynı hesabı tekrar tekrar yapıyor.\n\nDoğru fikir, sınıflandırma ağının sonundaki fully connected layer'ları convolution'a çevirmek. Fully connected layer, girdisinin tamamını gören bir convolution olarak yazılabiliyor. Bunu yapınca ağ sabit boyutlu bir vektör yerine bir harita üretmeye başlıyor — ve girdi boyutu da artık sabit olmak zorunda değil.\n\nBu, tam convolutional ağ fikri. Ama bir sorun bırakıyor: çıkan harita çok kaba."
+          "text": "Sınıflandırma ağı görüntüyü alıp tek bir vektör üretiyor. Segmentasyonda istediğin şey girdiyle aynı spatial boyutta, kanal sayısı sınıf sayısı kadar olan bir çıktı.\n\nİlk akla gelen çözüm — her piksel için etrafındaki yamayı kesip classifier'dan geçirmek — çalışıyor ama absürt derecede pahalı: komşu yamalar neredeyse aynı hesabı tekrar tekrar yapıyor.\n\nDoğru fikir, sınıflandırma ağının sonundaki fully connected layer'ları convolution'a çevirmek. Fully connected layer, girdisinin tamamını gören bir convolution olarak yazılabiliyor. Bunu yapınca ağ sabit boyutlu bir vektör yerine bir harita üretmeye başlıyor — ve girdi boyutu da artık sabit olmak zorunda değil.\n\nBu, tam convolutional ağ fikri. Ama bir sorun bırakıyor: çıkan harita çok kaba."
         },
         {
           "type": "text",
           "heading": "3. Asıl sorun: çözünürlük kaybı",
-          "text": "Tipik bir sınıflandırma omurgası uzamsal boyutu otuz iki kat küçültüyor. 320x320'lik bir görüntü, 10x10'luk bir haritaya iniyor.\n\nO haritadaki her hücre, girdideki 32x32 piksellik bir alanı temsil ediyor. Yani elindeki bilgi \"bu 32x32'lik bölge büyük ihtimalle koyun\" düzeyinde. Nesne sınırları bu çözünürlükte yok.\n\nİki şeye birden ihtiyacın var ve bunlar çelişiyor: sınıfı bilmek için geniş bağlam, yani derin ve küçültülmüş özellikler; sınırı bilmek için ince ayrıntı, yani yüksek çözünürlüklü erken özellikler.\n\nSegmentasyon mimarilerinin tamamı bu çelişkinin çözümü."
+          "text": "Tipik bir sınıflandırma omurgası spatial boyutu otuz iki kat küçültüyor. 320x320'lik bir görüntü, 10x10'luk bir haritaya iniyor.\n\nO haritadaki her hücre, girdideki 32x32 piksellik bir alanı temsil ediyor. Yani elindeki bilgi \"bu 32x32'lik bölge büyük ihtimalle koyun\" düzeyinde. Nesne sınırları bu çözünürlükte yok.\n\nİki şeye birden ihtiyacın var ve bunlar çelişiyor: sınıfı bilmek için geniş bağlam, yani derin ve küçültülmüş özellikler; sınırı bilmek için ince ayrıntı, yani yüksek çözünürlüklü erken özellikler.\n\nSegmentasyon mimarilerinin tamamı bu çelişkinin çözümü."
         },
         {
           "type": "text",
@@ -25772,7 +25772,7 @@
         {
           "type": "text",
           "heading": "5. Checkerboard artefaktı",
-          "text": "Transposed convolution'ın klasik arızası, ve sebebi tamamen aritmetik.\n\nFiltre boyutu stride'a eşit seçilirse, her çıktı pikseli yalnızca tek bir girdi hücresinden etkileniyor. Komşu hücrelerin katkıları hiç örtüşmüyor, aralarında keskin geçişler oluşuyor ve büyütülmüş görüntüde orijinal kaba ızgara dama tahtası deseni olarak görünüyor.\n\nÇözüm örtüşmeyi garantilemek: filtre boyutunu stride'ın iki katı seçmek. O zaman her çıktı pikseli en az iki komşu hücreyi görüyor ve geçişler yumuşuyor.\n\nStandart pratik bu: filtre boyutu stride'ın iki katı, dolgu stride'ın yarısı. Bu değerlerle çıktı boyutu da tam olarak girdi çarpı stride çıkıyor.\n\nBir de ilklendirme detayı var: transposed convolution'ın weight'lerini rastgele başlatmak yerine bilinear interpolasyona karşılık gelen değerlerle başlatmak, training'in başında makul bir büyütme davranışı veriyor — model sıfırdan öğrenmek yerine iyi bir noktadan başlıyor."
+          "text": "Transposed convolution'ın klasik arızası, ve sebebi tamamen aritmetik.\n\nFiltre boyutu stride'a eşit seçilirse, her çıktı pikseli yalnızca tek bir girdi hücresinden etkileniyor. Komşu hücrelerin katkıları hiç örtüşmüyor, aralarında keskin geçişler oluşuyor ve büyütülmüş görüntüde orijinal kaba grid dama tahtası deseni olarak görünüyor.\n\nÇözüm örtüşmeyi garantilemek: filtre boyutunu stride'ın iki katı seçmek. O zaman her çıktı pikseli en az iki komşu hücreyi görüyor ve geçişler yumuşuyor.\n\nStandart pratik bu: filtre boyutu stride'ın iki katı, dolgu stride'ın yarısı. Bu değerlerle çıktı boyutu da tam olarak girdi çarpı stride çıkıyor.\n\nBir de ilklendirme detayı var: transposed convolution'ın weight'lerini rastgele başlatmak yerine bilinear interpolasyona karşılık gelen değerlerle başlatmak, training'in başında makul bir büyütme davranışı veriyor — model sıfırdan öğrenmek yerine iyi bir noktadan başlıyor."
         },
         {
           "type": "text",
@@ -25782,7 +25782,7 @@
         {
           "type": "text",
           "heading": "7. U-Net",
-          "text": "U-Net, aynı fikri simetrik bir mimariye oturtuyor: inen bir yol, çıkan bir yol, ve aynı çözünürlükteki seviyeler arasında bağlantılar.\n\nİnen yolda çözünürlük düşerken kanal sayısı artıyor — bağlam toplanıyor. Çıkan yolda tersi oluyor, ve her seviyede inen yoldan gelen özellikler kanal olarak ekleniyor.\n\nBiyomedikal görüntüleme için tasarlandı ve o alanda hâlâ varsayılan mimari. Sebebi kısmen veri: tıbbi veri kümeleri küçük, U-Net az veriyle çalışabiliyor, ve güçlü veri çoğaltmayla iyi genelliyor.\n\nDikkat: U-Net'in bu iskeleti segmentasyonun dışında da her yerde. Diffusion modellerinin noise tahmin ağı da aynı yapıdır — girdi ve çıktı aynı uzamsal boyutta, ve her piksel hem yerel hem küresel bağlama ihtiyaç duyuyor. Aynı problem şekli, aynı mimari."
+          "text": "U-Net, aynı fikri simetrik bir mimariye oturtuyor: inen bir yol, çıkan bir yol, ve aynı çözünürlükteki seviyeler arasında bağlantılar.\n\nİnen yolda çözünürlük düşerken kanal sayısı artıyor — bağlam toplanıyor. Çıkan yolda tersi oluyor, ve her seviyede inen yoldan gelen özellikler kanal olarak ekleniyor.\n\nBiyomedikal görüntüleme için tasarlandı ve o alanda hâlâ varsayılan mimari. Sebebi kısmen veri: tıbbi veri kümeleri küçük, U-Net az veriyle çalışabiliyor, ve güçlü veri çoğaltmayla iyi genelliyor.\n\nDikkat: U-Net'in bu iskeleti segmentasyonun dışında da her yerde. Diffusion modellerinin noise tahmin ağı da aynı yapıdır — girdi ve çıktı aynı spatial boyutta, ve her piksel hem yerel hem küresel bağlama ihtiyaç duyuyor. Aynı problem şekli, aynı mimari."
         },
         {
           "type": "text",
@@ -25855,7 +25855,7 @@
         {
           "type": "text",
           "heading": "5. LSTM: gradient'e bir otoyol açmak",
-          "text": "LSTM'in getirdiği şey, gizli durumun yanına ikinci bir hat eklemek: hücre durumu.\n\nHücre durumu boyunca ana işlem çarpma değil toplama. Her adımda eskisinin bir kısmı korunuyor ve üstüne yeni bilgi ekleniyor. Korunacak kısmı da yeni bilginin ne kadar yazılacağını da öğrenilen kapılar belirliyor.\n\nÜç kapı var. Unutma kapısı hücre belleğinden neyin silineceğine karar veriyor — sıfıra yakınsa unut, bire yakınsa sakla. Girdi kapısı yeni adayın ne kadarının yazılacağını belirliyor. Çıktı kapısı belleğin ne kadarının dışarıya, gizli duruma yansıyacağını seçiyor.\n\nÇözümün özü tek bir yerde: hücre durumu boyunca gradient, unutma kapısının değeriyle çarpılarak geçiyor. Kapı açıkken bu çarpan bire yakın — yani gradient zayıflamadan akıyor. Vanilla RNN'de her adımda hem aktivasyon doygunluğundan hem weight çarpımından geçmesi gerekiyordu.\n\nBu, ResNet'in artık bağlantılarıyla aynı fikir: gradient'e layer'ları atlayan toplamalı bir yol açmak. İkisi de \"derinlikte gradient nasıl korunur\" sorusunun aynı cevabı."
+          "text": "LSTM'in getirdiği şey, gizli durumun yanına ikinci bir hat eklemek: hücre durumu.\n\nHücre durumu boyunca ana işlem çarpma değil toplama. Her adımda eskisinin bir kısmı korunuyor ve üstüne yeni bilgi ekleniyor. Korunacak kısmı da yeni bilginin ne kadar yazılacağını da öğrenilen kapılar belirliyor.\n\nÜç kapı var. Unutma kapısı hücre belleğinden neyin silineceğine karar veriyor — sıfıra yakınsa unut, bire yakınsa sakla. Girdi kapısı yeni adayın ne kadarının yazılacağını belirliyor. Çıktı kapısı belleğin ne kadarının dışarıya, gizli duruma yansıyacağını seçiyor.\n\nÇözümün özü tek bir yerde: hücre durumu boyunca gradient, unutma kapısının değeriyle çarpılarak geçiyor. Kapı açıkken bu çarpan bire yakın — yani gradient zayıflamadan akıyor. Vanilla RNN'de her adımda hem aktivasyon doygunluğundan hem weight çarpımından geçmesi gerekiyordu.\n\nBu, ResNet'in residual connection'larıyla aynı fikir: gradient'e layer'ları atlayan toplamalı bir yol açmak. İkisi de \"derinlikte gradient nasıl korunur\" sorusunun aynı cevabı."
         },
         {
           "type": "formula",
@@ -25875,7 +25875,7 @@
         {
           "type": "insight",
           "heading": "Geriye ne kalsın",
-          "text": "RNN, weight paylaşımını zaman eksenine taşıyor ve geçmişi sabit boyutlu bir vektörde tutuyor — bütün gerilim o sabit boyutta. Zaman içinde backprop bir çarpım zinciri olduğu için gradient üstel olarak sönüyor; patlama kırpmayla çözülür, sönme çözülmez. LSTM, hücre durumu boyunca toplamalı bir yol açıp gradient'i unutma kapısının değeriyle çarparak geçiriyor — kapı açıkken zayıflama yok. Bu, ResNet'in artık bağlantısıyla aynı fikirdir. LSTM sönmeyi çözdü ama sıralılığı ve tek vektör darboğazını çözmedi; attention ve Transformer o iki sorunun cevabı."
+          "text": "RNN, weight paylaşımını zaman eksenine taşıyor ve geçmişi sabit boyutlu bir vektörde tutuyor — bütün gerilim o sabit boyutta. Zaman içinde backprop bir çarpım zinciri olduğu için gradient üstel olarak sönüyor; patlama kırpmayla çözülür, sönme çözülmez. LSTM, hücre durumu boyunca toplamalı bir yol açıp gradient'i unutma kapısının değeriyle çarparak geçiriyor — kapı açıkken zayıflama yok. Bu, ResNet'in residual connection'ıyla aynı fikirdir. LSTM sönmeyi çözdü ama sıralılığı ve tek vektör darboğazını çözmedi; attention ve Transformer o iki sorunun cevabı."
         },
         {
           "type": "note",
@@ -25911,7 +25911,7 @@
         {
           "type": "text",
           "heading": "2. İlk attention: her adımda yeniden bak",
-          "text": "Fikir şu: tek bir özet vektörle yetinme, decoder her kelimeyi üretirken kaynağın tamamına geri bak ve o an hangi kısmının önemli olduğuna karar ver.\n\nMekanizma üç adım. Decoder'ın o andaki durumu ile kaynaktaki her konum karşılaştırılıp bir uyum skoru çıkarılıyor. Skorlar softmax ile weight'lere çevriliyor. Kaynak vektörlerin bu weight'lerle toplamı alınıyor — bağlam vektörü.\n\nGörüntü altyazılamada da aynısı: encoder görüntüden bölge öznitelikleri üretiyor, decoder her kelimeyi üretirken hangi bölgeye bakacağına karar veriyor.\n\nAma burada gizli bir bağımlılık var: üç adımın hepsi decoder'ın o anki durumuna bağlı. O durum olmadan uyum skoru hesaplanamıyor, skor olmadan bağlam vektörü çıkmıyor. Sistem hâlâ sıralı decoder'a muhtaç."
+          "text": "Fikir şu: tek bir özet vektörle yetinme, decoder her kelimeyi üretirken kaynağın tamamına geri bak ve o an hangi kısmının önemli olduğuna karar ver.\n\nMekanizma üç adım. Decoder'ın o andaki durumu ile kaynaktaki her konum karşılaştırılıp bir uyum skoru çıkarılıyor. Skorlar softmax ile weight'lere çevriliyor. Kaynak vektörlerin bu weight'lerle toplamı alınıyor — bağlam vektörü.\n\nGörüntü altyazılamada da aynısı: encoder görüntüden bölge feature'ları üretiyor, decoder her kelimeyi üretirken hangi bölgeye bakacağına karar veriyor.\n\nAma burada gizli bir bağımlılık var: üç adımın hepsi decoder'ın o anki durumuna bağlı. O durum olmadan uyum skoru hesaplanamıyor, skor olmadan bağlam vektörü çıkmıyor. Sistem hâlâ sıralı decoder'a muhtaç."
         },
         {
           "type": "text",
@@ -25941,7 +25941,7 @@
         {
           "type": "text",
           "heading": "7. Pozisyon bilgisi neden kayboluyor",
-          "text": "Self-attention'ın bir yan etkisi var ve kritik: sıra bilgisini tamamen yok ediyor.\n\nKonumları karıştırırsan çıktı da aynı şekilde karışıyor, ama içerik değişmiyor. Yani mekanizma dizi olarak değil küme olarak bakıyor.\n\nSomut kanıt: \"cat bites dog\" ile \"dog bites cat\" cümlelerinde \"cat\" kelimesinin gömülmesi aynı, dolayısıyla anahtarı da aynı. \"bites\" kelimesi sorusunu sorduğunda \"cat benden önce mi sonra mı\" bilgisi hiçbir yerde yok. İki cümlede de aynı skorlar çıkıyor.\n\nAma anlam tamamen farklı: birinde cat özne, diğerinde nesne.\n\nÇözüm, konum bilgisini gömülmeye eklemek. \"cat\" birinci sıradayken farklı, üçüncü sıradayken farklı bir vektör oluyor; anahtarı da ona göre değişiyor. Artık skorlar ayrışıyor ve sözdizimsel rol öğrenilebilir hale geliyor.\n\nDikkat: anahtar zaten \"ben hangi kelimeyim\" belirsizliğini çözüyordu. Pozisyon kodlaması farklı bir belirsizliği çözüyor — \"kaçıncı sıradaki hangi kelimeyim\"."
+          "text": "Self-attention'ın bir yan etkisi var ve kritik: sıra bilgisini tamamen yok ediyor.\n\nKonumları karıştırırsan çıktı da aynı şekilde karışıyor, ama içerik değişmiyor. Yani mekanizma dizi olarak değil küme olarak bakıyor.\n\nSomut kanıt: \"cat bites dog\" ile \"dog bites cat\" cümlelerinde \"cat\" kelimesinin embedding'i aynı, dolayısıyla anahtarı da aynı. \"bites\" kelimesi sorusunu sorduğunda \"cat benden önce mi sonra mı\" bilgisi hiçbir yerde yok. İki cümlede de aynı skorlar çıkıyor.\n\nAma anlam tamamen farklı: birinde cat özne, diğerinde nesne.\n\nÇözüm, konum bilgisini embedding'e eklemek. \"cat\" birinci sıradayken farklı, üçüncü sıradayken farklı bir vektör oluyor; anahtarı da ona göre değişiyor. Artık skorlar ayrışıyor ve sözdizimsel rol öğrenilebilir hale geliyor.\n\nDikkat: anahtar zaten \"ben hangi kelimeyim\" belirsizliğini çözüyordu. Pozisyon kodlaması farklı bir belirsizliği çözüyor — \"kaçıncı sıradaki hangi kelimeyim\"."
         },
         {
           "type": "text",
@@ -25956,22 +25956,22 @@
         {
           "type": "text",
           "heading": "10. Cross-attention: sorgu bir yerden, anahtar başka yerden",
-          "text": "Şimdiye kadar üç vektör de aynı diziden geliyordu. Sorguyu bir kaynaktan, anahtar ve değeri başka bir kaynaktan alırsan cross-attention elde edersin.\n\nÇeviride decoder bunu kullanıyor: sorgular üretilen çeviriden, anahtar ve değerler encoder'ın çıktısından. Yani \"şu an ürettiğim kelime için kaynak cümlenin neresine bakmalıyım\".\n\nAynı mekanizma modaliteler arasında da çalışıyor. Görüntü altyazılamada sorgular metinden, anahtar ve değerler görüntü özniteliklerinden geliyor. Metinden görüntü üreten diffusion modellerinde ise yön tersine dönüyor: sorgular görüntüden, anahtar ve değerler metinden — her piksel hangi kelimenin kendisini ilgilendirdiğini seçiyor.\n\nYani \"koşulu modele nasıl veririm\" sorusunun en genel cevabı bu mekanizma."
+          "text": "Şimdiye kadar üç vektör de aynı diziden geliyordu. Sorguyu bir kaynaktan, anahtar ve değeri başka bir kaynaktan alırsan cross-attention elde edersin.\n\nÇeviride decoder bunu kullanıyor: sorgular üretilen çeviriden, anahtar ve değerler encoder'ın çıktısından. Yani \"şu an ürettiğim kelime için kaynak cümlenin neresine bakmalıyım\".\n\nAynı mekanizma modaliteler arasında da çalışıyor. Görüntü altyazılamada sorgular metinden, anahtar ve değerler görüntü feature'larınden geliyor. Metinden görüntü üreten diffusion modellerinde ise yön tersine dönüyor: sorgular görüntüden, anahtar ve değerler metinden — her piksel hangi kelimenin kendisini ilgilendirdiğini seçiyor.\n\nYani \"koşulu modele nasıl veririm\" sorusunun en genel cevabı bu mekanizma."
         },
         {
           "type": "text",
           "heading": "11. Bloğun geri kalanı süs değil",
-          "text": "Transformer bloğu yalnızca attention'dan ibaret değil; her biri belirli bir arızayı çözen üç parça daha var.\n\nArtık bağlantı. Attention çıktısı girdiye ekleniyor. Bu, derin yığınlarda gradient'in kestirme bir yoldan geriye akmasını sağlıyor; onsuz derin Transformer eğitilemiyor.\n\nLayer normalizasyonu. Attention ve toplama sonrası ölçekler kayıyor; normalizasyon aktivasyonları sabit bir bantta tutuyor.\n\nİleri beslemeli layer. Attention aslında sadece bir weighted ortalama — konumlar arasında bilgi taşıyor ama tek bir konumun içinde doğrusal olmayan bir işlem yapmıyor. O işi bu layer yapıyor: her konuma ayrı ayrı uygulanan, genişletip daraltan küçük bir ağ.\n\nİkisinin iş bölümü net: attention konumlar arasında karıştırır, ileri beslemeli layer konumun içinde işler."
+          "text": "Transformer bloğu yalnızca attention'dan ibaret değil; her biri belirli bir arızayı çözen üç parça daha var.\n\nResidual connection. Attention çıktısı girdiye ekleniyor. Bu, derin yığınlarda gradient'in kestirme bir yoldan geriye akmasını sağlıyor; onsuz derin Transformer eğitilemiyor.\n\nLayer normalizasyonu. Attention ve toplama sonrası ölçekler kayıyor; normalizasyon aktivasyonları sabit bir bantta tutuyor.\n\nİleri beslemeli layer. Attention aslında sadece bir weighted ortalama — konumlar arasında bilgi taşıyor ama tek bir konumun içinde doğrusal olmayan bir işlem yapmıyor. O işi bu layer yapıyor: her konuma ayrı ayrı uygulanan, genişletip daraltan küçük bir ağ.\n\nİkisinin iş bölümü net: attention konumlar arasında karıştırır, ileri beslemeli layer konumun içinde işler."
         },
         {
           "type": "text",
           "heading": "12. Encoder-only, decoder-only, ikisi birden",
-          "text": "Aynı bloktan üç farklı mimari çıkıyor.\n\nEncoder-decoder. Orijinal çeviri mimarisi. Encoder kaynağı maskesiz okuyor, decoder nedensel maskeyle üretiyor ve cross-attention ile encoder'a bakıyor.\n\nEncoder-only. Maskeleme yok, her konum her konumu görüyor. Üretim için uygun değil ama anlama için ideal: sınıflandırma, labeling, gömülme çıkarma. BERT ailesi böyle, ve training hedefi de buna göre — cümledeki bazı kelimeleri gizleyip tahmin ettirmek.\n\nDecoder-only. Yalnızca nedensel maskeli bloklar. Hedef basit: bir sonraki kelimeyi tahmin et. GPT ailesi bu, ve bugünkü büyük dil modellerinin neredeyse tamamı bu biçimde.\n\nAynı mekanizma görüntüye de taşındı: görüntüyü yamalara bölüp her yamayı bir konum gibi ele alırsan Vision Transformer çıkıyor. Konvolüsyonun yerel önyargısını bırakıp her şeyi veriden öğrenmeyi seçiyor — bu yüzden çok veri istiyor."
+          "text": "Aynı bloktan üç farklı mimari çıkıyor.\n\nEncoder-decoder. Orijinal çeviri mimarisi. Encoder kaynağı maskesiz okuyor, decoder nedensel maskeyle üretiyor ve cross-attention ile encoder'a bakıyor.\n\nEncoder-only. Maskeleme yok, her konum her konumu görüyor. Üretim için uygun değil ama anlama için ideal: sınıflandırma, labeling, embedding çıkarma. BERT ailesi böyle, ve training hedefi de buna göre — cümledeki bazı kelimeleri gizleyip tahmin ettirmek.\n\nDecoder-only. Yalnızca nedensel maskeli bloklar. Hedef basit: bir sonraki kelimeyi tahmin et. GPT ailesi bu, ve bugünkü büyük dil modellerinin neredeyse tamamı bu biçimde.\n\nAynı mekanizma görüntüye de taşındı: görüntüyü yamalara bölüp her yamayı bir konum gibi ele alırsan Vision Transformer çıkıyor. Konvolüsyonun yerel önyargısını bırakıp her şeyi veriden öğrenmeyi seçiyor — bu yüzden çok veri istiyor."
         },
         {
           "type": "insight",
           "heading": "Geriye ne kalsın",
-          "text": "Attention, sabit bir özet yerine her adımda yeniden bakma fikri olarak doğdu. Self-attention, sorguyu da girdiden üreterek sıralı decoder bağımlılığını kaldırdı — paralellik ve mesafeden bağımsız erişim buradan geliyor, bedeli dizi uzunluğunun karesi. Anahtar ile değer ayrıdır çünkü nasıl bulunduğun ile ne taşıdığın farklı şeylerdir. Karekök ölçekleme softmax'ı doygunluktan korur. Pozisyon kodlaması olmadan mekanizma diziyi küme olarak görür. Çok kafalılık tek bir ilişki yerine birkaç ilişki türü taşımak içindir. Artık bağlantı, normalizasyon ve ileri beslemeli layer süs değil, her biri belirli bir arızanın çözümü. Cross-attention ise koşulu modele vermenin en genel yolu."
+          "text": "Attention, sabit bir özet yerine her adımda yeniden bakma fikri olarak doğdu. Self-attention, sorguyu da girdiden üreterek sıralı decoder bağımlılığını kaldırdı — paralellik ve mesafeden bağımsız erişim buradan geliyor, bedeli dizi uzunluğunun karesi. Anahtar ile değer ayrıdır çünkü nasıl bulunduğun ile ne taşıdığın farklı şeylerdir. Karekök ölçekleme softmax'ı doygunluktan korur. Pozisyon kodlaması olmadan mekanizma diziyi küme olarak görür. Çok kafalılık tek bir ilişki yerine birkaç ilişki türü taşımak içindir. Residual connection, normalizasyon ve ileri beslemeli layer süs değil, her biri belirli bir arızanın çözümü. Cross-attention ise koşulu modele vermenin en genel yolu."
         },
         {
           "type": "note",
@@ -25988,7 +25988,7 @@
         "vs01",
         "mlo11"
       ],
-      "summary": "Boyut indirgemenin neden gerektiğinden başlayıp, encode-decode kurulumuna, yeniden kurulum hatasını minimize etmenin neden varyansı maksimize etmekle aynı şey olduğuna, eigenvector çözümünün türetmesine, sıradaki bileşenlerin residual mantığına, SVD bağlantısına ve pratikteki tuzaklara kadar tek akış.",
+      "summary": "Boyut indirgemenin neden gerektiğinden başlayıp, encode-decode kurulumuna, reconstruction hatasını minimize etmenin neden varyansı maksimize etmekle aynı şey olduğuna, eigenvector çözümünün türetmesine, sıradaki bileşenlerin residual mantığına, SVD bağlantısına ve pratikteki tuzaklara kadar tek akış.",
       "sections": [
         {
           "type": "text",
@@ -26003,7 +26003,7 @@
         {
           "type": "text",
           "heading": "2. Kurulum: encode ve decode",
-          "text": "İki işlem tanımlıyorsun.\n\nEncode: n boyutlu noktayı l boyutlu bir koordinat vektörüne indir. Bunu bir matrisle yapıyorsun — o matrisin sütunları, seçtiğin temel yönler.\n\nDecode: l boyutlu koordinatlardan n boyutlu uzaya geri çık. Aynı yönlerin o koordinatlarla ağırlıklı toplamı.\n\nGeri döndüğün nokta orijinaliyle aynı olmayacak, çünkü arada bilgi attın. Aradaki fark yeniden kurulum hatası, ve minimize etmek istediğin şey bu.\n\nSeçtiğin yönlerin birim uzunlukta ve birbirine dik olmasını istiyorsun. Dik olmaları önemli: aksi halde iki yön aynı bilgiyi tekrar taşır ve boyut bütçeni israf edersin."
+          "text": "İki işlem tanımlıyorsun.\n\nEncode: n boyutlu noktayı l boyutlu bir koordinat vektörüne indir. Bunu bir matrisle yapıyorsun — o matrisin sütunları, seçtiğin temel yönler.\n\nDecode: l boyutlu koordinatlardan n boyutlu uzaya geri çık. Aynı yönlerin o koordinatlarla ağırlıklı toplamı.\n\nGeri döndüğün nokta orijinaliyle aynı olmayacak, çünkü arada bilgi attın. Aradaki fark reconstruction hatası, ve minimize etmek istediğin şey bu.\n\nSeçtiğin yönlerin birim uzunlukta ve birbirine dik olmasını istiyorsun. Dik olmaları önemli: aksi halde iki yön aynı bilgiyi tekrar taşır ve boyut bütçeni israf edersin."
         },
         {
           "type": "text",
@@ -26043,7 +26043,7 @@
         {
           "type": "text",
           "heading": "9. Ne zaman işe yaramaz",
-          "text": "PCA'nın üç yapısal sınırı var ve üçü de sık ısırıyor.\n\nÖlçeğe duyarlı. Bir öznitelik metre, diğeri milimetre cinsindense, ikincisinin varyansı milyon kat büyük çıkar ve birinci bileşen sadece onu gösterir. Birimleri farklı verilerde standartlaştırma şart.\n\nYalnızca doğrusal. Veri eğri bir yüzey üzerinde duruyorsa — sarmal, halka — PCA o yapıyı göremez, doğrusal izdüşüm onu ezer. Bu durumlar için çekirdekli PCA ya da manifold yöntemleri var.\n\nVaryans her zaman faydalı bilgi değil. PCA denetimsizdir, label'ları görmez. Sınıfları ayıran yön düşük varyanslı bir yön olabilir; PCA onu attığında sınıflandırma başarısı düşer. Ayrım hedefliyorsan doğru araç lineer diskriminant analizi.\n\nSon olarak yorumlanabilirlik: bileşenler orijinal özniteliklerin karışımı, dolayısıyla \"bu bileşen neyi ölçüyor\" sorusunun cevabı çoğu zaman yok."
+          "text": "PCA'nın üç yapısal sınırı var ve üçü de sık ısırıyor.\n\nÖlçeğe duyarlı. Bir feature metre, diğeri milimetre cinsindense, ikincisinin varyansı milyon kat büyük çıkar ve birinci bileşen sadece onu gösterir. Birimleri farklı verilerde standartlaştırma şart.\n\nYalnızca doğrusal. Veri eğri bir yüzey üzerinde duruyorsa — sarmal, halka — PCA o yapıyı göremez, doğrusal izdüşüm onu ezer. Bu durumlar için çekirdekli PCA ya da manifold yöntemleri var.\n\nVaryans her zaman faydalı bilgi değil. PCA denetimsizdir, label'ları görmez. Sınıfları ayıran yön düşük varyanslı bir yön olabilir; PCA onu attığında sınıflandırma başarısı düşer. Ayrım hedefliyorsan doğru araç lineer diskriminant analizi.\n\nSon olarak yorumlanabilirlik: bileşenler orijinal feature'ların karışımı, dolayısıyla \"bu bileşen neyi ölçüyor\" sorusunun cevabı çoğu zaman yok."
         },
         {
           "type": "insight",
@@ -26206,7 +26206,7 @@
         {
           "type": "text",
           "heading": "13. Weight decay tam olarak burada",
-          "text": "Weight'lerin üzerine sıfır ortalamalı Gaussian bir prior koy: \"weight'lerin küçük olmasını bekliyorum.\"\n\nGaussian'ın logaritması, weight vektörünün normunun karesini eksi işaretiyle veriyor. Minimize etme diline çevirince loss fonksiyonun şu hale geliyor: veri terimi artı $\\lambda$ çarpı weight'lerin karesi.\n\nBu, kodda her gün yazdığın weight decay.\n\nDönüm noktası tek cümlede: L2 regularization, weight'lerin üzerine Gaussian prior koyup MAP yapmaktır. Keyfi bir hile değil, bir cümlenin matematiği.\n\nAynı mantıkla L1 regularization, weight'lere Laplace prior koymaktır — ve Laplace'ın sivri tepesi, çözümün tam sıfırlara oturmasını teşvik ettiği için seyreklik üretiyor.\n\nYani modelinde iki tane gizli olasılık varsayımı var: loss fonksiyonun noise'u seçiyor, regularization terimin weight'lerin prior'ını seçiyor."
+          "text": "Weight'lerin üzerine sıfır ortalamalı Gaussian bir prior koy: \"weight'lerin küçük olmasını bekliyorum.\"\n\nGaussian'ın logaritması, weight vektörünün normunun karesini eksi işaretiyle veriyor. Minimize etme diline çevirince loss fonksiyonun şu hale geliyor: veri terimi artı $\\lambda$ çarpı weight'lerin karesi.\n\nBu, kodda her gün yazdığın weight decay.\n\nDönüm noktası tek cümlede: L2 regularization, weight'lerin üzerine Gaussian prior koyup MAP yapmaktır. Keyfi bir hile değil, bir cümlenin matematiği.\n\nAynı mantıkla L1 regularization, weight'lere Laplace prior koymaktır — ve Laplace'ın sivri tepesi, çözümün tam sıfırlara oturmasını teşvik ettiği için sparsity üretiyor.\n\nYani modelinde iki tane gizli olasılık varsayımı var: loss fonksiyonun noise'u seçiyor, regularization terimin weight'lerin prior'ını seçiyor."
         },
         {
           "type": "text",
@@ -26275,7 +26275,7 @@
         {
           "type": "text",
           "heading": "4. Bu modeller ne işe yarıyor",
-          "text": "Üretim akla ilk geleni ama listenin tamamı daha geniş, ve bazıları daha kullanışlı.\n\nÖrnek üretmek: sentez, veri çoğaltma, eksik modalite tamamlama.\n\nAnomali tespiti: modelin düşük olasılık verdiği örnekler aykırı demektir. Bunun için modelin gerçekten olasılık hesaplayabilmesi gerekiyor — birazdan gelecek ayrımın pratik karşılığı bu.\n\nLabel'sız öznitelik öğrenme: veriyi modellemeyi öğrenen ağ, yapıyı da öğreniyor; sonra küçük bir label'lı kümeyle üstüne classifier takılabiliyor.\n\nBelirsizliği modellemek: bir girdiye karşılık birden çok doğru çıktı olabildiği durumlar. Metinden görüntü üretimi böyle — tek doğru cevap yok, bir distribution var. Classifier mantığı burada çöküyor, çünkü ortalama almak anlamsız bir çıktı veriyor."
+          "text": "Üretim akla ilk geleni ama listenin tamamı daha geniş, ve bazıları daha kullanışlı.\n\nÖrnek üretmek: sentez, veri çoğaltma, eksik modalite tamamlama.\n\nAnomali tespiti: modelin düşük olasılık verdiği örnekler aykırı demektir. Bunun için modelin gerçekten olasılık hesaplayabilmesi gerekiyor — birazdan gelecek ayrımın pratik karşılığı bu.\n\nLabel'sız feature öğrenme: veriyi modellemeyi öğrenen ağ, yapıyı da öğreniyor; sonra küçük bir label'lı kümeyle üstüne classifier takılabiliyor.\n\nBelirsizliği modellemek: bir girdiye karşılık birden çok doğru çıktı olabildiği durumlar. Metinden görüntü üretimi böyle — tek doğru cevap yok, bir distribution var. Classifier mantığı burada çöküyor, çünkü ortalama almak anlamsız bir çıktı veriyor."
         },
         {
           "type": "text",
@@ -26295,7 +26295,7 @@
         {
           "type": "text",
           "heading": "7. Autoencoder: neden generative model değil",
-          "text": "Autoencoder sıkıştırıp geri açıyor: encoder dar bir koda indiriyor, decoder geri kuruyor, loss da yeniden kurulum hatası. Label gerekmiyor ve öğrendiği kod gerçekten anlamlı — label'sız öznitelik öğrenmenin klasik yolu, modern kendinden denetimli yöntemlerin atası.\n\nAma üretemiyor, ve sebebi öğretici: yeni bir görüntü üretmek için yeni bir kod örneklemen gerekiyor, ve hangi kodların geçerli olduğunu söyleyen hiçbir şey yok. Kod uzayında delikler var, aralar çöp üretiyor.\n\nYani geçerli bir kod üretmek, doğrudan geçerli bir görüntü üretmek kadar zor. Hiçbir şey kazanmadın.\n\nEksik olan tek şey, kodun nereden geldiğinin belli olması. VAE tam olarak bunu ekliyor."
+          "text": "Autoencoder sıkıştırıp geri açıyor: encoder dar bir koda indiriyor, decoder geri kuruyor, loss da reconstruction hatası. Label gerekmiyor ve öğrendiği kod gerçekten anlamlı — label'sız feature öğrenmenin klasik yolu, modern kendinden denetimli yöntemlerin atası.\n\nAma üretemiyor, ve sebebi öğretici: yeni bir görüntü üretmek için yeni bir kod örneklemen gerekiyor, ve hangi kodların geçerli olduğunu söyleyen hiçbir şey yok. Kod uzayında delikler var, aralar çöp üretiyor.\n\nYani geçerli bir kod üretmek, doğrudan geçerli bir görüntü üretmek kadar zor. Hiçbir şey kazanmadın.\n\nEksik olan tek şey, kodun nereden geldiğinin belli olması. VAE tam olarak bunu ekliyor."
         },
         {
           "type": "text",
@@ -26361,7 +26361,7 @@
         {
           "type": "text",
           "heading": "9. Üçünün altındaki ortak ilke",
-          "text": "GAN dışındaki hepsinin training ilkesi aynı: maximum likelihood. Training verisini en olası kılan parametreleri arıyorsun.\n\nAutoregressive modeller bunu doğrudan yapıyor, çünkü olasılığı tam hesaplayabiliyorlar. VAE ve diffusion doğrudan yapamıyor — ilkinde gizli değişken üzerinden, ikincisinde T adımlı yol üzerinden alınamayan bir integral var — o yüzden hesaplanabilir bir alt sınırla çalışıyorlar. Hedef değişmiyor, sadece tırmanılan merdiven değişiyor.\n\nGAN bu çizginin dışında duruyor, ve bütün karakteri buradan geliyor: optimize ettiği dürüst bir olabilirlik yok, onun yerine öğrenilen bir ölçüt var.\n\nMLE'nin kendisini hatırlaman gerekiyorsa MLE konu anlatımına bak; oradaki \"noise seçmek loss seçmektir\" cümlesi burada da geçerli — VAE'nin yeniden kurulum terimi tam olarak o yüzden kareler toplamı."
+          "text": "GAN dışındaki hepsinin training ilkesi aynı: maximum likelihood. Training verisini en olası kılan parametreleri arıyorsun.\n\nAutoregressive modeller bunu doğrudan yapıyor, çünkü olasılığı tam hesaplayabiliyorlar. VAE ve diffusion doğrudan yapamıyor — ilkinde gizli değişken üzerinden, ikincisinde T adımlı yol üzerinden alınamayan bir integral var — o yüzden hesaplanabilir bir alt sınırla çalışıyorlar. Hedef değişmiyor, sadece tırmanılan merdiven değişiyor.\n\nGAN bu çizginin dışında duruyor, ve bütün karakteri buradan geliyor: optimize ettiği dürüst bir olabilirlik yok, onun yerine öğrenilen bir ölçüt var.\n\nMLE'nin kendisini hatırlaman gerekiyorsa MLE konu anlatımına bak; oradaki \"noise seçmek loss seçmektir\" cümlesi burada da geçerli — VAE'nin reconstruction terimi tam olarak o yüzden kareler toplamı."
         },
         {
           "type": "text",
@@ -26403,7 +26403,7 @@
         {
           "type": "text",
           "heading": "2. Sıradan autoencoder neden üretemiyor",
-          "text": "Autoencoder tam olarak bunu yapıyor: encoder görüntüyü dar bir z'ye sıkıştırıyor, decoder z'den geri açıyor, loss da yeniden kurulum hatası. Label gerekmiyor.\n\nTraining biter, yeniden kurulum güzel. Şimdi yeni bir görüntü üretmeyi dene: rastgele bir z seç, decoder'a ver.\n\nÇıkan şey çöp.\n\nSebebi şu: encoder z'leri istediği yere koymakta serbest. Bir resmin z'sini 50 civarına, başkasınınkini eksi 30'a koyabilir. Arada kocaman boşluklar kalıyor, ve o boşluklar decoder'ın hiç görmediği bölgeler. Ayrıca hangi z'lerin geçerli olduğunu bilmiyorsun — nereden örnekleyeceğini söyleyen hiçbir şey yok.\n\nEksik olan tek şey bu: latent uzayın bir yapısı yok.\n\nVAE'nin tamamı bu cümleye verilen cevap."
+          "text": "Autoencoder tam olarak bunu yapıyor: encoder görüntüyü dar bir z'ye sıkıştırıyor, decoder z'den geri açıyor, loss da reconstruction hatası. Label gerekmiyor.\n\nTraining biter, reconstruction güzel. Şimdi yeni bir görüntü üretmeyi dene: rastgele bir z seç, decoder'a ver.\n\nÇıkan şey çöp.\n\nSebebi şu: encoder z'leri istediği yere koymakta serbest. Bir resmin z'sini 50 civarına, başkasınınkini eksi 30'a koyabilir. Arada kocaman boşluklar kalıyor, ve o boşluklar decoder'ın hiç görmediği bölgeler. Ayrıca hangi z'lerin geçerli olduğunu bilmiyorsun — nereden örnekleyeceğini söyleyen hiçbir şey yok.\n\nEksik olan tek şey bu: latent uzayın bir yapısı yok.\n\nVAE'nin tamamı bu cümleye verilen cevap."
         },
         {
           "type": "text",
@@ -26443,16 +26443,16 @@
         {
           "type": "formula",
           "heading": "ELBO",
-          "text": "$$\\log p_\\theta(x) \\ \\ge\\ \\underbrace{\\mathbb{E}_{z \\sim q_\\phi}\\bigl[\\log p_\\theta(x \\mid z)\\bigr]}_{\\text{yeniden kurulum}} \\ -\\ \\underbrace{D_{KL}\\bigl(q_\\phi(z \\mid x)\\,\\|\\,p(z)\\bigr)}_{\\text{prior'a çekme}}$$"
+          "text": "$$\\log p_\\theta(x) \\ \\ge\\ \\underbrace{\\mathbb{E}_{z \\sim q_\\phi}\\bigl[\\log p_\\theta(x \\mid z)\\bigr]}_{\\text{reconstruction}} \\ -\\ \\underbrace{D_{KL}\\bigl(q_\\phi(z \\mid x)\\,\\|\\,p(z)\\bigr)}_{\\text{prior'a çekme}}$$"
         },
         {
           "type": "text",
           "heading": "9. İki terim zıt yönde çekiyor",
-          "text": "Yeniden kurulum terimi diyor ki: her görüntünün z'si ayırt edilebilir olsun, yoksa decoder hangi görüntüyü kuracağını bilemez. Bu terim tek başına kalsa encoder z'leri birbirinden olabildiğince uzağa iterdi — yani sıradan autoencoder'ın hatasına geri dönerdik.\n\nKL terimi diyor ki: bütün z distribution'ları standart normalin etrafında toplansın. Bu terim tek başına kalsa encoder bütün görüntüler için aynı distribution'u üretir, z hiçbir bilgi taşımaz, decoder da ortalama bir bulanıklık basar.\n\nDenge ikisinin arasında. Sonuç, hem dolu hem ayırt edici bir latent uzay: boşluk yok ki örneklediğin z çöpe düşsün, ama z'ler birbirine de yapışmamış.\n\nVAE'yi bir cümlede anlatman gerekse bu cümle olurdu."
+          "text": "Reconstruction terimi diyor ki: her görüntünün z'si ayırt edilebilir olsun, yoksa decoder hangi görüntüyü kuracağını bilemez. Bu terim tek başına kalsa encoder z'leri birbirinden olabildiğince uzağa iterdi — yani sıradan autoencoder'ın hatasına geri dönerdik.\n\nKL terimi diyor ki: bütün z distribution'ları standart normalin etrafında toplansın. Bu terim tek başına kalsa encoder bütün görüntüler için aynı distribution'u üretir, z hiçbir bilgi taşımaz, decoder da ortalama bir bulanıklık basar.\n\nDenge ikisinin arasında. Sonuç, hem dolu hem ayırt edici bir latent uzay: boşluk yok ki örneklediğin z çöpe düşsün, ama z'ler birbirine de yapışmamış.\n\nVAE'yi bir cümlede anlatman gerekse bu cümle olurdu."
         },
         {
           "type": "text",
-          "heading": "10. Yeniden kurulum terimi neden MSE'ye iniyor",
+          "heading": "10. Reconstruction terimi neden MSE'ye iniyor",
           "text": "Decoder'ın çıktısını sabit varyanslı bir Gaussian'ın ortalaması olarak modellediğimizi hatırla. O Gaussian'ın logaritmasını alınca üstel kayboluyor ve geriye görüntü ile decoder çıktısı arasındaki farkın karesi kalıyor.\n\nYani ELBO'nun ilk terimini maksimize etmek, kareler toplamını minimize etmekle aynı şey.\n\nBu bir tesadüf değil, MLE konu anlatımındaki genel kuralın buradaki görünüşü: Gaussian varsayarsan MSE çıkar. Decoder'ı Bernoulli olarak modelleseydin (siyah-beyaz görüntülerde yapılır) aynı yerden cross-entropy çıkardı."
         },
         {
@@ -26488,7 +26488,7 @@
         {
           "type": "insight",
           "heading": "Geriye ne kalsın",
-          "text": "Üretmek için yapılandırılmış bir latent uzay lazım; sıradan autoencoder'ın latent uzayında delikler var, o yüzden üretemiyor. Hedef yine maximum likelihood, ama z gizli olduğu için marjinal integral alınamıyor. Encoder bu yüzden var — denklemden türetilmedi, hesaplanamayan posteriorun yerine dışarıdan kondu. ELBO iki terim: yeniden kurulum z'leri ayırır, KL onları prior'a toplar; denge dolu ve ayırt edici bir uzay verir. Reparameterization gradient'in sampling'in içinden geçebilmesi için. Üretimde encoder yok. Bulanıklık mimariden değil karesel loss'tan geliyor."
+          "text": "Üretmek için yapılandırılmış bir latent uzay lazım; sıradan autoencoder'ın latent uzayında delikler var, o yüzden üretemiyor. Hedef yine maximum likelihood, ama z gizli olduğu için marjinal integral alınamıyor. Encoder bu yüzden var — denklemden türetilmedi, hesaplanamayan posteriorun yerine dışarıdan kondu. ELBO iki terim: reconstruction z'leri ayırır, KL onları prior'a toplar; denge dolu ve ayırt edici bir uzay verir. Reparameterization gradient'in sampling'in içinden geçebilmesi için. Üretimde encoder yok. Bulanıklık mimariden değil karesel loss'tan geliyor."
         },
         {
           "type": "note",
@@ -26556,17 +26556,17 @@
         {
           "type": "text",
           "heading": "8. DCGAN: mimariyi oturtan tasarım kuralları",
-          "text": "İlk GAN'lar tam bağlantılı layer'larla kuruluyordu ve zor eğitiliyordu. DCGAN, konvolüsyonel yapıyı GAN'a oturtan tasarım kurallarını verdi.\n\nGenerator, düşük boyutlu noise'u küçük bir öznitelik haritasına açıyor, sonra adım adım büyütüyor. Havuzlama layer'ı yok — büyütme ve küçültme adımlı konvolüsyonlarla yapılıyor. Generator'de ReLU, discriminator'de sızıntılı ReLU kullanılıyor; giriş ve çıkış layer'ları dışında batch normalizasyon var.\n\nBu kuralların tek tek matematiksel gerekçesi yok, ampirik olarak bulundular. Ama etkisi büyüktü: güvenilir biçimde tanınabilir görüntü üreten ilk GAN ailesi bu.\n\nBir yan bulgu da buradan çıktı: latent uzayda aritmetik çalışıyor. Vektörleri toplayıp çıkarmak görüntüde anlamlı değişikliklere karşılık geliyor."
+          "text": "İlk GAN'lar tam bağlantılı layer'larla kuruluyordu ve zor eğitiliyordu. DCGAN, konvolüsyonel yapıyı GAN'a oturtan tasarım kurallarını verdi.\n\nGenerator, düşük boyutlu noise'u küçük bir feature mapna açıyor, sonra adım adım büyütüyor. Havuzlama layer'ı yok — büyütme ve küçültme adımlı konvolüsyonlarla yapılıyor. Generator'de ReLU, discriminator'de sızıntılı ReLU kullanılıyor; giriş ve çıkış layer'ları dışında batch normalizasyon var.\n\nBu kuralların tek tek matematiksel gerekçesi yok, ampirik olarak bulundular. Ama etkisi büyüktü: güvenilir biçimde tanınabilir görüntü üreten ilk GAN ailesi bu.\n\nBir yan bulgu da buradan çıktı: latent uzayda aritmetik çalışıyor. Vektörleri toplayıp çıkarmak görüntüde anlamlı değişikliklere karşılık geliyor."
         },
         {
           "type": "text",
           "heading": "9. StyleGAN: kontrolü ayırmak",
-          "text": "StyleGAN'ın getirdiği fikir, noise'u doğrudan generator'e vermeyi bırakmak.\n\nÖnce noise, birkaç tam bağlantılı layer'dan oluşan bir eşleme ağından geçiyor ve bir stil vektörüne dönüşüyor. Bu ara uzay, orijinal noise uzayından daha az dolaşık — yani boyutları görüntüdeki değişim eksenleriyle daha temiz örtüşüyor.\n\nSonra stil vektörü, üretimin her çözünürlük seviyesinde ayrı ayrı enjekte ediliyor. Enjeksiyon biçimi uyarlanabilir örnek normalizasyonu: öznitelik haritası normalize ediliyor, sonra stilden gelen ölçek ve kaydırma uygulanıyor.\n\nSonucu şu: kaba çözünürlükteki stil poz ve genel yapıyı, ince çözünürlüktekiler renk ve doku gibi ayrıntıları belirliyor. Yüzün duruşunu değiştirmeden saç rengini değiştirebiliyorsun.\n\nAyrıca her layer'a bağımsız noise ekleniyor; saç telleri, gözenekler gibi tamamen rastlantısal ayrıntılar oradan geliyor — generator bunları stil vektöründe taşımak zorunda kalmıyor."
+          "text": "StyleGAN'ın getirdiği fikir, noise'u doğrudan generator'e vermeyi bırakmak.\n\nÖnce noise, birkaç tam bağlantılı layer'dan oluşan bir eşleme ağından geçiyor ve bir stil vektörüne dönüşüyor. Bu ara uzay, orijinal noise uzayından daha az dolaşık — yani boyutları görüntüdeki değişim eksenleriyle daha temiz örtüşüyor.\n\nSonra stil vektörü, üretimin her çözünürlük seviyesinde ayrı ayrı enjekte ediliyor. Enjeksiyon biçimi uyarlanabilir örnek normalizasyonu: feature map normalize ediliyor, sonra stilden gelen ölçek ve kaydırma uygulanıyor.\n\nSonucu şu: kaba çözünürlükteki stil poz ve genel yapıyı, ince çözünürlüktekiler renk ve doku gibi ayrıntıları belirliyor. Yüzün duruşunu değiştirmeden saç rengini değiştirebiliyorsun.\n\nAyrıca her layer'a bağımsız noise ekleniyor; saç telleri, gözenekler gibi tamamen rastlantısal ayrıntılar oradan geliyor — generator bunları stil vektöründe taşımak zorunda kalmıyor."
         },
         {
           "type": "text",
           "heading": "10. CycleGAN: eşleşmemiş veriyle çeviri",
-          "text": "Görüntüden görüntüye çeviride doğal yaklaşım eşleşmiş veri istiyor: aynı sahnenin iki versiyonu. Pratikte bunu toplamak çoğu zaman imkansız — aynı atın zebra hali yok.\n\nCycleGAN iki ayrı koleksiyonla çalışıyor: bir yığın at fotoğrafı, bir yığın zebra fotoğrafı, eşleşme yok.\n\nİki generator kuruluyor, biri ileri biri geri yönde çeviriyor. Her yönün kendi discriminator'ü var; bu kadarı \"çıktı zebra gibi görünsün\" baskısını sağlıyor.\n\nAma bu tek başına yetmiyor: generator, girdiyle hiç ilgisi olmayan bir zebra üretse de discriminator'ü memnun edebilir. Eksik olan kısıt, içeriğin korunması.\n\nÇevrim tutarlılığı bunu sağlıyor: bir görüntüyü çevirip geri çevirdiğinde başladığın yere dönmelisin. Geri dönebilmesi için ileri çevirinin içeriği taşıması gerekiyor.\n\nBu fikir GAN'ların ötesine geçti — diffusion tabanlı eşleşmemiş çeviri modelleri de aynı çevrim kısıtını kullanıyor."
+          "text": "Görüntüden görüntüye çeviride doğal yaklaşım eşleşmiş veri istiyor: aynı sahnenin iki versiyonu. Pratikte bunu toplamak çoğu zaman imkansız — aynı atın zebra hali yok.\n\nCycleGAN iki ayrı koleksiyonla çalışıyor: bir yığın at fotoğrafı, bir yığın zebra fotoğrafı, eşleşme yok.\n\nİki generator kuruluyor, biri ileri biri geri yönde çeviriyor. Her yönün kendi discriminator'ü var; bu kadarı \"çıktı zebra gibi görünsün\" baskısını sağlıyor.\n\nAma bu tek başına yetmiyor: generator, girdiyle hiç ilgisi olmayan bir zebra üretse de discriminator'ü memnun edebilir. Eksik olan kısıt, içeriğin korunması.\n\nCycle consistency bunu sağlıyor: bir görüntüyü çevirip geri çevirdiğinde başladığın yere dönmelisin. Geri dönebilmesi için ileri çevirinin içeriği taşıması gerekiyor.\n\nBu fikir GAN'ların ötesine geçti — diffusion tabanlı eşleşmemiş çeviri modelleri de aynı çevrim kısıtını kullanıyor."
         },
         {
           "type": "text",
@@ -26576,7 +26576,7 @@
         {
           "type": "text",
           "heading": "12. Neden diffusion devraldı",
-          "text": "GAN'lar 2016-2021 arasında görüntü üretiminin standardıydı. Diffusion'ın onları geçmesinin sebebi tek tek kalite değil, karakter.\n\nDiffusion'ın training'i stabil: discriminator yok, denge yok, izlenebilir tek bir loss var ve düştükçe iyiye gidiyor. Mod kapsaması daha iyi: veri distribution'unun tamamını öğrenmeye çalışıyor, bir köşesine sıkışmıyor. Koşullama daha kolay takılıyor.\n\nBuna karşılık GAN'ın tek büyük üstünlüğü hâlâ duruyor: tek adımda üretiyor. Diffusion'ın onlarca adımına karşılık bir ileri geçiş.\n\nİronik son şu: GAN ortadan kalkmadı, modern boru hatlarının içine yerleşti. Latent diffusion mimarilerinde görüntüyü sıkıştıran çözücüyü keskin tutan şey bir GAN discriminator'ü. Ve diffusion damıtma yöntemlerinin bir kısmı, çok adımlı öğretmeni tek adımlı öğrenciye sıkıştırmak için yine adversarial loss kullanıyor."
+          "text": "GAN'lar 2016-2021 arasında görüntü üretiminin standardıydı. Diffusion'ın onları geçmesinin sebebi tek tek kalite değil, karakter.\n\nDiffusion'ın training'i stabil: discriminator yok, denge yok, izlenebilir tek bir loss var ve düştükçe iyiye gidiyor. Mod kapsaması daha iyi: veri distribution'unun tamamını öğrenmeye çalışıyor, bir köşesine sıkışmıyor. Koşullama daha kolay takılıyor.\n\nBuna karşılık GAN'ın tek büyük üstünlüğü hâlâ duruyor: tek adımda üretiyor. Diffusion'ın onlarca adımına karşılık bir ileri geçiş.\n\nİronik son şu: GAN ortadan kalkmadı, modern boru hatlarının içine yerleşti. Latent diffusion mimarilerinde görüntüyü sıkıştıran çözücüyü keskin tutan şey bir GAN discriminator'ü. Ve diffusion distillation yöntemlerinin bir kısmı, çok adımlı öğretmeni tek adımlı öğrenciye sıkıştırmak için yine adversarial loss kullanıyor."
         },
         {
           "type": "insight",
@@ -26586,7 +26586,7 @@
         {
           "type": "note",
           "heading": "Nereye bakılır",
-          "text": "Generator ve discriminator'ün kurulumu, PyTorch uygulaması ve normalizasyon detayı lab06'da; mode collapse belirtileri ve karşı önlemler yine lab06'da; DCGAN ve StyleGAN mimari kararları ile GAN döneminin özeti cs13'te; CycleGAN ve çevrim tutarlılığı lab06'da; generative model taksonomisi cs12'de. VAE ile karşılaştırma için VAE konu anlatımına, diffusion'la karşılaştırma için DDPM konu anlatımına bak."
+          "text": "Generator ve discriminator'ün kurulumu, PyTorch uygulaması ve normalizasyon detayı lab06'da; mode collapse belirtileri ve karşı önlemler yine lab06'da; DCGAN ve StyleGAN mimari kararları ile GAN döneminin özeti cs13'te; CycleGAN ve cycle consistency lab06'da; generative model taksonomisi cs12'de. VAE ile karşılaştırma için VAE konu anlatımına, diffusion'la karşılaştırma için DDPM konu anlatımına bak."
         }
       ]
     },
@@ -26656,7 +26656,7 @@
         {
           "type": "formula",
           "heading": "DDPM ELBO — üç parça",
-          "text": "$$\\log p_\\theta(x_0) \\ \\ge\\ \\underbrace{\\mathbb{E}_q[\\log p_\\theta(x_0|x_1)]}_{L_0}\\ -\\ \\underbrace{D_{KL}\\bigl(q(x_T|x_0)\\,\\|\\,p(x_T)\\bigr)}_{L_T}\\ -\\ \\underbrace{\\sum_{t>1} D_{KL}\\bigl(q(x_{t-1}|x_t,x_0)\\,\\|\\,p_\\theta(x_{t-1}|x_t)\\bigr)}_{L_{t-1}}$$\n\n$L_T$ sabittir, atılır. $L_0$ son adımın yeniden kurulumudur. İşin tamamı $L_{t-1}$ toplamındadır."
+          "text": "$$\\log p_\\theta(x_0) \\ \\ge\\ \\underbrace{\\mathbb{E}_q[\\log p_\\theta(x_0|x_1)]}_{L_0}\\ -\\ \\underbrace{D_{KL}\\bigl(q(x_T|x_0)\\,\\|\\,p(x_T)\\bigr)}_{L_T}\\ -\\ \\underbrace{\\sum_{t>1} D_{KL}\\bigl(q(x_{t-1}|x_t,x_0)\\,\\|\\,p_\\theta(x_{t-1}|x_t)\\bigr)}_{L_{t-1}}$$\n\n$L_T$ sabittir, atılır. $L_0$ son adımın reconstruction'ıdur. İşin tamamı $L_{t-1}$ toplamındadır."
         },
         {
           "type": "text",
@@ -26676,7 +26676,7 @@
         {
           "type": "text",
           "heading": "11. Ağ: neden U-Net",
-          "text": "Ağın işi şu: noisy görüntüyü al, üstündeki noise'u aynı boyutta bir görüntü olarak çıkar. Girdi ve çıktı aynı boyutta, ve çıktının her pikseli hem çevresindeki dokuya hem görüntünün genel yapısına bağlı. Bu, segmentasyonla aynı şekilli bir problem — o yüzden aynı mimari kullanılıyor.\n\nU-Net'in üç parçası bu işe birebir oturuyor:\n\nEncoder aşağı iniyor, çözünürlük düşüyor, alıcı alan büyüyor. Derinlerde her konum görüntünün büyük bir bölgesini özetliyor.\n\nDecoder yukarı çıkıyor, ve skip bağlantılarıyla encoder'ın erken layer'larından gelen ince detayı geri alıyor. Bu olmasaydı çıktı, aşağıda kaybolan yüksek frekansları geri getiremezdi.\n\nAttention blokları, düşük çözünürlüklü layer'larda. Konvolüsyon yereldir; görüntünün iki ucunun birbiriyle tutarlı olması için her konumun her konumu görebileceği bir layer gerekiyor. Tam çözünürlükte konmuyor çünkü attention maliyeti konum sayısının karesiyle büyüyor — 28x28'te uygun, 256x256'da değil. Bu yüzden ilk blok düz, derin bloklar attention'lı.\n\nDikkat: buradaki attention self-attention. Metinle ilgisi yok. Metin koşullaması aynı slota cross-attention olarak eklenir, ama o ayrı bir konu ve aşağıda."
+          "text": "Ağın işi şu: noisy görüntüyü al, üstündeki noise'u aynı boyutta bir görüntü olarak çıkar. Girdi ve çıktı aynı boyutta, ve çıktının her pikseli hem çevresindeki dokuya hem görüntünün genel yapısına bağlı. Bu, segmentasyonla aynı şekilli bir problem — o yüzden aynı mimari kullanılıyor.\n\nU-Net'in üç parçası bu işe birebir oturuyor:\n\nEncoder aşağı iniyor, çözünürlük düşüyor, receptive field büyüyor. Derinlerde her konum görüntünün büyük bir bölgesini özetliyor.\n\nDecoder yukarı çıkıyor, ve skip bağlantılarıyla encoder'ın erken layer'larından gelen ince detayı geri alıyor. Bu olmasaydı çıktı, aşağıda kaybolan yüksek frekansları geri getiremezdi.\n\nAttention blokları, düşük çözünürlüklü layer'larda. Konvolüsyon yereldir; görüntünün iki ucunun birbiriyle tutarlı olması için her konumun her konumu görebileceği bir layer gerekiyor. Tam çözünürlükte konmuyor çünkü attention maliyeti konum sayısının karesiyle büyüyor — 28x28'te uygun, 256x256'da değil. Bu yüzden ilk blok düz, derin bloklar attention'lı.\n\nDikkat: buradaki attention self-attention. Metinle ilgisi yok. Metin koşullaması aynı slota cross-attention olarak eklenir, ama o ayrı bir konu ve aşağıda."
         },
         {
           "type": "code",
@@ -26686,7 +26686,7 @@
         {
           "type": "text",
           "heading": "12. Timestep ağa nasıl giriyor",
-          "text": "Tek bir ağ bütün noise seviyelerinden sorumlu. t = 10'da yapılacak iş ince detay temizlemek, t = 900'de kaba yapıyı kurtarmak. Ağın hangi durumda olduğunu bilmesi gerekiyor.\n\nYol, Transformer'daki konum kodlamasının aynısı: t bir tam sayı, önce sinüzoidal gömülmeye çevriliyor (tipik olarak 256 boyut), sonra küçük bir MLP'den geçiyor. Ortaya çıkan vektör her ResBlock'un içinde, o bloğun kanal sayısına bir doğrusal layer'la indirgenip özellik haritalarına ekleniyor.\n\nEkleme (B, C) boyutundan (B, C, 1, 1)'e genişletilip tüm piksellere yayılıyor. Bunun bir anlamı var: \"şu an ne kadar noise var\" sorusu tüm görüntü için aynı cevabı verir, konuma göre değişmez. O yüzden koşul uzamsal değil, global olarak enjekte ediliyor.\n\nBu detayı aklında tut — birazdan metin koşullamasında tam olarak bu yetmeyecek."
+          "text": "Tek bir ağ bütün noise seviyelerinden sorumlu. t = 10'da yapılacak iş ince detay temizlemek, t = 900'de kaba yapıyı kurtarmak. Ağın hangi durumda olduğunu bilmesi gerekiyor.\n\nYol, Transformer'daki konum kodlamasının aynısı: t bir tam sayı, önce sinüzoidal embedding'e çevriliyor (tipik olarak 256 boyut), sonra küçük bir MLP'den geçiyor. Ortaya çıkan vektör her ResBlock'un içinde, o bloğun kanal sayısına bir doğrusal layer'la indirgenip özellik haritalarına ekleniyor.\n\nEkleme (B, C) boyutundan (B, C, 1, 1)'e genişletilip tüm piksellere yayılıyor. Bunun bir anlamı var: \"şu an ne kadar noise var\" sorusu tüm görüntü için aynı cevabı verir, konuma göre değişmez. O yüzden koşul spatial değil, global olarak enjekte ediliyor.\n\nBu detayı aklında tut — birazdan metin koşullamasında tam olarak bu yetmeyecek."
         },
         {
           "type": "code",
@@ -26701,7 +26701,7 @@
         {
           "type": "text",
           "heading": "14. Koşullama: istediğin şeyi nasıl söylersin",
-          "text": "Şu ana kadar anlatılan model veri distribution'undan rastgele örnek üretiyor. İşe yarar olması için istediğini söyleyebilmen lazım: bu sınıf, bu metin, bu kaynak görüntü.\n\nEn basit yol: koşulu da ağa girdi olarak ver. Sınıf label'ını bir gömülmeye çevir, timestep gömülmesiyle aynı yerden ekle. CS231n ödevinde yapılan şey tam olarak bu — orada koşul bir CLIP gömülmesiydi ve tek satırda bağlama vektörüne ekleniyordu.\n\nBunun sınırı şu: koşul tek bir vektöre havuzlanıyor ve tüm görüntüye aynı şekilde etki ediyor. \"Kedi\" demek için yeter. \"Sol altta küçük bir kedi, sağda masa\" demek için yetmez.\n\nDaha güçlü yol, koşulu bir dizi olarak tutup U-Net'in attention slotlarına cross-attention olarak bağlamak: sorgu görüntüden, anahtar ve değer metinden. O zaman her konum hangi kelimenin kendisini ilgilendirdiğini seçebiliyor. Metinden görüntü üreten modellerin tamamı bunu kullanıyor."
+          "text": "Şu ana kadar anlatılan model veri distribution'undan rastgele örnek üretiyor. İşe yarar olması için istediğini söyleyebilmen lazım: bu sınıf, bu metin, bu kaynak görüntü.\n\nEn basit yol: koşulu da ağa girdi olarak ver. Sınıf label'ını bir embedding'e çevir, timestep embedding'iyle aynı yerden ekle. CS231n ödevinde yapılan şey tam olarak bu — orada koşul bir CLIP embedding'iydi ve tek satırda bağlama vektörüne ekleniyordu.\n\nBunun sınırı şu: koşul tek bir vektöre havuzlanıyor ve tüm görüntüye aynı şekilde etki ediyor. \"Kedi\" demek için yeter. \"Sol altta küçük bir kedi, sağda masa\" demek için yetmez.\n\nDaha güçlü yol, koşulu bir dizi olarak tutup U-Net'in attention slotlarına cross-attention olarak bağlamak: sorgu görüntüden, anahtar ve değer metinden. O zaman her konum hangi kelimenin kendisini ilgilendirdiğini seçebiliyor. Metinden görüntü üreten modellerin tamamı bunu kullanıyor."
         },
         {
           "type": "text",
@@ -26716,12 +26716,12 @@
         {
           "type": "note",
           "heading": "CFG'nin bedeli",
-          "text": "Her sampling adımında ağ iki kez çalışıyor — üretim maliyeti iki katına çıkıyor. Bu, diffusion damıtma (distillation) çalışmalarının bir kısmının doğrudan hedefi: öğrenci modele CFG kalitesini tek geçişte ürettirmek."
+          "text": "Her sampling adımında ağ iki kez çalışıyor — üretim maliyeti iki katına çıkıyor. Bu, diffusion distillation (distillation) çalışmalarının bir kısmının doğrudan hedefi: öğrenci modele CFG kalitesini tek geçişte ürettirmek."
         },
         {
           "type": "text",
           "heading": "16. Bundan sonra ne oldu",
-          "text": "DDPM 2020'de kurdu, sonraki beş yıl aynı iskeletin üstüne kuruldu. Dört ana yön:\n\nDaha az adım. DDIM sampling'i deterministik yapıp 50-200 adıma indirdi. Damıtma yöntemleri (progressive distillation, consistency models, adversarial diffusion distillation) bunu tek haneli adıma kadar düşürdü.\n\nDaha iyi tasarım. Cosine schedule, v-prediction, noise seviyesi sampling distribution'ları — hepsi \"aynı çerçeve, daha iyi ayar\".\n\nDaha büyük çözünürlük: latent diffusion. Ham pikselde diffusion yüksek çözünürlükte çalışmıyor, çünkü model kapasitesinin çoğu piksel düzeyindeki ayrıntıya gidiyor. Çözüm iki aşamalı: önce bir VAE (keskinlik için GAN discriminator'üyle desteklenmiş) görüntüyü küçük bir latent uzaya sıkıştırıyor — tipik olarak 256x256x3'ten 32x32x16'ya, yani yaklaşık 128 kat daha az boyut. Sonra diffusion o latentlerin üzerinde çalışıyor; encoder donuk, üretim sonunda decoder latenti görüntüye çeviriyor. Stable Diffusion, DALL-E 3, FLUX — hepsi bu mimari.\n\nDaha genel çerçeve. Aynı süreç üç farklı dille yazılabiliyor: gizli değişkenli model (DDPM'in kendisi), skor fonksiyonu (density'nin gradient'ini öğrenmek), ve stokastik diferansiyel denklem (sürekli zamanlı noising ve onun ters çözümü). Rectified flow ise noise ile veri arasında düz bir doğru kurup hız vektörünü öğreniyor — pratikte daha az adım, daha basit türetme. Üçü de aynı ailenin farklı koordinat sistemleri."
+          "text": "DDPM 2020'de kurdu, sonraki beş yıl aynı iskeletin üstüne kuruldu. Dört ana yön:\n\nDaha az adım. DDIM sampling'i deterministik yapıp 50-200 adıma indirdi. Distillation yöntemleri (progressive distillation, consistency models, adversarial diffusion distillation) bunu tek haneli adıma kadar düşürdü.\n\nDaha iyi tasarım. Cosine schedule, v-prediction, noise seviyesi sampling distribution'ları — hepsi \"aynı çerçeve, daha iyi ayar\".\n\nDaha büyük çözünürlük: latent diffusion. Ham pikselde diffusion yüksek çözünürlükte çalışmıyor, çünkü model kapasitesinin çoğu piksel düzeyindeki ayrıntıya gidiyor. Çözüm iki aşamalı: önce bir VAE (keskinlik için GAN discriminator'üyle desteklenmiş) görüntüyü küçük bir latent uzaya sıkıştırıyor — tipik olarak 256x256x3'ten 32x32x16'ya, yani yaklaşık 128 kat daha az boyut. Sonra diffusion o latentlerin üzerinde çalışıyor; encoder donuk, üretim sonunda decoder latenti görüntüye çeviriyor. Stable Diffusion, DALL-E 3, FLUX — hepsi bu mimari.\n\nDaha genel çerçeve. Aynı süreç üç farklı dille yazılabiliyor: gizli değişkenli model (DDPM'in kendisi), skor fonksiyonu (density'nin gradient'ini öğrenmek), ve stokastik diferansiyel denklem (sürekli zamanlı noising ve onun ters çözümü). Rectified flow ise noise ile veri arasında düz bir doğru kurup hız vektörünü öğreniyor — pratikte daha az adım, daha basit türetme. Üçü de aynı ailenin farklı koordinat sistemleri."
         },
         {
           "type": "insight",
