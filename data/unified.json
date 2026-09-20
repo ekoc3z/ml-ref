@@ -6324,7 +6324,7 @@
       "title": "DDIM — Aynı Ağ, Neden Atlayabiliyoruz ve η Tam Olarak Ne Yapıyor?",
       "cat": "Theory",
       "summary": "DDIM yeni bir model değil, aynı eğitilmiş ağ için farklı bir sampling kuralı. Kartın çatısı üç soru: training'de zincir neden hiç yok, Gaussian varsayımı tam olarak nerede duruyor, ve η ile adım sayısı düğmeleri neden bağımsız ayarlanıp bağımlı bozuluyor.",
-      "context": "Lecture 11 — DDPM sampling'in genellemesi (Song ve ark., 2020)",
+      "context": "DDPM sampling'in genellemesi — Song ve ark., 2020",
       "keywords": [
         "implicit",
         "deterministic sampling",
@@ -6441,7 +6441,8 @@
           "text": "Pratik kütüphanelerde DDIM ayrı bir scheduler olarak geliyor; modeli değiştirmeden sampler'ı değiştiriyorsun. SIU 2026'daki Output Steering çalışması aday havuzunu tam da bu iki eksenin ızgarasıyla üretiyor — $\\eta \\in \\{0, 0.2, \\ldots, 1\\}$ ve adım sayısı $\\{100, 150, 200\\}$. Dikkat: o ızgara yalnızca çeşitlilik değil, aynı zamanda bir kalite gradyanı üretiyor; $\\eta=1$ ve 100 adımlı adaylar sistematik olarak daha zayıf olmalı."
         }
       ],
-      "id": "ida11-ddim-ayni-ag-neden-atlayabiliyoruz-ve-eta-ne-yapiyor"
+      "id": "ida11-ddim-ayni-ag-neden-atlayabiliyoruz-ve-eta-ne-yapiyor",
+      "mlo_only": true
     },
     {
       "title": "Conditional Diffusion and Text-to-Image Generation",

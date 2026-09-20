@@ -332,6 +332,7 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .sec-anim .lbl{font-size:12px}
 .sec-anim .hi{stroke:var(--accent)}
 .sec-anim text.hi{fill:var(--accent);stroke:none}
+.sr-src{color:var(--muted);font-weight:400}
 .home-guides{margin:34px auto 0;max-width:560px}
 .home-guides h3{font-size:13.5px;font-weight:700;letter-spacing:.06em;color:var(--muted);margin:0 0 4px}
 .home-guides-sub{font-size:14px;color:var(--muted);margin:0 0 10px}
@@ -1731,6 +1732,7 @@ let DATA = {};
 CHAPTERS.forEach(c => DATA[c] = []);
 let OVERVIEWS = {};
 let GUIDES = {};
+let MLO_ONLY = [];   // yalnizca ML-OVERALL'da gorunen kartlar (arama + sayim icin lazim)
 let SUMMARY = null;
 let IDA_SUMMARY = null;
 let VS_SUMMARY = null;
@@ -2016,9 +2018,9 @@ function renderCards(sec){
         metaEl.appendChild(ctxEl);
       }
       // ML-OVERALL <-> kaynak chapter: iki yonlu baglanti rozeti
-      if(sec.startsWith('mlo') && item._home){
+      if(sec.startsWith('mlo') && item._home && !item.mlo_only){
         const b = document.createElement('span'); b.className = 'mlo-badge';
-        b.textContent = '↳ kaynak: ' + item._home; b.title = 'Bu kartın evi';
+        b.textContent = '↳ kaynak: ' + famLabel(item._home); b.title = 'Bu kartın ders bölümündeki yeri';
         b.onclick = (e) => { e.stopPropagation(); switchSection(item._home); };
         metaEl.appendChild(b);
       } else if(item._mlo && item._mlo.length){
@@ -2197,17 +2199,26 @@ function showPopup(item, cc){
       ${item.intuition ? `<div class="popup-lbl">Intuition</div><div class="popup-intuition">${esc(item.intuition)}</div>` : ''}
       ${item.notes ? `<div class="popup-lbl">Notes</div><div class="popup-notes">${esc(item.notes)}</div>` : ''}`;
   }
+  const pmlo = (item._mlo || []).map(m =>
+        `<span class="mlo-badge" data-go-sec="${esc(m.key)}" title="${esc(m.title)}">◆ ML-OVERALL ${esc(m.num)} · ${m.i}/${m.n}</span>`).join('');
+  const psrc = (item._home && !item.mlo_only)
+        ? `<span class="mlo-badge" data-go-sec="${esc(item._home)}" title="Bu kartın ders bölümündeki yeri">↳ kaynak: ${esc(famLabel(item._home))}</span>` : '';
   $('popupBox').innerHTML = `
     <div class="popup-title">${esc(item.title)}</div>
     <div class="popup-meta">
       <span class="p-cat">${esc(item.cat)}</span>
       ${item.context ? `<span class="p-ctx">${esc(item.context)}</span>` : ''}
+      ${pmlo}${psrc}
     </div>
     ${(item.keywords||[]).length ? `<div class="card-keys" id="popup-keys">${item.keywords.map(k =>
         `<span class="kw" data-kw="${esc(k)}">${esc(k)}</span>`).join('')}</div>` : ''}
     ${item.summary ? `<p class="popup-summary">${esc(item.summary)}</p>` : ''}
     <hr class="popup-divider">
     ${body}`;
+  $('popupBox').querySelectorAll('[data-go-sec]').forEach(el => {
+    el.onclick = () => { hidePopup(); switchSection(el.dataset.goSec);
+      setTimeout(() => { const t = document.getElementById('card-'+(item.id||'')); if(t) t.scrollIntoView({block:'start'}); }, 60); };
+  });
   const pk = $('popup-keys');
   if(pk) pk.querySelectorAll('.kw').forEach(el => {
     el.title = '“' + el.dataset.kw + '” ara';
@@ -2377,8 +2388,10 @@ function homeSearch(q){
   if(q.length < 2){ box.innerHTML=''; if(hint) hint.style.display=''; return; }
   if(hint) hint.style.display='none';
   const res = [];
-  CHAPTERS.filter(c => !c.startsWith('mlo')).forEach(fam => {
-    (DATA[fam]||[]).forEach(item => {
+  const SCAN = CHAPTERS.filter(c => !c.startsWith('mlo')).map(c => [c, DATA[c]||[]]);
+  SCAN.push(['__extra__', MLO_ONLY]);
+  SCAN.forEach(([fam, famCards]) => {
+    famCards.forEach(item => {
       const inTitle = (item.title||'').toLowerCase().includes(q);
       const inSum   = (item.summary||'').toLowerCase().includes(q);
       const kwHit   = (item.keywords||[]).filter(k => k.toLowerCase().includes(q));
@@ -2390,7 +2403,10 @@ function homeSearch(q){
       });
       if(inTitle || inSum || kwHit.length || heads.length || snips.length){
         if(!snips.length && inSum) snips.push(snip(plain(item.summary), q));
-        res.push({item, fam, score:(inTitle?100:0) + (kwHit.length?60:0) + (inSum?20:0)
+        // mlo_only kartin "evi" ML-OVERALL bolumu; find() oradan bulacak
+        const rfam = (fam === '__extra__')
+          ? ((item._mlo && item._mlo.length) ? item._mlo[0].key : item._home) : fam;
+        res.push({item, fam:rfam, score:(inTitle?100:0) + (kwHit.length?60:0) + (inSum?20:0)
                                   + heads.length*3 + snips.length});
       }
     });
@@ -2411,7 +2427,9 @@ function homeSearch(q){
     if(!snips.length && (it.summary||'').toLowerCase().includes(q)) snips.push(snip(plain(it.summary), q));
     html += `<div class="sr">
       <button class="sr-main" data-id="${esc(it.id||'')}" data-fam="${esc(r.fam)}">
-        <div class="sr-crumb">${esc(famLabel(r.fam))}${it.cat?' — '+esc(it.cat):''}</div>
+        <div class="sr-crumb">${(it._mlo&&it._mlo.length)
+            ? 'ML-OVERALL '+esc(it._mlo[0].num)+(it.mlo_only?'':' <span class="sr-src">· '+esc(famLabel(r.fam))+'</span>')
+            : esc(famLabel(r.fam))}${it.cat?' — '+esc(it.cat):''}</div>
         <div class="sr-title">${esc(it.title||'')}</div>
         ${(() => { const kw = (it.keywords||[]);
                     if(!kw.some(k => k.toLowerCase().includes(q))) return '';
@@ -2420,7 +2438,7 @@ function homeSearch(q){
         ${heads.length?`<div class="sr-secs">§ ${heads.map(esc).join(' · § ')}</div>`:''}
         ${snips.length?`<div class="sr-snip">${snips[0]}</div>`:''}
       </button>
-      <button class="sr-go" data-id="${esc(it.id||'')}" data-fam="${esc(r.fam)}" title="Bölüme git">&rarr;</button>
+      <button class="sr-go" data-id="${esc(it.id||'')}" data-fam="${esc(r.fam)}" title="ML-OVERALL'daki yerine git">&rarr;</button>
     </div>`;
   });
   box.innerHTML = html;
@@ -2429,7 +2447,9 @@ function homeSearch(q){
     const it = find(el); if(it) showPopup(it, catClass(it.cat, it._home || el.dataset.fam));
   });
   box.querySelectorAll('.sr-go').forEach(el => el.onclick = () => {
-    const fam = el.dataset.fam, id = el.dataset.id;
+    const it = find(el); const id = el.dataset.id;
+    // varsayilan hedef ML-OVERALL; kartin mlo yeri yoksa kaynak bolume dus
+    const fam = (it && it._mlo && it._mlo.length) ? it._mlo[0].key : el.dataset.fam;
     switchSection(fam);
     setTimeout(() => { const t = document.getElementById('card-'+id); if(t) t.scrollIntoView({block:'start'}); }, 60);
   });
@@ -2455,7 +2475,7 @@ function guideIndexHTML(){
 function buildHome(){
   const host = $('home-page'); if(!host) return;
   const src   = CHAPTERS.filter(c => !c.startsWith('mlo'));   // mlo* ayni kartlara referans, iki kez sayma
-  const total = src.reduce((n,c) => n + ((DATA[c]||[]).length), 0);
+  const total = src.reduce((n,c) => n + ((DATA[c]||[]).length), 0) + MLO_ONLY.length;
   const fams  = src.filter(c => (DATA[c]||[]).length).length;
   const groups = []; MLO_NAV.forEach(m => { if(!groups.includes(m.group)) groups.push(m.group); });
   const ROMAN = ['I','II','III','IV','V','VI','VII','VIII','IX','X'];
@@ -2599,9 +2619,12 @@ document.addEventListener('keydown', e => {
 function applyData(d){
   CHAPTERS.forEach(c => { if(d[c]) DATA[c] = d[c]; });
   // ML-OVERALL: kartlar yerinden oynamaz, id ile REFERANS verilir (ayni nesne iki yerde gorunur)
-  const IDX = {};
+  const IDX = {}; MLO_ONLY = [];
   CHAPTERS.forEach(c => { if(c.startsWith('mlo')) return;
-    DATA[c].forEach(card => { card._mlo = null; if(card.id){ IDX[card.id] = card; card._home = c; } }); });
+    DATA[c].forEach(card => { card._mlo = null; if(card.id){ IDX[card.id] = card; card._home = c; } });
+    // mlo_only: kart dosyada duruyor ve indeksleniyor, ama ders bolumunun listesinde GORUNMUYOR
+    DATA[c].forEach(card => { if(card.mlo_only) MLO_ONLY.push(card); });
+    DATA[c] = DATA[c].filter(card => !card.mlo_only); });
   CHAPTERS.filter(c => c.startsWith('mlo')).forEach(c => DATA[c] = []);
   (d.mlo||[]).forEach(ch => {
     if(DATA[ch.key] === undefined) return;
@@ -2629,7 +2652,7 @@ function applyData(d){
 }
 
 
-fetch('./data/unified.json?v=20260920141530')
+fetch('./data/unified.json?v=20260920142550')
   .then(r => { if(!r.ok) throw new Error(r.status); return r.json() })
   .then(applyData)
   .catch(() => {
