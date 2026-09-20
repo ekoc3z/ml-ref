@@ -25563,26 +25563,13 @@
         },
         {
           "type": "insight",
-          "heading": "Asıl hikâye ortalamada değil, sapmada",
-          "text": "SSIM ortalaması 82'den 88'e çıkıyor, ama standart sapma 6.23'ten 2.59'a düşüyor.\n\nYöntem modeli daha iyi yapmıyor — daha ÖNGÖRÜLEBİLİR yapıyor. Klinikte değerli olan da bu: hangi örneğin eline geçtiğinin şansa kalmaması.\n\nPaper bunu öne çıkarmıyor. Okurken çıkarılacak asıl sonuç bu."
-        },
-        {
-          "type": "list",
-          "heading": "Eleştiri ve açık sorular",
-          "items": [
-            "İki aşama gerçekten gerekli mi? PSNR'da ikincisinin katkısı sıfır (26.47 → 26.49); kazanç yalnızca SSIM ve sapmada.",
-            "Oracle sadece PSNR'ın oracle'ı — SSIM'i 85.95, yani önerilen yöntemden düşük, çünkü adayı PSNR'a göre seçiyor. 'Üst sınır' sanılan satır tek metrikte üst sınır.",
-            "pix2pix SSIM'de başa baş (87.88 ↔ 87.89). Kazanç PSNR'da.",
-            "4 test deneği. 0.66 dB fark, ±2 sapmayla, dört denekte. İstatistiksel dayanak zayıf.",
-            "K = 8 nereden geldi? Ablasyon yok, doyum noktası bilinmiyor. Kazancın çoğu ilk üç adayda doluyorsa maliyet tartışması kapanır.",
-            "Kazanan adaylar η dağılımında nerede yoğunlaşıyor? Hep η ≈ 0 tarafındansa ızgaranın yarısı boşuna hesaplanıyor.",
-            "Maliyet hiç raporlanmamış — ne süre ne hesap."
-          ]
+          "heading": "Sonuç tablosu nasıl okunur: ortalama mı, sapma mı",
+          "text": "SSIM ortalaması 82'den 88'e çıkıyor. Ama asıl bilgi yanındaki sayıda: standart sapma 6.23'ten 2.59'a düşüyor.\n\nYani yöntem modeli daha iyi yapmıyor — daha ÖNGÖRÜLEBİLİR yapıyor. Denekler arasındaki kalite dalgalanması yarıdan fazla azalıyor.\n\nKlinik bağlamda değerli olan da bu: hangi örneğin eline geçtiğinin şansa kalmaması. Genel ders — stokastik bir yöntemi değerlendirirken ortalamaya bakmak yetmiyor, dağılımın genişliği çoğu zaman daha çok şey söylüyor."
         },
         {
           "type": "note",
-          "heading": "Maliyet tartışmasının doğru hâli",
-          "text": "\"8 aday = 8 kat yavaş\" yanlış ifade. İki şeyi ayır:\n\nHesap (FLOP) gerçekten 8 kat — paralellik bunu değiştirmiyor.\n\nDuvar saati 8 kat değil. Sekiz aday tek batch'te çalıştırılabilir ve latent 64x64 olduğu için bellek yükü önemsiz; diffusion sampling'de batch=1 GPU'yu zaten doldurmuyor, toplu çalıştırmak neredeyse bedava. Tek incelik adım sayılarının farklı olması — gruplayarak çözülür, duvar saati en uzun grubun süresi kadar olur.\n\nDolayısıyla eleştirinin doğru hâli: maliyet gecikmede değil VERİMDE. Vaka başına GPU-saati sekize katlanıyor."
+          "heading": "Hesap maliyeti ile gecikme aynı şey değil",
+          "text": "Sekiz aday üretmek \"sekiz kat yavaş\" demek değil. İki ayrı şey var:\n\nHESAP (FLOP) gerçekten sekiz kat — paralellik bunu değiştirmiyor.\n\nDUVAR SAATİ sekiz kat değil. Adaylar tek batch'te çalıştırılabiliyor, ve latent 64x64 olduğu için bellek yükü önemsiz. Üstelik diffusion sampling'de batch=1 GPU'yu zaten doldurmuyor, dolayısıyla toplu çalıştırmak neredeyse bedava geliyor. Tek incelik adayların farklı adım sayıları kullanması — gruplayınca çözülüyor, duvar saati en uzun grubun süresi kadar oluyor.\n\nGenel ders: bu tür yöntemlerin bedeli gecikmede değil VERİMDE aranır. Vaka başına GPU-saati sekize katlanıyor; tek hasta için önemsiz, günde yüzlerce vaka işleyen bir boru hattında doğrudan donanım maliyeti."
         }
       ]
     },
@@ -25694,18 +25681,6 @@
             "IXI (T1/T2/PD, 40 sağlıklı) · BRATS (T1/T2/FLAIR, 55 glioma) · MRI-CT pelvis (15 denek).",
             "Rakipler: SynDiff, DDPM, I²SB (başka bir bridge), pix2pix.",
             "T=1000, γ=2.2, lr 1e-4, RTX 4090. Yakınsama: ardışık turlar arası değişim %1'in altına inince."
-          ]
-        },
-        {
-          "type": "list",
-          "heading": "Okurken doğrulanacaklar",
-          "items": [
-            "Maliyet: her ters adımda R ekstra ileri geçiş, toplam T × R. Sonuçlarda ortalama R kaç çıkmış, rakiplere göre süre farkı ne?",
-            "Kazanç hangisinden geliyor — noise takvimi mi, özyineleme mi? İkisi ayrı ayrı ölçülmüş mü, ablasyon var mı?",
-            "γ ne kadar hassas? Yumuşak prior'ın tamamı o tek katsayıya bağlı; duyarlılık analizi var mı?",
-            "Adversarial gerilim: paper DDM'lerin GAN'lara göre kararlılık avantajıyla başlıyor ama kendisi discriminator kullanıyor. Bunu nasıl ele alıyor?",
-            "Genelleme iddiası sayısal olarak izole edilmiş mi, yoksa sadece genel sonuç tablolarına mı dayanıyor?",
-            "Training'de özyineleme tam yakınsıyor mu, yoksa kısaltılmış mı?"
           ]
         }
       ]
