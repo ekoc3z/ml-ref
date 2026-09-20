@@ -25697,6 +25697,130 @@
           ]
         }
       ]
+    },
+    "mri_recon_tutorial": {
+      "title": "A Tutorial on MRI Reconstruction: From Modern Methods to Clinical Implications",
+      "cat": "Paper · IEEE TBME 2025",
+      "context": "Çukur, Dar, Nezhad, Jun, Kim, Fujita, Bilgiç · papers/ kökü (tutorial)",
+      "summary": "Labın alan haritası. Hızlandırılmış MRI'da reconstruction'ın neden ters problem olduğunu kurup, klasik elle tasarlanmış prior'lardan DL'e kadar bütün yöntemleri tek bir denklemin altında topluyor ve üç eksene ayırıyor.",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "1. Üç blokta ne var",
+          "text": "NE YAPILMIŞ — Hızlandırılmış MRI reconstruction'ın tam bir haritası çıkarılmış. Fizikten başlıyor (spin, gradient, k-space), ters problemi kuruyor, klasik yöntemleri (parallel imaging, compressed sensing, low-rank, subspace) ve DL yöntemlerini aynı çerçeveye oturtuyor, sonra klinik tarafa geçiyor. Yanında Python toolbox'ı da var.\n\nYENİ FİKİR NE — Bir tutorial'ın \"yeni fikri\" yöntem değil, TASNİF olur. Burada iki tane var. Birincisi, DL yöntemlerini üç çerçeveye ayırması: data-driven, physics-guided, generative — ve bu ayrımı \"çıktı rastgele mi\" diye değil, imaging operator'ün nereye girdiği üzerinden yapması. İkincisi, her yöntemi tek bir denkleme indirgemesi: veri tutarlılığı artı prior. Klasikle DL arasındaki fark, o prior'ın elle mi yazıldığı yoksa veriden mi öğrenildiği.\n\nALANA KATKISI — Dağınık bir literatürü ortak bir dile çeviriyor. Bir paperi eline aldığında artık \"bu hangi çerçeve, hangi mimari, hangi öğrenme paradigması\" diye üç soruyla yerine oturtabiliyorsun. Klinik tarafı da bilerek içeride: hangi hızlanmanın hangi klinik karşılığı var, ve hallucination'ın neden bir görüntü kalitesi meselesi değil bir tanı güvenliği meselesi olduğu."
+        },
+        {
+          "type": "text",
+          "heading": "2. Sıfır noktası: MRI neden yavaş, ve k-space ne",
+          "text": "MRI'ın tek gerçek kısıtı süre. Protokole her sekans eklendiğinde hasta daha uzun yatıyor, hareket artefaktı ihtimali artıyor, ve bir yerde takas yapmak zorunda kalıyorsun: çözünürlük mü, SNR mı, kapsama mı, kaç kontrast mı.\n\nSürenin nereden geldiğini anlamak için tarayıcının neyi ölçtüğüne bakmak gerekiyor. RF ile uyarılan spinlerin sinyali okunurken, gradient bobinleri manyetik alanı konuma göre değiştiriyor ve böylece sinyalin FAZINI konuma bağlıyor. Gradyanın zaman integrali $k(t)$'yi veriyor, ve alınan sinyal şu hale geliyor: $s(t) = \\int m(r) e^{-j2\\pi k(t)\\cdot r} dr$.\n\nBu tam olarak Fourier dönüşümü. Yani tarayıcı görüntüyü değil, görüntünün Fourier uzayındaki bir noktasını ölçüyor. O uzaya k-space deniyor. Görüntüyü almak için ters Fourier dönüşümü alıyorsun.\n\nVe burada süre ortaya çıkıyor: k-space'in her noktası ayrı bir ölçüm. Tam bir görüntü için ızgaranın tamamını gezmen gerekiyor, ve her satır bir TR bekliyor. Yavaşlığın sebebi hesaplama değil, ölçümün kendisi."
+        },
+        {
+          "type": "insight",
+          "heading": "3. Izgaranın iki sayısı, görüntünün iki özelliği",
+          "text": "k-space'i ayrık olarak örneklediğin için iki parametre var ve ikisi görüntünün iki ayrı özelliğini belirliyor. Karıştırılması çok kolay, ama ayrımı net.\n\nÖrnekleme ARALIĞI $\\Delta k$ — noktalar arası mesafe. Görüntü tarafında görüş alanını (FOV) belirliyor: $\\mathrm{FOV} = 1/\\Delta k$. Aralık büyürse FOV küçülür, ve obje FOV'a sığmazsa kendi üstüne katlanır. Aliasing bu.\n\nKaplanan GENİŞLİK $W_k$ — k-space'te ne kadar uzağa gittiğin. Çözünürlüğü belirliyor: $\\Delta r \\approx 1/2W_k$. Daha uzak frekansları toplarsan daha ince detay görürsün.\n\nYani merkeze yakın noktalar kontrastı ve genel yapıyı, kenar noktalar keskinliği taşıyor. Hangi noktaları atlayacağına karar verirken bu bilgi doğrudan işe yarıyor."
+        },
+        {
+          "type": "text",
+          "heading": "4. Hızlandırma: ızgaranın bir kısmını hiç toplamamak",
+          "text": "Hızlandırma fikri bu kadar basit. $R$ katı hızlandırmak demek, k-space ızgarasının $1/R$'ini toplamak demek. Toplanan noktalar ikili bir maske ile veriliyor, $P(k)$.\n\nAma Nyquist'i ihlal ettiğin an FOV daralıyor ve görüntü kendi üstüne katlanıyor. Yani ham çıktı kullanılabilir değil — katlanmış bir görüntü.\n\nBunu kurtaran şey ikinci bir bilgi kaynağı: çoklu bobin. Tarayıcıda tek alıcı yok, onlarca bobin var ve her biri objeye farklı bir uzamsal duyarlılık profiliyle bakıyor. Aynı katlanmış piksel, farklı bobinlerde farklı ağırlıklarla görünüyor. Bilinmeyen sayısı aynı ama denklem sayısı bobin sayısı kadar arttığı için katlanma çözülebiliyor. Parallel imaging'in tamamı bu."
+        },
+        {
+          "type": "insight",
+          "heading": "5. Her şeyin toplandığı yer: imaging operator",
+          "text": "Şimdi üç etkiyi üst üste koyuyorsun. Bobin duyarlılıkları $C(r)$ görüntüyü çarpıyor, Fourier dönüşümü $F$ k-space'e taşıyor, maske $P(k)$ bir kısmını atıyor:\n\n$d(k) = P(k) \\, F\\{ C(r) m(r) \\}$\n\nÜçünü tek bir harfte topluyorsun — imaging operator:\n\n$d = A m$\n\nBu tek satır bütün alanın zemini. $A$ biliniyor, $d$ ölçülüyor, $m$ aranıyor. Yani reconstruction bir TERS PROBLEM.\n\nVe şuna dikkat: $A$ ölçümün fiziğini taşıyor. Hangi k-space noktalarının toplandığını, bobinlerin ne gördüğünü, dönüşümün ne olduğunu biliyor. Bu yüzden ileride bir yöntemin $A$'yı kullanıp kullanmaması, o yöntemin hangi aileye ait olduğunu belirleyen şey olacak."
+        },
+        {
+          "type": "insight",
+          "heading": "6. Alanın tek denklemi — ve klasik/DL ayrımının tam yeri",
+          "text": "Tam örnekleme yapsaydın $A$ iyi koşullu olurdu ve çözüm neredeyse bedava gelirdi: bobin bobin ters FFT, sonra duyarlılıklarla birleştirme, yani $m^* \\approx A^H d$. Buna zero-filled Fourier reconstruction deniyor ve ileride ağların girdisi hep bu oluyor.\n\nAma undersampling yaptığın an problem ill-posed hale geliyor: ölçümü açıklayan sonsuz sayıda görüntü var. Tek çıkış yolu dışarıdan bilgi eklemek:\n\n$m^* = \\arg\\min_m \\| d - Am \\|^2 + \\lambda \\Psi(m)$\n\nBirinci terim veri tutarlılığı — bulduğun görüntü, gerçekten ölçtüğün k-space noktalarını açıklamalı. İkinci terim prior — ölçmediğin yerleri neyin doldurduğu.\n\nVe bütün literatür bu ikinci terimin içinde. Klasik yöntemlerde $\\Psi$ AÇIK biçimde yazılı: bir insan oturup \"MR görüntüleri wavelet tabanında seyrektir\" ya da \"k-space komşulukları düşük ranklıdır\" demiş. DL yöntemlerinde $\\Psi$ ÖRTÜK: bir ağın ağırlıklarında duruyor ve örnek veriden öğrenilmiş.\n\nBu yüzden \"klasik mi DL mi\" sorusu aslında \"prior'ı kim yazdı\" sorusu. Fark bundan ibaret, ve gerisi hep bu denklemin etrafında dönüyor."
+        },
+        {
+          "type": "text",
+          "heading": "7. Klasik taraf: dört prior ailesi",
+          "text": "Dördü de aynı denklemi çözüyor, yalnızca $\\Psi$'yi farklı dolduruyorlar.\n\nLİNEER REGRESYON / İNTERPOLASYON — prior yok denecek kadar az, iş bobin çeşitliliğinden çıkıyor. SENSE görüntü uzayında katlanmayı çözüyor; duyarlılık profilleri açıkça biliniyor ve katlanan pikseller doğrusal bir sistemle ayrılıyor. GRAPPA ise k-space'te kalıyor: eksik bir noktayı, komşu noktaların bütün bobinler üzerinden ağırlıklı toplamıyla dolduruyor, ve o ağırlıkları merkezde toplanmış tam örneklenmiş kalibrasyon verisinden öğreniyor.\n\nSPARSITY (compressed sensing) — $\\Psi(m) = \\|\\Phi m\\|_1$. Fikir şu: MR görüntüsü piksel uzayında seyrek değil, ama uygun bir dönüşümde (wavelet, gradient) seyrek. Çözüm proximal gradient ile geliyor — bir veri tutarlılığı adımı, bir soft-thresholding adımı, sırayla. Ve burada ilginç bir tersine dönüş var: rastgele örnekleme örüntüsü, katlanmayı düzenli bir hayalet yerine gürültü benzeri bir kirliliğe çeviriyor, ki seyreklik kısıtı gürültüyü temizlemekte zaten iyi.\n\nLOW-RANK — k-space'ten yerel yamalar alınıp bir matrisin satırlarına diziliyor. Bobinler arası bağımlılık, objenin sınırlı uzamsal desteği ve faz yumuşaklığı bu matrisi düşük ranklı yapıyor. Rankı doğrudan dayatmak NP-zor olduğu için nükleer norm gibi bir vekil ceza kullanılıyor.\n\nSUBSPACE — niceliksel MRI için. Bloch simülasyonlarıyla sinyalin zaman içinde nasıl evrildiğine dair bir sözlük kuruluyor, SVD ile küçük bir altuzay çıkarılıyor, ve görüntü yerine o altuzaydaki katsayılar aranıyor. Aranan şeyin boyutu düştüğü için problem kolaylaşıyor. Burada prior doğrudan fizikten geliyor."
+        },
+        {
+          "type": "text",
+          "heading": "8. DL tarafı: üç çerçeve, ayrım noktası imaging operator",
+          "text": "Tutorial DL yöntemlerini üçe ayırıyor, ve ayrımı mimariye göre değil, $A$'nın nereye girdiğine göre yapıyor.\n\nDATA-DRIVEN — ağ, katlanmış görüntüden temiz görüntüye doğrudan bir eşleme öğreniyor. Girdi genelde $m_u = A^H d$, hedef tam örneklenmiş görüntü, loss ikisi arasındaki fark. $A$ eğitimde hiç geçmiyor. Tek ileri geçiş olduğu için çok hızlı, ama ölçülen veriye sadakati zorlayan bir mekanizma yok — ağ güzel ama ölçümle çelişen bir görüntü üretebilir.\n\nPHYSICS-GUIDED — aynı koşullu kurulum, ama $A$ ağın İÇİNE giriyor. Ağ katmanlarıyla veri tutarlılığı katmanları dönüşümlü diziliyor ve bu zincir açılıyor (unrolled). Performans artıyor, ama ağ eğitim sırasında belirli bir örnekleme örüntüsüne alışıyor; test sırasında örüntü ya da hızlanma oranı değişirse genelleme zorlanıyor.\n\nGENERATIVE — burada ağ koşulsuz. Undersampled veriyi hiç görmeden, yalnızca tam örneklenmiş kaliteli MR görüntülerinin DAĞILIMINI öğreniyor. $A$ eğitimde yok, yalnızca inference'ta devreye giriyor. Prior imaging operator'den bağımsız olduğu için farklı örüntülere, farklı hızlanmalara daha rahat genelliyor. Bedeli inference süresi."
+        },
+        {
+          "type": "insight",
+          "heading": "9. DİKKAT — buradaki \"generative\" ML'deki \"generative\" değil",
+          "text": "Bu tanım farkı kafa karıştırıyor ve tutorial bunu özellikle açıklıyor.\n\nGenel ML dilinde generative model, stokastik görüntü üretebilen her mimariyi kapsıyor. Burada ise ölçüt çıktının rastgele olup olmadığı DEĞİL, ağın koşullu olup olmadığı.\n\nYani içinde adversarial ya da variational bileşen taşıyan bir ağ bile, girdisinde undersampled veriyi alıyorsa burada generative sayılmıyor — data-driven ya da physics-guided oluyor. Bir modelin generative sayılması için undersampled veriyi hiç görmemesi, yalnızca hedef dağılımı öğrenmesi gerekiyor.\n\nGerekçesi şu: ters problem açısından belirleyici olan şey çıktının rastgeleliği değil, modelin imaging operator'le ne zaman karşılaştığı. Eğitimde karşılaşıyorsa o operatöre bağımlı hale geliyor; yalnızca inference'ta karşılaşıyorsa bağımsız kalıyor. Sınıflandırma bu bağımlılığı takip ediyor."
+        },
+        {
+          "type": "text",
+          "heading": "10. Unrolled ağ aşama aşama",
+          "text": "Physics-guided modelin nasıl çalıştığını adım adım takip etmek gerekiyor, çünkü \"unrolled\" kelimesi tek başına bir şey söylemiyor.\n\nBaşlangıçta elinde zero-filled reconstruction var, $m^{(0)} = m_u$ — katlanmış, kirli bir görüntü.\n\nSonra bir döngü başlıyor ve her turda iki şey oluyor. Önce ağ bloğu çalışıyor: $z^{(i+1)} = G_\\theta(m^{(i)})$. Bu blok öğrenilmiş prior'ın kendisi, görüntüyü daha makul bir MR görüntüsüne doğru itiyor. Ardından veri tutarlılığı bloğu çalışıyor: elde edilen görüntü k-space'e taşınıyor, GERÇEKTEN ölçülmüş olan noktalarda ağın tahmini atılıp ölçülen değer geri yazılıyor, sonra görüntüye dönülüyor.\n\nİkinci adım kritik. Ağ ne kadar özgür davranırsa davransın, ölçtüğün noktalarda gerçeğe geri çekiliyor. Ağın uydurabileceği yer yalnızca ölçmediğin noktalar.\n\nBu döngü sabit sayıda tur boyunca tekrarlanıyor, ve bütün zincir baştan sona birlikte eğitiliyor — yani ağ, kendisinden sonra bir veri tutarlılığı adımı geleceğini bilerek öğreniyor. Yapı, optimizasyondaki proximal splitting algoritmalarının sabit nokta iterasyonlarına birebir benziyor; aradaki tek fark, elle yazılmış prox adımının yerini öğrenilmiş bir bloğun almış olması."
+        },
+        {
+          "type": "text",
+          "heading": "11. Generative prior ile reconstruction aşama aşama",
+          "text": "Burada sıra tersine dönüyor. Önce, undersampled veriden tamamen habersiz bir generative model eğitiliyor — yalnızca temiz MR görüntülerinin dağılımını öğreniyor. Diffusion ise eğitim hedefi tanıdık: görüntüye takvimle noise ekleniyor, ağ eklenen noise'u tahmin ediyor, MSE. Reconstruction diye bir şey bu aşamada yok.\n\nİş inference'ta başlıyor. Saf noise'tan başlanıyor ve normal diffusion sampling'i çalıştırılıyor, AMA her adımın arasına veri tutarlılığı sokuluyor: ağ bir adım denoise ediyor, ardından ölçülen k-space noktaları çıktıya geri yazılıyor. Ağ görüntüyü makul tutuyor, projeksiyon onu ölçüme bağlıyor.\n\nSonuçta ortaya çıkan şey, $T$ turluk bir unrolled ağa çok benziyor — ama zincir eğitimde değil, yalnızca inference'ta kuruluyor, ve ağ o zincirin varlığından habersiz eğitilmiş.\n\nGAN tabanlı eski yaklaşımlarda ise döngü yerine optimizasyon var: generator sabit tutulup latent kod, bazen de generator'ün kendisi, üretilen görüntünün k-space'i ölçülenle uyuşana kadar optimize ediliyor."
+        },
+        {
+          "type": "algo",
+          "title": "Diffusion prior ile reconstruction (inference)",
+          "lines": [
+            "$m_T = \\epsilon \\sim \\mathcal{N}(0, I)$ >> saf noise",
+            "for $t = T, \\ldots, 1$ do",
+            "  $\\tilde{m}_{t-1} = G_\\theta(m_t, t)$ >> prior adımı: bir adım denoise",
+            "  $m_{t-1} = \\tilde{m}_{t-1} + A^H \\left( d - A\\tilde{m}_{t-1} \\right)$ >> ölçülen k-space geri yazılır",
+            "return $m_0$"
+          ]
+        },
+        {
+          "type": "insight",
+          "heading": "12. Burada bir şey dikkatini çekmeli — translation'da bu yok",
+          "text": "Yukarıdaki satırlarda $A$ var. Ölçümün fiziği biliniyor: hangi k-space noktaları toplandı, bobinler ne gördü. Bu yüzden üretilen görüntüyü ölçüme geri çekmek MÜMKÜN, ve projeksiyon tam olarak bunu yapıyor.\n\nTranslation'da ise böyle bir operatör YOK. Elinde T1 var, T2 istiyorsun; T2'nin hiçbir ölçümü yok, geri yazacağın bir k-space noktası yok. Bu yüzden orada kaynak görüntü ancak koşul olarak verilebiliyor — projeksiyonla değil, girdiyle.\n\nReconstruction ile translation arasındaki asıl fark bu. İkisi de diffusion kullanıyor olabilir, mimari bile aynı olabilir, ama birinde ölçümü zorlayan bir operatör var, diğerinde yok. Bir paperi okurken önce buna bak."
+        },
+        {
+          "type": "text",
+          "heading": "13. Mimari üç eksende tarif ediliyor",
+          "text": "Çerçeve seçildikten sonra sıra tek tek katmanlara geliyor, ve tutorial burayı üç eksene ayırıyor.\n\nOPERATÖR TİPİ — bir katmanın uzamsal bağımlılıkları nasıl kurduğu. Fully-connected: küresel ama sabit ağırlıklı filtreleme. Convolutional: yerel ve sabit, komşulukla sınırlı. Attentional: küresel ve girdiye uyarlanan, ağırlıklar token'lar arası benzerlikten hesaplanıyor. Recurrent (state-space dahil): yine küresel ve uyarlanan, ama diziyi tarayarak. Ayrım iki soruda toplanıyor — görüş alanı yerel mi küresel mi, ve ağırlıklar sabit mi girdiye göre mi değişiyor.\n\nGİRDİ ALANI — ağ neyin üzerinde çalışıyor. Görüntü uzayı en yaygın. Fourier uzayı doğrudan k-space üzerinde çalışıyor, veri tutarlılığı için doğal, ama enerji frekanslar arasında çok dengesiz dağıldığı için dikkat istiyor. Hibrit, ikisini dönüşümlü ya da paralel işliyor. Latent, önce sıkıştırıp orada çalışıyor — yüksek boyutlu ve çok kontrastlı veride verimli.\n\nKONTRAST YAPILANDIRMASI — protokoldeki kontrastların birlikte mi ayrı ayrı mı işlendiği. Bağımsız: her kontrast kendi başına, basit ama kontrastlar arası ortak anatomiyi çöpe atıyor. Ortak (joint): hepsi birlikte, yüksek hızlanmada belirgin kazanç, ama kontrastlar hizalı değilse artefakt ve kontrastlar arası sızıntı riski var. Prior-conditioned: biri tam örneklenmiş, diğeri ağır undersampled — tam olan diğerine rehberlik ediyor."
+        },
+        {
+          "type": "text",
+          "heading": "14. Öğrenme paradigması: elinde ne veri var",
+          "text": "Üçüncü eksen, eğitim verisinin ne olduğuna göre ayrılıyor.\n\nPOPÜLASYON DÜZEYİNDE — bir grup hastadan öğreniyorsun. Elinde eşleşmiş veri varsa, yani hem undersampled hem tam örneklenmiş hali, bu supervised öğrenme. Doğruluk yüksek ama tam örneklenmiş veri toplamak pahalı, bazı protokollerde klinik sürede mümkün bile değil.\n\nTam örneklenmiş veri yoksa self-supervised devreye giriyor, ve buradaki hile zarif: elindeki undersampled ölçümleri İKİYE BÖLÜYORSUN. Bir alt küme ağa girdi olarak veriliyor, diğer alt küme hedef olarak tutuluyor. Ağ, görmediği ölçümleri tahmin etmeyi öğreniyor. Hiç tam örnekleme olmadan denetim üretmiş oluyorsun.\n\nSCAN-SPECIFIC — eğitim verisi hiç yok, yalnızca test taraması var. Ağ o tek tarama üzerinde, inference sırasında sıfırdan eğitiliyor. Bir varyantta rastgele başlatılmış ağ sabit bir noise girdisini görüntüye eşliyor ve yalnızca ölçülen k-space'e uyacak şekilde optimize ediliyor (deep image prior). Tehlike şu: yeterince uzun eğitirsen ağ gürültüyü de ezberler. Bu yüzden ölçümlerin bir kısmı hiç kullanılmadan ayrılıp doğrulama olarak tutuluyor ve erken durdurmayı o belirliyor.\n\nHİBRİT — popülasyondan eğitilmiş bir ağ, test taramasının kendi verisiyle ince ayara sokuluyor. Farklı merkez, farklı protokol, farklı tarayıcı gibi dağılım kaymalarının cevabı bu."
+        },
+        {
+          "type": "insight",
+          "heading": "15. Hallucination: kayıp mı, sızıntı mı",
+          "text": "Hızlanma arttıkça daha az veri topluyorsun, dolayısıyla prior'ın payı büyüyor. Ve prior'ın uydurduğu şey gerçek anatomiye benzediği için gözle yakalanamıyor. Tutorial bunu iki ayrı arıza olarak ayırıyor, ve ayrım hangi yöntemi kullandığınla doğrudan ilgili.\n\nKAYIP — gerçekten orada olan bir yapı geri getirilemiyor. Aşırı düzleştirme, ince yapıların sönmesi. Elle tasarlanmış prior kullanan yöntemlerin tipik arızası: regularization'ı zayıflatırsan düzelir, ama bu sefer artefakt bastırma gücünü kaybedersin.\n\nSIZINTI — orada OLMAYAN bir yapı görüntüde beliriyor. Popülasyondan öğrenen DL yöntemlerinin tipik arızası: eğitim kümesinde sık görülen bir doku, test hastasında yokken oraya taşınıyor.\n\nİkisi de tanıyı yanlış yöne çekebilir ama sızıntı daha sinsi, çünkü görüntü daha iyi görünür. Önerilen yönler: fiziksel sinyal modelinden gelen prior'larla melez kurulumlar, farklı ailelerden yöntemleri birleştiren topluluklar, çoklu kontrastı birlikte kullanıp anatomik tutarlılığı zorlamak, ve çıktının yanında belirsizlik haritası vermek.\n\nBuradaki ders reconstruction'la sınırlı değil: üretilen her medikal görüntüde aynı soru var — bu doku ölçümden mi geliyor, yoksa modelin önsel bilgisinden mi."
+        },
+        {
+          "type": "ref",
+          "heading": "Arka plandaki kavramların tam kartları",
+          "items": [
+            {
+              "id": "ida02-fourier-transform-and-frequency-domain-analysis",
+              "label": "Fourier dönüşümü ve frekans uzayı"
+            },
+            {
+              "id": "ida11-ddpm-unet-dahil-bastan-sona",
+              "label": "DDPM — U-Net dahil baştan sona"
+            },
+            {
+              "id": "ida11-ddim-ayni-ag-neden-atlayabiliyoruz-ve-eta-ne-yapiyor",
+              "label": "DDIM — aynı ağ, neden atlayabiliyoruz"
+            },
+            {
+              "id": "ida10-gan-fundamentals-minimax-training",
+              "label": "GAN — minimax eğitimi"
+            },
+            {
+              "id": "ida05-u-net-encoder-decoder-for-biomedical-segmentation",
+              "label": "U-Net — encoder/decoder"
+            },
+            {
+              "id": "vs04-federated-learning",
+              "label": "Federated learning"
+            }
+          ]
+        }
+      ]
     }
   },
   "guides": {
