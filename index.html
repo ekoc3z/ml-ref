@@ -261,6 +261,7 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .sec-algo .algo-tx{padding-left:.15em}
 .sec-algo .algo-kw{font-weight:700}
 .sec-algo .algo-cm{margin-left:2.2em;font-style:italic;color:var(--muted);white-space:nowrap}
+.sec-algo .algo-cm-inline{margin-left:0;padding-left:.15em}
 .sec-algo .algo-sp{height:.5em}
 .sec-algo .katex{font-size:1.05em}
 @media(max-width:640px){.sec-algo{font-size:14.5px}.sec-algo .algo-gd{flex-basis:1.1em}.sec-algo .algo-cm{margin-left:1.2em}}
@@ -2216,10 +2217,12 @@ function renderSection(s){
         const cut = rest.indexOf('>>');           // '>>' -> LaTeX'teki \triangleright yorumu
         if(cut >= 0){ cm = rest.slice(cut+2).trim(); rest = rest.slice(0,cut).trim(); }
         const gd = Array.from({length:lvl}, () => '<span class="algo-gd"></span>').join('');
+        if(rest.startsWith('#'))                     // '#' ile baslayan satir: yerinde duran italik yorum
+          return `<div class="algo-ln">${gd}<span class="algo-cm algo-cm-inline">&#9655; ${cmHTML(rest.slice(1).trim())}</span></div>`;
         const cmh = cm ? `<span class="algo-cm">&#9655; ${cmHTML(cm)}</span>` : '';
         return `<div class="algo-ln">${gd}<span class="algo-tx">${bodyHTML(rest)}</span>${cmh}</div>`;
       }).join('');
-      const num = s.number ? `Algorithm ${esc(s.number)} ` : 'Algorithm ';
+      const num = s.number ? `Algorithm ${esc(s.number)} ` : '';   // numarasizsa yalniz baslik
       return `<div class="sec-block">${h}<div class="sec-algo">
         <div class="algo-rule-top"></div>
         <div class="algo-title">${num}<em>${esc(s.title||'')}</em></div>
@@ -2818,7 +2821,7 @@ function applyData(d){
 }
 
 
-fetch('./data/unified.json?v=20260920221021')
+fetch('./data/unified.json?v=20260920221732')
   .then(r => { if(!r.ok) throw new Error(r.status); return r.json() })
   .then(applyData)
   .catch(() => {

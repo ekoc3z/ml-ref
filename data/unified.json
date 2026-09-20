@@ -6396,9 +6396,23 @@
           "text": "Sık yapılan hata, varsayımı training'de sanmak. Training hiçbir şey varsaymıyor; yaptığı iş düz bir regresyon.\n\nVarsayım sampler'ın iddiasında.\n\nDDPM sampler'ı diyor ki: \"$p_\\theta(x_{t-1} \\mid x_t)$ distribution'undan örnek çekiyorum.\" Çekebilmek için o distribution'un şeklini bilmek zorundasın. Gaussian olduğunu varsayıyor, ağdan ortalamasını alıyor, üstüne taze noise ekleyip gerçekten çekiyor.\n\nVe bu varsayım ancak adım minikken doğru. Klasik diffusion sonucu: adım boyu küçüldükçe ters geçiş de ileri geçişle aynı biçimi alıyor. DDPM'in $T = 1000$ ve $\\beta \\approx 10^{-4}$ seçmesinin tek sebebi bu.\n\nBüyük atlarsan gerçek ters distribution çok modlu hale geliyor; tek bir Gaussian onu temsil edemiyor, tepeleri yakalamak yerine ortalamasını basıyor — bulanıklık buradan geliyor."
         },
         {
-          "type": "code",
-          "heading": "İki sampler yan yana",
-          "text": "DDPM adimi  (t -> t-1)\n  1. eps_hat = ag(x_t, t)\n  2. mu      = (1/sqrt(alpha_t)) * ( x_t - (beta_t/sqrt(1-abar_t)) * eps_hat )\n  3. z       = N(0,I)'dan TAZE noise\n  4. x_(t-1) = mu + sigma_t * z          <-- p_theta'dan CEKIM\n\nDDIM adimi  (t -> s,  s = t-1 de olabilir t-50 de)\n  1. eps_hat = ag(x_t, t)                <-- ayni ag, ayni cagri\n  2. x0_hat  = ( x_t - sqrt(1-abar_t) * eps_hat ) / sqrt(abar_t)\n  3. x_s     = sqrt(abar_s) * x0_hat + sqrt(1-abar_s) * eps_hat\n                                         <-- ileri formul, AYNI eps_hat"
+          "type": "algo",
+          "title": "DDPM adımı  ($t \\to t-1$)",
+          "lines": [
+            "$\\hat{\\epsilon} = \\epsilon_\\theta(x_t, t)$",
+            "$\\mu = \\frac{1}{\\sqrt{\\alpha_t}} \\left( x_t - \\frac{\\beta_t}{\\sqrt{1-\\bar{\\alpha}_t}} \\hat{\\epsilon} \\right)$",
+            "$z \\sim \\mathcal{N}(0, I)$ >> taze noise",
+            "$x_{t-1} = \\mu + \\sigma_t z$ >> $p_\\theta$'dan çekim"
+          ]
+        },
+        {
+          "type": "algo",
+          "title": "DDIM adımı  ($t \\to s$,  $s$ hemen önceki adım da olabilir, 50 geri de)",
+          "lines": [
+            "$\\hat{\\epsilon} = \\epsilon_\\theta(x_t, t)$ >> aynı ağ, aynı çağrı",
+            "$\\hat{x}_0 = \\dfrac{x_t - \\sqrt{1-\\bar{\\alpha}_t}\\, \\hat{\\epsilon}}{\\sqrt{\\bar{\\alpha}_t}}$ >> cebir, yeni ağ değil",
+            "$x_s = \\sqrt{\\bar{\\alpha}_s}\\, \\hat{x}_0 + \\sqrt{1-\\bar{\\alpha}_s}\\, \\hat{\\epsilon}$ >> ileri formül, AYNI $\\hat{\\epsilon}$"
+          ]
         },
         {
           "type": "text",
@@ -6818,9 +6832,18 @@
           "qa": true
         },
         {
-          "type": "code",
-          "heading": "4. Inference (Sampling)",
-          "text": "x_T ~ N(0, I)   (B, C, H, W)   saf noise'dan başla\n\nfor t = T, T-1, ..., 1:\n\n    ε_θ = U-Net(x_t, t)        (B, C, H, W)   noise tahmini\n\n    μ_θ = (1/sqrt(α_t))        (B, C, H, W)   x_{t-1} beklentisi\n        · (x_t - β_t/sqrt(1-ᾱ_t) · ε_θ)\n\n    z = N(0,I) if t > 1        stochasticity için\n    z = 0      if t = 1        son adımda noise ekleme\n\n    x_{t-1} = μ_θ + σ_t · z   (B, C, H, W)\n\nreturn x_0"
+          "type": "algo",
+          "number": "2",
+          "title": "Inference (sampling) — DDPM",
+          "lines": [
+            "$x_T \\sim \\mathcal{N}(0, I)$ >> saf noise'dan başla",
+            "for $t = T, \\ldots, 1$ do",
+            "  $\\hat{\\epsilon} = \\epsilon_\\theta(x_t, t)$ >> U-Net'in noise tahmini",
+            "  $\\mu_\\theta = \\frac{1}{\\sqrt{\\alpha_t}} \\left( x_t - \\frac{\\beta_t}{\\sqrt{1-\\bar{\\alpha}_t}} \\hat{\\epsilon} \\right)$ >> $x_{t-1}$'in beklentisi",
+            "  $z \\sim \\mathcal{N}(0, I)$ eğer $t > 1$, değilse $z = 0$ >> son adımda noise eklenmez",
+            "  $x_{t-1} = \\mu_\\theta + \\sigma_t z$",
+            "return $x_0$"
+          ]
         },
         {
           "type": "text",
@@ -6858,9 +6881,18 @@
           "qa": true
         },
         {
-          "type": "code",
-          "heading": "Inference (Sampling)",
-          "text": "1. x_T ~ N(0, I)              (B, C, H, W)   saf noise\n\n2. for t = T, T-1, ..., 1:\n\n   ε_θ = U-Net(x_t, t)        (B, C, H, W)   predicted noise\n\n   μ_θ = (1/sqrt(α_t))        (B, C, H, W)   x_{t-1} mean\n       · (x_t - β_t/sqrt(1-ᾱ_t) · ε_θ)\n\n   z ~ N(0,I)  if t > 1       (B, C, H, W)   sampling noise\n   z = 0       if t = 1\n\n   x_{t-1} = μ_θ + σ_t · z   (B, C, H, W)\n\n3. return x_0                  (B, C, H, W)   üretilen image"
+          "type": "algo",
+          "number": "2",
+          "title": "Inference (sampling)",
+          "lines": [
+            "$x_T \\sim \\mathcal{N}(0, I)$ >> saf noise'dan başla",
+            "for $t = T, \\ldots, 1$ do",
+            "  $\\hat{\\epsilon} = \\epsilon_\\theta(x_t, t)$ >> U-Net'in noise tahmini",
+            "  $\\mu_\\theta = \\frac{1}{\\sqrt{\\alpha_t}} \\left( x_t - \\frac{\\beta_t}{\\sqrt{1-\\bar{\\alpha}_t}} \\hat{\\epsilon} \\right)$ >> $x_{t-1}$'in beklentisi",
+            "  $z \\sim \\mathcal{N}(0, I)$ eğer $t > 1$, değilse $z = 0$ >> son adımda noise eklenmez",
+            "  $x_{t-1} = \\mu_\\theta + \\sigma_t z$",
+            "return $x_0$"
+          ]
         },
         {
           "type": "table",
@@ -26778,9 +26810,28 @@
           "text": "Discriminator'ün işi sıradan bir ikili sınıflandırma: gerçeklere 1, sahtelere 0 demeye çalışıyor. Loss'u da tanıdık, binary cross-entropy.\n\nGenerator'ün işi bunun tersi: discriminator'ü yanıltmak.\n\nİlk yazılışında generator, discriminator'ün sahte deme olasılığını minimize ediyordu. Pratikte bu çalışmıyor: training'in başında generator çok kötü, discriminator onu kolayca yakalıyor, ve o bölgede gradient neredeyse sıfır — yani generator en çok öğrenmesi gereken anda hiçbir sinyal alamıyor.\n\nÇözüm basit bir yeniden yazım: minimize etmek yerine, discriminator'ün gerçek deme olasılığını maksimize et. Aynı yöne itiyor ama gradient'i training başında güçlü. Uygulamaların tamamı bunu kullanıyor.\n\nBu detay, GAN literatüründeki genel kalıbın ilk örneği: yöntem doğru, ama işe yaraması için bir sürü pratik düzeltme gerekiyor."
         },
         {
-          "type": "code",
-          "heading": "Training döngüsü",
-          "text": "for her batch:\n    # 1) Ayirt ediciyi guncelle\n    gercek  = batch\n    sahte   = G(z),  z ~ N(0, I)\n    kayip_D = BCE(D(gercek), 1) + BCE(D(sahte.detach()), 0)\n    kayip_D geri yayilir, yalniz D guncellenir\n\n    # 2) Ureticiyi guncelle\n    sahte   = G(z)\n    kayip_G = BCE(D(sahte), 1)        # non-saturating bicim\n    kayip_G geri yayilir, yalniz G guncellenir\n\nDikkat: D guncellenirken sahte goruntu grafikten kopariliyor (detach),\nyoksa D'nin loss'u G'yi de gunceller — yanlis yone."
+          "type": "algo",
+          "title": "GAN — bir training adımı",
+          "lines": [
+            "for her batch do",
+            "  $x \\sim$ veri >> gerçek görüntüler",
+            "",
+            "  # 1) discriminator güncellenir",
+            "  $z \\sim \\mathcal{N}(0, I)$",
+            "  $\\tilde{x} = G(z)$ >> sahte görüntü, grafikten koparılır (detach)",
+            "  $L_D = \\mathrm{BCE}(D(x), 1) + \\mathrm{BCE}(D(\\tilde{x}), 0)$",
+            "  $L_D$ geri yayılır, yalnız $D$ güncellenir",
+            "",
+            "  # 2) generator güncellenir",
+            "  $z \\sim \\mathcal{N}(0, I)$, $\\; \\tilde{x} = G(z)$",
+            "  $L_G = \\mathrm{BCE}(D(\\tilde{x}), 1)$ >> non-saturating biçim",
+            "  $L_G$ geri yayılır, yalnız $G$ güncellenir"
+          ]
+        },
+        {
+          "type": "note",
+          "heading": "detach neden şart",
+          "text": "$D$ güncellenirken sahte görüntü grafikten koparılıyor. Koparılmazsa $D$'nin loss'u $G$'ye de akar ve $G$'yi yanlış yöne — discriminator'ü haklı çıkaracak yöne — günceller."
         },
         {
           "type": "text",
@@ -26938,9 +26989,37 @@
           "text": "Tek bir ağ bütün noise seviyelerinden sorumlu. t = 10'da yapılacak iş ince detay temizlemek, t = 900'de kaba yapıyı kurtarmak. Ağın hangi durumda olduğunu bilmesi gerekiyor.\n\nYol, Transformer'daki konum kodlamasının aynısı: t bir tam sayı, önce sinüzoidal embedding'e çevriliyor (tipik olarak 256 boyut), sonra küçük bir MLP'den geçiyor. Ortaya çıkan vektör her ResBlock'un içinde, o bloğun kanal sayısına bir doğrusal layer'la indirgenip özellik haritalarına ekleniyor.\n\nEkleme (B, C) boyutundan (B, C, 1, 1)'e genişletilip tüm piksellere yayılıyor. Bunun bir anlamı var: \"şu an ne kadar noise var\" sorusu tüm görüntü için aynı cevabı verir, konuma göre değişmez. O yüzden koşul spatial değil, global olarak enjekte ediliyor.\n\nBu detayı aklında tut — birazdan metin koşullamasında tam olarak bu yetmeyecek."
         },
         {
-          "type": "code",
-          "heading": "Training ve üretim döngüleri",
-          "text": "# Training — sıralı hiçbir şey yok, tamamen paralel\nfor x0 in dataset:                      # (B, C, H, W)\n    t   = randint(1, T, size=B)         # her örneğe rastgele adım\n    eps = randn_like(x0)                # gerçek noise\n    xt  = sqrt(abar[t])*x0 + sqrt(1-abar[t])*eps\n    loss = mse(eps, unet(xt, t))\n\n# Üretim — burası sıralı, yavaşlığın sebebi bu\nxt = randn(shape)                       # saf noise'dan başla\nfor t in range(T, 0, -1):\n    eps_th = unet(xt, t)\n    mu = (1/sqrt(alpha[t])) * (xt - (beta[t]/sqrt(1-abar[t])) * eps_th)\n    z  = randn_like(xt) if t > 1 else 0\n    xt = mu + sigma[t] * z\nreturn xt"
+          "type": "algo",
+          "number": "1",
+          "title": "Training (DDPM)",
+          "lines": [
+            "repeat",
+            "  $x_0 \\sim q(x_0)$ >> veri kümesinden bir görüntü",
+            "  $t \\sim \\mathrm{Uniform}\\{1, \\ldots, T\\}$ >> her örneğe rastgele adım",
+            "  $\\epsilon \\sim \\mathcal{N}(0, I)$ >> gerçek noise",
+            "  $x_t = \\sqrt{\\bar{\\alpha}_t}\\, x_0 + \\sqrt{1-\\bar{\\alpha}_t}\\, \\epsilon$ >> tek hamlede, zincir yok",
+            "  $\\nabla_\\theta \\, \\| \\epsilon - \\epsilon_\\theta(x_t, t) \\|^2$ ile gradient adımı",
+            "until yakınsayana kadar"
+          ]
+        },
+        {
+          "type": "algo",
+          "number": "2",
+          "title": "Sampling (DDPM)",
+          "lines": [
+            "$x_T \\sim \\mathcal{N}(0, I)$ >> saf noise'dan başla",
+            "for $t = T, \\ldots, 1$ do",
+            "  $z \\sim \\mathcal{N}(0, I)$ eğer $t > 1$, değilse $z = 0$",
+            "  $\\hat{\\epsilon} = \\epsilon_\\theta(x_t, t)$ >> noise tahmini",
+            "  $\\mu_\\theta = \\frac{1}{\\sqrt{\\alpha_t}} \\left( x_t - \\frac{\\beta_t}{\\sqrt{1-\\bar{\\alpha}_t}} \\hat{\\epsilon} \\right)$",
+            "  $x_{t-1} = \\mu_\\theta + \\sigma_t z$ >> bir adım geri",
+            "return $x_0$"
+          ]
+        },
+        {
+          "type": "note",
+          "heading": "İki döngünün farkı",
+          "text": "Training döngüsünde sıralı hiçbir şey yok — $t$ rastgele seçiliyor, $x_t$ kapalı formülle tek hamlede kuruluyor, bütün batch paralel işleniyor.\n\nSampling döngüsü ise zorunlu olarak sıralı: $x_{t-1}$ için $x_t$ gerekiyor, $x_t$ için $x_{t+1}$. Diffusion'ın yavaşlığının tek sebebi bu döngü, ağın kendisi değil."
         },
         {
           "type": "text",
