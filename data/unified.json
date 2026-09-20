@@ -18454,6 +18454,139 @@
       ]
     },
     {
+      "title": "Latent Diffusion'da Neden VAE Değil AE? — Nicemleme, VQ ve Codebook",
+      "cat": "Theory",
+      "summary": "Latent diffusion'ın ilk aşaması neden düzgün bir VAE değil: KL terimi latent'i örneklenebilir yapmak için vardı ve burada o özelliğe ihtiyaç yok. Kartın ikinci yarısı VQ'yu sıfırdan kuruyor — nicemleme nedir, codebook nasıl öğreniliyor, seçim neden konum başına yapılıyor ve kod sözlüğünün küçük olması ifade gücünü neden kısıtlamıyor.",
+      "context": "Latent diffusion ilk aşaması — VQ-VAE (van den Oord 2017), LDM (Rombach 2022)",
+      "keywords": [
+        "VQ-VAE",
+        "straight-through",
+        "k-means",
+        "codebook collapse",
+        "ayrık token",
+        "first-stage"
+      ],
+      "mlo_only": true,
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Soru",
+          "text": "Latent diffusion'da görüntüyü sıkıştıran ilk aşamaya herkes \"VAE\" diyor. Ama Stable Diffusion'da o bileşenin KL ağırlığı milyonda bir mertebesinde, ve birçok uygulamada KL yerine VQ kullanılıyor. Yani pratikte VAE değil, autoencoder.\n\nNeden? Cevap, KL teriminin ne işe yaradığını hatırlamakta."
+        },
+        {
+          "type": "text",
+          "heading": "1. KL ne satın alıyordu",
+          "text": "VAE'de KL terimi tek bir şey için vardı: latent'i örneklenebilir yapmak.\n\nÜretim zamanında encoder'ı kullanmıyordun. Doğrudan standart normalden bir $z$ çekip decoder'a veriyordun. Bunun çalışması için $z$'lerin o dağılımın etrafında toplanmış olması gerekiyordu — yoksa çektiğin nokta decoder'ın hiç görmediği bir bölgeye düşer, çıktı çöp olurdu. KL, encoder'ı oraya zorlayan şeydi.\n\nBedeli de biliniyor: reconstruction terimi ile KL zıt yönde çekiyor, ve KL ağır basınca yeniden kurulum bulanıklaşıyor."
+        },
+        {
+          "type": "text",
+          "heading": "2. Latent diffusion'da o ihtiyaç yok",
+          "text": "Burada latent'i prior'dan örneklemiyorsun. Latent'in distribution'unu ikinci aşama, yani diffusion modeli öğreniyor. \"Nereden örnekleyeceğim\" sorusunu o çözüyor.\n\nDolayısıyla KL koymanın geriye kalan tek etkisi var: yeniden kurulum kalitesini düşürmek.\n\nVe bu, sistemin tamamı için pahalı. Çünkü latent diffusion'da kalite tavanı diffusion'ın değil, autoencoder'ın yeniden kurulum kalitesi: encoder'ın attığı bilgi geri gelmiyor, diffusion mükemmel çalışsa bile decoder onu üretemez. Medikal görüntüde bu ciddi bir kısıt — sıkıştırmada kaybolan küçük bir lezyonu hiçbir şey kurtarmıyor.\n\nDönüm noktası tek cümlede: ihtiyaç duyulmayan bir özellik için sadakatten ödün verilmiyor."
+        },
+        {
+          "type": "text",
+          "heading": "3. Ama tamamen serbest AE de kullanılmıyor",
+          "text": "Hiç kısıt koymazsan latent'in ölçeği training boyunca kayabiliyor — bir kanal $\\pm 0.5$ bandında kalırken başkası $\\pm 400$'e çıkabiliyor, aykırı değerler oluşabiliyor.\n\nDiffusion bundan doğrudan zarar görüyor, çünkü noise schedule belli bir ölçeğe göre ayarlı: her adımda eklenecek noise miktarı sabit. Veri o ölçekten saptıysa eklenen noise ya etkisiz kalıyor ya her şeyi siliyor.\n\nBu yüzden LDM iki hafif düzenleme sunuyor, ve ikisinin de amacı örneklenebilirlik değil, sınırlılık:\n\nÇok küçük ağırlıklı KL — adı VAE, davranışı AE. Stable Diffusion bunu kullanıyor.\n\nVQ, yani vektör nicemleme — latent sonlu bir kod sözlüğüne oturtuluyor.\n\nİkisi arasındaki seçim, latent diffusion'ın çalışıp çalışmaması değil, bir tasarım tercihi."
+        },
+        {
+          "type": "text",
+          "heading": "4. Nicemleme nedir",
+          "text": "Sürekli bir değeri, izin verilen sonlu bir kümeye yuvarlamak.\n\nGünlük örnek: markette hesap 37,2473 TL çıkamaz, kuruşa yuvarlanır.\n\nGörüntüde klasik örnek: milyonlarca renk içeren bir fotoğrafı 256 renklik bir paletle kaydetmek. Her piksel artık istediği rengi alamıyor, paletteki en yakınını seçmek zorunda. Dosya küçülüyor, karşılığında biraz sadakat gidiyor."
+        },
+        {
+          "type": "text",
+          "heading": "5. VQ: yuvarlanan şey bir vektör",
+          "text": "Yukarıdaki örnekte tek bir değer yuvarlanıyordu. VQ'da yuvarlanan şey bir vektörün tamamı.\n\nElinde 4 boyutlu bir vektör var, ve önceden hazırlanmış 1024 tane 4 boyutlu vektörden oluşan bir liste. VQ şunu yapıyor: seninkine en yakın olanı bul, ve seninkini onunla değiştir.\n\nO listeye codebook, yani kod sözlüğü deniyor. \"Sonlu\" olması şu demek: latent uzayda artık yalnızca 1024 farklı vektör var, arası yok."
+        },
+        {
+          "type": "code",
+          "heading": "Somut olarak",
+          "text": "Encoder bir konum icin uretti:   ( 2.99 , -1.20 ,  0.05 ,  3.71 )\n\ncodebook:\n  kod    1 : ( 0.20 , -1.10 ,  0.50 ,  2.00 )\n  kod    2 : ( 3.02 , -1.18 ,  0.00 ,  3.80 )   <-- en yakin\n  ...\n  kod 1024 : (-0.70 ,  0.40 ,  1.90 , -2.20 )\n\nsonuc:  o konumun degeri artik kod 2\n        saklanan sey sadece:  2\n\nDikkat: dort sayi AYRI AYRI yuvarlanmiyor.\nDordu birlikte, 1024 secenekten birine sicriyor.\n(Her sayiyi ayri yuvarlamak skaler nicemleme olurdu — farkli sey.)"
+        },
+        {
+          "type": "text",
+          "heading": "6. Latent bir ızgara, seçim konum başına",
+          "text": "Burada en çok karışan nokta bu.\n\nKonvolüsyonel bir autoencoder'da latent düz bir vektör değil, uzamsal bir tensör: $64 \\times 64 \\times C$. Yani 4096 konum, her konumda $C$ tane sayı. Uzamsal yapının korunması şart, çünkü ikinci aşamadaki U-Net konvolüsyon ve attention uygulayabilmek için komşuluğa ihtiyaç duyuyor.\n\nCodebook'taki kodlar, yalnızca tek bir konumun boyutu kadar uzunlukta — tüm latent kadar değil. Ve nicemleme her konum için ayrı ayrı yapılıyor: 4096 tane bağımsız seçim.\n\nTek görüntü için bir arama değil, 4096 arama."
+        },
+        {
+          "type": "insight",
+          "heading": "Codebook küçük diye ifade gücü kısıtlanmıyor",
+          "text": "Sık yapılan hata: \"1024 kod varsa 1024 farklı görüntü üretilebilir\" sanmak. Değil.\n\nPalet benzetmesine dön: 256 renklik palet, sadece 256 farklı fotoğraf yapabilirsin demek değil. Her piksel paletten bir renk seçiyor; fotoğrafı yapan şey renklerin dizilişi.\n\nBurada da aynısı. Olasılık sayısı $1024^{4096}$ — taban seçenek sayısı, üs seçim sayısı. (Ters çevirip $4096^{1024}$ yazmak yaygın bir hata.) Bu sayı kabaca $10^{12000}$ mertebesinde; gözlenebilir evrendeki atom sayısı $10^{80}$.\n\nKilit cümle: kısıt yerel, ifade gücü kombinatoryal. Her tek parça 1024 seçenekten birine mahkûm, ama parçaların dizilişi serbest.\n\nDilde de aynı: sözlükte 50 bin kelime var, yazılabilecek cümle sayısı sınırsız."
+        },
+        {
+          "type": "text",
+          "heading": "7. Codebook nasıl öğreniliyor — hakem kim",
+          "text": "Codebook sabit değil, training'de öğreniliyor. Ve \"doğru\"yu söyleyen dışarıdan bir kaynak yok.\n\nZincir şu: encoder vektör üretir, vektör en yakın kodla değiştirilir, decoder kodlardan görüntüyü kurar, kurulan görüntü orijinaliyle karşılaştırılır. Sözlük kötüyse prototipler gerçek vektörleri temsil edemez, decoder'ın eline kötü girdi geçer, hata büyür.\n\nYani codebook'a not veren tek şey yeniden kurulum hatası.\n\nGüncelleme mantığı k-means'in aynısı: her vektör en yakın prototipe atanır, her prototip kendisine atanan vektörlerin ortalamasına doğru kaydırılır, atamalar değişir, tekrar.\n\nPalet örneğiyle: 1024 rastgele renkle başlarsın, her pikselin hangi rengi seçtiğine bakarsın, her palet rengini kendisini seçen piksellerin ortalamasına taşırsın. Birkaç tur sonra palet verinin gerçek dağılımına oturur."
+        },
+        {
+          "type": "list",
+          "heading": "Kayıptaki üç terim",
+          "items": [
+            "Yeniden kurulum — bütün sistemi süren asıl sinyal.",
+            "Codebook terimi — seçilen prototipi, kendisini seçen encoder vektörüne doğru çeker. Yukarıdaki k-means adımının kendisi; encoder bu terimden etkilenmez.",
+            "Commitment terimi — bunun aynası: encoder çıktısını seçtiği prototipe doğru çeker. Amacı encoder'ı sabitlemek; olmazsa encoder sürekli kayar, her adımda başka kod seçer, atamalar oturmaz.",
+            "Pratikte codebook çoğu uygulamada gradient yerine hareketli ortalamayla güncelleniyor — k-means'e daha yakın ve daha kararlı."
+          ]
+        },
+        {
+          "type": "note",
+          "heading": "Nicemleme türevlenebilir değil — straight-through",
+          "text": "\"En yakın komşuyu bul ve değiştir\" ayrık bir işlem; gradient içinden geçemiyor. Backprop'un kuralı her düğümün yerel türevini istiyordu, burada yok.\n\nÇözüm kaba ama çalışıyor: gradient nicemleme adımının üstünden atlatılıyor — decoder'dan gelen gradient, o adım hiç yokmuş gibi doğrudan encoder'a kopyalanıyor. Codebook ise yukarıdaki ayrı terimle güncelleniyor."
+        },
+        {
+          "type": "text",
+          "heading": "8. Bilinen arıza: ölü kodlar",
+          "text": "Bazı prototipler hiç seçilmiyor. Seçilmeyince güncellenmiyor, güncellenmeyince rastgele başladıkları yerde kalıyor, orada kaldıkları için bir daha hiç seçilmiyorlar. Kilitlenme.\n\nBuna codebook collapse deniyor. Sonuç: 1024 kodun mesela 300'ü gerçekten kullanılıyor, kalanı ölü — sıkıştırma kapasitesinin bir kısmı boşa gidiyor.\n\nKarşı önlemler: uzun süre seçilmeyen kodu, o an gerçekten kullanılan bir vektörün yakınına taşımak (ölü kodu yeniden doğurmak) · prototip boyutunu düşük tutmak · hareketli ortalamalı güncelleme."
+        },
+        {
+          "type": "text",
+          "heading": "9. Bedeli sıfır değil",
+          "text": "Nicemleme küçük bir yuvarlama hatası getiriyor. Konumun gerçek vektörü $(2.99, -1.20, 0.05, 3.71)$ iken en yakın kod $(3.02, -1.18, 0.00, 3.80)$ ise, aradaki fark kalıcı olarak kayboluyor.\n\n1024 kodla bu hata küçük ama var. İddia \"hiç kayıp yok\" değil — az kayıpla sınırlılık satın alınıyor."
+        },
+        {
+          "type": "table",
+          "heading": "Üç seçenek, tek doğru üzerinde",
+          "rows": [
+            [
+              "",
+              "Sadakat",
+              "Ölçek",
+              "Sonuç"
+            ],
+            [
+              "Düz AE",
+              "yüksek",
+              "başıboş",
+              "diffusion training'i zorlar"
+            ],
+            [
+              "VQ",
+              "yüksek",
+              "sabit, yapısal",
+              "iyi nokta"
+            ],
+            [
+              "Güçlü KL'li VAE",
+              "düşük (bulanık)",
+              "kontrollü",
+              "burada gerekmeyen bir özellik için ödün"
+            ]
+          ]
+        },
+        {
+          "type": "insight",
+          "heading": "Ayrıklığın ikinci kazancı",
+          "text": "Diffusion için gerekmiyor ama VQ'nun tarihsel çıkış amacı buydu: latent artık ayrık. Her konum bir indeks, yani bir token. Görüntü, 1024 kelimelik bir sözlükten yazılmış 4096 kelimelik bir metne dönüşüyor.\n\nBu, görüntüyü autoregressive üretmenin kapısını açıyor — ham pikselde milyonlarca sıralı adım gerekirken, token uzayında birkaç bin adım yetiyor. Bugünkü token tabanlı görüntü üretim modellerinin tamamı bu fikrin üstünde."
+        },
+        {
+          "type": "note",
+          "heading": "Nerede karşına çıkıyor",
+          "text": "Stable Diffusion küçük ağırlıklı KL'li varyantı kullanıyor. SIU 2026'daki Output Steering çalışması VQ'lu varyantı — şekildeki encoder kutularının üzerinde \"VQ Encoder\" yazıyor, latent $64 \\times 64$. İlk aşama her iki durumda da ayrı eğitiliyor ve diffusion training'i boyunca donduruluyor: generative modelin parçası değil, altyapı."
+        }
+      ],
+      "id": "cs12-latent-diffusion-neden-vae-degil-ae-nicemleme-vq-codebook"
+    },
+    {
       "title": "VAE: Setup, Latent Space, and Bayesian Formulation",
       "cat": "Generative Models",
       "summary": "VAEs put a probabilistic prior on the latent space, enabling both learning and sampling. The key insight is to train an encoder network $q_\\phi (z|x)$ to approximate the intractable true posterior $p_\\theta (z|x)$.",
@@ -26946,7 +27079,8 @@
         "vs03-mle-map-vae-aradigim-sey-ne-prior-kimin-uzerinde",
         "ida11-vae-vs-ddpm-elbo-derivation-tam-karsilastirmasi",
         "vs04-vae-vs-autoencoder",
-        "vs04-vae-loss-turetimi"
+        "vs04-vae-loss-turetimi",
+        "cs12-latent-diffusion-neden-vae-degil-ae-nicemleme-vq-codebook"
       ]
     },
     {
@@ -27005,7 +27139,8 @@
         "lab07-task-5-ddpm-noise-schedule",
         "lab07-task-6-7-ddpm-algoritmalar",
         "lab07-toy-vs-ddpm-training-objective-farki",
-        "lab07-huggingface-diffusers-ddpmscheduler-unet2dmodel"
+        "lab07-huggingface-diffusers-ddpmscheduler-unet2dmodel",
+        "cs12-latent-diffusion-neden-vae-degil-ae-nicemleme-vq-codebook"
       ]
     },
     {
