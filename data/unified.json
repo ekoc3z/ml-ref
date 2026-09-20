@@ -25707,7 +25707,7 @@
         {
           "type": "text",
           "heading": "1. Üç blokta ne var",
-          "text": "NE YAPILMIŞ — Hızlandırılmış MRI reconstruction'ın tam bir haritası çıkarılmış. Fizikten başlıyor (spin, gradient, k-space), inverse problemi kuruyor, klasik yöntemleri (parallel imaging, compressed sensing, low-rank, subspace) ve DL yöntemlerini aynı çerçeveye oturtuyor, sonra klinik tarafa geçiyor. Yanında Python toolbox'ı da var.\n\nYENİ FİKİR NE — Bir tutorial'ın \"yeni fikri\" yöntem değil, TASNİF olur. Burada iki tane var. Birincisi, DL yöntemlerini üç çerçeveye ayırması: data-driven, physics-guided, generative — ve bu ayrımı \"çıktı stochastic mi\" diye değil, imaging operator'ün nereye girdiği üzerinden yapması. İkincisi, her yöntemi tek bir denkleme indirgemesi: data consistency artı prior. Klasikle DL arasındaki fark, o prior'ın hand-crafted mı olduğu yoksa veriden mi öğrenildiği.\n\nALANA KATKISI — Dağınık bir literatürü ortak bir dile çeviriyor. Bir paperi eline aldığında artık \"bu hangi çerçeve, hangi mimari, hangi öğrenme paradigması\" diye üç soruyla yerine oturtabiliyorsun. Klinik tarafı da bilerek içeride: hangi acceleration rate'in hangi klinik karşılığı var, ve hallucination'ın neden bir görüntü kalitesi meselesi değil bir tanı güvenliği meselesi olduğu."
+          "text": "NE YAPILMIŞ — Hızlandırılmış MRI reconstruction'ın tam bir haritası çıkarılmış. Fizikten başlıyor (spin, gradient, k-space), inverse problemi kuruyor, klasik yöntemleri (parallel imaging, compressed sensing, low-rank, subspace) ve DL yöntemlerini aynı çerçeveye oturtuyor, sonra klinik tarafa geçiyor. Yanında Python toolbox'ı da var.\n\nYENİ FİKİR NE — Bir tutorial'ın \"yeni fikri\" yöntem değil, TASNİF olur. Burada iki tane var. Birincisi, DL yöntemlerini üç çerçeveye ayırması: data-driven, physics-guided, generative — ve bu ayrımı \"çıktı stochastic mi\" diye değil, imaging operator'ün nereye girdiği üzerinden yapması. İkincisi, her yöntemi tek bir denkleme indirgemesi: data consistency artı prior. Klasikle DL arasındaki fark, o prior'ın hand-crafted mı olduğu yoksa veriden mi öğrenildiği.\n\nALANA KATKISI — Dağınık bir literatürü ortak bir dile çeviriyor. Bir paperi eline aldığında artık \"bu hangi çerçeve, hangi mimari, hangi öğrenme paradigması\" diye üç soruyla yerine oturtabiliyorsun. Klinik tarafı da bilerek içeride: hangi acceleration rate'in hangi klinik karşılığı var, ve hallucination'ın neden bir görüntü kalitesi meselesi değil bir tanı güvenliği meselesi olduğu.\n\nSembollerin tamamı en alttaki notasyon tablolarında — $m$, $d$, $A$, $P$, $C$, $F$, $\\Psi$, $G_\\theta$ hepsi orada."
         },
         {
           "type": "text",
@@ -25815,6 +25815,299 @@
           "type": "insight",
           "heading": "16. Hallucination: loss mu, leakage mi",
           "text": "Hızlanma arttıkça daha az veri topluyorsun, dolayısıyla prior'ın payı büyüyor. Ve prior'ın uydurduğu şey gerçek anatomiye benzediği için gözle yakalanamıyor. Tutorial bunu iki ayrı arıza olarak ayırıyor, ve ayrım hangi yöntemi kullandığınla doğrudan ilgili.\n\nLOSS — gerçekten orada olan bir yapı geri getirilemiyor. Over-smoothing, ince yapıların sönmesi. Hand-crafted prior kullanan yöntemlerin tipik arızası: regularization'ı zayıflatırsan düzelir, ama bu sefer artifact suppression gücünü kaybedersin.\n\nLEAKAGE — orada OLMAYAN bir yapı görüntüde beliriyor. Popülasyondan öğrenen DL yöntemlerinin tipik arızası: training kümesinde sık görülen bir doku, test hastasında yokken oraya taşınıyor.\n\nİkisi de tanıyı yanlış yöne çekebilir ama leakage daha sinsi, çünkü görüntü daha iyi görünür. Önerilen yönler: fiziksel sinyal modelinden gelen prior'larla hybrid kurulumlar, farklı ailelerden yöntemleri birleştiren ensemble'lar, multi-contrast'ı birlikte kullanıp anatomik tutarlılığı zorlamak, ve çıktının yanında uncertainty map vermek.\n\nBuradaki ders reconstruction'la sınırlı değil: üretilen her medikal görüntüde aynı soru var — bu doku ölçümden mi geliyor, yoksa modelin önsel bilgisinden mi."
+        },
+        {
+          "type": "text",
+          "heading": "Notasyon — paperdeki bütün semboller",
+          "text": "Paperde sembol yoğun, ve aynı harf farklı yerlerde farklı şey olabiliyor. Üç tabloda topladım.\n\nİki uyarıya dikkat: $m$ hep GÖRÜNTÜ, $M$ hep onun k-space karşılığı — büyük-küçük harf domain değiştiriyor. Ve $\\alpha$ iki ayrı şey: klasik çözücülerde step size, diffusion'da noise schedule'ın parçası ($\\bar{\\alpha}_t$). Şapka ($\\hat{\\cdot}$) tahmin edilen, tilde ($\\tilde{\\cdot}$) ara/ham hali, yıldız ($^{*}$) çözüm demek."
+        },
+        {
+          "type": "table",
+          "heading": "A. Fizik ve k-space",
+          "rows": [
+            [
+              "Sembol",
+              "Ne",
+              "Not"
+            ],
+            [
+              "$r$",
+              "uzaydaki konum, $(x,y,z)$",
+              "görüntü tarafı"
+            ],
+            [
+              "$m(r)$",
+              "aranan MR görüntüsü (magnetization dağılımı)",
+              "bütün işin hedefi"
+            ],
+            [
+              "$s(t)$",
+              "coil'in okuduğu ham sinyal",
+              "zamanda"
+            ],
+            [
+              "$M(k)$",
+              "$m(r)$'nin Fourier dönüşümü — k-space sinyali",
+              "$s(t) = M(k)$"
+            ],
+            [
+              "$k(t)$",
+              "k-space trajectory, $(k_x,k_y,k_z)$",
+              "gradient'in zaman integrali"
+            ],
+            [
+              "$G(t)$",
+              "gradient waveform, eksen eksen",
+              "$k$'yı süren şey"
+            ],
+            [
+              "$\\gamma$",
+              "gyromagnetic ratio",
+              "sabit"
+            ],
+            [
+              "$\\tilde{M}(k)$",
+              "ayrık örneklenmiş k-space",
+              "ızgaraya oturtulmuş hali"
+            ],
+            [
+              "$\\tilde{m}(r)$",
+              "onun inverse Fourier'i",
+              "replica'lar ve blur burada çıkıyor"
+            ],
+            [
+              "$\\Delta k$",
+              "sampling interval — grid adımı",
+              "$\\mathrm{FOV} = 1/\\Delta k$"
+            ],
+            [
+              "$W_k$",
+              "kaplanan k-space genişliği",
+              "$\\Delta r \\approx 1/2W_k$, yani çözünürlük"
+            ],
+            [
+              "$\\Delta r$",
+              "uzamsal çözünürlük",
+              "—"
+            ],
+            [
+              "$R$",
+              "acceleration rate",
+              "grid'in $1/R$'i toplanıyor"
+            ],
+            [
+              "$N_c$",
+              "coil sayısı",
+              "—"
+            ]
+          ]
+        },
+        {
+          "type": "table",
+          "heading": "B. Inverse problem ve klasik yöntemler",
+          "rows": [
+            [
+              "Sembol",
+              "Ne",
+              "Not"
+            ],
+            [
+              "$d$",
+              "gerçekten toplanan k-space verisi",
+              "ölçüm"
+            ],
+            [
+              "$P(k)$",
+              "binary sampling mask",
+              "hangi nokta toplandı"
+            ],
+            [
+              "$C(r)$",
+              "coil sensitivity map'leri",
+              "her coil objeyi nasıl görüyor"
+            ],
+            [
+              "$F$",
+              "Fourier transform operatörü",
+              "—"
+            ],
+            [
+              "$A$",
+              "imaging operator, $A = P \\, F \\, C$",
+              "$d = Am$ — bütün fizik burada"
+            ],
+            [
+              "$A^H$",
+              "Hermitian adjoint (eşlenik devrik)",
+              "$m_u = A^H d$, zero-filled recon"
+            ],
+            [
+              "$A^\\dagger$",
+              "Moore-Penrose pseudoinverse",
+              "tam örneklemede analitik çözüm"
+            ],
+            [
+              "$m^{*}$",
+              "optimizasyonun çözümü",
+              "aranan görüntü"
+            ],
+            [
+              "$m_u$",
+              "zero-filled Fourier reconstruction",
+              "aliased, ağların girdisi"
+            ],
+            [
+              "$\\hat{m}$",
+              "ağın ürettiği reconstruction",
+              "çıktı"
+            ],
+            [
+              "$\\lambda$",
+              "regularization ağırlığı",
+              "prior'ın payı"
+            ],
+            [
+              "$\\Psi(\\cdot)$",
+              "prior / regularizer terimi",
+              "klasikte açık, DL'de örtük"
+            ],
+            [
+              "$\\Phi$",
+              "sparsifying transform (wavelet, gradient)",
+              "$\\Psi(m) = \\|\\Phi m\\|_1$"
+            ],
+            [
+              "$S_{\\alpha\\lambda}(\\cdot)$",
+              "soft-thresholding",
+              "CS'in proximal adımı"
+            ],
+            [
+              "$\\alpha$",
+              "step size",
+              "iteratif çözücülerde"
+            ],
+            [
+              "$H(k)$",
+              "k-space patch'lerinden kurulan Hankel matrisi",
+              "low-rank yöntemlerinde"
+            ],
+            [
+              "$\\sigma_i$",
+              "singular value'lar",
+              "rank penalty bunlardan kuruluyor"
+            ],
+            [
+              "$\\Gamma$",
+              "subspace tabanı (SVD ile, Bloch dictionary'den)",
+              "qMRI"
+            ],
+            [
+              "$s$",
+              "subspace coefficient'ları",
+              "$\\Gamma s \\approx$ sinyal evrimi"
+            ],
+            [
+              "$q$",
+              "quantitative parameter map'leri (ör. $T_2$)",
+              "qMRI'ın asıl hedefi"
+            ],
+            [
+              "$h(\\cdot)$",
+              "analitik sinyal modeli",
+              "fizikten gelen prior"
+            ]
+          ]
+        },
+        {
+          "type": "table",
+          "heading": "C. Deep learning tarafı",
+          "rows": [
+            [
+              "Sembol",
+              "Ne",
+              "Not"
+            ],
+            [
+              "$G_\\theta$",
+              "ağ (recovery network / generator)",
+              "$\\theta$ weight'ler"
+            ],
+            [
+              "$D_\\theta$",
+              "discriminator",
+              "yalnızca GAN kurulumunda"
+            ],
+            [
+              "$z$",
+              "latent değişken ya da noise girdisi",
+              "unconditional ağların girdisi"
+            ],
+            [
+              "$\\ell(\\cdot,\\cdot)$",
+              "loss fonksiyonu",
+              "$\\ell_1$, $\\ell_2$, perceptual, adversarial"
+            ],
+            [
+              "$\\mathcal{L}$",
+              "training objective",
+              "alt indisi çerçeveyi söylüyor"
+            ],
+            [
+              "$m^{(i)}$",
+              "unrolled ağın $i$. iterasyondaki görüntüsü",
+              "$m^{(0)} = m_u$"
+            ],
+            [
+              "$z^{(i+1)}$",
+              "ağ bloğunun çıktısı, DC'den önce",
+              "unrolled döngü"
+            ],
+            [
+              "$I$",
+              "unrolled iterasyon (cascade) sayısı",
+              "$\\hat{m} = m^{(I)}$"
+            ],
+            [
+              "$\\epsilon$",
+              "Gaussian noise",
+              "diffusion'da tahmin edilen şey"
+            ],
+            [
+              "$\\bar{\\alpha}_t$",
+              "kümülatif noise schedule",
+              "$t$ adımda ne kadar noise"
+            ],
+            [
+              "$T$",
+              "diffusion adım sayısı",
+              "—"
+            ],
+            [
+              "$\\tilde{m}_{t-1}$",
+              "ağın bir adım denoise ettiği görüntü",
+              "DC'den önce"
+            ],
+            [
+              "$\\Omega$",
+              "toplanan k-space indeksleri",
+              "elindeki bütün ölçümler"
+            ],
+            [
+              "$\\Theta, \\Lambda, V$",
+              "$\\Omega$'nın ayrık alt kümeleri",
+              "girdi / supervision / validation"
+            ],
+            [
+              "$P_\\Omega$",
+              "o indekslerdeki sampling mask operatörü",
+              "scan-specific loss'larda"
+            ],
+            [
+              "$N_{tr}$",
+              "training örneği sayısı",
+              "$j$ örnek indeksi"
+            ]
+          ]
         },
         {
           "type": "ref",
