@@ -19311,27 +19311,131 @@
       ]
     },
     {
-      "title": "Diffusion Transformer (DiT): Architecture and Conditioning",
+      "title": "Diffusion Transformer (DiT) — U-Net Neden Bırakıldı, Yerine Ne Geldi",
       "cat": "Generative Models",
-      "summary": "DiT replaces the U-Net backbone with Transformer blocks, operating on patchified latents. The main design question is how to inject conditioning signals — via scale/shift (for timestep) or cross-attention/joint attention (for text).",
+      "summary": "Diffusion'ın matematiği aynı kalıyor, yalnızca backbone U-Net'ten transformer'a geçiyor. Asıl mesele mimari süslemesi değil: U-Net'in büyütme reçetesi yoktu, transformer'ınki var. Bugünkü büyük üretim modellerinin hepsi bu yüzden DiT tabanlı.",
       "context": "CS231n · Lecture 14 · May 20, 2025 · Peebles and Xie ICCV 2023",
       "sections": [
         {
           "type": "text",
-          "heading": "DiT Overall Architecture",
-          "text": "Input: Noised Latent $(32\\times 32\\times 4)$   ← latent from LDM VAE\n  ↓  Patchify + Linear Embed      ← split into $2\\times 2$ patches → tokens\n  ↓  + positional embedding\n  ↓  Conditioning: Timestep t, Label y  ← via MLP → scale/shift vectors\n  ↓  N × DiT Block                ← standard Transformer blocks\n  ↓  LayerNorm\n  ↓  Linear + Reshape             ← back to spatial layout\nOutput: Predicted noise $\\sum (32\\times 32\\times 4)$",
-          "qa": true
+          "heading": "1. Önce şunu sor: DDPM'de ağ neden U-Net'ti",
+          "text": "Diffusion'da ağın işi şu: $x_t$ ve $t$ veriliyor, eklenen noise tahmin ediliyor. Çıktı girdiyle AYNI boyutta — her piksel için bir sayı üretiyorsun.\n\nBu tarif tanıdık gelmeli, çünkü segmentation'ın tarifi de aynı: girdi bir görüntü, çıktı her piksel için bir değer. Dense prediction denen şey bu. Ve o görev için elde hazır, denenmiş bir mimari vardı — U-Net.\n\nU-Net'in iki özelliği tam oturuyordu. Encoder inip bağlamı topluyor, decoder çıkıp çözünürlüğü geri veriyor; arada skip connection'lar ince detayı doğrudan karşıya taşıyor, yoksa darboğazda kaybolur. Noise tahmininde ince detay tam olarak aranan şey.\n\nYani U-Net bir tercih değildi, hazır cevaptı. Diffusion'ın kendi mantığından çıkmıyor — başka bir işten ödünç alındı."
+        },
+        {
+          "type": "insight",
+          "heading": "2. Ödünç alınan mimarinin iki sıkıntısı",
+          "text": "BİRİNCİSİ, U-Net'in görüşü yerel. Convolution komşuluğa bakıyor; görüntünün bir ucundaki yapıyla öbür ucundaki yapıyı ilişkilendiremiyor. Bu yüzden zaten DDPM uygulamalarında U-Net'in içine, düşük çözünürlüklü seviyelere ATTENTION BLOKLARI konuyordu. Yani transformer çoktan içeri sızmıştı, ama yama olarak.\n\nİKİNCİSİ ve asıl olanı: U-Net'in BÜYÜTME REÇETESİ YOK. Kaç seviye inilecek, hangi çözünürlükte attention konacak, kanal sayıları nasıl artacak, skip nereye bağlanacak — hepsi elle ayarlanmış tasarım kararları. Modeli iki katına çıkarmak istediğinde \"şunu şu kadar artır\" diyebileceğin tek bir eksen yok, ve büyüttüğünde ne kadar iyileşeceğini de bilmiyorsun.\n\nTransformer'da ise tam tersi. LLM tarafında yıllardır işleyen bir reçete var: derinliği ve genişliği artır, veriyi artır, compute'u artır — performans ÖNGÖRÜLEBILIR BIÇIMDE iyileşiyor. Scaling law denen şey bu, ve mühendislik olarak bir mimariden istenecek en değerli özellik."
+        },
+        {
+          "type": "insight",
+          "heading": "3. DiT'in fikri: diffusion'a dokunma, backbone'u değiştir",
+          "text": "Buradaki en kritik nokta, en kolay kaçırılan nokta: DiT yeni bir generative model değil.\n\nForward process aynı, noise schedule aynı, loss aynı ($\\epsilon$ tahmini + MSE), sampling aynı. Değişen tek şey, $\\epsilon_\\theta$'yı hesaplayan ağın içi. U-Net çıktı, transformer girdi.\n\nBunun önemi şurada: diffusion'ın matematiği ile onu hesaplayan ağın AYRILABILIR olduğunu gösteriyor. Biri diğerini şart koşmuyor. \"Diffusion demek U-Net demek\" sanısı bu paperle kırıldı.\n\nAynı ayrımı SelfRDB'de de görmüştün — orada da schedule ve bridge değişiyordu ama ağ hâlâ U-Net'ti. Hangi katmanın değiştiğini ayırt etmek, bir paperi okurken yapacağın ilk iş."
         },
         {
           "type": "text",
-          "heading": "DiT Block: Conditioning Injection Methods",
-          "text": "Method 1 — Predict scale/shift (most common for timestep t):\n  Conditioning → $\\mathrm{MLP} \\to (\\gamma _1, \\beta _1, \\alpha _1, \\gamma _2, \\beta _2, \\alpha _2)$\n  $x = \\operatorname{LayerNorm}(x)$             ← normalize\n  $x = \\gamma _1 \\cdot x + \\beta _1$             ← scale and shift (AdaLN)\n  x = MultiHeadSelfAttention(x)\n  $x = \\alpha _1 \\cdot x$ + residual       ← gated residual\n  $x = \\operatorname{LayerNorm}(x)$\n  $x = \\gamma _2 \\cdot x + \\beta _2$\n  x = PointwiseFeedforward(x)\n  $x = \\alpha _2 \\cdot x$ + residual\n\nMethod 2 — Cross-Attention (common for text conditioning):\n  Q from image tokens, K,V from text tokens\n  → each image patch attends to all text tokens\n\nMethod 3 — Joint Attention (MM-DiT in Stable Diffusion 3, FLUX.1):\n  Concatenate image and text tokens on sequence dimension\n  → image and text attend to each other simultaneously",
-          "qa": true
+          "heading": "4. Görüntüyü transformer'a nasıl sokuyorsun — patchify",
+          "text": "Transformer token dizisi ister, görüntü ise bir grid. Aradaki geçiş ViT'ten aynen alınıyor.\n\nLatent $32 \\times 32 \\times 4$ olsun. Bunu $2 \\times 2$'lik patch'lere bölüyorsun, her patch lineer bir projeksiyondan geçip bir token oluyor. $16 \\times 16 = 256$ token çıkıyor. Üstüne positional embedding ekleniyor, çünkü attention sırayı kendiliğinden bilmiyor ve hangi token'ın görüntünün neresinden geldiği bilgisi kaybolmamalı.\n\nSonra $N$ tane standart transformer bloğu. En sonda LayerNorm, lineer katman ve reshape ile token'lar tekrar grid'e dönüyor. Çıktı yine $32 \\times 32 \\times 4$ — tahmin edilen noise.\n\nNeden latent üzerinde çalışıldığına dikkat: attention token sayısının KARESİYLE büyüyor. Pikselde çalışsaydın $256 \\times 256$ görüntü için on binlerce token olurdu, attention patlar. Latent diffusion'ın sıkıştırması DiT'i mümkün kılan ön koşul. Patch boyutunu küçültmek (2 yerine 4 değil, 4 yerine 2) token sayısını artırıp kaliteyi yükseltiyor ama maliyeti de aynı oranda büyütüyor."
         },
         {
-          "type": "note",
-          "heading": "DiT Scaling Properties",
-          "text": "DiT demonstrated that diffusion models follow the same scaling laws as language models (Peebles and Xie ICCV 2023): larger models (more parameters, more Transformer depth/width) produce better FID scores for the same compute budget. This motivated scaling to billions of parameters — FLUX.1 (12B), MovieGen (30B)."
+          "type": "insight",
+          "heading": "5. Asıl tasarım sorusu: koşul nereden girecek",
+          "text": "U-Net'te bu kolaydı — timestep embedding'i her ResBlock'un içine toplayıp geçiyordun. Transformer bloğunda öyle doğal bir yer yok. DiT paperinin gerçek katkısı bu sorunun cevabı, mimarinin kendisi değil.\n\nDenenen yollar:\n\nIN-CONTEXT — koşulu fazladan bir token gibi dizinin başına ekle. En basiti, ama en zayıfı: koşul diğer token'larla yarışıyor ve etkisi dolaylı kalıyor.\n\nCROSS-ATTENTION — koşul ayrı bir diziyse (metin gibi) doğal seçim. Query görüntüden, key ve value koşuldan. Güçlü ama her bloğa ek bir attention katmanı bindiriyor, pahalı.\n\nadaLN — kazanan. Koşul küçük bir MLP'den geçiriliyor ve LayerNorm'un scale ile shift parametreleri ORADAN üretiliyor. Yani koşul ağa bir girdi olarak eklenmiyor, ağın normalization ayarlarını değiştiriyor.\n\nSezgisi şu: timestep bir içerik bilgisi değil, bir REJİM bilgisi. \"Şu an çok gürültülü bir aşamadasın, kaba yapıya bak\" ya da \"neredeyse temizsin, ince detaya bak\". Ağa ne göreceğini değil, hangi ayarda çalışacağını söylüyor — ve normalization istatistiklerini kaydırmak tam olarak ayar düğmesi çevirmek."
+        },
+        {
+          "type": "algo",
+          "title": "DiT bloğu — adaLN-Zero ile koşullama",
+          "lines": [
+            "$c$ = timestep $t$ ve class/text embedding'in toplamı",
+            "$(\\gamma_1, \\beta_1, \\alpha_1, \\gamma_2, \\beta_2, \\alpha_2) = \\mathrm{MLP}(c)$ >> koşuldan üretilen ayarlar",
+            "",
+            "# attention yolu",
+            "$h = \\mathrm{LayerNorm}(x)$",
+            "$h = \\gamma_1 \\cdot h + \\beta_1$ >> adaLN: scale ve shift koşuldan",
+            "$h = \\mathrm{MultiHeadSelfAttention}(h)$",
+            "$x = x + \\alpha_1 \\cdot h$ >> gated residual",
+            "",
+            "# feedforward yolu",
+            "$h = \\mathrm{LayerNorm}(x)$",
+            "$h = \\gamma_2 \\cdot h + \\beta_2$",
+            "$h = \\mathrm{FeedForward}(h)$",
+            "$x = x + \\alpha_2 \\cdot h$",
+            "",
+            "return $x$"
+          ]
+        },
+        {
+          "type": "insight",
+          "heading": "6. \"Zero\" nereden geliyor — küçük ama belirleyici detay",
+          "text": "Yukarıdaki $\\alpha$'lar residual'ın kapısı. adaLN-Zero'da MLP'nin son katmanı SIFIRDAN başlatılıyor, yani eğitimin ilk anında $\\alpha_1 = \\alpha_2 = 0$.\n\nSonuç: blok başlangıçta identity gibi davranıyor — girdi hiç değiştirilmeden geçiyor. Ağ derinleştikçe bloklar tek tek, gradient'in gerektirdiği ölçüde devreye giriyor.\n\nNeden işe yarıyor: çok derin bir ağı rastgele başlatıp eğitmeye kalktığında sinyal katmanlar boyunca bozuluyor ve eğitim ilk adımlarda dağılıyor. Sıfırdan başlayan residual gate, modelin kendi derinliğini kademeli açmasına izin veriyor.\n\nVe bu detay tercih değil, ölçülmüş sonuç: paper dört koşullama yöntemini aynı compute bütçesinde karşılaştırıyor ve adaLN-Zero diğerlerini net biçimde geçiyor. Mimari kararlarının \"güzel duruyor\" ile değil ablation ile verildiğinin iyi bir örneği."
+        },
+        {
+          "type": "table",
+          "heading": "U-Net ile DiT yan yana",
+          "rows": [
+            [
+              "",
+              "U-Net backbone",
+              "DiT backbone"
+            ],
+            [
+              "Temel operatör",
+              "convolution, yerel",
+              "self-attention, global"
+            ],
+            [
+              "Çözünürlük",
+              "encoder-decoder, iniyor-çıkıyor",
+              "sabit, token dizisi"
+            ],
+            [
+              "Detay taşıma",
+              "skip connection",
+              "gerek yok, çözünürlük hiç düşmüyor"
+            ],
+            [
+              "Koşullama",
+              "embedding'i ResBlock'a topla",
+              "adaLN — normalization ayarını koşuldan üret"
+            ],
+            [
+              "Büyütme",
+              "elle tasarım kararları",
+              "derinlik/genişlik, öngörülebilir"
+            ],
+            [
+              "Maliyet",
+              "çözünürlükle lineer",
+              "token sayısının karesi"
+            ]
+          ]
+        },
+        {
+          "type": "insight",
+          "heading": "7. Neden tuttu: ölçeklenebilir olması",
+          "text": "Paperin asıl iddiası mimari değil, EĞRİ. Model büyüdükçe (daha fazla blok, daha geniş katman, daha çok compute) üretim kalitesi tahmin edilebilir biçimde artıyor — dil modellerindeki scaling law'ın aynısı diffusion'da da geçerli.\n\nU-Net'te böyle bir eğri yoktu. Büyütüyordun, bazen iyileşiyordu, bazen ayar bozuluyordu.\n\nBu tek bulgu yönü değiştirdi. Elinde bir eğri varsa, bir sonraki modelin ne kadar compute ile ne kadar iyi olacağını PLANLAYABİLİYORSUN — ve endüstri tam olarak bunu istiyor. Bugünkü büyük görüntü ve video üretim sistemlerinin backbone'u bu yüzden transformer: Stable Diffusion 3, FLUX, video tarafındaki büyük modeller.\n\nNot: bunlar aynı zamanda rectified flow / flow matching kullanıyor. İki değişiklik bağımsız ama birlikte gidiyor — biri backbone'u, diğeri noise'tan veriye giden yolu değiştiriyor."
+        },
+        {
+          "type": "text",
+          "heading": "8. Senin için ne anlama geliyor",
+          "text": "Bir: \"diffusion = U-Net\" denklemi genel ML tarafında çoktan koptu, ama MEDİKAL görüntülemede U-Net hâlâ varsayılan. Lab paperlarının neredeyse hepsi U-Net tabanlı. Aradaki bu gecikme, bir paperin yayın yılı ile içindeki fikrin yaşının neden farklı şeyler olduğunun somut örneği.\n\nİki: bir paper okurken hangi katmanın değiştiğini ayır — generative model mi (DDPM, flow matching), backbone mu (U-Net, DiT, Mamba), yoksa problem kurulumu mu (bridge, koşullama, data consistency). Üçü bağımsız, ve bir paper genelde yalnızca birini değiştiriyor.\n\nÜç: DiT'in maliyet tarafı medikalde sıradan bir engel değil. Attention token sayısının karesiyle büyüyor, medikal görüntüler ise çoğu zaman 3D — volume'da token sayısı patlıyor. Mamba'nın medikal tarafta bu kadar hızlı karşılık bulmasının sebebi de bu: global bağ kuruyor ama maliyeti dizi uzunluğuyla lineer."
+        },
+        {
+          "type": "ref",
+          "heading": "Arka plandaki kartlar",
+          "items": [
+            {
+              "id": "ida11-ddpm-unet-dahil-bastan-sona",
+              "label": "DDPM — U-Net dahil baştan sona"
+            },
+            {
+              "id": "ida05-u-net-encoder-decoder-for-biomedical-segmentation",
+              "label": "U-Net — encoder/decoder"
+            },
+            {
+              "id": "cs12-latent-diffusion-neden-vae-degil-ae-nicemleme-vq-codebook",
+              "label": "Latent diffusion — neden AE, VQ ve codebook"
+            }
+          ]
         }
       ],
       "id": "cs13-diffusion-transformer-dit-architecture-and-conditioning",
@@ -25576,7 +25680,8 @@
           "heading": "7. Sekiz aday sekiz kat yavaş mı",
           "text": "Hayır, ve ayrım önemli.\n\nHESAP gerçekten sekiz kat — paralellik bunu değiştirmiyor.\n\nDUVAR SAATİ sekiz kat değil. Adaylar tek batch'te çalıştırılabiliyor, latent küçük olduğu için bellek yükü önemsiz, ve diffusion sampling'de batch=1 GPU'yu zaten doldurmuyor — toplu çalıştırmak neredeyse bedava. Tek incelik adayların farklı adım sayıları kullanması, gruplayınca çözülüyor.\n\nDoğru okuma: maliyet gecikmede değil VERİMDE. Vaka başına GPU-saati sekize katlanıyor.\n\nBu paperde GAN yok — seçim mekanizması adversarial değil, skor tabanlı."
         }
-      ]
+      ],
+      "venue": "ICON"
     },
     "selfrdb": {
       "title": "Self-Consistent Recursive Diffusion Bridge for Medical Image Translation",
@@ -25696,7 +25801,8 @@
             }
           ]
         }
-      ]
+      ],
+      "venue": "ICON"
     },
     "mri_recon_tutorial": {
       "title": "A Tutorial on MRI Reconstruction: From Modern Methods to Clinical Implications",
@@ -26139,7 +26245,8 @@
             }
           ]
         }
-      ]
+      ],
+      "venue": "ICON"
     }
   },
   "guides": {
