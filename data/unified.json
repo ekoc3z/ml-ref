@@ -27609,7 +27609,233 @@
         {
           "type": "note",
           "heading": "Nereye bakılır",
-          "text": "Bu metin sırayı verir, ayrıntı kartlarda: forward/reverse türetmesinin tamamı ve VAE ile satır satır karşılaştırması ida11'de; U-Net'in içi, ResBlock ve boyut akışı yine ida11 ile lab07'de; kod tarafı (corruption, training loop, DDPMScheduler, UNet2DModel) lab07'de; CFG, latent diffusion, SDE/skor bakışı ve rectified flow cs13'te."
+          "text": "Bu metin sırayı verir, ayrıntı kartlarda: forward/reverse türetmesinin tamamı ve VAE ile satır satır karşılaştırması ida11'de; U-Net'in içi, ResBlock ve boyut akışı yine ida11 ile lab07'de; kod tarafı (corruption, training loop, DDPMScheduler, UNet2DModel) lab07'de; CFG, latent diffusion ve SDE/skor bakışı cs13'te. Rectified flow ve flow matching'in kendi konu anlatımı var: Flow Matching ve Rectified Flow."
+        }
+      ]
+    },
+    "flow": {
+      "title": "Flow Matching ve Rectified Flow — Baştan Sona Konu Anlatımı",
+      "cat": "Konu Anlatımı",
+      "context": "Diffusion'ın devamı · CS231n 13 — tek oturumda okunmak için",
+      "chapters": [
+        "cs13",
+        "mlo21"
+      ],
+      "summary": "Noise ile veri arasına düz çizgi çekip velocity öğrenmek: flow'un ne olduğu, hedef bilinmezken neden yine de doğru haritanın öğrenildiği, yolların neden büküldüğü ve reflow'un onları nasıl düzelttiği, flow matching ile rectified flow'un farkı, DDPM ile aynı aileden oluşu, SD3/FLUX tarifi ve iki görüntü arasında transfer.",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Bu metin ne için",
+          "text": "DDPM anlatımının devamı. CS231n rectified flow'u tek bir kartta, eğitim ve sampling koduyla veriyor; kod on satır ama neden çalıştığı orada yok. Bu metin o boşluğu kapatıyor: flow nedir, hedef velocity neden bilinmiyor ve yine de nasıl öğreniliyor, rectified flow ile flow matching aynı şey mi, DDPM'le ilişkisi ne, ve bugünkü büyük modellerin (SD3, FLUX) tarifi neden bu.\n\nNotasyon CS231n'inkiyle aynı: $t=0$ veri, $t=1$ noise. Lipman'ın flow matching paperı tam tersini kullanıyor; o fark aşağıda ayrıca geçiyor, çünkü paper okurken işaretleri karıştırmanın en kolay yolu bu."
+        },
+        {
+          "type": "text",
+          "heading": "1. DDPM'den geriye ne rahatsız ediyordu",
+          "text": "DDPM çalışıyor ama üç yerde ağır. Birincisi türetme: forward process, variance schedule, ELBO, KL'nin MSE'ye çökmesi — sonuçtaki loss basit ama oraya gelen yol uzun. İkincisi adım sayısı: sampling 1000 adım. Üçüncüsü schedule: $\\beta_t$ elle seçilen bir tasarım kararı, ve kaliteyi ciddi etkiliyor.\n\nDDIM bir ipucu vermişti. Aynı eğitilmiş ağla, rastgelelik tamamen kaldırılınca ($\\eta=0$) sampling deterministik bir yol izliyor ve 50 adıma iniyor. Yani üretim aslında noise'dan veriye giden deterministik bir yolculuk olarak da yazılabiliyor.\n\nBuradan doğal soru çıkıyor: madem sonunda deterministik bir yol izliyoruz, o yolu baştan doğrudan öğrenemez miyiz — ELBO'suz, schedule'sız?"
+        },
+        {
+          "type": "text",
+          "heading": "2. Tek cümlelik fikir",
+          "text": "Her noktada \"buradan hangi yöne gitmeliyim\" diyen bir velocity field öğren; üretim, noise'dan başlayıp bu alanı takip etmek.\n\nRüzgâr haritası düşün. Haritanın her noktasında bir ok var. Bir tüyü rastgele bir yere bırakıyorsun, tüy okları takip ediyor ve bir yere varıyor. Oklar doğru çizildiyse, rastgele bırakılan tüyler vardıklarında veri distribution'unu oluşturuyor. Öğrenilen şey tüylerin kendisi değil, harita."
+        },
+        {
+          "type": "text",
+          "heading": "3. Flow: bir ODE",
+          "text": "Tüyün hareketi bir diferansiyel denklem: $\\frac{dx}{dt} = v(x, t)$. $x$ tüyün konumu (bir görüntü), $v$ o konumda ve o anda velocity. Denklemi $t=1$'den $t=0$'a çözmek, noise'u görüntüye taşımak demek.\n\nBu fikir yeni değil. Neural ODE (Chen ve ark., NeurIPS 2018) ve continuous normalizing flows tam olarak bunu yapıyordu. Sorun eğitimdeydi: bir $v_\\theta$'nın iyi olup olmadığını anlamak için ODE'yi baştan sona simüle edip likelihood hesaplaman gerekiyordu. Her eğitim adımında yüzlerce ağ çağrısı — büyük görüntülerde pratik değil.\n\nFlow matching'in katkısı bu tek engeli kaldırmak: ODE'yi eğitim sırasında hiç çözmeden, düz bir regression ile $v_\\theta$'yı eğitmek. Adındaki \"simulation-free\" bu demek."
+        },
+        {
+          "type": "text",
+          "heading": "4. Sorun: doğru haritayı kimse bilmiyor",
+          "text": "Regression yapmak için hedef lazım: her $(x, t)$ için doğru velocity. Ama bu hedef bir bütün olarak distribution'a bağlı. $t=0.5$'teki bir noktadan hangi yöne gidileceği, o noktaya hangi veri örneklerinden ve hangi noise örneklerinden gelinebileceğine bağlı — yani bütün veri setine. Kapalı formda yazamıyorsun.\n\nBu, DDPM'deki durumun aynısı. Orada da gerçek reverse geçiş $q(x_{t-1} \\mid x_t)$ bilinmiyordu, çünkü bütün veri distribution'una bağlıydı. Çözüm de aynı çıkacak: tek bir örneğe koşullayınca her şey hesaplanabilir hale geliyor."
+        },
+        {
+          "type": "text",
+          "heading": "5. Hile: tek bir çift için cevap bariz",
+          "text": "Tek bir veri örneği $x_0$ ve tek bir noise örneği $z$ al. İkisi arasına düz bir çizgi çek: $x_t = (1-t)\\,x_0 + t\\,z$. Bu çizgi üzerindeki velocity sabit: $z - x_0$. Hesaplanacak hiçbir şey yok.\n\nSayılarla, tek boyutta: $x_0 = 2$, $z = -1$. O zaman $x_t = 2 - 3t$. $t=0.5$'te $x_t = 0.5$, velocity her yerde $-3$. $t=1$'deki $-1$'den başlayıp tek bir Euler adımı atarsan: $x = -1 - 1 \\cdot (-3) = 2$. Tam olarak veriye varıyorsun.\n\nEğitim bu kadar: rastgele bir veri örneği, rastgele bir noise, rastgele bir $t$ çek; aradaki noktayı kur; ağdan o noktadaki velocity'yi tahmin etmesini iste; hedef $z - x_0$."
+        },
+        {
+          "type": "formula",
+          "heading": "Rectified flow / flow matching loss",
+          "text": "$$x_t = (1-t)\\,x_0 + t\\,z, \\qquad z \\sim \\mathcal{N}(0, I), \\quad t \\sim \\mathcal{U}[0,1]$$\n$$L(\\theta) = \\mathbb{E}_{x_0,\\, z,\\, t}\\, \\| v_\\theta(x_t, t) - (z - x_0) \\|^2$$"
+        },
+        {
+          "type": "text",
+          "heading": "6. Neden tek çiftin cevabıyla eğitmek doğru haritayı veriyor",
+          "text": "Burada bir şey tuhaf görünmeli. Aynı $x_t$ noktasına birçok farklı çiftten gelinebilir, ve her biri farklı bir hedef söylüyor. Ağ aynı girdi için birbiriyle çelişen hedeflerle eğitiliyor.\n\nCevap MSE'nin kendisinde. MSE'yi minimize eden tahmin, hedeflerin ortalamasıdır — MLE anlatımındaki \"Gaussian noise varsa MSE, MSE'nin çözümü ortalama\" gerçeğinin aynısı. Dolayısıyla ağ her noktada o noktadan geçen bütün çiftlerin velocity'lerinin ortalamasını öğreniyor: $v^*(x, t) = \\mathbb{E}[\\, z - x_0 \\mid x_t = x \\,]$.\n\nFlow matching paperlarının asıl teoremi şu: bu ortalama velocity field, noise distribution'unu tam olarak veri distribution'una taşıyor. Tek tek çiftlerin düz çizgileri gerçek yollar değil, ama ortalamaları doğru haritayı veriyor.\n\nOyuncak örnek: veri yalnızca iki noktadan oluşsun, $-1$ ve $+1$. $t=0.5$'te $x=0$ noktasına hem ($x_0=+1$, $z=-1$, velocity $-2$) çiftinden hem de ($x_0=-1$, $z=+1$, velocity $+2$) çiftinden eşit olasılıkla geliniyor. Ağ ortalamayı, yani $0$'ı öğreniyor. O noktadaki tüy kıpırdamıyor.\n\nDDPM'deki ε-prediction da aynı hileyi kullanıyordu: tek örnekteki gerçek noise gürültülü bir hedef, ama MSE'nin minimize ettiği şey conditional expectation. İki yöntemin eğitimi bu yüzden bu kadar benziyor."
+        },
+        {
+          "type": "svg",
+          "heading": "7. Çiftler düz, öğrenilen yollar değil",
+          "svg": "<svg width=\"560\" height=\"230\" viewBox=\"0 0 560 230\" role=\"img\" aria-label=\"rastgele eslesme ve ogrenilen flow\"><text x=\"20\" y=\"16\">eğitim çiftleri: düz ama kesişiyor</text><line class=\"axis\" x1=\"20.0\" y1=\"34\" x2=\"20.0\" y2=\"194\" stroke-width=\"1\"/><line class=\"axis\" x1=\"250.0\" y1=\"34\" x2=\"250.0\" y2=\"194\" stroke-width=\"1\"/><text x=\"16\" y=\"212\">veri, t=0</text><text x=\"198\" y=\"212\">noise, t=1</text><text x=\"310\" y=\"16\">öğrenilen flow: kesişmiyor, bükülüyor</text><line class=\"axis\" x1=\"310.0\" y1=\"34\" x2=\"310.0\" y2=\"194\" stroke-width=\"1\"/><line class=\"axis\" x1=\"540.0\" y1=\"34\" x2=\"540.0\" y2=\"194\" stroke-width=\"1\"/><text x=\"306\" y=\"212\">veri, t=0</text><text x=\"488\" y=\"212\">noise, t=1</text><line class=\"p-curve\" x1=\"20.0\" y1=\"74.0\" x2=\"250.0\" y2=\"178.0\" stroke-width=\"1.3\"/><line class=\"p-curve\" x1=\"20.0\" y1=\"154.0\" x2=\"250.0\" y2=\"156.0\" stroke-width=\"1.3\"/><line class=\"p-curve\" x1=\"20.0\" y1=\"154.0\" x2=\"250.0\" y2=\"138.0\" stroke-width=\"1.3\"/><line class=\"p-curve\" x1=\"20.0\" y1=\"74.0\" x2=\"250.0\" y2=\"122.0\" stroke-width=\"1.3\"/><line class=\"p-curve\" x1=\"20.0\" y1=\"154.0\" x2=\"250.0\" y2=\"106.0\" stroke-width=\"1.3\"/><line class=\"p-curve\" x1=\"20.0\" y1=\"74.0\" x2=\"250.0\" y2=\"90.0\" stroke-width=\"1.3\"/><line class=\"p-curve\" x1=\"20.0\" y1=\"74.0\" x2=\"250.0\" y2=\"72.0\" stroke-width=\"1.3\"/><line class=\"p-curve\" x1=\"20.0\" y1=\"154.0\" x2=\"250.0\" y2=\"50.0\" stroke-width=\"1.3\"/><polyline class=\"q-line\" stroke-width=\"1.6\" points=\"540.0,178.0 535.4,176.7 530.8,175.5 526.2,174.3 521.6,173.1 517.0,172.0 512.4,170.8 507.8,169.8 503.2,168.7 498.6,167.7 494.0,166.8 489.5,165.9 484.9,165.0 480.3,164.2 475.7,163.5 471.1,162.8 466.5,162.1 461.9,161.5 457.3,161.0 452.7,160.5 448.1,160.1 443.5,159.7 438.9,159.4 434.3,159.1 429.7,158.9 425.1,158.6 420.5,158.4 415.9,158.2 411.3,158.0 406.7,157.8 402.1,157.7 397.5,157.5 392.9,157.3 388.4,157.1 383.8,156.9 379.2,156.7 374.6,156.6 370.0,156.4 365.4,156.2 360.8,156.0 356.2,155.8 351.6,155.7 347.0,155.5 342.4,155.3 337.8,155.1 333.2,154.9 328.6,154.7 324.0,154.6 319.4,154.4 314.8,154.2 310.2,154.0 310.0,154.0\"/><polyline class=\"q-line\" stroke-width=\"1.6\" points=\"540.0,156.0 535.4,155.2 530.8,154.4 526.2,153.6 521.6,152.8 517.0,152.0 512.4,151.3 507.8,150.6 503.2,149.9 498.6,149.3 494.0,148.7 489.5,148.1 484.9,147.5 480.3,147.0 475.7,146.5 471.1,146.1 466.5,145.8 461.9,145.4 457.3,145.2 452.7,145.0 448.1,144.8 443.5,144.8 438.9,144.8 434.3,144.8 429.7,145.0 425.1,145.1 420.5,145.4 415.9,145.7 411.3,146.0 406.7,146.3 402.1,146.7 397.5,147.0 392.9,147.4 388.4,147.8 383.8,148.1 379.2,148.5 374.6,148.9 370.0,149.2 365.4,149.6 360.8,150.0 356.2,150.3 351.6,150.7 347.0,151.1 342.4,151.4 337.8,151.8 333.2,152.2 328.6,152.5 324.0,152.9 319.4,153.2 314.8,153.6 310.2,154.0 310.0,154.0\"/><polyline class=\"q-line\" stroke-width=\"1.6\" points=\"540.0,138.0 535.4,137.5 530.8,137.1 526.2,136.6 521.6,136.2 517.0,135.7 512.4,135.3 507.8,134.9 503.2,134.5 498.6,134.2 494.0,133.8 489.5,133.5 484.9,133.2 480.3,132.9 475.7,132.6 471.1,132.4 466.5,132.2 461.9,132.0 457.3,131.9 452.7,131.9 448.1,131.8 443.5,131.9 438.9,132.0 434.3,132.2 429.7,132.5 425.1,132.9 420.5,133.3 415.9,133.9 411.3,134.6 406.7,135.3 402.1,136.1 397.5,136.9 392.9,137.8 388.4,138.7 383.8,139.6 379.2,140.5 374.6,141.4 370.0,142.3 365.4,143.2 360.8,144.1 356.2,145.0 351.6,145.9 347.0,146.8 342.4,147.7 337.8,148.6 333.2,149.5 328.6,150.4 324.0,151.3 319.4,152.2 314.8,153.1 310.2,154.0 310.0,154.0\"/><polyline class=\"q-line\" stroke-width=\"1.6\" points=\"540.0,122.0 535.4,121.8 530.8,121.7 526.2,121.5 521.6,121.4 517.0,121.2 512.4,121.1 507.8,121.0 503.2,120.8 498.6,120.7 494.0,120.6 489.5,120.5 484.9,120.4 480.3,120.3 475.7,120.2 471.1,120.1 466.5,120.1 461.9,120.0 457.3,120.0 452.7,120.0 448.1,120.0 443.5,120.0 438.9,120.1 434.3,120.2 429.7,120.3 425.1,120.5 420.5,120.8 415.9,121.2 411.3,121.7 406.7,122.3 402.1,123.2 397.5,124.2 392.9,125.4 388.4,126.8 383.8,128.4 379.2,129.9 374.6,131.5 370.0,133.1 365.4,134.7 360.8,136.3 356.2,137.9 351.6,139.5 347.0,141.1 342.4,142.7 337.8,144.3 333.2,145.9 328.6,147.5 324.0,149.1 319.4,150.7 314.8,152.3 310.2,153.9 310.0,153.9\"/><polyline class=\"q-line\" stroke-width=\"1.6\" points=\"540.0,106.0 535.4,106.2 530.8,106.3 526.2,106.5 521.6,106.6 517.0,106.8 512.4,106.9 507.8,107.0 503.2,107.2 498.6,107.3 494.0,107.4 489.5,107.5 484.9,107.6 480.3,107.7 475.7,107.8 471.1,107.9 466.5,107.9 461.9,108.0 457.3,108.0 452.7,108.0 448.1,108.0 443.5,108.0 438.9,107.9 434.3,107.8 429.7,107.7 425.1,107.5 420.5,107.2 415.9,106.8 411.3,106.3 406.7,105.7 402.1,104.8 397.5,103.8 392.9,102.6 388.4,101.2 383.8,99.6 379.2,98.1 374.6,96.5 370.0,94.9 365.4,93.3 360.8,91.7 356.2,90.1 351.6,88.5 347.0,86.9 342.4,85.3 337.8,83.7 333.2,82.1 328.6,80.5 324.0,78.9 319.4,77.3 314.8,75.7 310.2,74.1 310.0,74.1\"/><polyline class=\"q-line\" stroke-width=\"1.6\" points=\"540.0,90.0 535.4,90.5 530.8,90.9 526.2,91.4 521.6,91.8 517.0,92.3 512.4,92.7 507.8,93.1 503.2,93.5 498.6,93.8 494.0,94.2 489.5,94.5 484.9,94.8 480.3,95.1 475.7,95.4 471.1,95.6 466.5,95.8 461.9,96.0 457.3,96.1 452.7,96.1 448.1,96.2 443.5,96.1 438.9,96.0 434.3,95.8 429.7,95.5 425.1,95.1 420.5,94.7 415.9,94.1 411.3,93.4 406.7,92.7 402.1,91.9 397.5,91.1 392.9,90.2 388.4,89.3 383.8,88.4 379.2,87.5 374.6,86.6 370.0,85.7 365.4,84.8 360.8,83.9 356.2,83.0 351.6,82.1 347.0,81.2 342.4,80.3 337.8,79.4 333.2,78.5 328.6,77.6 324.0,76.7 319.4,75.8 314.8,74.9 310.2,74.0 310.0,74.0\"/><polyline class=\"q-line\" stroke-width=\"1.6\" points=\"540.0,72.0 535.4,72.8 530.8,73.6 526.2,74.4 521.6,75.2 517.0,76.0 512.4,76.7 507.8,77.4 503.2,78.1 498.6,78.7 494.0,79.3 489.5,79.9 484.9,80.5 480.3,81.0 475.7,81.5 471.1,81.9 466.5,82.2 461.9,82.6 457.3,82.8 452.7,83.0 448.1,83.2 443.5,83.2 438.9,83.2 434.3,83.2 429.7,83.0 425.1,82.9 420.5,82.6 415.9,82.3 411.3,82.0 406.7,81.7 402.1,81.3 397.5,81.0 392.9,80.6 388.4,80.2 383.8,79.9 379.2,79.5 374.6,79.1 370.0,78.8 365.4,78.4 360.8,78.0 356.2,77.7 351.6,77.3 347.0,76.9 342.4,76.6 337.8,76.2 333.2,75.8 328.6,75.5 324.0,75.1 319.4,74.8 314.8,74.4 310.2,74.0 310.0,74.0\"/><polyline class=\"q-line\" stroke-width=\"1.6\" points=\"540.0,50.0 535.4,51.3 530.8,52.5 526.2,53.7 521.6,54.9 517.0,56.0 512.4,57.2 507.8,58.2 503.2,59.3 498.6,60.3 494.0,61.2 489.5,62.1 484.9,63.0 480.3,63.8 475.7,64.5 471.1,65.2 466.5,65.9 461.9,66.5 457.3,67.0 452.7,67.5 448.1,67.9 443.5,68.3 438.9,68.6 434.3,68.9 429.7,69.1 425.1,69.4 420.5,69.6 415.9,69.8 411.3,70.0 406.7,70.2 402.1,70.3 397.5,70.5 392.9,70.7 388.4,70.9 383.8,71.1 379.2,71.3 374.6,71.4 370.0,71.6 365.4,71.8 360.8,72.0 356.2,72.2 351.6,72.3 347.0,72.5 342.4,72.7 337.8,72.9 333.2,73.1 328.6,73.3 324.0,73.4 319.4,73.6 314.8,73.8 310.2,74.0 310.0,74.0\"/><circle class=\"dot\" cx=\"20.0\" cy=\"154.0\" r=\"3.5\"/><circle class=\"dot\" cx=\"20.0\" cy=\"74.0\" r=\"3.5\"/><circle class=\"dot\" cx=\"250.0\" cy=\"178.0\" r=\"2.5\"/><circle class=\"dot\" cx=\"250.0\" cy=\"156.0\" r=\"2.5\"/><circle class=\"dot\" cx=\"250.0\" cy=\"138.0\" r=\"2.5\"/><circle class=\"dot\" cx=\"250.0\" cy=\"122.0\" r=\"2.5\"/><circle class=\"dot\" cx=\"250.0\" cy=\"106.0\" r=\"2.5\"/><circle class=\"dot\" cx=\"250.0\" cy=\"90.0\" r=\"2.5\"/><circle class=\"dot\" cx=\"250.0\" cy=\"72.0\" r=\"2.5\"/><circle class=\"dot\" cx=\"250.0\" cy=\"50.0\" r=\"2.5\"/><circle class=\"dot\" cx=\"310.0\" cy=\"154.0\" r=\"3.5\"/><circle class=\"dot\" cx=\"310.0\" cy=\"74.0\" r=\"3.5\"/><circle class=\"dot\" cx=\"540.0\" cy=\"178.0\" r=\"2.5\"/><circle class=\"dot\" cx=\"540.0\" cy=\"156.0\" r=\"2.5\"/><circle class=\"dot\" cx=\"540.0\" cy=\"138.0\" r=\"2.5\"/><circle class=\"dot\" cx=\"540.0\" cy=\"122.0\" r=\"2.5\"/><circle class=\"dot\" cx=\"540.0\" cy=\"106.0\" r=\"2.5\"/><circle class=\"dot\" cx=\"540.0\" cy=\"90.0\" r=\"2.5\"/><circle class=\"dot\" cx=\"540.0\" cy=\"72.0\" r=\"2.5\"/><circle class=\"dot\" cx=\"540.0\" cy=\"50.0\" r=\"2.5\"/></svg>",
+          "caption": "Tek boyutlu oyuncak: veri iki noktadan (−1, +1) oluşuyor. Solda eğitimde rastgele eşleşen çiftler — her biri düz ama birbirini kesiyor. Sağda aynı veriyle öğrenilen gerçek ortalama velocity field'ın ODE yolları (sayısal olarak çözüldü): kesişmiyor, bu yüzden bükülüyor."
+        },
+        {
+          "type": "text",
+          "heading": "Yollar neden bükülüyor",
+          "text": "Bir ODE'nin yolları kesişemez: aynı noktada, aynı anda iki farklı velocity olamaz. Ama eğitimde çiftler rastgele eşleştiği için düz çizgileri sürekli kesişiyor. Kesişme noktalarında ağ ortalama alıyor ve öğrenilen yollar birbirinden kaçmak için bükülüyor.\n\nBunun pratik sonucu önemli. Tek bir çift için tek Euler adımı yetiyordu, çünkü yol düzdü. Öğrenilen yollar bükük olduğu için tek adım yetmiyor; düz çizgi varsayan her Euler adımı bükülme kadar hata yapıyor. Bu yüzden rectified flow ile eğitilmiş bir model de pratikte 20-50 adım istiyor. DDPM'in 1000'inden çok az, ama bir değil."
+        },
+        {
+          "type": "text",
+          "heading": "8. Reflow: yolları gerçekten düzleştirmek",
+          "text": "Rectified flow paperının (Liu, Gong, Liu — ICLR 2023) flow matching'den ayrılan asıl katkısı burada. Sorun rastgele eşleştirmeydi. O halde eşleştirmeyi değiştir.\n\nEğitilmiş modeli al. Bir sürü noise örneği çek, her birini ODE ile çözüp modelin ürettiği görüntüye taşı. Artık elinde rastgele değil, modelin kendi yollarıyla eşleşmiş $(z, \\hat{x}_0)$ çiftleri var. Bu yollar kesişmiyordu — ODE yolları kesişemez. Yeni modeli bu çiftlerle aynı loss'la yeniden eğit. Çiftler kesişmediği için ortalama alınacak bir çatışma da neredeyse yok, ve yeni yollar çok daha düz çıkıyor.\n\nBu işleme reflow deniyor, \"rectify\" de düzeltmek demek. Paper ayrıca bu işlemin transport maliyetini artırmadığını gösteriyor: her reflow, noise ile veri arasındaki eşleştirmeyi daha kısa yollu hale getiriyor ya da en azından kötüleştirmiyor. Bir iki reflow sonrasında yollar o kadar düz oluyor ki tek adımlık üretime distillation ile inmek kolaylaşıyor. InstaFlow (ICLR 2024) tek adımlık text-to-image'i bu yolla yaptı.\n\nÖnemli ayrım: SD3 ve FLUX'un kullandığı \"rectified flow\", reflow yapılmamış ilk aşama. Yani pratikte büyük modellerde \"rectified flow\" denildiğinde kastedilen çoğunlukla sadece düz çizgili interpolation ve velocity loss'u."
+        },
+        {
+          "type": "table",
+          "heading": "9. Rectified flow, flow matching, stochastic interpolants — aynı şey mi",
+          "rows": [
+            [
+              "",
+              "Rectified flow",
+              "Flow matching",
+              "Stochastic interpolants"
+            ],
+            [
+              "Yazarlar",
+              "Liu, Gong, Liu",
+              "Lipman, Chen, Ben-Hamu, Nickel, Le",
+              "Albergo, Vanden-Eijnden"
+            ],
+            [
+              "Venue",
+              "ICLR 2023",
+              "ICLR 2023",
+              "ICLR 2023"
+            ],
+            [
+              "arXiv",
+              "2209.03003",
+              "2210.02747",
+              "2209.15571"
+            ],
+            [
+              "Çıkış noktası",
+              "Düz yol + iki distribution arasında transfer",
+              "Continuous normalizing flow'ları simülasyonsuz eğitmek",
+              "İki distribution arasında genel interpolation çerçevesi"
+            ],
+            [
+              "Yol",
+              "Yalnızca düz çizgi",
+              "Genel Gaussian yollar; en iyisi düz (OT) yol",
+              "Genel, noise'lu ya da noise'suz"
+            ],
+            [
+              "Kendine özgü katkı",
+              "Reflow ile yolları düzleştirme",
+              "Conditional hedefin marginal ile aynı gradient'i verdiğinin ispatı",
+              "Diffusion ile flow'u tek çerçevede birleştirme"
+            ],
+            [
+              "Zaman",
+              "$t=0$ veri, $t=1$ noise",
+              "$t=0$ noise, $t=1$ veri",
+              "—"
+            ]
+          ]
+        },
+        {
+          "type": "text",
+          "heading": "Kısa cevap",
+          "text": "Üç grup aynı fikri 2022 sonbaharında birbirinden bağımsız buldu ve üçü de ICLR 2023'te yayımlandı. Düz çizgili yol seçilince flow matching ile (reflow'suz) rectified flow aynı loss'u veriyor; literatürde isimler çoğu zaman birbirinin yerine kullanılıyor. Atıf verirken üçünü birlikte vermek standart.\n\nİşaret tuzağı: Lipman'da $t=0$ noise, $t=1$ veri ve velocity veriye doğru, yani $x_1 - x_0$ ile \"veri eksi noise\". CS231n ve Liu'da tersi: velocity $z - x_0$, noise eksi veri, ve sampling'de bu yüzden çıkarma yapılıyor. İki paperı yan yana okurken bir formülde işaretin ters görünmesi hata değil, zaman yönünün ters olması."
+        },
+        {
+          "type": "text",
+          "heading": "10. DDPM ile ilişkisi: aynı aile, farklı yol",
+          "text": "CS231n'in genelleştirilmiş diffusion kartındaki çerçeve burada her şeyi birleştiriyor: $x_t = a(t)\\,x_0 + b(t)\\,z$. Rectified flow $a(t) = 1-t$, $b(t) = t$ seçiyor, yani katsayıların toplamı 1: düz çizgi. DDPM'in variance-preserving hali $a^2 + b^2 = 1$ seçiyor: katsayılar bir çeyrek çember üstünde, dolayısıyla tek bir çiftin yolu bile eğri.\n\nİkinci fark tahmin hedefi. DDPM noise'u ($\\epsilon$), rectified flow velocity'yi ($z - x_0$) tahmin ediyor. Ama bunlar birbirine cebirle çevrilebiliyor: $x_t$ ve velocity tahmini $\\hat{v}$ elindeyse $\\hat{x}_0 = x_t - t\\,\\hat{v}$ ve $\\hat{z} = x_t + (1-t)\\,\\hat{v}$. DDIM kartındaki \"$\\hat{x}_0$ yeni bir ağ değil, cebirle çıkıyor\" gözleminin aynısı.\n\nÜçüncü bağ ODE'nin kendisi. Song ve ark. (ICLR 2021) her diffusion modelinin, aynı marginal distribution'ları veren deterministik bir karşılığı olduğunu gösterdi (probability flow ODE). DDIM bu ODE'nin bir Euler çözümü gibi okunabiliyor. Yani DDIM ile sample alan bir DDPM de aslında bir flow takip ediyor; fark, yolun eğri seçilmiş olması.\n\nSonuç: flow matching diffusion'ı çöpe atmıyor. Aynı aileden, yolu düz seçen ve türetmeyi ELBO yerine regression'dan kuran bir üye."
+        },
+        {
+          "type": "text",
+          "heading": "11. Neden düz yol az adım demek",
+          "text": "Euler adımı \"bu adım boyunca velocity sabit kalacak\" varsayımı. Yol düz ve velocity gerçekten sabitse bu varsayım tam doğru: tek adım yetiyor (5. bölümdeki örnek). Yol büküldükçe, adım boyunca velocity değişiyor ve her adım bükülme miktarı kadar hata yapıyor.\n\nAynı marginal distribution'ları veren yolların içinde düz olanlar Euler için en rahatı. DDPM'in eğri yolunda aynı kaliteye ulaşmak için daha fazla adım gerekiyor; rectified flow'da daha az. Reflow yolları daha da düzleştirip bu sayıyı daha da düşürüyor."
+        },
+        {
+          "type": "algo",
+          "number": "1",
+          "title": "Rectified flow — training",
+          "lines": [
+            "repeat",
+            "  $x_0 \\sim p_{\\text{data}}$, $\\; z \\sim \\mathcal{N}(0, I)$, $\\; t \\sim \\mathcal{U}[0,1]$",
+            "  $x_t \\leftarrow (1-t)\\,x_0 + t\\,z$ >> çift arasındaki düz çizgi",
+            "  $v \\leftarrow z - x_0$ >> o çizginin velocity'si, sabit",
+            "  gradient step on $\\| v_\\theta(x_t, t) - v \\|^2$",
+            "until converged"
+          ]
+        },
+        {
+          "type": "algo",
+          "number": "2",
+          "title": "Rectified flow — sampling (Euler)",
+          "lines": [
+            "Input: $N$ adım sayısı",
+            "",
+            "$x \\sim \\mathcal{N}(0, I)$ >> $t=1$'den başla",
+            "for $i = N, \\ldots, 1$ do",
+            "  $t \\leftarrow i / N$",
+            "  $x \\leftarrow x - \\frac{1}{N}\\, v_\\theta(x, t)$ >> velocity noise'a doğru, geriye git",
+            "end for",
+            "return $x$"
+          ]
+        },
+        {
+          "type": "ref",
+          "heading": "Gerçek PyTorch kodu",
+          "items": [
+            {
+              "id": "cs13-diffusion-models-intuition-and-rectified-flow",
+              "label": "CS231n — Rectified flow training ve sampling kodu"
+            },
+            {
+              "id": "cs13-conditional-generation-and-classifier-free-guidance-cfg",
+              "label": "Conditional rectified flow ve CFG"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "heading": "12. Zaman nasıl örneklenmeli",
+          "text": "Loss'ta $t$ düzgün dağılımdan çekiliyor. Ama her $t$ aynı derecede öğretici değil. $t$ 0'a yakınken $x_t$ neredeyse temiz görüntü, en iyi tahmin kabaca \"$-x_0$ yönüne git\"; $t$ 1'e yakınken $x_t$ neredeyse saf noise, en iyi tahmin kabaca \"veri ortalamasına doğru git\". İki uçta da doğru cevap basit. Zor ve bilgi taşıyan kısım ortada.\n\nSD3 paperı (Esser ve ark., ICML 2024) birkaç alternatifi karşılaştırıp logit-normal dağılımın en iyi çalıştığını buldu: $t = \\text{sigmoid}(n)$, $n \\sim \\mathcal{N}(0,1)$. Bu $t$'yi ortaya yığıyor, uçlardan daha az örnek çekiyor. CS231n'in CFG kodundaki torch.randn(()).sigmoid() satırı tam olarak bu."
+        },
+        {
+          "type": "text",
+          "heading": "13. Bugünkü tarif: latent + DiT + rectified flow",
+          "text": "SD3'ün başlığı \"Scaling Rectified Flow Transformers\" ve bugünkü büyük görüntü modellerinin tarifi üç parçadan oluşuyor:\n\nLatent diffusion — görüntü önce bir VAE ile küçük bir latent'e sıkıştırılıyor ve flow orada öğreniliyor. Rectified flow'un loss'u değişmiyor; $x_0$ artık görüntü değil, onun latent'i.\n\nDiT — velocity'yi tahmin eden ağ U-Net değil transformer. Flow'un matematiği ağdan bağımsız; DiT kartındaki \"diffusion ile onu hesaplayan ağ ayrılabilir\" gözlemi flow için de aynen geçerli.\n\nRectified flow — düz yol, velocity loss, logit-normal zaman örneklemesi, 30-50 adımlık Euler ya da daha iyi bir ODE çözücü.\n\nFLUX da aynı tarifin üstünde. Yani bugün \"diffusion modeli\" denen büyük modellerin önemli bir kısmı teknik olarak flow matching modeli."
+        },
+        {
+          "type": "ref",
+          "heading": "İlgili kartlar",
+          "items": [
+            {
+              "id": "cs13-latent-diffusion-models-ldms-vae-gan-diffusion",
+              "label": "Latent diffusion — VAE + GAN + diffusion"
+            },
+            {
+              "id": "cs12-latent-diffusion-neden-vae-degil-ae-nicemleme-vq-codebook",
+              "label": "Latent diffusion neden VAE, VQ, codebook"
+            },
+            {
+              "id": "cs13-diffusion-transformer-dit-architecture-and-conditioning",
+              "label": "DiT — U-Net neden bırakıldı"
+            },
+            {
+              "id": "cs13-generalized-diffusion-vp-ve-score-functions-and-sdes",
+              "label": "Genelleştirilmiş diffusion — VP, VE, score, SDE"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "heading": "14. Noise zorunlu değil: iki distribution arasında flow",
+          "text": "Liu paperının adı \"learning to generate and transfer data\". İkinci kelime önemli. Loss'ta $z$'nin Gaussian olmasını gerektiren hiçbir şey yok. $z$ yerine başka bir distribution'dan örnek koyarsan, iki distribution arasında bir flow öğreniyorsun.\n\nMRI synthesis'te bunun anlamı doğrudan: $x_0$ hedef kontrast (T2), $z$ aynı hastanın kaynak kontrastı (T1). Eşleşmiş veride çiftleri veri zaten veriyor, rastgele eşleştirmeye gerek yok. Eğitim aynı loss; üretimde saf noise yerine kaynak görüntüden başlayıp ODE'yi çözüyorsun.\n\nBu, labın diffusion bridge çizgisine (I²SB, BBDM, SelfRDB) çok yakın. Bridge'ler de iki görüntü arasında bir yol kuruyor, ama yolun ortasına noise ekliyor. Düz transfer flow'u bunun noise'suz, deterministik ucu gibi düşünülebilir; bedeli, aynı kaynaktan hep aynı çıktının gelmesi (çeşitlilik ve belirsizlik yok).\n\nEşleşmemiş veride (translation) çiftler yok; eşleştirmeyi kendin kurman gerekiyor — reflow ya da optimal transport'a dayalı eşleştirmeler burada devreye giriyor.\n\nReconstruction'da ise öğrenilmiş flow bir prior olarak kullanılabilir: her Euler adımından sonra ölçülen k-space'e data consistency uygulanıyor, diffusion prior'la reconstruction'da yapılanın aynısı. Bu yönlerin medikalde ne kadar işlendiğine güncel literatürden bakmak gerekiyor."
+        },
+        {
+          "type": "insight",
+          "heading": "Geriye ne kalsın",
+          "text": "Noise ile veri arasına düz çizgi çek, ağa o çizginin yönünü öğret, üretimde yönü geriye takip et. Tek bir çiftin cevabı bariz; ağ bütün çiftlerin ortalamasını öğreniyor ve bu ortalama doğru haritayı veriyor. Çiftler kesiştiği için öğrenilen yollar bükülüyor; reflow onları düzleştiriyor. DDPM ile aynı ailedir; farkı yolu düz seçmesi ve türetmeyi ELBO yerine regression'dan kurması. Noise yerine başka bir görüntü koyarsan aynı loss translation yapıyor."
+        },
+        {
+          "type": "note",
+          "heading": "Nereye bakılır",
+          "text": "Paperlar: Liu, Gong, Liu — Flow Straight and Fast: Learning to Generate and Transfer Data with Rectified Flow (ICLR 2023, arXiv 2209.03003) · Lipman ve ark. — Flow Matching for Generative Modeling (ICLR 2023, arXiv 2210.02747) · Albergo, Vanden-Eijnden — Building Normalizing Flows with Stochastic Interpolants (ICLR 2023, arXiv 2209.15571) · Esser ve ark. — Scaling Rectified Flow Transformers for High-Resolution Image Synthesis (ICML 2024, SD3).\n\nÖğrenme: MIT 6.S184 — Introduction to Flow Matching and Diffusion Models (ders notları + lab) · Lipman ve ark. — Flow Matching Guide and Code (arXiv 2412.06264) ve facebookresearch/flow_matching kütüphanesi.\n\nÇalıştırmak için: github.com/cloneofsimo/minRF — minimal rectified flow, MNIST/CIFAR üzerinde Colab'da çalışıyor."
         }
       ]
     }

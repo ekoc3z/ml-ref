@@ -328,6 +328,8 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .sec-fig .p-curve{stroke:currentColor;fill:none}
 .sec-fig .q-curve{stroke:var(--accent);fill:var(--accent);fill-opacity:.10}
 .sec-fig .axis{stroke:var(--border)}
+.sec-fig .q-line{stroke:var(--accent);fill:none}
+.sec-fig .dot{fill:currentColor}
 .sec-fig text{fill:var(--muted);font-size:13px;font-family:inherit}
 .sec-fig figcaption{font-size:13px;color:var(--muted);margin-top:4px;font-style:italic}
 /* --- adim adim diyagram (type:'anim') --- */
@@ -2842,7 +2844,7 @@ function applyData(d){
 }
 
 
-fetch('./data/unified.json?v=20260921102106')
+fetch('./data/unified.json?v=20260921114646')
   .then(r => { if(!r.ok) throw new Error(r.status); return r.json() })
   .then(applyData)
   .catch(() => {
