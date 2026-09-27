@@ -7103,6 +7103,47 @@
           "text": "Şimdi asıl ilginç kısım. Aynı marginal'leri veren, içinde hiç rastgelelik olmayan bir denklem daha var:\n\n$$\\frac{dx}{dt} = f(x,t) - \\tfrac{1}{2} g(t)^2 \\nabla_x \\log p_t(x)$$\n\nBuradaki iddia şu: bu ODE'yi çözerek taşıdığın noktaların her $t$'deki distribution'ı, SDE'ninkiyle birebir aynı. Tek tek yollar farklı, ama distribution aynı.\n\nNasıl olabiliyor? Bir distribution'ı hareket ettirmenin iki yolu var. Ya her parçacığı rastgele titretirsin ve kalabalık yayılır, ya da her parçacığı hesaplanmış bir hızla iterek aynı yayılmayı deterministik olarak üretirsin. Sonuçta kalabalığın şekli aynı olur; kimin nereye gittiği farklı olur.\n\n$\\tfrac{1}{2}$ çarpanı da buradan geliyor: SDE'de yayılmanın bir kısmını rastgelelik yapıyordu. Rastgeleliği tamamen kaldırınca, o kaybolan yayılmayı hız alanının tek başına üretmesi gerekiyor ve denge tam olarak yarım katsayıda kuruluyor.\n\nBunun üç sonucu var:\n\nDeterministik üretim mümkün. Başlangıç noktasını seçtiğin anda çıktı belirleniyor. DDIM'in $\\eta = 0$ sampler'ı tam olarak bu ODE'nin bir discretization'ı.\n\nAdım atlamak meşrulaşıyor. Elinde bir ODE varsa çözücü seçmek serbesttir; adımı büyütmek hatayı artırır ama süreci bozmaz. Stokastik zincirde bu mümkün değildi.\n\nFlow matching'e köprü buradan kuruluyor. Probability flow ODE'nin sağ tarafı bir velocity field. Flow matching ise o alanı score üzerinden dolambaçlı yoldan çıkarmak yerine doğrudan öğreniyor, üstelik yolu düz seçerek. Aynı hedefin daha kısa yoldan kurulmuş hali."
         },
         {
+          "type": "table",
+          "heading": "12. Reverse SDE ile PF-ODE — hangisi ne zaman",
+          "rows": [
+            [
+              "",
+              "Reverse SDE",
+              "Probability flow ODE"
+            ],
+            [
+              "Denklem",
+              "$\\bigl[f - g^2 \\nabla_x \\log p_t\\bigr] dt + g\\, d\\bar{w}$",
+              "$\\bigl[f - \\tfrac{1}{2} g^2 \\nabla_x \\log p_t\\bigr] dt$"
+            ],
+            [
+              "Süreç",
+              "stochastic",
+              "deterministic"
+            ],
+            [
+              "Çeşitlilik",
+              "yüksek",
+              "düşük"
+            ],
+            [
+              "Örnek kalitesi",
+              "yüksek",
+              "düşük"
+            ],
+            [
+              "Hız",
+              "yavaş",
+              "hızlı"
+            ]
+          ]
+        },
+        {
+          "type": "text",
+          "heading": "Tablodaki üç satırın sebebi",
+          "text": "Çeşitlilik. Reverse SDE her adımda taze noise çekiyor, yani aynı $x_T$'den başlasan bile her çalıştırmada farklı bir görüntü çıkıyor. ODE'de rastgelelik yalnızca başlangıçta; $x_T$ sabitlenirse çıktı da sabit. Çeşitlilik tamamen başlangıç noktasının dağılımından geliyor.\n\nKalite. Buradaki fark sezgisel olarak şu: SDE'nin eklediği noise bir tür hata düzeltme işlevi görüyor. Yol sırasında veriden uzak bir yere savrulursan, sonraki adımlarda score terimi seni geri çekiyor ve eklenen rastgelelik farklı bölgeleri yoklamanı sağlıyor. ODE'de böyle bir düzeltme yok: tek bir yörüngeyi takip ediyorsun ve her adımda yaptığın discretization hatası üstüne biniyor, geri dönüşü olmuyor. Bol adım bütçen varsa SDE genelde daha iyi örnek veriyor.\n\nHız. ODE'nin avantajı tam da determinizminden geliyor. Elinde sıradan bir diferansiyel denklem varsa yüksek mertebeli çözücüler kullanabilir, adımı büyütebilirsin; 20-50 adımda bitirmek mümkün. SDE'de her adım yeni rastgelelik eklediği için adım büyütmek doğrudan kaliteyi bozuyor, o yüzden yüzlerce adım gerekiyor.\n\nPratikteki bölünme de buradan: çok adım bütçen varsa ve çeşitlilik istiyorsan SDE, az adımda hızlı üretim istiyorsan ODE. DDIM'in $\\eta$ düğmesi zaten bu iki ucun arasını geziyor — $\\eta = 1$ SDE tarafı, $\\eta = 0$ ODE tarafı."
+        },
+        {
           "type": "insight",
           "heading": "Geriye ne kalsın",
           "text": "Score, density'nin logaritmasının $x$'e göre gradient'i; normalizasyon sabitini öldürdüğü için hesaplanabilir. Gerçek score bilinmiyor ama kendi eklediğin noise'un score'u biliniyor, ve o hedefle eğitmek doğru cevabı veriyor. Bu eğitim DDPM'in $\\varepsilon$-prediction'ı ile aynı şey; ikisi tek bir ölçek çarpanıyla birbirine çevriliyor. Sürekli zamana geçince süreç bir SDE oluyor, onun deterministik karşılığı olan probability flow ODE ise DDIM ile flow matching'in ortak zemini."
