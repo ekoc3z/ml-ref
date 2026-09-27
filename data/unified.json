@@ -7028,8 +7028,69 @@
         },
         {
           "type": "text",
-          "heading": "8. SDE görüntüsü ve probability flow",
-          "text": "Adım sayısını sonsuza götürüp sürekli zamana geçersen forward süreç bir stokastik diferansiyel denklem oluyor:\n\n$$dx = f(x,t)\\, dt + g(t)\\, dw$$\n\n$dw$ Brownian hareket, yani her anda eklenen sonsuz küçük rastgelelik. DDPM'in variance-preserving schedule'ı bu denklemin bir özel hali (VP-SDE), NCSN'inki başka bir özel hali (VE-SDE).\n\nSong ve ark. (2021) bu denklemin zamanda tersine çözülebildiğini gösterdi, ve ters denklemin içinde tek bilinmeyen olarak score duruyor:\n\n$$dx = \\bigl[ f(x,t) - g(t)^2 \\nabla_x \\log p_t(x) \\bigr] dt + g(t)\\, d\\bar{w}$$\n\nAsıl çarpıcı sonuç bunun deterministik kardeşi. Aynı marginal'leri veren, hiç rastgelelik içermeyen bir ODE var:\n\n$$\\frac{dx}{dt} = f(x,t) - \\tfrac{1}{2} g(t)^2 \\nabla_x \\log p_t(x)$$\n\nBuna probability flow ODE deniyor. Her $t$'de dağılım aynı kalıyor, ama yol deterministik. DDIM'in deterministik sampler'ı bu ODE'nin bir ayrıklaştırması olarak okunabiliyor — ve buradan flow matching'e giden köprü de aynı yer."
+          "heading": "8. Sürekli zamana geçiş: SDE nereden çıkıyor",
+          "text": "DDPM'in forward adımı şuydu: $x_t = \\sqrt{1-\\beta_t}\\, x_{t-1} + \\sqrt{\\beta_t}\\, z$. Adım sayısını 1000'den 10000'e çıkarsaydın her adımda daha az noise eklemen gerekirdi, yoksa toplam bozulma değişirdi. Yani $\\beta_t$ aslında \"birim zamanda ne kadar noise\" demek, ve adım süresine bağlı.\n\nBunu açıkça yazalım: $t$ artık 0 ile 1 arasında sürekli bir sayı olsun, adım süresi $\\Delta t$, ve $\\beta_t = \\beta(t)\\, \\Delta t$. Küçük $\\Delta t$ için karekökü açarsan:\n\n$$\\sqrt{1-\\beta(t)\\Delta t} \\approx 1 - \\tfrac{1}{2}\\beta(t)\\Delta t$$\n\nYerine koyup düzenleyince bir adımdaki değişim şu hale geliyor:\n\n$$\\Delta x = -\\tfrac{1}{2}\\beta(t)\\, x\\, \\Delta t + \\sqrt{\\beta(t)}\\, \\sqrt{\\Delta t}\\, z$$\n\n$\\Delta t \\to 0$ limitinde bu bir stochastic differential equation oluyor:\n\n$$dx = \\underbrace{f(x,t)}_{\\text{drift}}\\, dt + \\underbrace{g(t)}_{\\text{diffusion}}\\, dw$$\n\nİki terimin anlamı ayrı ayrı çok somut:\n\n$f(x,t)$ drift, yani deterministik sürüklenme. Yukarıdaki örnekte $-\\tfrac{1}{2}\\beta(t)x$, yani her an görüntüyü biraz sıfıra doğru çekiyor. Rüzgârsız bir nehirde akıntının seni taşıması gibi.\n\n$g(t)$ diffusion, yani rastgele titreşimin şiddeti. $dw$ Brownian hareket: her anda çekilen sonsuz küçük, bağımsız bir gürültü. Suyun üstündeki toz zerresinin titremesi.\n\nDikkat çeken ayrıntı: noise terimi $\\Delta t$ ile değil $\\sqrt{\\Delta t}$ ile ölçekleniyor. Bağımsız rastgele adımların varyansları toplandığı için, standart sapma adım sayısının kareköküyle büyüyor. Rastgele yürüyüşün temel özelliği bu ve SDE'lerin ayrı bir matematik dalı olmasının sebebi."
+        },
+        {
+          "type": "table",
+          "heading": "9. VP ve VE — iki tasarım tercihi",
+          "rows": [
+            [
+              "",
+              "VP-SDE (variance preserving)",
+              "VE-SDE (variance exploding)"
+            ],
+            [
+              "Kim kullanıyor",
+              "DDPM",
+              "NCSN (Song, Ermon 2019)"
+            ],
+            [
+              "Drift $f$",
+              "$-\\tfrac{1}{2}\\beta(t)\\, x$ — görüntüyü küçültüyor",
+              "$0$ — görüntüye dokunulmuyor"
+            ],
+            [
+              "Diffusion $g$",
+              "$\\sqrt{\\beta(t)}$",
+              "$\\sigma(t)$, hızla büyüyen"
+            ],
+            [
+              "$x_t$'nin ölçeği",
+              "sabit, varyans hep $1$",
+              "sürekli büyüyor, sonda $\\sigma_{\\max}$ devasa"
+            ],
+            [
+              "Sondaki durum",
+              "$\\mathcal{N}(0,I)$",
+              "$\\mathcal{N}(x_0, \\sigma_{\\max}^2 I)$, pratikte veriden bağımsız"
+            ],
+            [
+              "Avantajı",
+              "ağın girdisi hep aynı büyüklükte",
+              "veri hiç bozulmuyor, sadece üstüne ekleniyor"
+            ],
+            [
+              "Zorluğu",
+              "sinyal ile noise iç içe ölçekleniyor",
+              "ağ çok geniş bir $\\sigma$ aralığını idare etmeli"
+            ]
+          ]
+        },
+        {
+          "type": "insight",
+          "heading": "VP ile VE arasındaki fark neden önemli",
+          "text": "İkisi de aynı işi yapıyor: veriyi tanınmaz hale getirip sonunda bilinen bir distribution bırakmak. Fark, bunu nasıl yaptıkları.\n\nVP her adımda görüntüyü biraz küçültüp yerine noise koyuyor, böylece toplam büyüklük sabit kalıyor. Bir bardak boyalı suyun yarısını dökeyim, yerine su ekleyeyim gibi: seviye hep aynı, renk kayboluyor. Ağın girdisi her $t$'de aynı ölçekte olduğu için normalization ve mimari açısından rahat.\n\nVE görüntüye hiç dokunmuyor, sadece üstüne giderek daha büyük noise yığıyor. Boyalı suyu hiç dökmeyip üstüne kovalarca berrak su eklemek gibi: renk yine kayboluyor ama kap taşıyor. Buradaki zorluk ölçek: $\\sigma$ 0.01'den 50'ye kadar değişebiliyor ve ağın hepsinde çalışması gerekiyor.\n\nSong ve ark. (2021) ikisinin de aynı çerçevenin özel hali olduğunu gösterdi. Bu birleştirme, DDPM ile NCSN'in birbirinden bağımsız iki icat değil, tek bir denklemin iki ayarı olduğunu ortaya çıkardı — paperın asıl katkısı bu."
+        },
+        {
+          "type": "text",
+          "heading": "10. Zamanda geriye gitmek: score neden zorunlu",
+          "text": "Forward süreç bilgi yok ediyor. Elinde yalnızca $x_t$ varken \"bu noise hangi görüntüden geldi\" sorusunun tek bir cevabı yok, çünkü birçok farklı görüntü aynı $x_t$'ye götürebilir.\n\nAnderson'un 1982'de ispatladığı sonuç şu: bir SDE zamanda tersine çevrilebiliyor, ama ters denklem fazladan bir terim taşıyor ve o terim score:\n\n$$dx = \\bigl[ f(x,t) - g(t)^2 \\nabla_x \\log p_t(x) \\bigr] dt + g(t)\\, d\\bar{w}$$\n\nTerimleri tek tek oku:\n\n$f(x,t)$ — ileri giderken seni sürükleyen akıntı, geri giderken de aynı akıntı işin içinde.\n\n$-g(t)^2 \\nabla_x \\log p_t(x)$ — yeni olan terim. Score, yoğunluğun arttığı yönü gösteriyordu; bu terim seni o yöne itiyor. Sezgisi doğrudan: ileri giderken gürültü seni veriden uzaklaştırdı, geri dönerken birinin sana \"veri şu tarafta\" demesi gerekiyor. Score tam olarak bu bilgi.\n\n$g(t)\\, d\\bar{w}$ — geri giderken de rastgelelik var. Aynı $x_T$'den başlayıp farklı görüntüler üretebilmenin sebebi bu.\n\nKatsayının $g(t)^2$ olması da tesadüf değil: gürültü ne kadar şiddetliyse, onu geri almak için gereken itme o kadar büyük.\n\nPratik sonuç: eğer her $t$ ve her $x$ için score'u bilirsen, saf gürültüden başlayıp bu denklemi çözerek veri üretebilirsin. Ağın öğrendiği tek şey de zaten bu."
+        },
+        {
+          "type": "text",
+          "heading": "11. Probability flow ODE: aynı dağılım, rastgelelik yok",
+          "text": "Şimdi asıl ilginç kısım. Aynı marginal'leri veren, içinde hiç rastgelelik olmayan bir denklem daha var:\n\n$$\\frac{dx}{dt} = f(x,t) - \\tfrac{1}{2} g(t)^2 \\nabla_x \\log p_t(x)$$\n\nBuradaki iddia şu: bu ODE'yi çözerek taşıdığın noktaların her $t$'deki dağılımı, SDE'ninkiyle birebir aynı. Tek tek yollar farklı, ama dağılım aynı.\n\nNasıl olabiliyor? Bir dağılımı hareket ettirmenin iki yolu var. Ya her parçacığı rastgele titretirsin ve kalabalık yayılır, ya da her parçacığı hesaplanmış bir hızla iterek aynı yayılmayı deterministik olarak üretirsin. Sonuçta kalabalığın şekli aynı olur; kimin nereye gittiği farklı olur.\n\n$\\tfrac{1}{2}$ çarpanı da buradan geliyor: SDE'de yayılmanın bir kısmını rastgelelik yapıyordu. Rastgeleliği tamamen kaldırınca, o kaybolan yayılmayı hız alanının tek başına üretmesi gerekiyor ve denge tam olarak yarım katsayıda kuruluyor.\n\nBunun üç sonucu var:\n\nDeterministik üretim mümkün. Başlangıç noktasını seçtiğin anda çıktı belirleniyor. DDIM'in $\\eta = 0$ sampler'ı tam olarak bu ODE'nin bir discretization'ı.\n\nAdım atlamak meşrulaşıyor. Elinde bir ODE varsa çözücü seçmek serbesttir; adımı büyütmek hatayı artırır ama süreci bozmaz. Stokastik zincirde bu mümkün değildi.\n\nFlow matching'e köprü buradan kuruluyor. Probability flow ODE'nin sağ tarafı bir velocity field. Flow matching ise o alanı score üzerinden dolambaçlı yoldan çıkarmak yerine doğrudan öğreniyor, üstelik yolu düz seçerek. Aynı hedefin daha kısa yoldan kurulmuş hali."
         },
         {
           "type": "insight",
