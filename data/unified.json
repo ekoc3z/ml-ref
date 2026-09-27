@@ -6224,7 +6224,7 @@
         "variance",
         "mean",
         "beklenti",
-        "Generative model",
+        "generative model",
         "discriminative model"
       ]
     },
@@ -6267,7 +6267,7 @@
       "id": "ida11-denoising-diffusion-probabilistic-models-overview",
       "keywords": [
         "DDPM",
-        "Noise schedule"
+        "noise schedule"
       ]
     },
     {
@@ -6293,7 +6293,7 @@
         "transition",
         "DDPM",
         "denoising",
-        "Noise schedule"
+        "noise schedule"
       ]
     },
     {
@@ -6317,7 +6317,7 @@
       "keywords": [
         "DDPM",
         "denoising",
-        "Noise schedule"
+        "noise schedule"
       ]
     },
     {
@@ -6326,12 +6326,12 @@
       "summary": "DDIM yeni bir model değil, aynı eğitilmiş ağ için farklı bir sampling kuralı. Kartın çatısı üç soru: training'de zincir neden hiç yok, Gaussian varsayımı tam olarak nerede duruyor, ve η ile adım sayısı düğmeleri neden bağımsız ayarlanıp bağımlı bozuluyor.",
       "context": "DDPM sampling'in genellemesi — Song ve ark., 2020",
       "keywords": [
-        "implicit",
-        "deterministic sampling",
-        "eta",
-        "ancestral",
-        "respacing",
-        "step skipping"
+        "Gaussian",
+        "normal distribution",
+        "normal dağılım",
+        "diffusion",
+        "DDPM",
+        "denoising"
       ],
       "sections": [
         {
@@ -6479,7 +6479,7 @@
       "keywords": [
         "DDPM",
         "denoising",
-        "Noise schedule"
+        "noise schedule"
       ]
     },
     {
@@ -6536,10 +6536,10 @@
       "id": "ida11-vae-vs-ddpm-loss-goruntu-kalitesi-ve-training",
       "keywords": [
         "variational autoencoder",
-        "Latent space",
+        "latent space",
         "diffusion",
         "denoising",
-        "Noise schedule"
+        "noise schedule"
       ]
     },
     {
@@ -6621,10 +6621,10 @@
       "id": "ida11-ddpm-vae-paraleli-ile-tam-matematiksel-akis",
       "keywords": [
         "variational autoencoder",
-        "Latent space",
+        "latent space",
         "diffusion",
         "denoising",
-        "Noise schedule"
+        "noise schedule"
       ]
     },
     {
@@ -6742,7 +6742,7 @@
       "id": "ida11-vae-vs-ddpm-elbo-derivation-tam-karsilastirmasi",
       "keywords": [
         "variational autoencoder",
-        "Latent space",
+        "latent space",
         "evidence lower bound",
         "variational inference",
         "diffusion",
@@ -6782,7 +6782,7 @@
       "keywords": [
         "diffusion",
         "denoising",
-        "Noise schedule"
+        "noise schedule"
       ]
     },
     {
@@ -6856,7 +6856,7 @@
       "keywords": [
         "diffusion",
         "denoising",
-        "Noise schedule",
+        "noise schedule",
         "U-Net",
         "encoder-decoder",
         "skip connection"
@@ -6940,7 +6940,131 @@
       "keywords": [
         "diffusion",
         "denoising",
-        "Noise schedule"
+        "noise schedule"
+      ]
+    },
+    {
+      "title": "Score Matching — Neden Gradient'i Öğreniyoruz ve DDPM'le Nasıl Aynı Şey",
+      "cat": "Theory",
+      "summary": "Score, log-yoğunluğun $x$'e göre gradient'i; normalizasyon sabitini denklemden sildiği için hesaplanabilir hale geliyor. Gerçek score bilinmiyor ama kendi eklediğin noise'unki biliniyor — denoising score matching bu hileyle eğitiyor ve sonuçta DDPM'in $\\varepsilon$-prediction'ı ile aynı loss'a çıkıyor. SDE ve probability flow ODE bağlantısı da buradan.",
+      "context": "Score-based generative modeling — Song ve Ermon 2019, Song ve ark. 2021",
+      "mlo_only": true,
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Tek cümle",
+          "text": "Score matching, distribution'ı doğrudan öğrenmek yerine onun logaritmasının gradient'ini öğreniyor: $\\nabla_x \\log p(x)$. Bu tek hamle, hesaplanamayan normalizasyon sabitini denklemden siliyor.\n\nDDPM ile ayrı bir yöntem değil, aynı şeyin başka dilde yazılmış hali — sonda birebir aynı loss'a çıkıyor."
+        },
+        {
+          "type": "text",
+          "heading": "1. Problem: normalizasyon sabiti",
+          "text": "Bir distribution'ı parametreyle yazmanın doğal yolu şu: bir enerji fonksiyonu $E_\\theta(x)$ tanımla, olasılığı ona bağla.\n\n$$p_\\theta(x) = \\frac{e^{-E_\\theta(x)}}{Z_\\theta}, \\qquad Z_\\theta = \\int e^{-E_\\theta(x)}\\, dx$$\n\nSorun $Z_\\theta$'da. Bu integral bütün görüntü uzayı üzerinden alınıyor, yani $256 \\times 256 \\times 3$ boyutlu bir uzayda. Hesaplanamıyor, ve $\\theta$'ya bağlı olduğu için maximum likelihood da yapılamıyor.\n\nDiffusion öncesi generative modellerin taksonomisi büyük ölçüde bu sorunun etrafında şekillenmişti: VAE alt sınıra kaçıyor, GAN likelihood'u hiç hesaplamıyor, autoregressive modeller zinciri parçalara bölüyor."
+        },
+        {
+          "type": "text",
+          "heading": "2. Gradient alınca sabit ölüyor",
+          "text": "Logaritmayı al ve $x$'e göre türev al:\n\n$$\\nabla_x \\log p_\\theta(x) = \\nabla_x \\bigl[ -E_\\theta(x) - \\log Z_\\theta \\bigr] = -\\nabla_x E_\\theta(x)$$\n\n$\\log Z_\\theta$ sabit bir sayı — $x$'e bağlı değil, dolayısıyla gradient'i sıfır. Hesaplanamayan terim kendiliğinden düşüyor.\n\nBu gradient'e score deniyor:\n\n$$s(x) := \\nabla_x \\log p(x)$$\n\nDikkat: türev $\\theta$'ya göre değil, $x$'e göre. Karışması kolay, çünkü likelihood tartışmalarında alıştığın türev $\\theta$'ya göre olandı."
+        },
+        {
+          "type": "insight",
+          "heading": "Score sezgisel olarak ne",
+          "text": "Görüntü uzayının her noktasına bir ok yerleştir: o noktadan hangi yöne gidersen distribution'ın yoğunluğu en hızlı artar. Score bu ok alanı.\n\nGerçekçi görüntülerin bulunduğu bölgelerde oklar o bölgeye doğru bakıyor; uzak, gürültülü bölgelerde ise \"veriye doğru\" yönü gösteriyor. Üretim de bu okları takip etmek oluyor.\n\nFlow matching'deki velocity field ile aynı türden bir nesne: ikisi de uzaydaki her noktaya bir vektör atıyor. Fark, neyi gösterdikleri — biri yoğunluğun artış yönünü, diğeri veriye giden yolun hızını."
+        },
+        {
+          "type": "text",
+          "heading": "3. Naive score matching neden çalışmıyor",
+          "text": "Hedef belli: ağın tahmini $s_\\theta(x)$ gerçek score'a yakın olsun.\n\n$$J(\\theta) = \\mathbb{E}_{x \\sim p_{\\text{data}}} \\bigl\\| s_\\theta(x) - \\nabla_x \\log p_{\\text{data}}(x) \\bigr\\|^2$$\n\nAma sağdaki terim elimizde yok: $p_{\\text{data}}$'yı bilseydik zaten problem kalmazdı.\n\nHyvärinen (2005) kısmi integrasyonla bu terimi denklemden çıkarmayı başardı; geriye $\\operatorname{tr}(\\nabla_x s_\\theta(x))$, yani Jacobian'ın izi kalıyor. Teorik olarak çözüm, pratikte değil: yüksek boyutta Jacobian'ın izini hesaplamak her adımda $d$ tane geri yayılım demek."
+        },
+        {
+          "type": "text",
+          "heading": "4. Denoising score matching: hile",
+          "text": "Vincent (2011) şunu fark etti: veriye kendi eklediğin noise'un score'u kapalı formda biliniyor.\n\n$\\tilde{x} = x + \\sigma \\varepsilon$ olsun, $\\varepsilon \\sim \\mathcal{N}(0,I)$. O zaman $q(\\tilde{x} \\mid x)$ bir Gaussian ve score'u doğrudan yazılabiliyor:\n\n$$\\nabla_{\\tilde{x}} \\log q(\\tilde{x} \\mid x) = -\\frac{\\tilde{x} - x}{\\sigma^2} = -\\frac{\\varepsilon}{\\sigma}$$\n\nHedef artık bilinmeyen bir şey değil, kendi çektiğin $\\varepsilon$. Loss basit bir regression'a dönüşüyor:\n\n$$J(\\theta) = \\mathbb{E}_{x,\\, \\varepsilon,\\, \\sigma} \\Bigl\\| s_\\theta(\\tilde{x}, \\sigma) + \\frac{\\varepsilon}{\\sigma} \\Bigr\\|^2$$\n\nKanıtlanan şey şu: bu loss'u minimize eden ağ, gürültülü distribution'ın gerçek score'unu öğreniyor. Yani hedefi bilmeden doğru cevaba varıyorsun — DDPM'deki \"tek örneğin gürültüsünü hedef al, ortalaması doğru çıksın\" hilesinin aynısı."
+        },
+        {
+          "type": "insight",
+          "heading": "5. DDPM ile birebir aynı loss",
+          "text": "Diffusion'ın forward süreci $x_t = \\sqrt{\\bar{\\alpha}_t}\\, x_0 + \\sqrt{1-\\bar{\\alpha}_t}\\, \\varepsilon$ zaten \"veriye bilinen miktarda noise eklemek\". Yani DDPM'in training'i tam olarak denoising score matching.\n\nBağlantı tek satır:\n\n$$s_\\theta(x_t, t) = -\\frac{\\varepsilon_\\theta(x_t, t)}{\\sqrt{1-\\bar{\\alpha}_t}}$$\n\n$\\varepsilon$-prediction ile score prediction aynı ağın iki farklı ölçeklenmiş hali. Biri \"eklenen noise neydi\" diye soruyor, diğeri \"yoğunluk hangi yöne artıyor\" diye — cevap aynı vektör, işareti ve ölçeği farklı.\n\nBu yüzden CME 296'nın 2. dersi \"parallel with diffusion\" diye bitiyor: yeni bir model ailesi değil, aynı eğitimin başka türetmesi."
+        },
+        {
+          "type": "text",
+          "heading": "6. Score ile nasıl sample alınır: Langevin",
+          "text": "Score elindeyse üretim, okları takip edip üstüne biraz rastgelelik eklemek:\n\n$$x_{k+1} = x_k + \\frac{\\delta}{2}\\, s_\\theta(x_k) + \\sqrt{\\delta}\\, z_k, \\qquad z_k \\sim \\mathcal{N}(0,I)$$\n\nBuna Langevin dynamics deniyor. Yeterince adım sonra $x_k$, $p(x)$'ten gelen bir örnek gibi davranıyor. Gürültü terimi olmasaydı sadece en yakın tepeye tırmanır, tek bir noktaya saplanırdın; rastgelelik distribution'ın tamamını gezmeyi sağlıyor.\n\nNeden tek bir noise seviyesi yetmiyor: gerçek veri yüksek boyutlu uzayda ince bir bölgeye sıkışmış durumda. Bu bölgenin uzağında $p(x)$ neredeyse sıfır, dolayısıyla orada ne veri var ne de ağın öğrenebileceği bir sinyal — score tahmini çöp çıkıyor. Rastgele bir noktadan başlarsan tam da o çöp bölgedesin.\n\nÇözüm: birçok noise seviyesi. Yüksek $\\sigma$'da distribution her yere yayılıyor ve score her yerde anlamlı; seviye seviye azaltarak veriye yaklaşıyorsun. Song ve Ermon'un NCSN'i (2019) bu fikir, ve DDPM'in schedule'ı ile aynı şeye bakıyor."
+        },
+        {
+          "type": "table",
+          "heading": "7. Aynı sürecin üç dili",
+          "rows": [
+            [
+              "",
+              "Latent variable",
+              "Score",
+              "SDE"
+            ],
+            [
+              "Ağ ne tahmin ediyor",
+              "$\\varepsilon_\\theta(x_t,t)$",
+              "$s_\\theta(x_t,t)$",
+              "aynı ağ, sürekli $t$"
+            ],
+            [
+              "Türetme",
+              "ELBO",
+              "denoising score matching",
+              "stokastik diferansiyel denklem"
+            ],
+            [
+              "Sampling",
+              "ancestral (DDPM)",
+              "annealed Langevin",
+              "reverse-time SDE çözücü"
+            ],
+            [
+              "Kaynak",
+              "Ho ve ark. 2020",
+              "Song, Ermon 2019",
+              "Song ve ark. 2021"
+            ]
+          ]
+        },
+        {
+          "type": "text",
+          "heading": "8. SDE görüntüsü ve probability flow",
+          "text": "Adım sayısını sonsuza götürüp sürekli zamana geçersen forward süreç bir stokastik diferansiyel denklem oluyor:\n\n$$dx = f(x,t)\\, dt + g(t)\\, dw$$\n\n$dw$ Brownian hareket, yani her anda eklenen sonsuz küçük rastgelelik. DDPM'in variance-preserving schedule'ı bu denklemin bir özel hali (VP-SDE), NCSN'inki başka bir özel hali (VE-SDE).\n\nSong ve ark. (2021) bu denklemin zamanda tersine çözülebildiğini gösterdi, ve ters denklemin içinde tek bilinmeyen olarak score duruyor:\n\n$$dx = \\bigl[ f(x,t) - g(t)^2 \\nabla_x \\log p_t(x) \\bigr] dt + g(t)\\, d\\bar{w}$$\n\nAsıl çarpıcı sonuç bunun deterministik kardeşi. Aynı marginal'leri veren, hiç rastgelelik içermeyen bir ODE var:\n\n$$\\frac{dx}{dt} = f(x,t) - \\tfrac{1}{2} g(t)^2 \\nabla_x \\log p_t(x)$$\n\nBuna probability flow ODE deniyor. Her $t$'de dağılım aynı kalıyor, ama yol deterministik. DDIM'in deterministik sampler'ı bu ODE'nin bir ayrıklaştırması olarak okunabiliyor — ve buradan flow matching'e giden köprü de aynı yer."
+        },
+        {
+          "type": "insight",
+          "heading": "Geriye ne kalsın",
+          "text": "Score, yoğunluğun logaritmasının $x$'e göre gradient'i; normalizasyon sabitini öldürdüğü için hesaplanabilir. Gerçek score bilinmiyor ama kendi eklediğin noise'un score'u biliniyor, ve o hedefle eğitmek doğru cevabı veriyor. Bu eğitim DDPM'in $\\varepsilon$-prediction'ı ile aynı şey; ikisi tek bir ölçek çarpanıyla birbirine çevriliyor. Sürekli zamana geçince süreç bir SDE oluyor, onun deterministik karşılığı olan probability flow ODE ise DDIM ile flow matching'in ortak zemini."
+        },
+        {
+          "type": "ref",
+          "heading": "İlgili kartlar",
+          "items": [
+            {
+              "id": "cs13-generalized-diffusion-vp-ve-score-functions-and-sdes",
+              "label": "Genelleştirilmiş diffusion — VP, VE, score, SDE"
+            },
+            {
+              "id": "ida11-ddim-ayni-ag-neden-atlayabiliyoruz-ve-eta-ne-yapiyor",
+              "label": "DDIM — neden atlayabiliyoruz, η ne yapıyor"
+            },
+            {
+              "id": "ida11-ddpm-matematiksel-ozet-forward-reverse-prediction-ve-l-simpl",
+              "label": "DDPM — matematiksel özet"
+            }
+          ]
+        },
+        {
+          "type": "note",
+          "heading": "Nereye bakılır",
+          "text": "Kaynaklar: Hyvärinen 2005 (score matching) · Vincent 2011 (denoising score matching) · Song, Ermon — Generative Modeling by Estimating Gradients of the Data Distribution (NeurIPS 2019) · Song ve ark. — Score-Based Generative Modeling through SDEs (ICLR 2021).\n\nDers: CME 296, Lecture 2. Flow matching tarafının devamı için Flow Matching ve Rectified Flow konu anlatımı."
+        }
+      ],
+      "id": "ida11-score-matching-neden-gradient-i-ogreniyoruz-ve-ddpm-le-nasil",
+      "keywords": [
+        "diffusion",
+        "denoising",
+        "noise schedule"
       ]
     }
   ],
@@ -18283,9 +18407,9 @@
       "keywords": [
         "supervised learning",
         "reinforcement learning",
-        "Generative model",
+        "generative model",
         "discriminative model",
-        "Density estimation"
+        "density estimation"
       ]
     },
     {
@@ -18317,9 +18441,9 @@
       ],
       "id": "cs12-discriminative-vs-generative-the-density-competition",
       "keywords": [
-        "Generative model",
+        "generative model",
         "discriminative model",
-        "Density estimation"
+        "density estimation"
       ]
     },
     {
@@ -18347,9 +18471,9 @@
       ],
       "id": "cs12-taxonomy-of-generative-models-goodfellow-2017",
       "keywords": [
-        "Generative model",
+        "generative model",
         "discriminative model",
-        "Density estimation"
+        "density estimation"
       ]
     },
     {
@@ -18382,9 +18506,9 @@
       "id": "cs12-maximum-likelihood-estimation-for-generative-models",
       "keywords": [
         "MLE",
-        "Generative model",
+        "generative model",
         "discriminative model",
-        "Density estimation"
+        "density estimation"
       ]
     },
     {
@@ -18440,9 +18564,9 @@
       "keywords": [
         "joint probability",
         "factorization",
-        "Generative model",
+        "generative model",
         "discriminative model",
-        "Density estimation",
+        "density estimation",
         "sequential generation"
       ]
     },
@@ -18477,9 +18601,9 @@
       ],
       "id": "cs12-autoencoders-unsupervised-feature-learning",
       "keywords": [
-        "Generative model",
+        "generative model",
         "discriminative model",
-        "Density estimation",
+        "density estimation",
         "autoencoder",
         "AE",
         "reconstruction"
@@ -18491,12 +18615,11 @@
       "summary": "Latent diffusion'ın ilk aşaması neden düzgün bir VAE değil: KL terimi latent'i örneklenebilir yapmak için vardı ve burada o özelliğe ihtiyaç yok. Kartın ikinci yarısı VQ'yu sıfırdan kuruyor — quantization nedir, codebook nasıl öğreniliyor, seçim neden konum başına yapılıyor ve codebooknün küçük olması ifade gücünü neden kısıtlamıyor.",
       "context": "Latent diffusion ilk aşaması — VQ-VAE (van den Oord 2017), LDM (Rombach 2022)",
       "keywords": [
-        "VQ-VAE",
-        "straight-through",
-        "k-means",
-        "Codebook collapse",
-        "ayrık token",
-        "first-stage"
+        "variational autoencoder",
+        "latent space",
+        "DDPM",
+        "denoising",
+        "noise schedule"
       ],
       "mlo_only": true,
       "sections": [
@@ -18656,7 +18779,7 @@
         "Bayes theorem",
         "prior",
         "posterior",
-        "Generative model",
+        "generative model",
         "discriminative model"
       ]
     },
@@ -18696,12 +18819,12 @@
       ],
       "id": "cs12-vae-decoder-predicted-mean-l2-ve-z-integral-sorunu",
       "keywords": [
-        "Generative model",
+        "generative model",
         "discriminative model",
-        "Density estimation",
+        "density estimation",
         "regularization",
         "L1",
-        "Weight decay"
+        "weight decay"
       ]
     },
     {
@@ -18732,11 +18855,11 @@
       ],
       "id": "cs12-vae-elbo-evidence-lower-bound-derivation",
       "keywords": [
-        "Generative model",
+        "generative model",
         "discriminative model",
-        "Density estimation",
+        "density estimation",
         "variational autoencoder",
-        "Latent space",
+        "latent space",
         "variational inference"
       ]
     },
@@ -18765,11 +18888,11 @@
       ],
       "id": "cs12-vae-training-reparameterization-trick-and-two-term-loss",
       "keywords": [
-        "Generative model",
+        "generative model",
         "discriminative model",
-        "Density estimation",
+        "density estimation",
         "variational autoencoder",
-        "Latent space"
+        "latent space"
       ]
     },
     {
@@ -18817,11 +18940,11 @@
       ],
       "id": "cs12-vae-tam-tablo",
       "keywords": [
-        "Generative model",
+        "generative model",
         "discriminative model",
-        "Density estimation",
+        "density estimation",
         "variational autoencoder",
-        "Latent space"
+        "latent space"
       ]
     },
     {
@@ -18864,11 +18987,11 @@
       ],
       "id": "cs12-vae-neden-boyle-calisir-anlama-zinciri",
       "keywords": [
-        "Generative model",
+        "generative model",
         "discriminative model",
-        "Density estimation",
+        "density estimation",
         "variational autoencoder",
-        "Latent space"
+        "latent space"
       ]
     },
     {
@@ -18915,11 +19038,11 @@
       ],
       "id": "cs12-vae-sampling-and-disentanglement",
       "keywords": [
-        "Generative model",
+        "generative model",
         "discriminative model",
-        "Density estimation",
+        "density estimation",
         "variational autoencoder",
-        "Latent space"
+        "latent space"
       ]
     },
     {
@@ -19000,9 +19123,9 @@
       ],
       "id": "cs12-kl-divergence-yonu-p-q-mass-covering-q-p-mode-seeking",
       "keywords": [
-        "Generative model",
+        "generative model",
         "discriminative model",
-        "Density estimation",
+        "density estimation",
         "Kullback-Leibler",
         "relative entropy"
       ]
@@ -19039,9 +19162,9 @@
       ],
       "id": "cs12-vae-de-kl-yonu-neden-d-kl-q-p-kullaniliyor",
       "keywords": [
-        "Generative model",
+        "generative model",
         "discriminative model",
-        "Density estimation",
+        "density estimation",
         "KL divergence",
         "Kullback-Leibler",
         "relative entropy"
@@ -28170,6 +28293,7 @@
         "cs12-maximum-likelihood-estimation-for-generative-models",
         "cs12-autoregressive-models-chain-rule-of-probability",
         "cs12-autoencoders-unsupervised-feature-learning",
+        "cs12-latent-diffusion-neden-vae-degil-ae-nicemleme-vq-codebook",
         "cs12-vae-setup-latent-space-and-bayesian-formulation",
         "cs12-vae-decoder-predicted-mean-l2-ve-z-integral-sorunu",
         "cs12-vae-elbo-evidence-lower-bound-derivation",
@@ -28177,14 +28301,10 @@
         "cs12-vae-tam-tablo",
         "cs12-vae-neden-boyle-calisir-anlama-zinciri",
         "cs12-vae-sampling-and-disentanglement",
-        "ida11-ddpm-vae-paraleli-ile-tam-matematiksel-akis",
         "cs12-kl-divergence-yonu-p-q-mass-covering-q-p-mode-seeking",
         "cs12-vae-de-kl-yonu-neden-d-kl-q-p-kullaniliyor",
-        "vs03-mle-map-vae-aradigim-sey-ne-prior-kimin-uzerinde",
-        "ida11-vae-vs-ddpm-elbo-derivation-tam-karsilastirmasi",
         "vs04-vae-vs-autoencoder",
-        "vs04-vae-loss-turetimi",
-        "cs12-latent-diffusion-neden-vae-degil-ae-nicemleme-vq-codebook"
+        "vs04-vae-loss-turetimi"
       ]
     },
     {
@@ -28229,6 +28349,7 @@
         "ida11-ddpm-matematiksel-ozet-forward-reverse-prediction-ve-l-simpl",
         "ida11-ddpm-unet-dahil-bastan-sona",
         "ida11-ddpm-training-inference-tam-parametreler-ve-dimensionlar",
+        "ida11-score-matching-neden-gradient-i-ogreniyoruz-ve-ddpm-le-nasil",
         "cs13-diffusion-models-intuition-and-rectified-flow",
         "cs13-conditional-generation-and-classifier-free-guidance-cfg",
         "cs13-noise-schedules-optimal-prediction-analysis",
@@ -28243,8 +28364,7 @@
         "lab07-task-5-ddpm-noise-schedule",
         "lab07-task-6-7-ddpm-algoritmalar",
         "lab07-toy-vs-ddpm-training-objective-farki",
-        "lab07-huggingface-diffusers-ddpmscheduler-unet2dmodel",
-        "cs12-latent-diffusion-neden-vae-degil-ae-nicemleme-vq-codebook"
+        "lab07-huggingface-diffusers-ddpmscheduler-unet2dmodel"
       ]
     },
     {
