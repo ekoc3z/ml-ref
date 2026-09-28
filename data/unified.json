@@ -1482,97 +1482,97 @@
       ]
     },
     {
-      "title": "Cross-Entropy — Denklem, Sezgi, Ne Zaman Kullanılır",
+      "title": "Cross-Entropy — Equation, Intuition, When It Is Used",
       "cat": "Theory",
       "mlo_only": true,
-      "context": "Sınıflandırmanın varsayılan loss'u",
-      "summary": "Doğru cevaba verilen olasılığın negatif logaritması. Maximum likelihood ve KL divergence ile bağı, softmax ile birleşince gradient'in neden tahmin eksi gerçeğe indiği, hangi varyantın ne zaman kullanıldığı, ve dengesiz veri ile etiket gürültüsündeki sınırları.",
+      "context": "The default loss of classification",
+      "summary": "The negative logarithm of the probability given to the correct answer. Its link to maximum likelihood and the KL divergence, why the gradient comes down to prediction minus truth once it is combined with softmax, which variant is used when, and its limits under class imbalance and label noise.",
       "sections": [
         {
           "type": "text",
-          "heading": "Tek cümle",
-          "text": "Cross-entropy, modelin doğru cevaba verdiği olasılığın logaritmasının eksisi. Model doğru cevaba ne kadar az olasılık verdiyse ceza o kadar büyük.\n\nSınıflandırmanın varsayılan loss'u olmasının sebebi üç şeyin aynı noktada buluşması: maximum likelihood'dan türemesi, gradient'inin çok temiz çıkması, ve olasılık çıktısını doğrudan cezalandırması."
+          "heading": "In one sentence",
+          "text": "Cross-entropy is minus the logarithm of the probability the model assigns to the correct answer. The less probability the model gave to the correct answer, the larger the penalty.\n\nThe reason it is the default loss of classification is that three things meet at the same point: it derives from maximum likelihood, its gradient comes out very clean, and it penalises the probability output directly."
         },
         {
           "type": "formula",
-          "heading": "Denklem",
-          "text": "İki sınıf (binary cross-entropy), $y \\in \\{0,1\\}$ ve model çıktısı $\\hat{y} \\in (0,1)$:\n$$L = -\\bigl[\\, y \\log \\hat{y} + (1-y) \\log (1-\\hat{y}) \\,\\bigr]$$\n\nÇok sınıf, $K$ sınıf ve one-hot etiket:\n$$L = -\\sum_{k=1}^{K} y_k \\log \\hat{y}_k = -\\log \\hat{y}_{c}$$\n\nSondaki sadeleşme şundan: one-hot etikette tek bir terim hayatta kalıyor, o da doğru sınıf $c$'nin olasılığı. Yani çok sınıflı cross-entropy pratikte \"doğru sınıfa verdiğin olasılığın log'u\"ndan ibaret."
+          "heading": "The equation",
+          "text": "Two classes (binary cross-entropy), $y \\in \\{0,1\\}$ and model output $\\hat{y} \\in (0,1)$:\n$$L = -\\bigl[\\, y \\log \\hat{y} + (1-y) \\log (1-\\hat{y}) \\,\\bigr]$$\n\nMulti-class, $K$ classes and a one-hot label:\n$$L = -\\sum_{k=1}^{K} y_k \\log \\hat{y}_k = -\\log \\hat{y}_{c}$$\n\nThe simplification at the end comes from this: with a one-hot label a single term survives, and that is the probability of the correct class $c$. That is, multi-class cross-entropy is in practice nothing but \\\"the log of the probability you gave to the correct class\\\"."
         },
         {
           "type": "text",
-          "heading": "Sezgi: sürpriz miktarı",
-          "text": "Logaritma burada bir şaşkınlık ölçüsü. Model doğru cevaba 1 olasılık verdiyse hiç şaşırmadın, ceza sıfır. Olasılık düştükçe şaşkınlık ve ceza hızla büyüyor.\n\nSayılarla, doğru sınıfa verilen olasılığa göre:\n\n$$\\hat{y}_c = 0.9 \\Rightarrow L = 0.105 \\qquad 0.5 \\Rightarrow 0.693 \\qquad 0.1 \\Rightarrow 2.303 \\qquad 0.01 \\Rightarrow 4.605$$\n\nDikkat edilecek şey ölçeğin doğrusal olmaması. 0.9'dan 0.5'e düşmek cezayı altı katına çıkarıyor, 0.5'ten 0.1'e düşmek üç katına daha. Emin olup yanılmak çok pahalı; kararsız kalmak ucuz. Modelin aşırı özgüvenli yanlışlardan kaçınmayı öğrenmesi bu asimetriden geliyor."
+          "heading": "Intuition: the amount of surprise",
+          "text": "The logarithm here is a measure of astonishment. If the model gave probability 1 to the correct answer you were not surprised at all and the penalty is zero. As the probability falls, the astonishment and the penalty grow fast.\n\nWith numbers, by the probability given to the correct class:\n\n$$\\hat{y}_c = 0.9 \\Rightarrow L = 0.105 \\qquad 0.5 \\Rightarrow 0.693 \\qquad 0.1 \\Rightarrow 2.303 \\qquad 0.01 \\Rightarrow 4.605$$\n\nThe thing to notice is that the scale is not linear. Falling from 0.9 to 0.5 multiplies the penalty six times, falling from 0.5 to 0.1 three times more. Being confident and wrong is very expensive; being undecided is cheap. The model's learning to avoid overconfident mistakes comes from this asymmetry."
         },
         {
           "type": "text",
-          "heading": "Nereden geliyor",
-          "text": "İki ayrı yoldan aynı ifadeye çıkılıyor.\n\nMaximum likelihood. Etiketi kategorik bir distribution'dan geldiğini varsayıp veri setinin likelihood'unu yazarsan, log alıp eksiyle çarptığında elde ettiğin şey tam olarak cross-entropy. Yani cross-entropy'yi minimize etmek, etiketlerin likelihood'unu maksimize etmekle aynı şey.\n\nBilgi kuramı. Gerçek distribution $p$ ile tahmin edilen $q$ arasındaki cross-entropy $H(p,q) = H(p) + D_{\\mathrm{KL}}(p \\parallel q)$. Etiket sabit olduğu için $H(p)$ de sabit; geriye optimize edilen tek şey olarak KL divergence kalıyor. Yani cross-entropy'yi minimize etmek, tahmin edilen distribution'ı gerçeğine yaklaştırmak demek."
+          "heading": "Where it comes from",
+          "text": "The same expression is reached along two separate routes.\n\nMaximum likelihood. If you assume the label comes from a categorical distribution and write the likelihood of the data set, what you obtain when you take the log and multiply by minus one is exactly cross-entropy. That is, minimising cross-entropy is the same thing as maximising the likelihood of the labels.\n\nInformation theory. The cross-entropy between the true distribution $p$ and the predicted $q$ is $H(p,q) = H(p) + D_{\\mathrm{KL}}(p \\parallel q)$. Because the label is fixed, $H(p)$ is constant too; what is left as the only thing being optimised is the KL divergence. That is, minimising cross-entropy means bringing the predicted distribution closer to the true one."
         },
         {
           "type": "insight",
-          "heading": "Neden MSE değil: gradient",
-          "text": "Sınıflandırmada MSE de kullanılabilir ama eğitim yavaşlıyor. Sebep gradient'te.\n\nSigmoid ya da softmax çıktısına MSE uygularsan, zincir kuralı gradient'e aktivasyonun türevini de katıyor. O türev çıktı 0 ya da 1'e yaklaştığında sıfıra gidiyor. Sonuç: model emin bir şekilde yanlış cevap verdiğinde gradient neredeyse sıfır oluyor, yani en çok düzeltilmesi gereken durumda öğrenme duruyor.\n\nCross-entropy'de logaritma tam olarak bu terimi sadeleştiriyor. Softmax ile birlikte kullanıldığında logit'lere göre gradient şu kadar basit:\n\n$$\\frac{\\partial L}{\\partial z} = \\hat{y} - y$$\n\nYani \"tahmin eksi gerçek\". Hata ne kadar büyükse gradient o kadar büyük, doygunluk sorunu yok. Softmax ile cross-entropy'nin her yerde birlikte anılmasının sebebi bu sadeleşme."
+          "heading": "Why not MSE: the gradient",
+          "text": "MSE can be used in classification too, but training slows down. The reason is in the gradient.\n\nIf you apply MSE to a sigmoid or softmax output, the chain rule puts the derivative of the activation into the gradient as well. That derivative goes to zero when the output approaches 0 or 1. The result: when the model gives a confidently wrong answer the gradient is almost zero, that is, learning stops in exactly the situation that most needs correcting.\n\nIn cross-entropy the logarithm cancels precisely this term. When it is used together with softmax, the gradient with respect to the logits is this simple:\n\n$$\\frac{\\partial L}{\\partial z} = \\hat{y} - y$$\n\nThat is, \\\"prediction minus truth\\\". The larger the error the larger the gradient, and there is no saturation problem. This cancellation is the reason softmax and cross-entropy are named together everywhere."
         },
         {
           "type": "table",
-          "heading": "Hangi varyant ne zaman",
+          "heading": "Which variant when",
           "rows": [
             [
-              "Durum",
-              "Kullanılan",
-              "Not"
+              "Situation",
+              "Used",
+              "Note"
             ],
             [
-              "Tek etiketli çok sınıf",
+              "Single-label multi-class",
               "softmax + cross-entropy",
-              "sınıflar birbirini dışlıyor"
+              "the classes exclude each other"
             ],
             [
-              "Çok etiketli",
+              "Multi-label",
               "sigmoid + binary cross-entropy",
-              "her sınıf için bağımsız karar"
+              "an independent decision for each class"
             ],
             [
-              "İki sınıf",
+              "Two classes",
               "binary cross-entropy",
-              "softmax'ın özel hali"
+              "the special case of softmax"
             ],
             [
-              "Dengesiz sınıflar",
+              "Imbalanced classes",
               "weighted cross-entropy",
-              "az örnekli sınıfa büyük ağırlık"
+              "a large weight on the class with few samples"
             ],
             [
-              "Aşırı dengesizlik (detection)",
+              "Extreme imbalance (detection)",
               "focal loss",
-              "kolay örneklerin katkısını söndürüyor"
+              "damps the contribution of the easy samples"
             ],
             [
-              "Aşırı özgüven sorunu",
+              "Overconfidence problem",
               "label smoothing",
-              "hedefi 1 yerine 0.9 gibi alıyor"
+              "takes the target as 0.9 rather than 1"
             ],
             [
-              "Piksel bazlı segmentation",
+              "Pixel-wise segmentation",
               "pixel-wise cross-entropy",
-              "genelde Dice loss ile birlikte"
+              "usually together with Dice loss"
             ]
           ]
         },
         {
           "type": "text",
-          "heading": "Avantajları ve sınırları",
-          "text": "Avantajları. Olasılık çıktısını doğrudan cezalandırıyor, gradient'i temiz, maximum likelihood ile teorik temeli var, ve hemen her framework'te sayısal olarak kararlı biçimde hazır geliyor.\n\nSınırları da var.\n\nÖlçtüğü şey olasılık, sıralama ya da eşik değil. Doğruluk oranı ya da F1 gibi metrikleri doğrudan optimize etmiyor; loss düşerken hedeflediğin metrik bir yerde iyileşmeyi bırakabiliyor.\n\nDengesiz veride yanıltıcı. Örneklerin yüzde doksanı tek sınıftaysa, her şeye o sınıfı demek düşük loss veriyor. Ağırlıklandırma ya da focal loss bu yüzden var.\n\nEtiket gürültüsüne kırılgan. Yanlış etiketlenmiş bir örnek, model doğru cevabı verdiğinde çok büyük ceza üretiyor ve eğitim o tek örnek uğruna bozulabiliyor.\n\nKalibrasyon garantisi yok. Çıktılar olasılık gibi görünüyor ama modern derin network'ler genelde aşırı özgüvenli; gerçek güven isteniyorsa ayrıca kalibrasyon gerekiyor."
+          "heading": "Advantages and limits",
+          "text": "Advantages. It penalises the probability output directly, its gradient is clean, it has a theoretical foundation in maximum likelihood, and it comes ready in a numerically stable form in almost every framework.\n\nIt has limits too.\n\nWhat it measures is probability, not ranking or a threshold. It does not directly optimise metrics such as accuracy or F1; while the loss is falling the metric you are aiming at can stop improving somewhere.\n\nMisleading on imbalanced data. If ninety percent of the samples are of a single class, saying that class to everything gives a low loss. Weighting and focal loss exist for this reason.\n\nFragile to label noise. A mislabelled sample produces a very large penalty when the model gives the correct answer, and training can be spoiled for the sake of that single sample.\n\nNo guarantee of calibration. The outputs look like probabilities but modern deep networks are generally overconfident; if genuine confidence is wanted, calibration is needed in addition."
         },
         {
           "type": "note",
-          "heading": "Pratikte üç tuzak",
-          "text": "Logit mi olasılık mı. PyTorch'ta CrossEntropyLoss ham logit bekliyor ve softmax'ı kendi içinde uyguluyor; çıktıya ayrıca softmax uygularsan iki kez uygulamış oluyorsun. Aynı şekilde BCEWithLogitsLoss logit bekliyor, BCELoss ise olasılık.\n\n$\\log 0$ problemi. Olasılık tam sıfıra giderse loss sonsuza gidiyor. Kütüphaneler bunu logit üzerinden hesaplayarak çözüyor; elle yazarken küçük bir epsilon eklemek gerekiyor.\n\nOrtalama mı toplam mı. Batch üzerinde ortalama almak standart; toplam alırsan efektif learning rate batch boyutuyla değişiyor."
+          "heading": "Three traps in practice",
+          "text": "Logit or probability. In PyTorch CrossEntropyLoss expects raw logits and applies the softmax internally; if you also apply a softmax to the output you have applied it twice. In the same way BCEWithLogitsLoss expects logits, while BCELoss expects probabilities.\n\nThe $\\log 0$ problem. If the probability goes to exactly zero the loss goes to infinity. Libraries solve this by computing over the logits; when writing it by hand you have to add a small epsilon.\n\nMean or sum. Taking the mean over the batch is standard; if you take the sum, the effective learning rate changes with the batch size."
         },
         {
           "type": "insight",
-          "heading": "Geriye ne kalsın",
-          "text": "Cross-entropy, doğru cevaba verilen olasılığın negatif logaritması. Maximum likelihood'dan türüyor ve KL divergence'ı minimize etmekle aynı kapıya çıkıyor. MSE yerine tercih edilmesinin sebebi teorik zarafet değil, softmax ile birleştiğinde gradient'in tahmin eksi gerçek biçimine inmesi ve doygunluk yaşamaması. Sınırı ise ölçtüğü şeyin olasılık olması: dengesiz veride ve etiket gürültüsünde ayrıca önlem gerekiyor."
+          "heading": "What should stay with you",
+          "text": "Cross-entropy is the negative logarithm of the probability given to the correct answer. It derives from maximum likelihood and comes out at the same door as minimising the KL divergence. The reason it is preferred over MSE is not theoretical elegance but that, combined with softmax, the gradient comes down to the form prediction minus truth and does not saturate. Its limit is that what it measures is probability: on imbalanced data and under label noise separate precautions are needed."
         }
       ],
       "id": "ch07-cross-entropy-denklem-sezgi-ne-zaman-kullanilir",
@@ -7045,50 +7045,50 @@
       ]
     },
     {
-      "title": "Guidance — Classifier'dan Classifier-Free'ye",
+      "title": "Guidance — From Classifier to Classifier-Free",
       "cat": "Theory",
-      "summary": "Condition'ı input olarak vermek uyumu zayıf bırakıyor. Guidance bunu sampling sırasında güçlendiriyor: Bayes kuralı score üzerinde yazılınca koşullu score, koşulsuz score artı classifier gradient'ine ayrışıyor. Classifier guidance bu terimi ayrı bir modelden alıyor, classifier-free guidance ise aynı bilginin koşullu ile koşulsuz tahminin farkında zaten var olduğunu görüp o modeli siliyor.",
-      "context": "Koşullu üretim — Dhariwal, Nichol 2021 · Ho, Salimans 2022 · CME 296 Lecture 4",
+      "summary": "Giving the condition as an input leaves the consistency weak. Guidance strengthens it during sampling: when Bayes' rule is written on the score, the conditional score decomposes into the unconditional score plus the classifier gradient. Classifier guidance takes that term from a separate model; classifier-free guidance sees that the same information is already present in the difference between the conditional and the unconditional prediction and deletes that model.",
+      "context": "Conditional generation — Dhariwal, Nichol 2021 · Ho, Salimans 2022 · CME 296 Lecture 4",
       "mlo_only": true,
       "sections": [
         {
           "type": "text",
-          "heading": "Tek cümle",
-          "text": "Guidance, koşullu üretimde condition'ın etkisini yapay olarak güçlendirme tekniği. Önce ayrı bir classifier'ın gradient'i ile yapıldı, sonra o classifier'ı tamamen ortadan kaldıran bir yöntem bulundu.\n\nİki yöntem de training'i değil sampling'i değiştiriyor; ikincisi ise training'e tek bir küçük ekleme yapıyor."
+          "heading": "In one sentence",
+          "text": "Guidance is the technique of artificially strengthening the effect of the condition in conditional generation. It was first done with the gradient of a separate classifier, and later a method was found that removes that classifier entirely.\n\nBoth methods change sampling, not training; the second one makes a single small addition to training."
         },
         {
           "type": "text",
-          "heading": "1. Problem: condition'ı vermek yetmiyor",
-          "text": "Koşullu üretimin en doğrudan yolu, condition $y$'yi network'e ek input olarak vermek: $\\varepsilon_\\theta(x_t, y, t)$. Training sırasında da (görüntü, etiket) çiftleriyle eğitirsin.\n\nBu çalışıyor ama zayıf çalışıyor. Üretilen örnekler etiketle uyumlu oluyor, ancak uyum gevşek: \"golden retriever\" dediğinde köpek geliyor, fakat bazen belirsiz bir köpek, bazen konu dışı ayrıntılarla dolu bir sahne.\n\nSebep şu: model $p(x \\mid y)$'yi öğreniyor ve o distribution'dan dürüstçe örnek alıyor. Distribution'ın içinde etikete zayıf uyan bölgeler de var ve örnekleme onları da ziyaret ediyor. İstenen şey ise \"etikete en tipik uyan\" bölgeler.\n\nGuidance'ın çıkış noktası bu: örnekleme sırasında condition'ın ağırlığını arttırmak."
+          "heading": "1. The problem: giving the condition is not enough",
+          "text": "The most direct route to conditional generation is to give the condition $y$ to the network as an extra input: $\\varepsilon_\\theta(x_t, y, t)$. During training you train on (image, label) pairs.\n\nThis works, but it works weakly. The generated samples are consistent with the label, yet the consistency is loose: when you say \\\"golden retriever\\\" a dog comes, but sometimes an indistinct dog, sometimes a scene full of irrelevant detail.\n\nThe reason is this: the model learns $p(x \\mid y)$ and samples honestly from that distribution. Inside the distribution there are also regions that match the label weakly, and sampling visits those too. What is wanted, though, are the regions that match the label most typically.\n\nThis is guidance's point of departure: increasing the weight of the condition during sampling."
         },
         {
           "type": "text",
-          "heading": "2. Classifier guidance: fikir",
-          "text": "Dhariwal ve Nichol (2021) şunu önerdi: koşulsuz olarak eğitilmiş bir generation model'in yanına, ayrı eğitilmiş bir classifier koy. Classifier \"bu görüntü hangi sınıfa ait\" sorusunu cevaplıyor; onun gradient'i de \"bu görüntüyü hangi yönde değiştirirsem daha çok o sınıfa benzer\" bilgisini veriyor.\n\nSampling sırasında her adımda bu yön, modelin kendi adımına ekleniyor. Yani generation model nereye gideceğini söylüyor, classifier ise o yönü sınıfa doğru büküyor."
+          "heading": "2. Classifier guidance: the idea",
+          "text": "Dhariwal and Nichol (2021) proposed this: place a separately trained classifier next to an unconditionally trained generation model. The classifier answers the question \\\"which class does this image belong to\\\"; its gradient then gives the information \\\"in which direction do I change this image so that it resembles that class more\\\".\n\nDuring sampling this direction is added to the model's own step at each step. That is, the generation model says where to go, and the classifier bends that direction towards the class."
         },
         {
           "type": "text",
-          "heading": "3. Türetme: Bayes'i score üzerinde uygulamak",
-          "text": "İstenen şey koşullu score, yani $\\nabla_x \\log p_t(x \\mid y)$. Bayes kuralını yazıp logaritma alınca:\n\n$$\\log p_t(x \\mid y) = \\log p_t(x) + \\log p_t(y \\mid x) - \\log p_t(y)$$\n\nSon terim $x$'e bağlı değil, dolayısıyla $x$'e göre gradient alınca düşüyor:\n\n$$\\nabla_x \\log p_t(x \\mid y) = \\nabla_x \\log p_t(x) + \\nabla_x \\log p_t(y \\mid x)$$\n\nDenklemin okunuşu şu: koşullu score, koşulsuz score artı classifier'ın gradient'i. İlk terimi zaten eğitilmiş diffusion model veriyor, ikincisini classifier.\n\nSlaytlardaki iki ara adım bu sonucu sampling formülüne bağlıyor. Birincisi, DDPM'in adım kuralında koşulsuz geçişin Gaussian olduğunu kullanıyor. İkincisi, $\\log p_t(y \\mid x)$'i adımın merkezinde birinci mertebeden Taylor açılımıyla doğrusallaştırıyor. İkisi birleşince ortaya çıkan ifade yine bir Gaussian, ama ortalaması kaymış:\n\n$$\\mu_{\\text{guided}} = \\mu_\\theta(x_t,t) + \\Sigma \\cdot \\nabla_x \\log p_t(y \\mid x)$$\n\nYani classifier'ın tek etkisi adımın merkezini sınıfa doğru itmek.\n\nBu Taylor adımı bir yaklaşıklık; guidance'ın \"teorik olarak temiz değil ama pratikte çalışıyor\" tarafı buradan geliyor."
+          "heading": "3. The derivation: applying Bayes on the score",
+          "text": "What is wanted is the conditional score, that is $\\nabla_x \\log p_t(x \\mid y)$. Writing Bayes' rule and taking the logarithm:\n\n$$\\log p_t(x \\mid y) = \\log p_t(x) + \\log p_t(y \\mid x) - \\log p_t(y)$$\n\nThe last term does not depend on $x$, and therefore it drops when the gradient with respect to $x$ is taken:\n\n$$\\nabla_x \\log p_t(x \\mid y) = \\nabla_x \\log p_t(x) + \\nabla_x \\log p_t(y \\mid x)$$\n\nThe reading of the equation is this: the conditional score is the unconditional score plus the classifier's gradient. The first term is already given by the trained diffusion model, the second by the classifier.\n\nThe two intermediate steps in the slides connect this result to the sampling formula. The first uses the fact that the unconditional transition in DDPM's step rule is Gaussian. The second linearises $\\log p_t(y \\mid x)$ with a first order Taylor expansion at the centre of the step. When the two are combined the expression that emerges is again a Gaussian, but with a shifted mean:\n\n$$\\mu_{\\text{guided}} = \\mu_\\theta(x_t,t) + \\Sigma \\cdot \\nabla_x \\log p_t(y \\mid x)$$\n\nThat is, the classifier's only effect is to push the centre of the step towards the class.\n\nThis Taylor step is an approximation; guidance's \\\"not theoretically clean but works in practice\\\" side comes from here."
         },
         {
           "type": "insight",
-          "heading": "4. Guidance scale: neden 1'den büyük",
-          "text": "Türetme doğal olarak classifier teriminin katsayısını 1 veriyor. Ama deneyde 1 ile iyi sonuç alınmıyor; katsayıyı büyütmek gerekiyor:\n\n$$\\nabla_x \\log p_t(x) + s \\cdot \\nabla_x \\log p_t(y \\mid x), \\qquad s > 1$$\n\nBunun anlamı artık $p(x \\mid y)$'den örnek almamak. Efektif olarak $p(x) \\cdot p(y \\mid x)^s$ gibi, sınıf olasılığı keskinleştirilmiş bir distribution'dan örnek alıyorsun. Sonuç: etikete çok daha tipik, daha \"temiz\" görüntüler, ama daha az çeşitlilik.\n\nTakas her zaman aynı yönde: $s$ büyüdükçe kalite ve uyum artıyor, çeşitlilik düşüyor. Çok büyük $s$'te görüntüler doygun ve klişe hale geliyor."
+          "heading": "4. Guidance scale: why larger than 1",
+          "text": "The derivation naturally gives the coefficient of the classifier term as 1. But in experiments good results are not obtained with 1; the coefficient has to be enlarged:\n\n$$\\nabla_x \\log p_t(x) + s \\cdot \\nabla_x \\log p_t(y \\mid x), \\qquad s > 1$$\n\nWhat this means is that you are no longer sampling from $p(x \\mid y)$. Effectively you are sampling from a distribution like $p(x) \\cdot p(y \\mid x)^s$, in which the class probability has been sharpened. The result: images far more typical of the label and \\\"cleaner\\\", but less diverse.\n\nThe trade-off is always in the same direction: as $s$ grows, quality and consistency increase, diversity drops. At very large $s$ the images become saturated and cliched."
         },
         {
           "type": "text",
-          "heading": "5. Classifier guidance'ın bedeli",
-          "text": "Yöntem çalışıyor ama üç yük getiriyor.\n\nEtiketli veri ve ayrı bir model gerekiyor. Classifier'ı ayrıca eğitmen lazım.\n\nHazır classifier kullanılamıyor. Guidance her noise seviyesinde uygulandığı için classifier'ın $x_t$ gibi bozulmuş girdilerde çalışması gerekiyor. Normal bir ImageNet classifier temiz görüntülerle eğitildiği için işe yaramıyor; noise'lu veriyle yeniden eğitmen gerekiyor.\n\nHer adımda ekstra maliyet. Sampling'in her adımında classifier'dan geçip gradient almak gerekiyor, üstelik $s$ ayrıca ayarlanması gereken yeni bir parametre.\n\nAyrıca sınıf etiketiyle sınırlı: serbest metinle koşullama bu çerçevede doğal değil."
+          "heading": "5. The cost of classifier guidance",
+          "text": "The method works but brings three burdens.\n\nLabelled data and a separate model are needed. You have to train the classifier in addition.\n\nAn off-the-shelf classifier cannot be used. Because guidance is applied at every noise level, the classifier has to work on corrupted inputs like $x_t$. An ordinary ImageNet classifier is trained on clean images and is therefore useless; you have to retrain it on noisy data.\n\nExtra cost at every step. At each step of sampling you have to pass through the classifier and take a gradient, and on top of that $s$ is a new parameter that has to be tuned separately.\n\nIt is also limited to class labels: conditioning on free text is not natural in this frame."
         },
         {
           "type": "insight",
-          "heading": "6. Classifier-free guidance: classifier'ı silmek",
-          "text": "Ho ve Salimans (2022) türetmedeki denklemi ters çevirip baktı. Aynı eşitlikten classifier terimi yalnız bırakılabiliyor:\n\n$$\\nabla_x \\log p_t(y \\mid x) = \\nabla_x \\log p_t(x \\mid y) - \\nabla_x \\log p_t(x)$$\n\nYani classifier'ın verdiği bilgi, koşullu ve koşulsuz score'un farkında zaten mevcut. Ayrı bir model kurmaya gerek yok; ikisini de üretebilen tek bir network yeter.\n\nBunun için training'e tek bir ekleme yapılıyor: örneklerin bir kısmında condition rastgele düşürülüyor ve yerine boş bir token konuyor. Aynı network böylece hem koşullu hem koşulsuz tahmin üretmeyi öğreniyor.\n\nSampling'de iki tahmin alınıp aradaki fark büyütülüyor:\n\n$$\\tilde{\\varepsilon} = \\varepsilon_\\theta(x_t, \\varnothing, t) + w \\cdot \\bigl[ \\varepsilon_\\theta(x_t, y, t) - \\varepsilon_\\theta(x_t, \\varnothing, t) \\bigr]$$\n\nParantez içi \"condition'ın getirdiği fark\" yönü; $w$ o yönü ne kadar abartacağını söylüyor. $w = 1$ sıradan koşullu üretim, $w > 1$ guidance."
+          "heading": "6. Classifier-free guidance: deleting the classifier",
+          "text": "Ho and Salimans (2022) turned the equation in the derivation around and looked at it. From the same identity the classifier term can be isolated:\n\n$$\\nabla_x \\log p_t(y \\mid x) = \\nabla_x \\log p_t(x \\mid y) - \\nabla_x \\log p_t(x)$$\n\nThat is, the information the classifier provides is already present in the difference between the conditional and the unconditional score. There is no need to set up a separate model; a single network that can produce both is enough.\n\nFor this a single addition is made to training: on a fraction of the samples the condition is randomly dropped and an empty token is put in its place. The same network thus learns to produce both conditional and unconditional predictions.\n\nAt sampling time the two predictions are taken and the difference between them is amplified:\n\n$$\\tilde{\\varepsilon} = \\varepsilon_\\theta(x_t, \\varnothing, t) + w \\cdot \\bigl[ \\varepsilon_\\theta(x_t, y, t) - \\varepsilon_\\theta(x_t, \\varnothing, t) \\bigr]$$\n\nInside the bracket is the direction of \\\"the difference the condition brings\\\"; $w$ says how much you will exaggerate that direction. $w = 1$ is ordinary conditional generation, $w > 1$ is guidance."
         },
         {
           "type": "table",
-          "heading": "7. İki yöntemin karşılaştırması",
+          "heading": "7. The two methods compared",
           "rows": [
             [
               "",
@@ -7096,69 +7096,65 @@
               "Classifier-free guidance"
             ],
             [
-              "Ek model",
-              "evet, noise'lu veride eğitilmiş classifier",
-              "hayır"
+              "Extra model",
+              "yes, a classifier trained on noisy data",
+              "no"
             ],
             [
-              "Training'e etkisi",
-              "yok, saf sampling tekniği",
-              "condition dropout eklenir"
+              "Effect on training",
+              "none, a pure sampling technique",
+              "condition dropout is added"
             ],
             [
-              "Koşullama tipi",
-              "sınıf etiketi",
-              "metin, görüntü, herhangi bir embedding"
+              "Conditioning type",
+              "class label",
+              "text, image, any embedding"
             ],
             [
-              "Inference maliyeti",
-              "her adımda classifier + gradient",
-              "her adımda 2 network çağrısı"
+              "Inference cost",
+              "classifier + gradient at every step",
+              "2 network calls at every step"
             ],
             [
-              "Yaklaşıklık",
-              "Taylor açılımı",
-              "yok"
+              "Approximation",
+              "Taylor expansion",
+              "none"
             ],
             [
-              "Pratikteki yeri",
-              "tarihsel, ilk çözüm",
-              "bugünkü standart"
+              "Place in practice",
+              "historical, the first solution",
+              "today's standard"
             ]
           ]
         },
         {
           "type": "text",
-          "heading": "8. Bedeli ve pratik notlar",
-          "text": "Classifier-free guidance'ın maliyeti sampling'i iki katına çıkarması: her adımda network bir kez koşullu, bir kez koşulsuz çalışıyor. Distillation çalışmalarının bir kısmı tam olarak bu ikinci çağrıyı ortadan kaldırmayı hedefliyor.\n\nCondition'ın nasıl temsil edildiği serbest. Metinle koşullamada CLIP ya da T5 gibi bir text encoder'ın embedding'i kullanılıyor; network bu vektörü cross-attention ya da adaLN üzerinden alıyor. Guidance'ın matematiği condition'ın ne olduğuna bakmıyor, sadece \"koşullu ve koşulsuz tahmin\" ikilisine ihtiyaç duyuyor.\n\n$w$ değeri modele göre ayarlanıyor; tipik aralık 2 ile 8 arası. Görüntü üretim arayüzlerindeki \"CFG scale\" ya da \"guidance scale\" ayarı tam olarak bu sayı.\n\nSon olarak guidance parametrizasyondan bağımsız: aynı işlem $\\varepsilon$, score ya da velocity tahminleri üzerinde birebir aynı biçimde yazılabiliyor, çünkü üçü birbirine sabit katsayılarla bağlı."
+          "heading": "8. Its cost and practical notes",
+          "text": "The cost of classifier-free guidance is that it doubles sampling: at every step the network runs once conditionally and once unconditionally. Part of the work on distillation aims at exactly removing this second call.\n\nHow the condition is represented is free. In text conditioning the embedding of a text encoder such as CLIP or T5 is used; the network takes this vector through cross-attention or adaLN. The mathematics of guidance does not look at what the condition is, it only needs the pair \\\"conditional and unconditional prediction\\\".\n\nThe value of $w$ is tuned per model; the typical range is between 2 and 8. The \\\"CFG scale\\\" or \\\"guidance scale\\\" setting in image generation interfaces is exactly this number.\n\nFinally, guidance is independent of the parametrization: the same operation can be written identically on $\\varepsilon$, score or velocity predictions, because the three are related to each other by fixed coefficients."
         },
         {
           "type": "insight",
-          "heading": "Geriye ne kalsın",
-          "text": "Condition'ı input olarak vermek uyumu zayıf bırakıyor; guidance bu uyumu örnekleme sırasında güçlendiriyor. Bayes kuralı score üzerinde yazıldığında koşullu score, koşulsuz score artı classifier gradient'i olarak ayrışıyor. Classifier guidance bu ikinci terimi ayrı bir modelden alıyor ve noise'lu veride eğitilmiş bir classifier gerektiriyor. Classifier-free guidance ise aynı terimin koşullu ile koşulsuz tahminin farkında zaten var olduğunu görüp ayrı modeli siliyor; bedeli adım başına iki network çağrısı. Guidance scale büyüdükçe uyum ve kalite artıyor, çeşitlilik azalıyor."
+          "heading": "What should stay with you",
+          "text": "Giving the condition as an input leaves the consistency weak; guidance strengthens that consistency during sampling. When Bayes' rule is written on the score, the conditional score decomposes into the unconditional score plus the classifier gradient. Classifier guidance takes this second term from a separate model and requires a classifier trained on noisy data. Classifier-free guidance sees that the same term is already present in the difference between the conditional and the unconditional prediction and deletes the separate model; its cost is two network calls per step. As the guidance scale grows, consistency and quality increase and diversity decreases."
         },
         {
           "type": "ref",
-          "heading": "İlgili kartlar",
+          "heading": "Related cards",
           "items": [
             {
               "id": "cs13-conditional-generation-and-classifier-free-guidance-cfg",
-              "label": "CS231n — CFG formülleri ve kodu"
-            },
-            {
-              "id": "ida11-score-matching-neden-gradient-i-ogreniyoruz-ve-ddpm-le-nasil",
-              "label": "Score matching — score'un ne olduğu"
+              "label": "CS231n — CFG formulas and code"
             },
             {
               "id": "ida11-conditional-diffusion-and-text-to-image-generation",
-              "label": "Conditional diffusion ve text-to-image"
+              "label": "Conditional diffusion and text-to-image"
             }
           ]
         },
         {
           "type": "note",
-          "heading": "Nereye bakılır",
-          "text": "Kaynaklar: Dhariwal, Nichol — Diffusion Models Beat GANs on Image Synthesis (2021), classifier guidance · Ho, Salimans — Classifier-Free Diffusion Guidance (2022).\n\nDers: CME 296, Lecture 4, Part 3. Aynı dersin birinci bölümü (pixel space'ten latent space'e, AE → VAE → perceptual ve adversarial loss) Autoencoder ve VAE konu anlatımında, ikinci bölümü (transformer, ViT, contrastive learning, CLIP) CS231n 15 kartlarında."
+          "heading": "Where to look",
+          "text": "Sources: Dhariwal, Nichol — Diffusion Models Beat GANs on Image Synthesis (2021), classifier guidance · Ho, Salimans — Classifier-Free Diffusion Guidance (2022).\n\nCourse: CME 296, Lecture 4, Part 3. The first part of the same lecture (from pixel space to latent space, AE to VAE, perceptual and adversarial loss) is in the Autoencoder and VAE walkthrough, and the second part (transformer, ViT, contrastive learning, CLIP) in the CS231n 15 cards."
         }
       ],
       "id": "ida11-guidance-classifier-dan-classifier-free-ye",
