@@ -27400,55 +27400,55 @@
       ]
     },
     "vae": {
-      "title": "Autoencoder ve VAE — Baştan Sona Konu Anlatımı",
+      "title": "Autoencoder and VAE — A Complete Walkthrough",
       "cat": "Konu Anlatımı",
-      "context": "Autoencoder · VAE · VQ · CS231n 12 · ML-OVERALL 19 — tek oturumda okunmak için",
+      "context": "Autoencoder · VAE · VQ · CS231n 12 · ML-OVERALL 19 — to be read in one sitting",
       "chapters": [
         "cs12",
         "cs13",
         "mlo19"
       ],
-      "summary": "Sıradan autoencoder'ın ne yaptığı ve neden generative model olmadığından başlayıp, VAE'nin her parçasının hangi zorunluluktan doğduğuna, ELBO'nun iki teriminin neden zıt yönde çektiğine, reparameterization trick'e, VAE'nin neden bulanık ürettiğine ve son olarak VQ'ya — latent'i düzenlemenin üçüncü yoluna — kadar tek akış.",
+      "summary": "One continuous thread from what a plain autoencoder does and why it is not a generative model, to the necessity each part of the VAE came out of, why the two terms of the ELBO pull in opposite directions, the reparameterization trick, why the VAE produces blurry output, and finally VQ — the third way of regulating the latent.",
       "sections": [
         {
           "type": "text",
-          "heading": "Bu metin ne için",
-          "text": "Bu konu aslında üç ayrı şey: sıradan autoencoder, VAE, ve VQ. Üçü de görüntüyü küçük bir latent temsile indiriyor, ama latent'i nasıl ele aldıkları farklı — ve o fark, her birinin ne işe yaradığını belirliyor.\n\nTek tek bakıldığında her parça anlaşılır ama birleştirilince kayıp gidiyor: encoder, decoder, KL terimi, reparameterization, codebook.\n\nBurada amaç sıra: hangi problem hangi parçayı doğurdu. Hiçbiri süs değil, her biri bir zorunluluktan çıkmış. O zinciri görürsen formülleri ezberlemene gerek kalmıyor."
+          "heading": "What this text is for",
+          "text": "This topic is really three separate things: the plain autoencoder, the VAE, and VQ. All three reduce an image to a small latent representation, but how they handle the latent differs — and that difference determines what each one is good for.\n\nTaken one by one every piece is understandable, but once they are combined things go missing: encoder, decoder, the KL term, reparameterization, the codebook.\n\nThe aim here is the order: which problem gave rise to which piece. None of them is decoration, each came out of a necessity. If you see that chain you do not need to memorise the formulas."
         },
         {
           "type": "text",
-          "heading": "1. Nereden başladık: sıkıştırma",
-          "text": "Amaç yeni görüntü üretmek. Ama 28x28'lik bir görüntü 784 boyutlu bir uzayda bir nokta, ve o uzayın neredeyse tamamı noise.\n\nÖnce şunu fark et: üretmek için küçük bir kontrol paneline ihtiyacın var. 784 sayıyı elle ayarlayarak yüz çizemezsin, ama elinde yirmi düğme olsa — yaş, poz, saç rengi, ifade — her kombinasyon bir yüz verirdi.\n\nO düğme takımına latent uzay, tek bir ayara z diyoruz. Üretim demek, z seçip görüntüye çevirmek demek.\n\nDikkat: z'nin dar olması şart. Geniş bırakırsan model hiçbir şey öğrenmez, girdiyi olduğu gibi kopyalar. Darlık, modeli gerçek yapıyı bulmaya zorlayan basıncın kendisi."
+          "heading": "1. Where we started: compression",
+          "text": "The goal is to generate new images. But a 28x28 image is a point in a 784-dimensional space, and almost all of that space is noise.\n\nFirst notice this: to generate, you need a small control panel. You cannot draw a face by tuning 784 numbers by hand, but if you had twenty dials — age, pose, hair colour, expression — every combination would give a face.\n\nWe call that set of dials the latent space, and a single setting z. Generating means choosing a z and turning it into an image.\n\nNote: z must be narrow. If you leave it wide the model learns nothing and copies the input as is. The narrowness is the very pressure that forces the model to find real structure."
         },
         {
           "type": "text",
-          "heading": "Pixel space neden yetmiyor",
-          "text": "Üretimi doğrudan piksellerin üzerinde yapmak en doğal seçenek gibi görünüyor, ama üç yerde tıkanıyor.\n\nBoyut. $256 \\times 256$ renkli bir görüntü 196.608 sayı demek. Modelin kapasitesinin büyük kısmı bu kadar boyutu idare etmeye gidiyor ve maliyet çözünürlükle karesel büyüyor.\n\nKapasitenin nereye harcandığı. Piksel düzeyindeki ayrıntılar, yani tek tek doku ve noise desenleri, görüntünün anlamına neredeyse hiç katkı vermiyor. Pikselde çalışan bir model kapasitesinin çoğunu insanın fark bile etmediği ayrıntılara ayırıyor.\n\nMesafenin anlamsızlığı. Bir görüntüyü bir piksel sağa kaydır: insana göre aynı görüntü, piksel uzayında ise çok uzak iki nokta. Yani piksel uzayındaki yakınlık, algısal yakınlıkla örtüşmüyor.\n\nİstenen şey şu: daha küçük boyutlu ve içinde mesafenin anlam taşıdığı bir uzay. Bu metnin geri kalanı o uzayı kurma denemelerinin sırası."
+          "heading": "Why pixel space is not enough",
+          "text": "Doing generation directly on the pixels looks like the most natural option, but it gets stuck in three places.\n\nDimension. A $256 \\times 256$ colour image means 196,608 numbers. Most of the model's capacity goes into handling that many dimensions and the cost grows quadratically with resolution.\n\nWhere the capacity is spent. Pixel-level details, that is, individual texture and noise patterns, contribute almost nothing to the meaning of the image. A model working in pixels devotes most of its capacity to details a human does not even notice.\n\nThe meaninglessness of distance. Shift an image one pixel to the right: to a human it is the same image, but in pixel space they are two very distant points. So proximity in pixel space does not coincide with perceptual proximity.\n\nWhat is wanted is this: a space of smaller dimension in which distance carries meaning. The rest of this text is the sequence of attempts to build that space."
         },
         {
           "type": "text",
-          "heading": "Üç ayrı benzerlik",
-          "text": "Bu tartışmada üç benzerlik kavramı birbirine karışıyor, ayırmakta fayda var.\n\nYapısal benzerlik: piksel değerleri ne kadar örtüşüyor. Kaydırma, döndürme ya da küçük bir renk kayması bunu hemen bozuyor.\n\nAlgısal benzerlik: insan gözüne ne kadar benzer görünüyor. Hafif bulanıklık algısal olarak küçük bir fark, yapısal olarak büyük.\n\nAnlamsal benzerlik: aynı şeyi mi gösteriyorlar. Farklı açıdan çekilmiş iki köpek fotoğrafı anlamsal olarak yakın, yapısal olarak tamamen farklı.\n\nİyi bir latent uzayın hedefi anlamsal ve algısal yakınlığı korumak; yapısal yakınlığı korumak zorunda değil."
+          "heading": "Three different similarities",
+          "text": "Three notions of similarity get mixed up in this discussion, and it is worth separating them.\n\nStructural similarity: how much the pixel values overlap. A shift, a rotation or a small colour change breaks it immediately.\n\nPerceptual similarity: how similar it looks to the human eye. Slight blurriness is a small perceptual difference and a large structural one.\n\nSemantic similarity: do they show the same thing. Two photographs of a dog taken from different angles are semantically close and structurally completely different.\n\nThe goal of a good latent space is to preserve semantic and perceptual proximity; it does not have to preserve structural proximity."
         },
         {
           "type": "text",
-          "heading": "2. Autoencoder nedir, ne işe yarar",
-          "text": "Autoencoder iki parçadan oluşuyor. Encoder görüntüyü dar bir latent koda indiriyor, decoder o koddan görüntüyü geri kuruyor. Loss da basit: çıkan görüntü ile girene ne kadar benziyor. Label gerekmiyor — denetim sinyali girdinin kendisi, o yüzden denetimsiz.\n\nDarlık burada zorlayıcı unsur. Latent geniş olsaydı model hiçbir şey öğrenmez, girdiyi olduğu gibi kopyalardı. Dar olduğu için neyi atıp neyi tutacağına karar vermek zorunda kalıyor — ve tutmayı seçtiği şey veri kümesindeki gerçek yapı oluyor.\n\nÜretim dışında gerçekten işe yaradığı yerler var:\n\nLabel'sız feature öğrenme. Training bitince decoder'ı atıp encoder'ı saklıyorsun; üstüne küçük bir classifier takıp çok daha az label'la eğitebiliyorsun. Modern kendinden denetimli yöntemlerin atası bu.\n\nNoise temizleme. Girdiye kasten noise ekleyip temiz halini hedef olarak verirsen, network temizlemeyi öğreniyor.\n\nAnomali tespiti. Normal veriyle eğitilmiş bir autoencoder, normal örnekleri iyi kurar. Aykırı bir örnek geldiğinde reconstruction hatası yükselir — o hatanın kendisi anomali skoru olur.\n\nBoyut indirgeme. Doğrusal bir autoencoder, kabaca PCA'nın yaptığı işi yapıyor; nonlineerlik eklenince PCA'nın göremediği eğri yapıları da yakalayabiliyor."
+          "heading": "2. What an autoencoder is and what it is good for",
+          "text": "An autoencoder consists of two parts. The encoder reduces the image to a narrow latent code, and the decoder rebuilds the image from that code. The loss is simple: how much the resulting image resembles the one that went in. No labels are needed — the supervision signal is the input itself, which is why it is unsupervised.\n\nNarrowness is the forcing element here. Had the latent been wide the model would learn nothing and copy the input as is. Because it is narrow it is forced to decide what to throw away and what to keep — and what it chooses to keep turns out to be the real structure in the dataset.\n\nThere are places where it is genuinely useful beyond generation:\n\nLearning features without labels. When training ends you discard the decoder and keep the encoder; you can attach a small classifier on top and train it with far fewer labels. This is the ancestor of modern self-supervised methods.\n\nDenoising. If you deliberately add noise to the input and give the clean version as the target, the network learns to clean.\n\nAnomaly detection. An autoencoder trained on normal data reconstructs normal examples well. When an outlier arrives the reconstruction error rises — that error itself becomes the anomaly score.\n\nDimensionality reduction. A linear autoencoder does roughly what PCA does; once non-linearity is added it can also capture curved structures PCA cannot see."
         },
         {
           "type": "text",
-          "heading": "3. Sıradan autoencoder neden üretemiyor",
-          "text": "Autoencoder tam olarak bunu yapıyor: encoder görüntüyü dar bir z'ye sıkıştırıyor, decoder z'den geri açıyor, loss da reconstruction hatası. Label gerekmiyor.\n\nTraining biter, reconstruction güzel. Şimdi yeni bir görüntü üretmeyi dene: rastgele bir z seç, decoder'a ver.\n\nÇıkan şey çöp.\n\nSebebi şu: encoder z'leri istediği yere koymakta serbest. Bir resmin z'sini 50 civarına, başkasınınkini eksi 30'a koyabilir. Arada kocaman boşluklar kalıyor, ve o boşluklar decoder'ın hiç görmediği bölgeler. Ayrıca hangi z'lerin geçerli olduğunu bilmiyorsun — nereden örnekleyeceğini söyleyen hiçbir şey yok.\n\nEksik olan tek şey bu: latent uzayın bir yapısı yok.\n\nVAE'nin tamamı bu cümleye verilen cevap."
+          "heading": "3. Why a plain autoencoder cannot generate",
+          "text": "The autoencoder does exactly this: the encoder compresses the image into a narrow z, the decoder unfolds it from z, and the loss is the reconstruction error. No labels needed.\n\nTraining ends and the reconstruction is nice. Now try generating a new image: pick a random z and give it to the decoder.\n\nWhat comes out is garbage.\n\nThe reason: the encoder is free to place the z's wherever it likes. It can put the z of one picture around 50 and that of another at minus 30. Huge gaps remain in between, and those gaps are regions the decoder has never seen. Moreover you do not know which z's are valid — nothing tells you where to sample from.\n\nThe only thing missing is this: the latent space has no structure.\n\nThe whole of the VAE is the answer given to that sentence."
         },
         {
           "type": "text",
-          "heading": "4. Fikir: z'nin nereden geldiğini sen söyle",
-          "text": "Madem z'nin yapısı yok, onu bir distribution'dan geliyormuş gibi modelle. Seçim standart normal: p(z) = N(0, I).\n\nArtık z'nin nerede olması gerektiği belli. Üretim zamanında nereden örnekleyeceğini de biliyorsun: standart normalden çek, decoder'a ver.\n\nAma bu bir dilek. Encoder'ı gerçekten oraya uymaya zorlayan bir şey gerekiyor — ve o zorlama, birazdan çıkacak KL terimi olacak. Önce hedefin kendisini yazalım."
+          "heading": "4. The idea: you decide where z comes from",
+          "text": "Since z has no structure, model it as if it came from a distribution. The standard choice is the standard normal: p(z) = N(0, I).\n\nNow it is clear where z should be. And at generation time you know where to sample from: draw from the standard normal and hand it to the decoder.\n\nBut this is a wish. Something is needed that actually forces the encoder to comply — and that force will be the KL term that comes out shortly. First let us write the target itself."
         },
         {
           "type": "text",
-          "heading": "5. Hedef yine maximum likelihood",
-          "text": "Yeni bir ilke yok. Training verisini en olası kılan parametreleri arıyoruz; parametreler decoder ve encoder weight'leri.\n\nz'leri bilseydik iş kolay olurdu: her görüntü için z'si elimizde olurdu, doğrudan log olabilirliği maksimize ederdik.\n\nAma z gizli. Dolayısıyla onun üzerinden integral almamız gerekiyor: bir görüntünün olasılığı, bütün olası z'ler üzerinden, o z'den bu görüntüyü üretme olasılığının prior ile weighted toplamı."
+          "heading": "5. The target is again maximum likelihood",
+          "text": "There is no new principle. We look for the parameters that make the training data most probable; the parameters are the decoder and encoder weights.\n\nIf we knew the z's the job would be easy: we would hold the z of every image and directly maximise the log-likelihood.\n\nBut z is hidden. Therefore we have to integrate over it: the probability of an image is, over all possible z's, the sum of the probability of producing this image from that z, weighted by the prior."
         },
         {
           "type": "formula",
@@ -27457,43 +27457,43 @@
         },
         {
           "type": "text",
-          "heading": "6. İntegral neden hesaplanamıyor",
-          "text": "Bu integral kapalı formda yok, ve sayısal olarak da alınamıyor.\n\nSezgisi şu: decoder bir sinir network'ü, ve ona hangi z'yi verirsen bir şey üretiyor. Hangi z'lerin bu görüntüyü üretmeye aday olduğunu önceden bilmiyorsun — z sürekli ve yüksek boyutlu, sınır yok. Hepsini toplaman gerekiyor ama toplanacak kümenin kendisi belirsiz.\n\nBayes kuralıyla dolaşmayı dene: marjinal, pay bölü payda biçiminde yazılabiliyor. Pay hesaplanabilir — decoder ve prior elinde. Ama paydada gerçek posterior var, yani \"bu görüntüyü hangi z üretmiş olabilir\" distribution'u, ve onu hesaplamak için yine aynı integrale ihtiyacın var.\n\nYol kapalı. İşte VAE'nin karakteristik hamlesi tam burada geliyor."
+          "heading": "6. Why the integral cannot be computed",
+          "text": "This integral has no closed form, and it cannot be taken numerically either.\n\nThe intuition: the decoder is a neural network, and whatever z you give it, it produces something. You do not know in advance which z's are candidates for producing this image — z is continuous and high dimensional, with no bounds. You would have to sum over all of them, but the set to be summed over is itself undetermined.\n\nTry going around it with Bayes' rule: the marginal can be written as a numerator over a denominator. The numerator is computable — you hold the decoder and the prior. But in the denominator sits the true posterior, that is, the distribution of \\\"which z might have produced this image\\\", and computing it requires the same integral again.\n\nThe road is closed. And this is exactly where the characteristic move of the VAE comes in."
         },
         {
           "type": "text",
-          "heading": "7. Encoder denklemden türetilmedi, dışarıdan eklendi",
-          "text": "Bu ayrımı kaçırmak çok kolay ve kaçırınca VAE hiç oturmuyor.\n\nGerçek posterior, denklemin içinde olması gereken matematiksel parça. Denklemi açınca karşına çıkıyor, ve hesaplanamıyor.\n\nEncoder ise bir karar: madem denklemden türetemiyorum, dışarıdan ayrı bir network koyayım, o yaklaşsın. Türetilmiş bir şey değil, eklenmiş bir şey. Yaptığı iş tek bir ileri geçiş — x giriyor, z'nin distribution'unun parametreleri çıkıyor. İntegral yok.\n\nBu, VAE'deki iki network'ün rollerinin neden asimetrik olduğunu da açıklıyor. Decoder modelin kendisi; encoder training'i mümkün kılmak için kurulmuş bir yardımcı."
+          "heading": "7. The encoder was not derived from the equation, it was added from outside",
+          "text": "This distinction is very easy to miss, and if you miss it the VAE never settles.\n\nThe true posterior is the mathematical piece that ought to be inside the equation. When you unfold the equation it appears, and it cannot be computed.\n\nThe encoder is a decision: since I cannot derive it from the equation, let me place a separate network from outside to approximate it. It is not something derived but something added. What it does is a single forward pass — x goes in, the parameters of the distribution of z come out. No integral.\n\nThis also explains why the roles of the two networks in a VAE are asymmetric. The decoder is the model itself; the encoder is an assistant set up to make training possible."
         },
         {
           "type": "text",
-          "heading": "8. Network'ler olasılık üretemez, parametre üretir",
-          "text": "Bir sinir ağına \"bana bir distribution ver\" diyemezsin. Verebileceği şey sayılar.\n\nO yüzden her iki network da distribution'ların parametrelerini üretiyor. Encoder, z için bir ortalama ve bir standart sapma çıkarıyor — yani \"bu görüntünün z'si şurada, şu kadar belirsizlikle\". Decoder, x için bir ortalama çıkarıyor.\n\nBu küçük detay ileride iki şeyi birden açıklayacak: reconstruction teriminin neden kareler toplamına indiğini, ve reparameterization trick'e neden ihtiyaç duyulduğunu."
+          "heading": "8. Networks cannot produce probabilities, they produce parameters",
+          "text": "You cannot say to a neural network \\\"give me a distribution\\\". What it can give is numbers.\n\nSo both networks produce the parameters of distributions. The encoder outputs a mean and a standard deviation for z — that is, \\\"the z of this image is around here, with this much uncertainty\\\". The decoder outputs a mean for x.\n\nThis small detail will later explain two things at once: why the reconstruction term reduces to a sum of squares, and why the reparameterization trick is needed."
         },
         {
           "type": "text",
-          "heading": "9. ELBO: hesaplanabilir bir alt sınır",
-          "text": "Doğrudan tırmanamadığın bir tepe var. Altında, hesaplanabilen bir merdiven kuruyorsun ve onu tırmanıyorsun. O merdivenin adı ELBO.\n\nTüretmenin mekaniği şu: yardımcı distribution'u (encoder) denkleme sokuyorsun, logaritmayı açıyorsun, ve ortaya çıkan üç terimden biri negatif olamayacağı bilinen bir KL. Onu atınca elinde bir alt sınır kalıyor.\n\nAtılan terim, encoder'ın gerçek posteriordan ne kadar saptığı. Onu hesaplayamıyorsun, ama işareti bilindiği için atmakta serbestsin. Encoder ne kadar iyiyse alt sınır gerçek hedefe o kadar yakın oturuyor.\n\nGeriye iki terim kalıyor, ve ikisi de anlamlı."
+          "heading": "9. The ELBO: a computable lower bound",
+          "text": "There is a peak you cannot climb directly. Underneath it you build a computable ladder and climb that. The name of that ladder is the ELBO.\n\nThe mechanics of the derivation: you insert the auxiliary distribution (the encoder) into the equation, unfold the logarithm, and one of the three terms that appear is a KL known to be non-negative. Dropping it leaves you with a lower bound.\n\nThe dropped term is how far the encoder deviates from the true posterior. You cannot compute it, but since its sign is known you are free to drop it. The better the encoder, the closer the lower bound sits to the real target.\n\nTwo terms remain, and both are meaningful."
         },
         {
           "type": "formula",
           "heading": "ELBO",
-          "text": "$$\\log p_\\theta(x) \\ \\ge\\ \\underbrace{\\mathbb{E}_{z \\sim q_\\phi}\\bigl[\\log p_\\theta(x \\mid z)\\bigr]}_{\\text{reconstruction}} \\ -\\ \\underbrace{D_{KL}\\bigl(q_\\phi(z \\mid x)\\,\\|\\,p(z)\\bigr)}_{\\text{prior'a çekme}}$$"
+          "text": "$$\\log p_\\theta(x) \\ \\ge\\ \\underbrace{\\mathbb{E}_{z \\sim q_\\phi}\\bigl[\\log p_\\theta(x \\mid z)\\bigr]}_{\\text{reconstruction}} \\ -\\ \\underbrace{D_{KL}\\bigl(q_\\phi(z \\mid x)\\,\\|\\,p(z)\\bigr)}_{\\text{pull towards the prior}}$$"
         },
         {
           "type": "text",
-          "heading": "10. İki terim zıt yönde çekiyor",
-          "text": "Reconstruction terimi diyor ki: her görüntünün z'si ayırt edilebilir olsun, yoksa decoder hangi görüntüyü kuracağını bilemez. Bu terim tek başına kalsa encoder z'leri birbirinden olabildiğince uzağa iterdi — yani sıradan autoencoder'ın hatasına geri dönerdik.\n\nKL terimi diyor ki: bütün z distribution'ları standart normalin etrafında toplansın. Bu terim tek başına kalsa encoder bütün görüntüler için aynı distribution'u üretir, z hiçbir bilgi taşımaz, decoder da ortalama bir bulanıklık basar.\n\nDenge ikisinin arasında. Sonuç, hem dolu hem ayrıştırıcı bir latent uzay: boşluk yok ki örneklediğin z çöpe düşsün, ama z'ler birbirine de yapışmamış.\n\nVAE'yi bir cümlede anlatman gerekse bu cümle olurdu."
+          "heading": "10. The two terms pull in opposite directions",
+          "text": "The reconstruction term says: let the z of every image be distinguishable, otherwise the decoder cannot know which image to rebuild. If this term stood alone the encoder would push the z's as far away from each other as possible — that is, we would return to the failure of the plain autoencoder.\n\nThe KL term says: let all the z distributions gather around the standard normal. If this term stood alone the encoder would produce the same distribution for every image, z would carry no information, and the decoder would print an average blur.\n\nThe balance is between the two. The result is a latent space that is both full and discriminative: there are no gaps for a sampled z to fall into, yet the z's are not stuck together either.\n\nIf you had to explain the VAE in one sentence, this would be it."
         },
         {
           "type": "text",
-          "heading": "11. Reconstruction terimi neden MSE'ye iniyor",
-          "text": "Decoder'ın çıktısını sabit varyanslı bir Gaussian'ın ortalaması olarak modellediğimizi hatırla. O Gaussian'ın logaritmasını alınca üstel kayboluyor ve geriye görüntü ile decoder çıktısı arasındaki farkın karesi kalıyor.\n\nYani ELBO'nun ilk terimini maksimize etmek, kareler toplamını minimize etmekle aynı şey.\n\nBu bir tesadüf değil, MLE konu anlatımındaki genel kuralın buradaki görünüşü: Gaussian varsayarsan MSE çıkar. Decoder'ı Bernoulli olarak modelleseydin (siyah-beyaz görüntülerde yapılır) aynı yerden cross-entropy çıkardı."
+          "heading": "11. Why the reconstruction term reduces to MSE",
+          "text": "Recall that we modelled the decoder's output as the mean of a Gaussian with fixed variance. Taking the logarithm of that Gaussian makes the exponential disappear and what remains is the square of the difference between the image and the decoder output.\n\nSo maximising the first term of the ELBO is the same as minimising the sum of squares.\n\nThis is not a coincidence, it is the local appearance of the general rule from the MLE walkthrough: if you assume Gaussian you get MSE. Had you modelled the decoder as Bernoulli (done for black and white images) cross-entropy would have come out of the same place."
         },
         {
           "type": "text",
-          "heading": "12. Reparameterization trick: neden mecburuz",
-          "text": "Bir sorun var. ELBO'nun ilk terimi, encoder'ın ürettiği distribution'dan z çekmeyi gerektiriyor. Ama sampling rastgele bir işlem ve gradient onun içinden geçemiyor — \"bu sampling'i biraz değiştirsem loss nasıl değişirdi\" sorusunun türevi yok.\n\nÇözüm, rastgeleliği yoldan çekmek: z'yi doğrudan çekmek yerine, standart normalden bir noise çek ve z'yi encoder'ın ürettiği ortalama artı standart sapma çarpı o noise olarak yaz.\n\nArtık rastgelelik, parametrelere bağlı olmayan ayrı bir girdi. Ortalama ve standart sapma ise sıradan cebirsel işlemlerle z'ye bağlı, gradient rahatça akıyor.\n\nAynı numarayı diffusion'da da görmüştün: orada da $x_t$, $x_0$ ile noise'un weighted toplamı olarak yazılıyordu. İki yerde de yapılan şey aynı — rastgeleliği, gradient'in akabileceği bir biçime sokmak."
+          "heading": "12. The reparameterization trick: why it is compulsory",
+          "text": "There is a problem. The first term of the ELBO requires drawing a z from the distribution the encoder produced. But sampling is a random operation and the gradient cannot pass through it — the question \\\"how would the loss change if I altered this sampling slightly\\\" has no derivative.\n\nThe solution is to take the randomness out of the path: instead of drawing z directly, draw a noise from the standard normal and write z as the mean produced by the encoder plus the standard deviation times that noise.\n\nNow the randomness is a separate input that does not depend on the parameters. The mean and the standard deviation are tied to z through ordinary algebraic operations and the gradient flows freely.\n\nYou have seen the same trick in diffusion: there too $x_t$ was written as the weighted sum of $x_0$ and noise. What is being done in both places is the same — putting the randomness into a form the gradient can flow through."
         },
         {
           "type": "formula",
@@ -27502,113 +27502,113 @@
         },
         {
           "type": "text",
-          "heading": "13. Training ile üretim farkı",
-          "text": "Training'de zincir şu: görüntü gelir, encoder z distribution'unu verir, reparameterization ile bir z çekilir, decoder görüntüyü kurar, iki terimli loss hesaplanır.\n\nÜretimde encoder hiç kullanılmıyor. Doğrudan standart normalden bir z çekip decoder'a veriyorsun.\n\nBu, KL teriminin neden var olduğunun pratik kanıtı: üretimde çektiğin z'nin decoder'ın tanıdığı bir bölgeye düşmesi gerekiyor, ve onu oraya çeken tek şey o terim.\n\nEncoder atılmıyor ama — bir görüntüyü latent koda çevirmek istersen (arama, düzenleme, anomali tespiti) hâlâ elinde."
+          "heading": "13. The difference between training and generation",
+          "text": "In training the chain is this: an image arrives, the encoder gives the distribution of z, a z is drawn by reparameterization, the decoder rebuilds the image, and the two-term loss is computed.\n\nAt generation the encoder is not used at all. You draw a z directly from the standard normal and hand it to the decoder.\n\nThis is the practical proof of why the KL term exists: the z you draw at generation has to fall into a region the decoder recognises, and the only thing pulling it there is that term.\n\nThe encoder is not thrown away though — if you want to turn an image into a latent code (search, editing, anomaly detection) you still hold it."
         },
         {
           "type": "text",
-          "heading": "14. Latent boyutların anlam kazanması",
-          "text": "Seçilen prior köşegen, yani boyutları bağımsız. KL terimi encoder'ı buna uymaya ittiği için z'nin boyutları da bağımsızlaşma eğilimi gösteriyor.\n\nSonuç: tek bir boyutu değiştirince görüntüde tek bir şey değişiyor. Rakam veri kümesinde bir boyut rakamın kendisini, başka biri yazı kalınlığını ya da eğimini değiştirebiliyor.\n\nBu tam olarak garanti edilen bir şey değil, bir eğilim. Ama VAE'nin GAN'a göre daha okunaklı bir latent uzay üretmesinin sebebi bu."
+          "heading": "14. How the latent dimensions acquire meaning",
+          "text": "The chosen prior is diagonal, that is, its dimensions are independent. Because the KL term pushes the encoder to comply, the dimensions of z also tend to become independent.\n\nThe result: changing a single dimension changes a single thing in the image. In a digit dataset one dimension may change the digit itself, another the stroke thickness or the slant.\n\nThis is not exactly a guarantee, it is a tendency. But it is why the VAE produces a more legible latent space than the GAN."
         },
         {
           "type": "text",
-          "heading": "15. Neden bulanık üretiyor",
-          "text": "VAE'nin bilinen kusuru bulanıklık, ve sebebi mimari değil loss fonksiyonu.\n\nDecoder Gaussian varsayıldığı için loss karesel. Karesel hata, belirsizlik karşısında ortalamayı seçer. Model bir kenarın tam olarak nerede olduğundan emin değilse iki olasılığın ortasını basar — ve iki keskin kenarın ortalaması bulanık bir kenardır.\n\nGAN bu sorunu loss fonksiyonunu değiştirerek çözüyor: bir discriminator, ortalama görüntüleri sahte diye yakalıyor, dolayısıyla ortalama almak artık ödüllendirilmiyor. Diffusion ise sorunu başka yoldan çözüyor — tek adımda tüm belirsizliği çözmek zorunda kalmıyor, belirsizliği bin küçük adıma yayıyor.\n\nModern latent diffusion mimarileri ikisini birden kullanıyor: sıkıştırma için VAE, keskin decoder için GAN discriminator'ü, üretim için diffusion."
+          "heading": "15. Why it produces blurry results",
+          "text": "The known flaw of the VAE is blurriness, and its cause is not the architecture but the loss function.\n\nBecause the decoder is assumed Gaussian, the loss is squared. Squared error chooses the average in the face of uncertainty. If the model is not sure exactly where an edge is, it prints the middle of the two possibilities — and the average of two sharp edges is a blurry edge.\n\nThe GAN solves this problem by changing the loss function: a discriminator catches average images as fake, so averaging is no longer rewarded. Diffusion solves it another way — it does not have to resolve all the uncertainty in one step, it spreads the uncertainty over a thousand small steps.\n\nModern latent diffusion architectures use both at once: a VAE for compression, a GAN discriminator for a sharp decoder, and diffusion for generation."
         },
         {
           "type": "text",
-          "heading": "Bulanıklığı yenmek: perceptual loss",
-          "text": "VAE'nin reconstruction terimi MSE'ye iniyordu, ve MSE algısal değil yapısal bir ölçü. Belirsizlik olduğunda ortalama alıyor, ortalama da bulanıklık üretiyor.\n\nPerceptual loss bu ölçüyü değiştiriyor. Orijinal ve yeniden kurulan görüntüyü önceden eğitilmiş bir görüntü network'ünden geçiriyorsun, ve pikselleri değil ara layer aktivasyonlarını karşılaştırıyorsun:\n\n$$L_{\\text{perc}} = \\sum_{l} \\bigl\\| \\phi_l(x) - \\phi_l(\\hat{x}) \\bigr\\|^2$$\n\nBurada $\\phi_l$ o network'ün $l$ layer'ındaki çıktısı. Bu aktivasyonlar kenar, doku ve parça gibi yapıları temsil ettiği için karşılaştırma algısal yakınlığa çok daha yakın oluyor. LPIPS bu fikrin standart hale gelmiş ölçüsü.\n\nSonuç: bir piksellik kaymalar cezalandırılmıyor ama doku kaybı cezalandırılıyor. Yani tam olarak bulanıklığın cezalandırılması gereken yer."
+          "heading": "Beating blurriness: perceptual loss",
+          "text": "The reconstruction term of the VAE reduced to MSE, and MSE is a structural rather than a perceptual measure. When there is uncertainty it takes an average, and averaging produces blurriness.\n\nPerceptual loss changes that measure. You pass both the original and the reconstructed image through a pretrained image network and compare not the pixels but the intermediate layer activations:\n\n$$L_{\\text{perc}} = \\sum_{l} \\bigl\\| \\phi_l(x) - \\phi_l(\\hat{x}) \\bigr\\|^2$$\n\nHere $\\phi_l$ is the output at layer $l$ of that network. Because these activations represent structures such as edges, textures and parts, the comparison comes much closer to perceptual proximity. LPIPS is the standardised measure of this idea.\n\nThe result: shifts of one pixel are not penalised, but loss of texture is. That is exactly where blurriness ought to be penalised."
         },
         {
           "type": "text",
-          "heading": "Gerçekçilik: adversarial loss",
-          "text": "Perceptual loss bulanıklığı azaltıyor ama tek başına yetmiyor: çıktı hâlâ fazla düzgün kalıyor, gerçek fotoğrafların yüksek frekanslı ayrıntısı eksik oluyor.\n\nBuraya bir discriminator ekleniyor. Görevi decoder'ın ürettiği görüntü ile gerçek görüntüyü ayırt etmek; decoder da onu kandırmaya çalışıyor. Ayrı bir GAN değil, mevcut loss'a eklenen bir terim.\n\nBöylece dört terim birlikte çalışıyor:\n\n$$L = L_{\\text{rec}} + \\lambda_{\\text{perc}} L_{\\text{perc}} + \\lambda_{\\text{adv}} L_{\\text{adv}} + \\beta \\cdot \\mathrm{KL}$$\n\nHer birinin işi farklı. Reconstruction içeriği yerinde tutuyor, perceptual algısal kaliteyi getiriyor, adversarial gerçekçi doku üretiyor, KL ise latent uzayı düzenli tutuyor. KL'nin ağırlığı bilinçli olarak çok küçük seçiliyor; amaç buradan örnek çekmek değil, yalnızca latent uzayın dağılmasını engellemek.\n\nLatent diffusion'da kullanılan VAE tam olarak bu: klasik VAE değil, algısal ve adversarial terimlerle rafine edilmiş hali."
+          "heading": "Realism: adversarial loss",
+          "text": "Perceptual loss reduces blurriness but is not enough on its own: the output still stays too smooth and the high-frequency detail of real photographs is missing.\n\nA discriminator is added here. Its job is to distinguish the image produced by the decoder from a real image; the decoder in turn tries to fool it. Not a separate GAN, but a term added to the existing loss.\n\nFour terms then work together:\n\n$$L = L_{\\text{rec}} + \\lambda_{\\text{perc}} L_{\\text{perc}} + \\lambda_{\\text{adv}} L_{\\text{adv}} + \\beta \\cdot \\mathrm{KL}$$\n\nEach has a different job. Reconstruction keeps the content in place, perceptual brings perceptual quality, adversarial produces realistic texture, and KL keeps the latent space orderly. The weight of the KL is deliberately chosen very small; the aim is not to sample from it but only to prevent the latent space from dispersing.\n\nThe VAE used in latent diffusion is exactly this: not the classical VAE, but its refined form with perceptual and adversarial terms."
         },
         {
           "type": "text",
-          "heading": "16. VAE MLE mi yapıyor, MAP mi",
-          "text": "Sık sorulan soru: içinde p(z) = N(0, I) var, bu bir prior değil mi, o halde VAE MAP yapmıyor mu?\n\nAyırt edici tek test şu: prior, tahmin ettiğin şeyin üzerinde mi?\n\nVAE'de tahmin ettiğin şey weight'ler. Onların üzerinde bir prior yok. p(z) gerçekten bir prior ama z'nin üzerinde, ve z tahmin edilmiyor — üzerinden integral alınıyor.\n\nDolayısıyla VAE, adında variational geçmesine rağmen weight'ler açısından maximum likelihood yapıyor. Gerçekten MAP yapmak isteseydin weight'lere prior koyman gerekirdi, ki onun adı weight decay."
+          "heading": "16. Is the VAE doing MLE or MAP",
+          "text": "A frequently asked question: there is a p(z) = N(0, I) inside it, is that not a prior, and does the VAE therefore not do MAP?\n\nThe one distinguishing test is this: is the prior on the thing you are estimating?\n\nIn a VAE what you estimate is the weights. There is no prior on them. p(z) really is a prior, but on z, and z is not being estimated — it is being integrated over.\n\nTherefore the VAE, despite the word variational in its name, is doing maximum likelihood with respect to the weights. If you really wanted to do MAP you would have to place a prior on the weights, and the name of that is weight decay."
         },
         {
           "type": "text",
-          "heading": "17. Üçüncü yol: VQ",
-          "text": "Şimdiye kadar iki uç gördün. Sıradan autoencoder latent'i tamamen serbest bırakıyor — sadık ama yapısız. VAE bir ceza terimiyle latent'i bilinen bir distribution'a doğru itiyor — yapılı ama bulanık.\n\nÜçüncü bir yol daha var, ve mantığı ikisinden de farklı: latent'i yumuşak bir cezayla itmek yerine, sonlu bir seçenek kümesine oturtmak. Adı vector quantization, kısaca VQ.\n\nQuantization, sürekli bir değeri izin verilen sonlu bir kümeye yuvarlamak demek. Görüntüdeki klasik örneği renk paleti: milyonlarca renk içeren bir fotoğrafı 256 renklik bir paletle kaydediyorsun, her piksel paletteki en yakın rengi seçmek zorunda kalıyor.\n\nVQ'da yuvarlanan şey tek bir sayı değil, bir vektörün tamamı. Elinde 1024 tane küçük vektörden oluşan bir liste var — buna codebook deniyor. Encoder'ın ürettiği vektör, listedeki en yakın vektörle değiştiriliyor."
+          "heading": "17. A third way: VQ",
+          "text": "So far you have seen two extremes. The plain autoencoder leaves the latent completely free — faithful but unstructured. The VAE pushes the latent towards a known distribution with a penalty term — structured but blurry.\n\nThere is a third way, and its logic differs from both: instead of pushing the latent with a soft penalty, seat it on a finite set of options. Its name is vector quantization, VQ for short.\n\nQuantization means rounding a continuous value onto a permitted finite set. Its classic example in images is the colour palette: you save a photograph containing millions of colours with a palette of 256, and every pixel is forced to choose the nearest colour in the palette.\n\nIn VQ the thing being rounded is not a single number but an entire vector. You hold a list of 1024 small vectors — this is called the codebook. The vector produced by the encoder is replaced by the nearest vector in the list."
         },
         {
           "type": "code",
-          "heading": "Seçim konum başına yapılıyor",
-          "text": "latent:    64 x 64 x C\n           4096 konum, her konumda C sayi\n\ncodebook:  1024 vektor, her biri C sayilik\n           (tum latent kadar DEGIL, tek konum kadar)\n\nquantize:  4096 konumun HER BIRI ayri ayri\n           kendi vektorune en yakin kodu secer\n\nsaklanan:  konum 1 -> 417\n           konum 2 -> 417\n           konum 3 -> 903\n           ...\n           4096 indeks"
+          "heading": "The choice is made per position",
+          "text": "latent:    64 x 64 x C\n           4096 positions, C numbers at each position\n\ncodebook:  1024 vectors, each of C numbers\n           (NOT the size of the whole latent, the size of one position)\n\nquantize:  EACH of the 4096 positions separately\n           picks the code nearest to its own vector\n\nstored:    position 1 -> 417\n           position 2 -> 417\n           position 3 -> 903\n           ...\n           4096 indices"
         },
         {
           "type": "insight",
-          "heading": "Codebook küçük diye ifade gücü kısıtlanmıyor",
-          "text": "Sık yapılan hata: 1024 kod varsa 1024 farklı görüntü üretilebilir sanmak.\n\nPalet benzetmesine dön — 256 renklik palet, sadece 256 farklı fotoğraf demek değil. Her piksel paletten bir renk seçiyor; fotoğrafı yapan şey renklerin dizilişi.\n\nBurada olasılık sayısı $1024^{4096}$: taban seçenek sayısı, üs seçim sayısı. Kabaca $10^{12000}$ mertebesinde; gözlenebilir evrendeki atom sayısı $10^{80}$.\n\nKilit cümle: kısıt yerel, ifade gücü kombinatoryal. Her tek parça 1024 seçenekten birine mahkûm ama parçaların dizilişi serbest. Dilde de aynı — sözlükte 50 bin kelime var, yazılabilecek cümle sayısı sınırsız."
+          "heading": "A small codebook does not limit expressive power",
+          "text": "A common mistake: thinking that if there are 1024 codes then 1024 different images can be produced.\n\nReturn to the palette analogy — a palette of 256 colours does not mean only 256 different photographs. Every pixel picks a colour from the palette; what makes the photograph is the arrangement of the colours.\n\nHere the number of possibilities is $1024^{4096}$: the base is the number of options, the exponent the number of choices. Roughly of the order of $10^{12000}$; the number of atoms in the observable universe is $10^{80}$.\n\nThe key sentence: the constraint is local, the expressive power is combinatorial. Every single piece is condemned to one of 1024 options but the arrangement of the pieces is free. It is the same in language — there are 50 thousand words in the dictionary and the number of sentences that can be written is unbounded."
         },
         {
           "type": "text",
-          "heading": "18. Codebook nasıl öğreniliyor",
-          "text": "Codebook sabit değil, training'de öğreniliyor. Ve doğruyu söyleyen dışarıdan bir kaynak yok.\n\nZincir şu: encoder vektör üretir, vektör en yakın kodla değiştirilir, decoder kodlardan görüntüyü kurar, sonuç orijinaliyle karşılaştırılır. Codebook kötüyse decoder'ın eline kötü girdi geçer ve hata büyür. Yani codebook'a not veren tek şey reconstruction hatası.\n\nGüncelleme mantığı k-means'in aynısı: her vektör en yakın prototipe atanır, her prototip kendisine atanan vektörlerin ortalamasına doğru kaydırılır, atamalar değişir, tekrar. Palet örneğiyle — 1024 rastgele renkle başlarsın, her palet rengini kendisini seçen piksellerin ortalamasına taşırsın, birkaç tur sonra palet verinin gerçek distribution'una oturur.\n\nLoss'ta buna karşılık iki ek terim var: biri seçilen kodu encoder vektörüne doğru çeker (k-means adımının kendisi), diğeri encoder'ı seçtiği koda doğru çeker — yani \"bir seçim yaptın, ona bağlı kal\". İkincisi olmazsa encoder sürekli kayar ve atamalar oturmaz.\n\nBir teknik pürüz: en yakın komşuyu bulup değiştirmek ayrık bir işlem, gradient içinden geçemiyor. Çözüm kaba ama çalışıyor — gradient quantization adımının üstünden atlatılıyor, decoder'dan gelen gradient o adım hiç yokmuş gibi encoder'a kopyalanıyor.\n\nBilinen arızası ölü kodlar: bazı prototipler hiç seçilmiyor, seçilmeyince güncellenmiyor, güncellenmeyince bir daha hiç seçilmiyor. Buna codebook collapse deniyor; karşı önlem, uzun süre kullanılmayan kodu gerçekten kullanılan bir vektörün yakınına taşımak."
+          "heading": "18. How the codebook is learned",
+          "text": "The codebook is not fixed, it is learned during training. And there is no external source telling the truth.\n\nThe chain is this: the encoder produces a vector, the vector is replaced by the nearest code, the decoder rebuilds the image from the codes, and the result is compared with the original. If the codebook is bad the decoder receives bad input and the error grows. So the only thing grading the codebook is the reconstruction error.\n\nThe update logic is the same as k-means: every vector is assigned to its nearest prototype, every prototype is shifted towards the mean of the vectors assigned to it, the assignments change, and it repeats. With the palette example — you start with 1024 random colours, move every palette colour to the mean of the pixels that chose it, and after a few rounds the palette settles onto the true distribution of the data.\n\nIn the loss there are two additional terms for this: one pulls the chosen code towards the encoder vector (the k-means step itself), and the other pulls the encoder towards the code it chose — that is, \\\"you made a choice, stick to it\\\". Without the second the encoder keeps drifting and the assignments never settle.\n\nOne technical wrinkle: finding and substituting the nearest neighbour is a discrete operation and the gradient cannot pass through it. The solution is crude but works — the gradient is made to jump over the quantization step, and the gradient coming from the decoder is copied to the encoder as if that step did not exist.\n\nIts known failure is dead codes: some prototypes are never chosen, are therefore never updated, and having never been updated are never chosen again. This is called codebook collapse; the countermeasure is to move a long-unused code close to a vector that is genuinely in use."
         },
         {
           "type": "table",
-          "heading": "Üç yol, tek tabloda",
+          "heading": "Three ways, in one table",
           "rows": [
             [
               "",
-              "Latent nasıl düzenleniyor",
-              "Sadakat",
-              "Latent örneklenebilir mi",
-              "Nerede kullanılır"
+              "How the latent is regulated",
+              "Fidelity",
+              "Can the latent be sampled",
+              "Where it is used"
             ],
             [
-              "Sıradan AE",
-              "hiç",
-              "yüksek",
-              "hayır",
-              "feature öğrenme, denoising, anomali"
+              "Plain AE",
+              "not at all",
+              "high",
+              "no",
+              "feature learning, denoising, anomaly"
             ],
             [
               "VAE",
-              "KL cezası, yumuşak",
-              "düşük (bulanık)",
-              "evet",
-              "doğrudan generative model"
+              "KL penalty, soft",
+              "low (blurry)",
+              "yes",
+              "a generative model in its own right"
             ],
             [
               "VQ",
-              "sonlu codebook, sert",
-              "yüksek",
-              "hayır",
-              "latent diffusion, token tabanlı üretim"
+              "finite codebook, hard",
+              "high",
+              "no",
+              "latent diffusion, token-based generation"
             ]
           ]
         },
         {
           "type": "text",
-          "heading": "Diffusion'ın bu uzayda çalışması",
-          "text": "Sıra ikinci aşamada: üretim latent uzayda yapılıyor.\n\nEğitimde encoder görüntüleri latent'e çeviriyor ve diffusion bu latent'ler üzerinde eğitiliyor. Encoder bu aşamada donuk, yani weight'leri güncellenmiyor; görevi yalnızca veri hazırlamak.\n\nÜretimde encoder hiç kullanılmıyor. Rastgele bir latent'ten başlıyorsun, diffusion onu temiz bir latent'e çeviriyor, decoder da görüntüye açıyor.\n\nKazanç doğrudan boyuttan geliyor: $256 \\times 256 \\times 3$ yerine $32 \\times 32 \\times 4$ üzerinde çalışmak yaklaşık 48 kat daha az boyut demek. Stable Diffusion ve FLUX gibi modellerin mimarisi bu iki aşamalı kurulum.\n\nBedeli de var: decoder'ın geri açamadığı hiçbir ayrıntı üretilemiyor. Latent uzay ne kadar agresif sıkıştırılırsa kalite tavanı o kadar aşağı iniyor. Sıkıştırma oranı bu yüzden bir tasarım kararı."
+          "heading": "Diffusion working in this space",
+          "text": "Now for the second stage: generation is performed in the latent space.\n\nIn training the encoder converts the images into latents and the diffusion model is trained on those latents. The encoder is frozen at this stage, that is, its weights are not updated; its job is only to prepare data.\n\nAt generation the encoder is not used at all. You start from a random latent, diffusion turns it into a clean latent, and the decoder unfolds it into an image.\n\nThe gain comes directly from the dimension: working on $32 \\times 32 \\times 4$ instead of $256 \\times 256 \\times 3$ means about 48 times fewer dimensions. The architecture of models such as Stable Diffusion and FLUX is this two-stage setup.\n\nThere is a cost too: no detail the decoder cannot unfold can be generated. The more aggressively the latent space is compressed, the lower the quality ceiling drops. The compression ratio is therefore a design decision."
         },
         {
           "type": "svg",
-          "heading": "İki aşamalı kurulum",
+          "heading": "The two-stage setup",
           "svg": "<svg width=\"620\" height=\"180\" viewBox=\"0 0 620 180\" role=\"img\" aria-label=\"latent diffusion boru hatti\"><defs><marker id=\"ah3\" viewBox=\"0 0 10 10\" refX=\"9\" refY=\"5\" markerWidth=\"5\" markerHeight=\"5\" orient=\"auto\"><path d=\"M0,0 L10,5 L0,10 z\" class=\"ahf\"/></marker></defs><rect class=\"q-line\" x=\"14\" y=\"54\" width=\"78\" height=\"34\" rx=\"3\" stroke-width=\"1.4\" fill=\"none\"/><text x=\"53.0\" y=\"72.0\" text-anchor=\"middle\">görüntü</text><text x=\"53.0\" y=\"104\" text-anchor=\"middle\">256×256×3</text><line class=\"p-curve\" x1=\"96\" y1=\"71.0\" x2=\"124\" y2=\"71.0\" stroke-width=\"1.6\" marker-end=\"url(#ah3)\"/><rect class=\"q-line\" x=\"126\" y=\"54\" width=\"66\" height=\"34\" rx=\"3\" stroke-width=\"1.4\" fill=\"none\"/><text x=\"159.0\" y=\"72.0\" text-anchor=\"middle\">encoder</text><text x=\"159.0\" y=\"104\" text-anchor=\"middle\">eğitimde</text><line class=\"p-curve\" x1=\"196\" y1=\"71.0\" x2=\"224\" y2=\"71.0\" stroke-width=\"1.6\" marker-end=\"url(#ah3)\"/><rect class=\"q-line\" x=\"226\" y=\"54\" width=\"78\" height=\"34\" rx=\"3\" stroke-width=\"1.4\" fill=\"none\"/><text x=\"265.0\" y=\"72.0\" text-anchor=\"middle\">latent</text><text x=\"265.0\" y=\"104\" text-anchor=\"middle\">32×32×4</text><line class=\"p-curve\" x1=\"308\" y1=\"71.0\" x2=\"336\" y2=\"71.0\" stroke-width=\"1.6\" marker-end=\"url(#ah3)\"/><rect class=\"q-line\" x=\"338\" y=\"54\" width=\"96\" height=\"34\" rx=\"3\" stroke-width=\"1.4\" fill=\"none\"/><text x=\"386.0\" y=\"72.0\" text-anchor=\"middle\">diffusion</text><text x=\"386.0\" y=\"104\" text-anchor=\"middle\">burada çalışıyor</text><line class=\"p-curve\" x1=\"438\" y1=\"71.0\" x2=\"466\" y2=\"71.0\" stroke-width=\"1.6\" marker-end=\"url(#ah3)\"/><rect class=\"q-line\" x=\"468\" y=\"54\" width=\"66\" height=\"34\" rx=\"3\" stroke-width=\"1.4\" fill=\"none\"/><text x=\"501.0\" y=\"72.0\" text-anchor=\"middle\">decoder</text><text x=\"501.0\" y=\"104\" text-anchor=\"middle\">üretimde</text><line class=\"p-curve\" x1=\"538\" y1=\"71.0\" x2=\"566\" y2=\"71.0\" stroke-width=\"1.6\" marker-end=\"url(#ah3)\"/><text x=\"596\" y=\"73\" text-anchor=\"middle\">görüntü</text><text x=\"14\" y=\"140\">boyut: 196.608 → 4.096, yaklaşık 48 kat azalma</text><text x=\"14\" y=\"158\">encoder diffusion eğitimi boyunca donuk; üretimde yalnızca decoder çalışıyor</text></svg>",
-          "caption": "Encoder yalnızca training'de, decoder yalnızca üretimde çalışıyor. Diffusion'ın gördüğü tek şey ortadaki latent."
+          "caption": "The encoder runs only during training, the decoder only during generation. The only thing diffusion ever sees is the latent in the middle."
         },
         {
           "type": "text",
-          "heading": "19. Hangisinin ne zaman doğru olduğu",
-          "text": "Seçimi belirleyen tek soru şu: latent'ten doğrudan örnek çekecek misin?\n\nÇekeceksen VAE gerekiyor. KL terimi tam olarak bunun bedeli — latent'i bilinen bir distribution'a oturtuyor ki oradan çektiğin nokta decoder'ın tanıdığı bir yere düşsün. Karşılığında reconstruction'dan ödün veriyorsun.\n\nÇekmeyeceksen KL'e ihtiyacın yok, ve koyarsan sadece zarar ediyorsun. Latent diffusion'da durum tam olarak bu: latent'i prior'dan örneklemiyorsun, latent'in distribution'unu ikinci aşamada diffusion modeli öğreniyor. O yüzden ilk aşamada istenen tek şey mümkün olduğunca sadık bir sıkıştırıcı.\n\nAma tamamen serbest AE de kullanılmıyor, çünkü latent'in ölçeği training boyunca kayabiliyor ve diffusion'ın noise schedule'ı belli bir ölçeğe ayarlı. Bu yüzden hafif bir düzenleme konuyor: ya çok küçük ağırlıklı KL (Stable Diffusion böyle — adı VAE, davranışı AE), ya da VQ.\n\nVe VQ'nun diffusion için gerekmeyen ikinci bir kazancı var: latent artık ayrık. Her konum bir indeks, yani bir token. Görüntü, 1024 kelimelik bir sözlükten yazılmış 4096 kelimelik bir metne dönüşüyor — bu da görüntüyü autoregressive üretmenin kapısını açıyor."
+          "heading": "19. Which one is right and when",
+          "text": "The single question that determines the choice is this: will you draw samples directly from the latent?\n\nIf you will, you need a VAE. The KL term is exactly the price of that — it seats the latent on a known distribution so that a point you draw from there falls somewhere the decoder recognises. In return you give up some reconstruction.\n\nIf you will not, you do not need the KL, and putting it in only does harm. This is exactly the situation in latent diffusion: you do not sample the latent from the prior, the distribution of the latent is learned in the second stage by the diffusion model. So the only thing wanted in the first stage is a compressor that is as faithful as possible.\n\nBut a completely free AE is not used either, because the scale of the latent can drift during training and the noise schedule of diffusion is tuned to a particular scale. So a light regulation is placed: either a KL with a very small weight (Stable Diffusion is like this — called a VAE, behaving like an AE), or VQ.\n\nAnd VQ has a second gain that diffusion does not require: the latent is now discrete. Every position is an index, that is, a token. The image turns into a text of 4096 words written from a dictionary of 1024 words — which opens the door to generating images autoregressively."
         },
         {
           "type": "insight",
-          "heading": "Geriye ne kalsın",
-          "text": "Autoencoder darlık sayesinde veri yapısını öğreniyor ve feature öğrenme, denoising, anomali tespitinde tek başına işe yarıyor — ama üretemiyor, çünkü latent uzayında delikler var ve geçerli bir kodun nereden geleceği belli değil. VAE bunu KL ile çözüyor: latent'i bilinen bir distribution'a oturtuyor, bedeli reconstruction'dan ödün. Hedef yine maximum likelihood ama $z$ gizli olduğu için marjinal integral alınamıyor; encoder bu yüzden var — denklemden türetilmedi, hesaplanamayan posteriorun yerine dışarıdan kondu. ELBO'nun iki terimi zıt yönde çekiyor ve denge dolu ve ayırt edici bir uzay veriyor. Reparameterization, gradient'in sampling'in içinden geçebilmesi için. Bulanıklık mimariden değil karesel loss'tan geliyor. VQ ise üçüncü yol: latent'i sonlu bir codebook'a oturtuyor — sadakati koruyor, ölçeği yapısal olarak sabitliyor, ve latent'i token'lara çeviriyor. Seçimi belirleyen tek soru: latent'ten doğrudan örnek çekecek misin?"
+          "heading": "What should stay with you",
+          "text": "Thanks to its narrowness the autoencoder learns the structure of the data and is useful on its own for feature learning, denoising and anomaly detection — but it cannot generate, because there are holes in its latent space and there is no telling where a valid code comes from. The VAE solves this with the KL: it seats the latent on a known distribution, at the price of some reconstruction. The target is again maximum likelihood but because $z$ is hidden the marginal integral cannot be taken; this is why the encoder exists — it was not derived from the equation, it was put in from outside in place of the intractable posterior. The two terms of the ELBO pull in opposite directions and the balance gives a space that is both full and discriminative. Reparameterization exists so the gradient can pass through the sampling. The blurriness comes not from the architecture but from the squared loss. VQ is the third way: it seats the latent on a finite codebook — preserving fidelity, fixing the scale structurally, and turning the latent into tokens. The single question that determines the choice: will you draw samples directly from the latent?"
         },
         {
           "type": "note",
-          "heading": "Nereye bakılır",
-          "text": "Autoencoder'ın kurulumu ve neden generative model olmadığı, VAE'nin kurulumu, ELBO türetmesi ve reparameterization cs12'de; VQ'nun tam açıklaması (quantization, codebook'un öğrenilmesi, straight-through, ölü kodlar) ML-OVERALL 19'daki ayrı kartta; VAE ile DDPM'in ELBO türetmelerinin satır satır karşılaştırması ida11'de; MLE-MAP ayrımı ve prior kimin üzerinde tartışması vs03'te. Aynı zincirin diffusion'daki hali için DDPM konu anlatımına bak."
+          "heading": "Where to look",
+          "text": "The setup of the autoencoder and why it is not a generative model, the setup of the VAE, the ELBO derivation and reparameterization are in cs12; the full explanation of VQ (quantization, learning the codebook, straight-through, dead codes) is in the separate card in ML-OVERALL 19; the line by line comparison of the ELBO derivations of the VAE and DDPM is in ida11; the MLE-MAP distinction and the discussion of whom the prior is on is in vs03. For the diffusion version of the same chain see the DDPM walkthrough."
         }
       ]
     },
