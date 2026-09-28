@@ -27899,65 +27899,65 @@
       ]
     },
     "score": {
-      "title": "Score Matching — Baştan Sona Konu Anlatımı",
+      "title": "Score Matching — A Complete Walkthrough",
       "cat": "Konu Anlatımı",
-      "context": "Diffusion'ın ikinci dili · CME 296 Lecture 2 — tek oturumda okunmak için",
+      "context": "The second language of diffusion · CME 296 Lecture 2 — to be read in one sitting",
       "chapters": [
         "ida11",
         "cs13",
         "mlo21"
       ],
-      "summary": "Score, log-density'nin $x$'e göre gradient'i; normalizasyon sabitini denklemden sildiği için hesaplanabilir hale geliyor. Gerçek score bilinmiyor ama kendi eklediğin noise'unki biliniyor — denoising score matching bu hileyle eğitiyor ve sonuçta DDPM'in $\\varepsilon$-prediction'ı ile aynı loss'a çıkıyor. SDE ve probability flow ODE bağlantısı da buradan.",
+      "summary": "The score is the gradient of the log-density; because it removes the normalization constant it becomes computable. The true score is unknown but the score of the noise you added yourself is known — denoising score matching trains with that trick and ends up at the same loss as DDPM's epsilon-prediction. The SDE and probability flow ODE connection follows from here.",
       "sections": [
         {
           "type": "text",
-          "heading": "Bu metin ne için",
-          "text": "Diffusion'ın üç dilinden ikincisi. Birinci dil DDPM'in kendi türetmesi, gizli değişkenli model ve ELBO; bu metin ikinci dili kuruyor: score, yani log-density'nin gradient'i.\n\nSıra şu: normalizasyon sabitinin neden problem olduğu, score'un onu nasıl ortadan kaldırdığı, gerçek score bilinmezken nasıl eğitildiği, bunun DDPM ile neden aynı şey olduğu, ve continuous time'a geçilince ortaya çıkan SDE ile probability flow ODE. Sonda DDIM ile flow matching'in ortak zemini de buradan görünüyor."
+          "heading": "What this text is for",
+          "text": "The second of diffusion's three languages. The first language is DDPM's own derivation, the latent variable model and the ELBO; this text builds the second one: the score, that is, the gradient of the log-density.\n\nThe order is this: why the normalization constant is a problem, how the score removes it, how it is trained when the true score is unknown, why this is the same thing as DDPM, and the SDE and the probability flow ODE that appear once one moves to continuous time. At the end the common ground of DDIM and flow matching also becomes visible from here."
         },
         {
           "type": "text",
-          "heading": "1. Problem: normalizasyon sabiti",
-          "text": "Bir distribution'ı parametreyle yazmanın doğal yolu şu: bir enerji fonksiyonu $E_\\theta(x)$ tanımla, olasılığı ona bağla.\n\n$$p_\\theta(x) = \\frac{e^{-E_\\theta(x)}}{Z_\\theta}, \\qquad Z_\\theta = \\int e^{-E_\\theta(x)}\\, dx$$\n\nSorun $Z_\\theta$'da. Bu integral bütün görüntü uzayı üzerinden alınıyor, yani $256 \\times 256 \\times 3$ boyutlu bir uzayda. Hesaplanamıyor, ve $\\theta$'ya bağlı olduğu için maximum likelihood da yapılamıyor.\n\nDiffusion öncesi generative modellerin taksonomisi büyük ölçüde bu sorunun etrafında şekillenmişti: VAE alt sınıra kaçıyor, GAN likelihood'u hiç hesaplamıyor, autoregressive modeller zinciri parçalara bölüyor."
+          "heading": "1. The problem: the normalization constant",
+          "text": "The natural way of writing a distribution with parameters is this: define an energy function $E_\\theta(x)$ and tie the probability to it.\n\n$$p_\\theta(x) = \\frac{e^{-E_\\theta(x)}}{Z_\\theta}, \\qquad Z_\\theta = \\int e^{-E_\\theta(x)}\\, dx$$\n\nThe problem is $Z_\\theta$. That integral is taken over the whole image space, that is, over a space of $256 \\times 256 \\times 3$ dimensions. It cannot be computed, and since it depends on $\\theta$ maximum likelihood cannot be done either.\n\nThe taxonomy of generative models before diffusion was largely shaped around this problem: the VAE escapes to a lower bound, the GAN never computes a likelihood, autoregressive models split the chain into pieces."
         },
         {
           "type": "text",
-          "heading": "2. Gradient alınca sabit ölüyor",
-          "text": "Logaritmayı al ve $x$'e göre türev al:\n\n$$\\nabla_x \\log p_\\theta(x) = \\nabla_x \\bigl[ -E_\\theta(x) - \\log Z_\\theta \\bigr] = -\\nabla_x E_\\theta(x)$$\n\n$\\log Z_\\theta$ sabit bir sayı — $x$'e bağlı değil, dolayısıyla gradient'i sıfır. Hesaplanamayan terim kendiliğinden düşüyor.\n\nBu gradient'e score deniyor:\n\n$$s(x) := \\nabla_x \\log p(x)$$\n\nDikkat: türev $\\theta$'ya göre değil, $x$'e göre. Karışması kolay, çünkü likelihood tartışmalarında alıştığın türev $\\theta$'ya göre olandı."
+          "heading": "2. Taking the gradient kills the constant",
+          "text": "Take the logarithm and differentiate with respect to $x$:\n\n$$\\nabla_x \\log p_\\theta(x) = \\nabla_x \\bigl[ -E_\\theta(x) - \\log Z_\\theta \\bigr] = -\\nabla_x E_\\theta(x)$$\n\n$\\log Z_\\theta$ is a constant number — it does not depend on $x$, so its gradient is zero. The incomputable term drops out by itself.\n\nThis gradient is called the score:\n\n$$s(x) := \\nabla_x \\log p(x)$$\n\nNote: the derivative is with respect to $x$, not $\\theta$. This is easy to confuse, because the derivative you are used to in likelihood discussions was the one with respect to $\\theta$."
         },
         {
           "type": "insight",
-          "heading": "Score sezgisel olarak ne",
-          "text": "Görüntü uzayının her noktasına bir ok yerleştir: o noktadan hangi yöne gidersen distribution'ın density'si en hızlı artar. Score bu ok alanı.\n\nGerçekçi görüntülerin bulunduğu bölgelerde oklar o bölgeye doğru bakıyor; uzak, noise'lu bölgelerde ise \"veriye doğru\" yönü gösteriyor. Üretim de bu okları takip etmek oluyor.\n\nFlow matching'deki velocity field ile aynı türden bir nesne: ikisi de uzaydaki her noktaya bir vektör atıyor. Fark, neyi gösterdikleri — biri density'nin artış yönünü, diğeri veriye giden yolun hızını."
+          "heading": "What the score is intuitively",
+          "text": "Place an arrow at every point of the image space: from that point, the direction in which the density of the distribution increases fastest. The score is this field of arrows.\n\nIn regions where realistic images lie the arrows point towards that region; in distant, noisy regions they point \\\"towards the data\\\". Generation then becomes following these arrows.\n\nIt is the same kind of object as the velocity field in flow matching: both assign a vector to every point in space. The difference is what they point at — one the direction of increase of the density, the other the velocity along the road to the data."
         },
         {
           "type": "text",
-          "heading": "3. Naive score matching neden çalışmıyor",
-          "text": "Hedef belli: network'ün tahmini $s_\\theta(x)$ gerçek score'a yakın olsun.\n\n$$J(\\theta) = \\mathbb{E}_{x \\sim p_{\\text{data}}} \\bigl\\| s_\\theta(x) - \\nabla_x \\log p_{\\text{data}}(x) \\bigr\\|^2$$\n\nAma sağdaki terim elimizde yok: $p_{\\text{data}}$'yı bilseydik zaten problem kalmazdı.\n\nHyvärinen (2005) kısmi integrasyonla bu terimi denklemden çıkarmayı başardı; geriye $\\operatorname{tr}(\\nabla_x s_\\theta(x))$, yani Jacobian'ın izi kalıyor. Teorik olarak çözüm, pratikte değil: yüksek boyutta Jacobian'ın izini hesaplamak her adımda $d$ tane backpropagation demek."
+          "heading": "3. Why naive score matching does not work",
+          "text": "The target is clear: make the network's estimate $s_\\theta(x)$ close to the true score.\n\n$$J(\\theta) = \\mathbb{E}_{x \\sim p_{\\text{data}}} \\bigl\\| s_\\theta(x) - \\nabla_x \\log p_{\\text{data}}(x) \\bigr\\|^2$$\n\nBut we do not hold the term on the right: if we knew $p_{\\text{data}}$ there would be no problem in the first place.\n\nHyvärinen (2005) managed to remove that term from the equation with integration by parts; what remains is $\\operatorname{tr}(\\nabla_x s_\\theta(x))$, that is, the trace of the Jacobian. A solution in theory, not in practice: in high dimensions computing the trace of the Jacobian means $d$ backpropagations at every step."
         },
         {
           "type": "text",
-          "heading": "4. Denoising score matching: hile",
-          "text": "Vincent (2011) şunu fark etti: veriye kendi eklediğin noise'un score'u kapalı formda biliniyor.\n\n$\\tilde{x} = x + \\sigma \\varepsilon$ olsun, $\\varepsilon \\sim \\mathcal{N}(0,I)$. O zaman $q(\\tilde{x} \\mid x)$ bir Gaussian ve score'u doğrudan yazılabiliyor:\n\n$$\\nabla_{\\tilde{x}} \\log q(\\tilde{x} \\mid x) = -\\frac{\\tilde{x} - x}{\\sigma^2} = -\\frac{\\varepsilon}{\\sigma}$$\n\nHedef artık bilinmeyen bir şey değil, kendi çektiğin $\\varepsilon$. Loss basit bir regression'a dönüşüyor:\n\n$$J(\\theta) = \\mathbb{E}_{x,\\, \\varepsilon,\\, \\sigma} \\Bigl\\| s_\\theta(\\tilde{x}, \\sigma) + \\frac{\\varepsilon}{\\sigma} \\Bigr\\|^2$$\n\nKanıtlanan şey şu: bu loss'u minimize eden network, noise'lu distribution'ın gerçek score'unu öğreniyor. Yani hedefi bilmeden doğru cevaba varıyorsun — DDPM'deki \"tek örneğin noise'unu hedef al, ortalaması doğru çıksın\" hilesinin aynısı."
+          "heading": "4. Denoising score matching: the trick",
+          "text": "Vincent (2011) noticed this: the score of the noise you added yourself is known in closed form.\n\nLet $\\tilde{x} = x + \\sigma \\varepsilon$ with $\\varepsilon \\sim \\mathcal{N}(0,I)$. Then $q(\\tilde{x} \\mid x)$ is a Gaussian and its score can be written directly:\n\n$$\\nabla_{\\tilde{x}} \\log q(\\tilde{x} \\mid x) = -\\frac{\\tilde{x} - x}{\\sigma^2} = -\\frac{\\varepsilon}{\\sigma}$$\n\nThe target is no longer something unknown, it is the $\\varepsilon$ you drew yourself. The loss turns into a simple regression:\n\n$$J(\\theta) = \\mathbb{E}_{x,\\, \\varepsilon,\\, \\sigma} \\Bigl\\| s_\\theta(\\tilde{x}, \\sigma) + \\frac{\\varepsilon}{\\sigma} \\Bigr\\|^2$$\n\nWhat is proved is this: the network minimising this loss learns the true score of the noisy distribution. So you arrive at the right answer without knowing the target — the same trick as DDPM's \\\"take the noise of a single example as the target and let the average come out right\\\"."
         },
         {
           "type": "insight",
-          "heading": "5. DDPM ile birebir aynı loss",
-          "text": "Diffusion'ın forward süreci $x_t = \\sqrt{\\bar{\\alpha}_t}\\, x_0 + \\sqrt{1-\\bar{\\alpha}_t}\\, \\varepsilon$ zaten \"veriye bilinen miktarda noise eklemek\". Yani DDPM'in training'i tam olarak denoising score matching.\n\nBağlantı tek satır:\n\n$$s_\\theta(x_t, t) = -\\frac{\\varepsilon_\\theta(x_t, t)}{\\sqrt{1-\\bar{\\alpha}_t}}$$\n\n$\\varepsilon$-prediction ile score prediction aynı network'ün iki farklı ölçeklenmiş hali. Biri \"eklenen noise neydi\" diye soruyor, diğeri \"density hangi yöne artıyor\" diye — cevap aynı vektör, işareti ve ölçeği farklı.\n\nBu yüzden CME 296'nın 2. dersi \"parallel with diffusion\" diye bitiyor: yeni bir model ailesi değil, aynı training'in başka türetmesi."
+          "heading": "5. Exactly the same loss as DDPM",
+          "text": "Diffusion's forward process $x_t = \\sqrt{\\bar{\\alpha}_t}\\, x_0 + \\sqrt{1-\\bar{\\alpha}_t}\\, \\varepsilon$ is already \\\"adding a known amount of noise to the data\\\". So DDPM's training is exactly denoising score matching.\n\nThe connection is one line:\n\n$$s_\\theta(x_t, t) = -\\frac{\\varepsilon_\\theta(x_t, t)}{\\sqrt{1-\\bar{\\alpha}_t}}$$\n\n$\\varepsilon$-prediction and score prediction are two differently scaled versions of the same network. One asks \\\"what was the added noise\\\", the other \\\"in which direction does the density increase\\\" — the answer is the same vector, with a different sign and scale.\n\nThis is why the second lecture of CME 296 ends with \\\"parallel with diffusion\\\": not a new family of models, but another derivation of the same training."
         },
         {
           "type": "text",
-          "heading": "6. Score ile nasıl sample alınır: Langevin",
-          "text": "Score elindeyse üretim, okları takip edip üstüne biraz rastgelelik eklemek:\n\n$$x_{k+1} = x_k + \\frac{\\delta}{2}\\, s_\\theta(x_k) + \\sqrt{\\delta}\\, z_k, \\qquad z_k \\sim \\mathcal{N}(0,I)$$\n\nBuna Langevin dynamics deniyor. Yeterince adım sonra $x_k$, $p(x)$'ten gelen bir örnek gibi davranıyor. Noise terimi olmasaydı sadece en yakın tepeye tırmanır, tek bir noktaya saplanırdın; rastgelelik distribution'ın tamamını gezmeyi sağlıyor.\n\nNeden tek bir noise seviyesi yetmiyor: gerçek veri yüksek boyutlu uzayda ince bir bölgeye sıkışmış durumda. Bu bölgenin uzağında $p(x)$ neredeyse sıfır, dolayısıyla orada ne veri var ne de network'ün öğrenebileceği bir sinyal — score tahmini çöp çıkıyor. Rastgele bir noktadan başlarsan tam da o çöp bölgedesin.\n\nÇözüm: birçok noise seviyesi. Yüksek $\\sigma$'da distribution her yere yayılıyor ve score her yerde anlamlı; seviye seviye azaltarak veriye yaklaşıyorsun. Song ve Ermon'un NCSN'i (2019) bu fikir, ve DDPM'in schedule'ı ile aynı şeye bakıyor."
+          "heading": "6. How to sample with the score: Langevin",
+          "text": "If you hold the score, generation is following the arrows and adding a little randomness on top:\n\n$$x_{k+1} = x_k + \\frac{\\delta}{2}\\, s_\\theta(x_k) + \\sqrt{\\delta}\\, z_k, \\qquad z_k \\sim \\mathcal{N}(0,I)$$\n\nThis is called Langevin dynamics. After enough steps $x_k$ behaves like a sample coming from $p(x)$. Without the noise term you would only climb the nearest peak and get stuck at a single point; the randomness makes it possible to wander the whole distribution.\n\nWhy a single noise level is not enough: real data is squeezed into a thin region of a high-dimensional space. Far from that region $p(x)$ is almost zero, so there is neither data nor a signal the network could learn from — the score estimate comes out as garbage. If you start from a random point you are in exactly that garbage region.\n\nThe solution: many noise levels. At high $\\sigma$ the distribution spreads everywhere and the score is meaningful everywhere; you approach the data by lowering the level step by step. Song and Ermon's NCSN (2019) is this idea, and it looks at the same thing as DDPM's schedule."
         },
         {
           "type": "svg",
-          "heading": "Noise seviyesi score'u nasıl değiştiriyor",
+          "heading": "How the noise level changes the score",
           "svg": "<svg width=\"600\" height=\"215\" viewBox=\"0 0 600 215\" role=\"img\" aria-label=\"score alani\"><defs><marker id=\"ah2\" viewBox=\"0 0 10 10\" refX=\"9\" refY=\"5\" markerWidth=\"5\" markerHeight=\"5\" orient=\"auto\"><path d=\"M0,0 L10,5 L0,10 z\" class=\"ahf\"/></marker></defs><text x=\"135\" y=\"18\" text-anchor=\"middle\">küçük noise seviyesi</text><text x=\"135\" y=\"34\" text-anchor=\"middle\">veriden uzakta score bilgi taşımıyor</text><polyline class=\"p-curve\" stroke-width=\"1.6\" points=\"15.4,135.0 16.9,135.0 18.4,135.0 19.9,135.0 21.4,135.0 22.9,135.0 24.4,135.0 25.9,135.0 27.4,135.0 28.9,135.0 30.4,135.0 31.8,135.0 33.3,135.0 34.8,135.0 36.3,135.0 37.8,135.0 39.3,135.0 40.8,135.0 42.3,135.0 43.8,135.0 45.3,135.0 46.8,134.9 48.3,134.9 49.8,134.8 51.3,134.7 52.8,134.6 54.3,134.4 55.8,134.1 57.3,133.7 58.8,133.2 60.2,132.5 61.7,131.5 63.2,130.3 64.7,128.7 66.2,126.8 67.7,124.5 69.2,121.8 70.7,118.6 72.2,115.0 73.7,111.0 75.2,106.8 76.7,102.3 78.2,97.7 79.7,93.2 81.2,89.0 82.7,85.1 84.2,81.9 85.7,79.4 87.2,77.7 88.7,77.0 90.2,77.3 91.6,78.5 93.1,80.6 94.6,83.5 96.1,87.1 97.6,91.2 99.1,95.6 100.6,100.2 102.1,104.7 103.6,109.1 105.1,113.2 106.6,117.0 108.1,120.4 109.6,123.3 111.1,125.8 112.6,127.9 114.1,129.6 115.6,131.0 117.1,132.0 118.6,132.9 120.0,133.5 121.5,133.9 123.0,134.3 124.5,134.5 126.0,134.7 127.5,134.8 129.0,134.9 130.5,134.9 132.0,134.9 133.5,135.0 135.0,135.0 136.5,135.0 138.0,134.9 139.5,134.9 141.0,134.9 142.5,134.8 144.0,134.7 145.5,134.5 147.0,134.3 148.5,133.9 149.9,133.5 151.4,132.9 152.9,132.0 154.4,131.0 155.9,129.6 157.4,127.9 158.9,125.8 160.4,123.3 161.9,120.4 163.4,117.0 164.9,113.2 166.4,109.1 167.9,104.7 169.4,100.2 170.9,95.6 172.4,91.2 173.9,87.1 175.4,83.5 176.9,80.6 178.4,78.5 179.8,77.3 181.3,77.0 182.8,77.7 184.3,79.4 185.8,81.9 187.3,85.1 188.8,89.0 190.3,93.2 191.8,97.7 193.3,102.3 194.8,106.8 196.3,111.0 197.8,115.0 199.3,118.6 200.8,121.8 202.3,124.5 203.8,126.8 205.3,128.7 206.8,130.3 208.3,131.5 209.8,132.5 211.2,133.2 212.7,133.7 214.2,134.1 215.7,134.4 217.2,134.6 218.7,134.7 220.2,134.8 221.7,134.9 223.2,134.9 224.7,135.0 226.2,135.0 227.7,135.0 229.2,135.0 230.7,135.0 232.2,135.0 233.7,135.0 235.2,135.0 236.7,135.0 238.2,135.0 239.6,135.0 241.1,135.0 242.6,135.0 244.1,135.0 245.6,135.0 247.1,135.0 248.6,135.0 250.1,135.0 251.6,135.0 253.1,135.0 254.6,135.0\"/><line class=\"axis\" x1=\"15\" y1=\"135\" x2=\"255\" y2=\"135\" stroke-width=\"1\"/><line class=\"q-line\" x1=\"33.8\" y1=\"161\" x2=\"61.4\" y2=\"161\" stroke-width=\"2\" marker-end=\"url(#ah2)\"/><line class=\"q-line\" x1=\"66.0\" y1=\"161\" x2=\"93.6\" y2=\"161\" stroke-width=\"2\" marker-end=\"url(#ah2)\"/><line class=\"q-line\" x1=\"112.0\" y1=\"161\" x2=\"84.4\" y2=\"161\" stroke-width=\"2\" marker-end=\"url(#ah2)\"/><line class=\"q-line\" x1=\"158.0\" y1=\"161\" x2=\"185.6\" y2=\"161\" stroke-width=\"2\" marker-end=\"url(#ah2)\"/><line class=\"q-line\" x1=\"204.0\" y1=\"161\" x2=\"176.4\" y2=\"161\" stroke-width=\"2\" marker-end=\"url(#ah2)\"/><line class=\"q-line\" x1=\"236.2\" y1=\"161\" x2=\"208.6\" y2=\"161\" stroke-width=\"2\" marker-end=\"url(#ah2)\"/><text x=\"435\" y=\"18\" text-anchor=\"middle\">büyük noise seviyesi</text><text x=\"435\" y=\"34\" text-anchor=\"middle\">score her yerde veriye doğru bakıyor</text><polyline class=\"p-curve\" stroke-width=\"1.6\" points=\"315.4,124.3 316.9,123.6 318.4,122.8 319.9,122.0 321.4,121.3 322.9,120.4 324.4,119.6 325.9,118.7 327.4,117.8 328.9,116.8 330.4,115.8 331.8,114.8 333.3,113.8 334.8,112.8 336.3,111.7 337.8,110.6 339.3,109.5 340.8,108.4 342.3,107.2 343.8,106.1 345.3,104.9 346.8,103.8 348.3,102.6 349.8,101.4 351.3,100.2 352.8,99.1 354.3,97.9 355.8,96.7 357.3,95.6 358.8,94.5 360.2,93.3 361.7,92.3 363.2,91.2 364.7,90.1 366.2,89.1 367.7,88.1 369.2,87.2 370.7,86.3 372.2,85.4 373.7,84.6 375.2,83.8 376.7,83.0 378.2,82.3 379.7,81.6 381.2,81.0 382.7,80.4 384.2,79.9 385.7,79.4 387.2,79.0 388.7,78.6 390.1,78.3 391.6,78.0 393.1,77.7 394.6,77.5 396.1,77.3 397.6,77.2 399.1,77.1 400.6,77.0 402.1,77.0 403.6,77.0 405.1,77.0 406.6,77.1 408.1,77.1 409.6,77.2 411.1,77.3 412.6,77.4 414.1,77.6 415.6,77.7 417.1,77.8 418.6,77.9 420.1,78.1 421.5,78.2 423.0,78.3 424.5,78.4 426.0,78.5 427.5,78.6 429.0,78.7 430.5,78.8 432.0,78.8 433.5,78.8 435.0,78.8 436.5,78.8 438.0,78.8 439.5,78.8 441.0,78.7 442.5,78.6 444.0,78.5 445.5,78.4 447.0,78.3 448.5,78.2 449.9,78.1 451.4,77.9 452.9,77.8 454.4,77.7 455.9,77.6 457.4,77.4 458.9,77.3 460.4,77.2 461.9,77.1 463.4,77.1 464.9,77.0 466.4,77.0 467.9,77.0 469.4,77.0 470.9,77.1 472.4,77.2 473.9,77.3 475.4,77.5 476.9,77.7 478.4,78.0 479.9,78.3 481.3,78.6 482.8,79.0 484.3,79.4 485.8,79.9 487.3,80.4 488.8,81.0 490.3,81.6 491.8,82.3 493.3,83.0 494.8,83.8 496.3,84.6 497.8,85.4 499.3,86.3 500.8,87.2 502.3,88.1 503.8,89.1 505.3,90.1 506.8,91.2 508.3,92.3 509.8,93.3 511.2,94.5 512.7,95.6 514.2,96.7 515.7,97.9 517.2,99.1 518.7,100.2 520.2,101.4 521.7,102.6 523.2,103.8 524.7,104.9 526.2,106.1 527.7,107.2 529.2,108.4 530.7,109.5 532.2,110.6 533.7,111.7 535.2,112.8 536.7,113.8 538.2,114.8 539.6,115.8 541.1,116.8 542.6,117.8 544.1,118.7 545.6,119.6 547.1,120.4 548.6,121.3 550.1,122.0 551.6,122.8 553.1,123.6 554.6,124.3\"/><line class=\"axis\" x1=\"315\" y1=\"135\" x2=\"555\" y2=\"135\" stroke-width=\"1\"/><line class=\"q-line\" x1=\"333.8\" y1=\"161\" x2=\"354.4\" y2=\"161\" stroke-width=\"2\" marker-end=\"url(#ah2)\"/><line class=\"q-line\" x1=\"366.0\" y1=\"161\" x2=\"375.3\" y2=\"161\" stroke-width=\"2\" marker-end=\"url(#ah2)\"/><line class=\"q-line\" x1=\"412.0\" y1=\"161\" x2=\"411.2\" y2=\"161\" stroke-width=\"2\" marker-end=\"url(#ah2)\"/><line class=\"q-line\" x1=\"458.0\" y1=\"161\" x2=\"458.8\" y2=\"161\" stroke-width=\"2\" marker-end=\"url(#ah2)\"/><line class=\"q-line\" x1=\"504.0\" y1=\"161\" x2=\"494.7\" y2=\"161\" stroke-width=\"2\" marker-end=\"url(#ah2)\"/><line class=\"q-line\" x1=\"536.2\" y1=\"161\" x2=\"515.6\" y2=\"161\" stroke-width=\"2\" marker-end=\"url(#ah2)\"/></svg>",
-          "caption": "İki noktadan oluşan bir veri distribution'ı, iki farklı noise seviyesinde. Eğri density, altındaki oklar score; ok uzunluğu büyüklüğü gösteriyor. Solda density veri çevresine sıkışmış ve uzak bölgelerde score neredeyse sıfır, yani oradan başlayan bir sampler hangi yöne gideceğini bilmiyor. Sağda aynı veri geniş noise ile yayılmış; score her yerde tanımlı ve veriye doğru bakıyor. Annealed sampling'in yüksek seviyeden başlayıp aşağı inmesinin sebebi bu."
+          "caption": "A data distribution consisting of two points, at two different noise levels. The curve is the density and the arrows below it the score; the arrow length shows the magnitude. On the left the density is squeezed around the data and in the distant regions the score is almost zero, so a sampler starting there does not know which way to go. On the right the same data is spread out with wide noise; the score is defined everywhere and points towards the data. This is why annealed sampling starts at a high level and comes down."
         },
         {
           "type": "table",
-          "heading": "7. Aynı sürecin üç dili",
+          "heading": "7. Three languages for the same process",
           "rows": [
             [
               "",
@@ -27966,16 +27966,16 @@
               "SDE"
             ],
             [
-              "Network ne tahmin ediyor",
+              "What the network predicts",
               "$\\varepsilon_\\theta(x_t,t)$",
               "$s_\\theta(x_t,t)$",
-              "aynı network, continuous $t$"
+              "the same network, continuous $t$"
             ],
             [
-              "Türetme",
+              "Derivation",
               "ELBO",
               "denoising score matching",
-              "stokastik diferansiyel denklem"
+              "stochastic differential equation"
             ],
             [
               "Sampling",
@@ -27984,26 +27984,26 @@
               "reverse-time SDE solver"
             ],
             [
-              "Kaynak",
-              "Ho ve ark. 2020",
+              "Source",
+              "Ho et al. 2020",
               "Song, Ermon 2019",
-              "Song ve ark. 2021"
+              "Song et al. 2021"
             ]
           ]
         },
         {
           "type": "text",
-          "heading": "Neden continuous time'a geçiyoruz",
-          "text": "Önce şunu sormak lazım: ayrık zincir çalışıyordu, continuous time'a geçmenin derdi ne.\n\nAyrık hâlde adım sayısı modelin tanımının parçası. $T = 1000$ seçtiğinde $\\beta_t$ değerleri, $\\bar{\\alpha}_t$ çarpımları, posterior katsayıları — hepsi o sayıya göre kurulmuş oluyor. Continuous time'a geçince $T$ bir tanım olmaktan çıkıp solver tercihine dönüşüyor. Merdiven ile rampa farkı: merdivende basamak yüksekliği sabittir, rampada istediğin yere basarsın.\n\nDört somut getirisi var.\n\nBirleştirme. Ayrık hâlde DDPM ile NCSN birbirinden bağımsız iki yöntem gibi duruyordu; biri görüntüyü küçültüp noise ekliyor, diğeri sadece üstüne yığıyordu. Sürekli hâlde ikisi de tek bir denklemin farklı $f$ ve $g$ seçimi, yani VP ile VE. Song ve ark.'nın paperının asıl katkısı bu birleştirme.\n\nAdım sayısının serbest kalması. Model bir kez eğitiliyor, sonra aynı network ile 1000 de 50 de 20 adımla da örnek alabiliyorsun. Ayrık tanımda katsayılar $T$'ye gömülü olduğu için bu esneklik yoktu; DDIM'in respacing ile açtığı kapı, continuous time dilinde kendiliğinden geliyor.\n\nHazır matematiğe erişim. SDE'lerin zamanda tersine çözülmesi, probability flow ODE, yüksek mertebeli sayısal solver'lar — bunlar onlarca yıldır var olan araçlar. Süreci bir SDE olarak yazdığın anda hepsi kullanılabilir hale geliyor. DPM-Solver da tam bu kapıdan giriyor.\n\nNoise seviyesinin continuous olması. $t$'yi 1 ile 1000 arasından değil $[0,1]$ aralığından çekiyorsun, network herhangi bir ara seviyede de çalışıyor. Flow matching'in logit-normal zaman sampling'i gibi tercihler de ancak bu zeminde anlamlı.\n\nYani yeni bir model icat edilmiyor: aynı süreç daha genel bir dille yazılıyor, ve o dilin getirdiği araç çantası kullanılıyor."
+          "heading": "Why we move to continuous time",
+          "text": "One should ask first: the discrete chain was working, so what is the trouble with moving to continuous time.\n\nIn the discrete form the number of steps is part of the definition of the model. When you choose $T = 1000$, the $\\beta_t$ values, the $\\bar{\\alpha}_t$ products and the posterior coefficients are all set up according to that number. Once you move to continuous time, $T$ stops being a definition and turns into a choice of solver. The difference between a staircase and a ramp: on a staircase the step height is fixed, on a ramp you step wherever you like.\n\nIt has four concrete gains.\n\nUnification. In the discrete form DDPM and NCSN looked like two independent methods; one shrinks the image and adds noise, the other only piles it on top. In the continuous form both are different choices of $f$ and $g$ in a single equation, namely VP and VE. This unification is the real contribution of the paper by Song and colleagues.\n\nThe number of steps becomes free. The model is trained once, and then with the same network you can take samples in 1000, 50 or 20 steps. In the discrete definition this flexibility did not exist because the coefficients were embedded in $T$; the door DDIM opened with respect to respacing comes for free in the language of continuous time.\n\nAccess to ready-made mathematics. Reversing SDEs in time, the probability flow ODE, high-order numerical solvers — these are tools that have existed for decades. The moment you write the process as an SDE all of them become usable. DPM-Solver enters through exactly this door.\n\nThe noise level becomes continuous. You draw $t$ from the interval $[0,1]$ rather than from 1 to 1000, and the network works at any intermediate level too. Choices such as flow matching's logit-normal time sampling are only meaningful on this ground.\n\nSo no new model is being invented: the same process is written in a more general language and the toolbox that language brings is used."
         },
         {
           "type": "text",
-          "heading": "8. Continuous time'a geçiş: SDE nereden çıkıyor",
-          "text": "DDPM'in forward adımı şuydu: $x_t = \\sqrt{1-\\beta_t}\\, x_{t-1} + \\sqrt{\\beta_t}\\, z$. Adım sayısını 1000'den 10000'e çıkarsaydın her adımda daha az noise eklemen gerekirdi, yoksa toplam bozulma değişirdi. Yani $\\beta_t$ aslında \"birim zamanda ne kadar noise\" demek, ve adım süresine bağlı.\n\nBunu açıkça yazalım. $t$ artık 1, 2, 3 diye sayılan bir indeks değil, 0 ile 1 arasında continuous bir sayı; iki ardışık adım arasındaki süre $\\Delta t$. Adım sayısını ikiye katlarsan $\\Delta t$ yarıya iner ve her adımda eklenen noise da yarıya inmeli, yoksa toplam bozulma değişir. Demek ki adımdan bağımsız olan büyüklük \"birim zamanda eklenen noise\", ona $\\beta(t)$ diyelim:\n\n$$\\beta_t = \\beta(t)\\, \\Delta t$$\n\nŞimdi karekökü küçük $\\Delta t$ için açıyoruz. Kullanılan kural $(1+u)^a \\approx 1 + a u$, burada $u = -\\beta(t)\\Delta t$ ve $a = \\tfrac{1}{2}$:\n\n$$\\sqrt{1-\\beta(t)\\Delta t} \\approx 1 - \\tfrac{1}{2}\\beta(t)\\Delta t$$\n\nSayıyla kontrol: $\\beta(t)\\Delta t = 0.01$ için gerçek değer $0.994987$, yaklaşım $0.995$. Adım küçüldükçe fark daha da kapanıyor, limitte tamamen kayboluyor.\n\nBunu $x_t = \\sqrt{1-\\beta_t}\\, x_{t-1} + \\sqrt{\\beta_t}\\, z$ içine koyup $x_t - x_{t-1}$ farkını yazınca bir adımdaki değişim şu hale geliyor:\n\n$$\\Delta x = -\\tfrac{1}{2}\\beta(t)\\, x\\, \\Delta t + \\sqrt{\\beta(t)}\\, \\sqrt{\\Delta t}\\, z$$\n\n$\\Delta t \\to 0$ limitinde bu bir stochastic differential equation oluyor:\n\n$$dx = \\underbrace{f(x,t)}_{\\text{drift}}\\, dt + \\underbrace{g(t)}_{\\text{diffusion}}\\, dw$$\n\nİki terimin anlamı ayrı ayrı çok somut:\n\n$f(x,t)$ drift, yani deterministik sürüklenme. Yukarıdaki örnekte $-\\tfrac{1}{2}\\beta(t)x$, yani her an görüntüyü biraz sıfıra doğru çekiyor. Rüzgârsız bir nehirde akıntının seni taşıması gibi.\n\n$g(t)$ diffusion, yani rastgele titreşimin şiddeti. $dw$ Brownian hareket: her anda çekilen sonsuz küçük, bağımsız bir noise. Suyun üstündeki toz zerresinin titremesi.\n\nDikkat çeken ayrıntı: noise terimi $\\Delta t$ ile değil $\\sqrt{\\Delta t}$ ile ölçekleniyor. Bağımsız rastgele adımların varyansları toplandığı için, standart sapma adım sayısının kareköküyle büyüyor. Rastgele yürüyüşün temel özelliği bu ve SDE'lerin ayrı bir matematik dalı olmasının sebebi."
+          "heading": "8. Moving to continuous time: where the SDE comes from",
+          "text": "DDPM's forward step was this: $x_t = \\sqrt{1-\\beta_t}\\, x_{t-1} + \\sqrt{\\beta_t}\\, z$. If you raised the number of steps from 1000 to 10000 you would have to add less noise at every step, otherwise the total corruption would change. So $\\beta_t$ really means \\\"how much noise per unit time\\\", and it depends on the step duration.\n\nLet us write this explicitly. $t$ is no longer an index counted as 1, 2, 3 but a continuous number between 0 and 1; the duration between two successive steps is $\\Delta t$. If you double the number of steps, $\\Delta t$ halves and the noise added at every step must halve as well, otherwise the total corruption changes. So the quantity independent of the step is \\\"noise added per unit time\\\"; call it $\\beta(t)$:\n\n$$\\beta_t = \\beta(t)\\, \\Delta t$$\n\nNow we expand the square root for small $\\Delta t$. The rule used is $(1+u)^a \\approx 1 + a u$, here with $u = -\\beta(t)\\Delta t$ and $a = \\tfrac{1}{2}$:\n\n$$\\sqrt{1-\\beta(t)\\Delta t} \\approx 1 - \\tfrac{1}{2}\\beta(t)\\Delta t$$\n\nCheck with a number: for $\\beta(t)\\Delta t = 0.01$ the true value is $0.994987$ and the approximation $0.995$. As the step shrinks the gap closes further and in the limit disappears entirely.\n\nPutting this into $x_t = \\sqrt{1-\\beta_t}\\, x_{t-1} + \\sqrt{\\beta_t}\\, z$ and writing the difference $x_t - x_{t-1}$, the change in one step becomes:\n\n$$\\Delta x = -\\tfrac{1}{2}\\beta(t)\\, x\\, \\Delta t + \\sqrt{\\beta(t)}\\, \\sqrt{\\Delta t}\\, z$$\n\nIn the limit $\\Delta t \\to 0$ this becomes a stochastic differential equation:\n\n$$dx = \\underbrace{f(x,t)}_{\\text{drift}}\\, dt + \\underbrace{g(t)}_{\\text{diffusion}}\\, dw$$\n\nThe meaning of the two terms is very concrete separately:\n\n$f(x,t)$ is the drift, that is, the deterministic pull. In the example above it is $-\\tfrac{1}{2}\\beta(t)x$, that is, at every moment it draws the image a little towards zero. Like a current carrying you down a windless river.\n\n$g(t)$ is the diffusion, that is, the intensity of the random jitter. $dw$ is Brownian motion: an infinitesimal, independent noise drawn at every instant. The trembling of a dust speck on water.\n\nA detail worth noticing: the noise term scales with $\\sqrt{\\Delta t}$, not with $\\Delta t$. Because the variances of independent random steps add, the standard deviation grows with the square root of the number of steps. This is the fundamental property of the random walk and the reason SDEs are a branch of mathematics of their own."
         },
         {
           "type": "table",
-          "heading": "9. VP ve VE — iki tasarım tercihi",
+          "heading": "9. VP and VE — two design choices",
           "rows": [
             [
               "",
@@ -28011,75 +28011,75 @@
               "VE-SDE (variance exploding)"
             ],
             [
-              "Kim kullanıyor",
+              "Who uses it",
               "DDPM",
               "NCSN (Song, Ermon 2019)"
             ],
             [
               "Drift $f$",
-              "$-\\tfrac{1}{2}\\beta(t)\\, x$ — görüntüyü küçültüyor",
-              "$0$ — görüntüye dokunulmuyor"
+              "$-\\tfrac{1}{2}\\beta(t)\\, x$ — shrinks the image",
+              "$0$ — the image is untouched"
             ],
             [
               "Diffusion $g$",
               "$\\sqrt{\\beta(t)}$",
-              "$\\sigma(t)$, hızla büyüyen"
+              "$\\sigma(t)$, growing fast"
             ],
             [
-              "$x_t$'nin ölçeği",
-              "sabit, varyans hep $1$",
-              "sürekli büyüyor, sonda $\\sigma_{\\max}$ devasa"
+              "Scale of $x_t$",
+              "fixed, variance always $1$",
+              "grows continuously, huge $\\sigma_{\\max}$ at the end"
             ],
             [
-              "Sondaki durum",
+              "Final state",
               "$\\mathcal{N}(0,I)$",
-              "$\\mathcal{N}(x_0, \\sigma_{\\max}^2 I)$, pratikte veriden bağımsız"
+              "$\\mathcal{N}(x_0, \\sigma_{\\max}^2 I)$, in practice independent of the data"
             ],
             [
-              "Avantajı",
-              "network'ün girdisi hep aynı büyüklükte",
-              "veri hiç bozulmuyor, sadece üstüne ekleniyor"
+              "Advantage",
+              "the network's input is always of the same magnitude",
+              "the data is never corrupted, only added to"
             ],
             [
-              "Zorluğu",
-              "sinyal ile noise iç içe ölçekleniyor",
-              "network çok geniş bir $\\sigma$ aralığını idare etmeli"
+              "Difficulty",
+              "signal and noise are scaled together",
+              "the network must handle a very wide range of $\\sigma$"
             ]
           ]
         },
         {
           "type": "insight",
-          "heading": "VP ile VE arasındaki fark neden önemli",
-          "text": "İkisi de aynı işi yapıyor: veriyi tanınmaz hale getirip sonunda bilinen bir distribution bırakmak. Fark, bunu nasıl yaptıkları.\n\nVP her adımda görüntüyü biraz küçültüp yerine noise koyuyor, böylece toplam büyüklük sabit kalıyor. Bir bardak boyalı suyun yarısını dökeyim, yerine su ekleyeyim gibi: seviye hep aynı, renk kayboluyor. Network'ün girdisi her $t$'de aynı ölçekte olduğu için normalization ve mimari açısından rahat.\n\nVE görüntüye hiç dokunmuyor, sadece üstüne giderek daha büyük noise yığıyor. Boyalı suyu hiç dökmeyip üstüne kovalarca berrak su eklemek gibi: renk yine kayboluyor ama kap taşıyor. Buradaki zorluk ölçek: $\\sigma$ 0.01'den 50'ye kadar değişebiliyor ve network'ün hepsinde çalışması gerekiyor.\n\nSong ve ark. (2021) ikisinin de aynı çerçevenin özel hali olduğunu gösterdi. Bu birleştirme, DDPM ile NCSN'in birbirinden bağımsız iki icat değil, tek bir denklemin iki ayarı olduğunu ortaya çıkardı — paperın asıl katkısı bu."
+          "heading": "Why the difference between VP and VE matters",
+          "text": "Both do the same job: making the data unrecognisable and leaving a known distribution at the end. The difference is how they do it.\n\nVP shrinks the image a little at every step and puts noise in its place, so the total magnitude stays fixed. Like pouring out half a glass of coloured water and adding water in its place: the level is always the same, the colour disappears. Because the network's input is at the same scale at every $t$, it is comfortable in terms of normalization and architecture.\n\nVE never touches the image, it only piles ever larger noise on top. Like never pouring out the coloured water and adding bucketfuls of clear water on top: the colour disappears again but the vessel overflows. The difficulty here is scale: $\\sigma$ can range from 0.01 to 50 and the network has to work at all of them.\n\nSong and colleagues (2021) showed that both are special cases of the same framework. This unification revealed that DDPM and NCSN are not two independent inventions but two settings of a single equation — this is the real contribution of the paper."
         },
         {
           "type": "text",
-          "heading": "Tabloyu somutlaştıralım: network ne görüyor",
-          "text": "Network'ün girdisi her iki kurulumda da $x_t$, yani o $t$ seviyesindeki bozulmuş görüntü. Aradaki fark, bu girdinin sayısal olarak neye benzediği.\n\nVP'de iki katsayının kareleri toplamı hep 1 olduğu için piksel değerleri her $t$'de aynı bantta kalıyor:\n\n$$x_t = \\sqrt{\\bar{\\alpha}_t}\\, x_0 + \\sqrt{1-\\bar{\\alpha}_t}\\, \\varepsilon$$\n\n$$t \\text{ küçük: } 0.99\\, x_0 + 0.10\\, \\varepsilon \\qquad t \\text{ orta: } 0.71\\, x_0 + 0.71\\, \\varepsilon \\qquad t \\text{ büyük: } 0.10\\, x_0 + 0.99\\, \\varepsilon$$\n\nVE'de ise görüntünün katsayısı hiç değişmiyor, sadece üstüne eklenen noise büyüyor:\n\n$$x_t = x_0 + \\sigma(t)\\, \\varepsilon$$\n\n$\\sigma = 0.01$ iken $x_t$ neredeyse temiz görüntü, değerler $-1$ ile $1$ arasında. $\\sigma = 50$ iken aynı görüntünün değerleri $-150$ ile $150$ bandına yayılıyor ve içindeki yapı tamamen kayboluyor. \"Veri hiç bozulmuyor, sadece üstüne ekleniyor\" cümlesi bunu anlatıyor: $x_0$ terimi hiç küçültülmüyor."
+          "heading": "Making the table concrete: what the network sees",
+          "text": "The network's input is $x_t$ in both setups, that is, the corrupted image at that level $t$. The difference is what that input looks like numerically.\n\nIn VP the sum of the squares of the two coefficients is always 1, so the pixel values stay in the same band at every $t$:\n\n$$x_t = \\sqrt{\\bar{\\alpha}_t}\\, x_0 + \\sqrt{1-\\bar{\\alpha}_t}\\, \\varepsilon$$\n\n$$t \\text{ small: } 0.99\\, x_0 + 0.10\\, \\varepsilon \\qquad t \\text{ middle: } 0.71\\, x_0 + 0.71\\, \\varepsilon \\qquad t \\text{ large: } 0.10\\, x_0 + 0.99\\, \\varepsilon$$\n\nIn VE the coefficient of the image never changes, only the noise added on top grows:\n\n$$x_t = x_0 + \\sigma(t)\\, \\varepsilon$$\n\nAt $\\sigma = 0.01$, $x_t$ is almost the clean image and the values lie between $-1$ and $1$. At $\\sigma = 50$ the values of the same image spread into the band from $-150$ to $150$ and the structure inside is completely lost. The sentence \\\"the data is never corrupted, only added to\\\" says this: the $x_0$ term is never shrunk."
         },
         {
           "type": "text",
-          "heading": "Her iki tarafın bedeli ne",
-          "text": "VE'nin bedeli ölçek. Network aynı weight'lerle hem $\\sigma = 0.01$ hem $\\sigma = 50$ durumunu idare etmek zorunda, yani girdi büyüklüğü binlerce kat değişiyor. Sinir ağları bunu sevmiyor: aktivasyonlar ya doyuyor ya sıfıra iniyor. Pratikte girdiyi $\\sigma$'ya bölmek, $\\sigma$'yı ayrıca bir input olarak vermek gibi ön işlemlerle çözülüyor.\n\nVP'nin bedeli ise sinyal ile noise'un birlikte ölçeklenmesi. Orada $x_0$'ın katsayısı $t$ büyüdükçe sıfıra gidiyor, ve $x_0$'ı geri çıkarmak için ona bölmen gerekiyor:\n\n$$\\hat{x}_0 = \\frac{x_t - \\sqrt{1-\\bar{\\alpha}_t}\\, \\varepsilon_\\theta}{\\sqrt{\\bar{\\alpha}_t}}$$\n\n$t$ büyükken bu bölme $0.10$'a bölmek demek: $\\varepsilon_\\theta$'daki küçük bir hata $\\hat{x}_0$'da on katına çıkıyor. Büyük $t$'de $x̂_0$ tahminlerinin neden bulanık ve güvenilmez olduğunun sebebi bu — DDIM'de tek adımda üretemememizin de arkasında aynı mekanizma var.\n\nYani ikisi de aynı işi yapıyor ama zorluğu farklı yere koyuyor: VE ölçek aralığına, VP geri çevirme hassasiyetine."
+          "heading": "What each side costs",
+          "text": "VE's cost is scale. The network has to handle both $\\sigma = 0.01$ and $\\sigma = 50$ with the same weights, that is, the magnitude of the input changes by thousands of times. Neural networks do not like this: activations either saturate or fall to zero. In practice it is solved with preprocessing such as dividing the input by $\\sigma$ and giving $\\sigma$ separately as an input.\n\nVP's cost is that signal and noise are scaled together. There the coefficient of $x_0$ goes to zero as $t$ grows, and to recover $x_0$ you have to divide by it:\n\n$$\\hat{x}_0 = \\frac{x_t - \\sqrt{1-\\bar{\\alpha}_t}\\, \\varepsilon_\\theta}{\\sqrt{\\bar{\\alpha}_t}}$$\n\nAt large $t$ this division means dividing by $0.10$: a small error in $\\varepsilon_\\theta$ grows tenfold in $\\hat{x}_0$. This is why $\\hat{x}_0$ estimates at large $t$ are blurry and unreliable — and the same mechanism lies behind our inability to generate in a single step in DDIM.\n\nSo both do the same job but put the difficulty in a different place: VE in the range of scales, VP in the sensitivity of the inversion."
         },
         {
           "type": "text",
-          "heading": "Ara not: $p_t(x)$ tam olarak ne",
-          "text": "Denklemlerde $p_t(x)$ diye bir şey belirdi, açalım.\n\n$p_t$, $t$ seviyesindeki noise'lu verinin distribution'ı. Yani bütün veri setini alıp her örneğe $t$ kadar noise ekleseydin, elde edeceğin bulutun dağılımı.\n\n$$p_0 = p_{\\text{data}} \\qquad p_1 \\approx \\mathcal{N}(0,I)$$\n\nAradaki her $t$ için $p_t$, veri distribution'ının biraz daha bulanıklaşmış hali. Forward süreç boyunca keskin yapılar erimeye başlıyor, mod'lar birbirine karışıyor, sonunda tek bir Gaussian tepesi kalıyor.\n\nİki nokta önemli:\n\nBunu hiçbir zaman açıkça hesaplamıyoruz. $p_t$'nin formülü yok, çünkü $p_{\\text{data}}$'nın formülü yok. Sadece ondan örnek üretebiliyoruz: bir $x_0$ çek, üstüne uygun noise ekle, elindeki $x_t$ zaten $p_t$'den bir örnek.\n\nNetwork'ün öğrendiği şey tam olarak bunun score'u: $\\nabla_x \\log p_t(x)$. Her $t$ için ayrı bir score alanı var, ve $t$ network'e input olarak verildiği için tek bir network hepsini birden öğreniyor.\n\nReverse denklemde $p_t$'nin görünmesinin sebebi de bu: zamanda geriye gitmek \"veri şu anda nerede yoğun\" bilgisini gerektiriyor, o bilgi de $p_t$'nin score'unda duruyor."
+          "heading": "An aside: what $p_t(x)$ exactly is",
+          "text": "Something called $p_t(x)$ appeared in the equations; let us open it up.\n\n$p_t$ is the distribution of the noisy data at level $t$. That is, if you took the whole dataset and added $t$ worth of noise to every example, it is the distribution of the resulting cloud.\n\n$$p_0 = p_{\\text{data}} \\qquad p_1 \\approx \\mathcal{N}(0,I)$$\n\nFor every $t$ in between, $p_t$ is a slightly more blurred version of the data distribution. Along the forward process sharp structures start to melt, the modes blend into each other, and at the end a single Gaussian peak remains.\n\nTwo points matter:\n\nWe never compute this explicitly. $p_t$ has no formula, because $p_{\\text{data}}$ has no formula. We can only produce samples from it: draw an $x_0$, add the appropriate noise, and the $x_t$ you hold is already a sample from $p_t$.\n\nWhat the network learns is exactly the score of this: $\\nabla_x \\log p_t(x)$. There is a separate score field for every $t$, and because $t$ is given to the network as an input, a single network learns all of them at once.\n\nThis is also why $p_t$ appears in the reverse equation: going backwards in time requires the information \\\"where is the data dense right now\\\", and that information sits in the score of $p_t$."
         },
         {
           "type": "text",
-          "heading": "10. Zamanda geriye gitmek: score neden zorunlu",
-          "text": "Forward süreç bilgi yok ediyor. Elinde yalnızca $x_t$ varken \"bu noise hangi görüntüden geldi\" sorusunun tek bir cevabı yok, çünkü birçok farklı görüntü aynı $x_t$'ye götürebilir.\n\nAnderson'un 1982'de ispatladığı sonuç şu: bir SDE zamanda tersine çevrilebiliyor, ama ters denklem fazladan bir terim taşıyor ve o terim score:\n\n$$dx = \\bigl[ f(x,t) - g(t)^2 \\nabla_x \\log p_t(x) \\bigr] dt + g(t)\\, d\\bar{w}$$\n\nTerimleri tek tek oku:\n\n$f(x,t)$ — ileri giderken seni sürükleyen akıntı, geri giderken de aynı akıntı işin içinde.\n\n$-g(t)^2 \\nabla_x \\log p_t(x)$ — yeni olan terim. Score, density'nin arttığı yönü gösteriyordu; bu terim seni o yöne itiyor. Sezgisi doğrudan: ileri giderken noise seni veriden uzaklaştırdı, geri dönerken birinin sana \"veri şu tarafta\" demesi gerekiyor. Score tam olarak bu bilgi.\n\n$g(t)\\, d\\bar{w}$ — geri giderken de rastgelelik var. Aynı $x_T$'den başlayıp farklı görüntüler üretebilmenin sebebi bu.\n\nKatsayının $g(t)^2$ olması da tesadüf değil: noise ne kadar şiddetliyse, onu geri almak için gereken itme o kadar büyük.\n\nPratik sonuç: eğer her $t$ ve her $x$ için score'u bilirsen, saf noise'tan başlayıp bu denklemi çözerek veri üretebilirsin. Network'ün öğrendiği tek şey de zaten bu."
+          "heading": "10. Going backwards in time: why the score is compulsory",
+          "text": "The forward process destroys information. When you hold only $x_t$, the question \\\"which image did this noise come from\\\" has no single answer, because many different images can lead to the same $x_t$.\n\nThe result Anderson proved in 1982 is this: an SDE can be reversed in time, but the reverse equation carries an extra term, and that term is the score:\n\n$$dx = \\bigl[ f(x,t) - g(t)^2 \\nabla_x \\log p_t(x) \\bigr] dt + g(t)\\, d\\bar{w}$$\n\nRead the terms one by one:\n\n$f(x,t)$ — the current that carried you while going forwards is also in play while going back.\n\n$-g(t)^2 \\nabla_x \\log p_t(x)$ — the new term. The score pointed in the direction in which the density increases; this term pushes you that way. The intuition is direct: while going forwards the noise drove you away from the data, and on the way back somebody has to tell you \\\"the data is over there\\\". The score is exactly that information.\n\n$g(t)\\, d\\bar{w}$ — there is randomness on the way back too. This is why you can start from the same $x_T$ and produce different images.\n\nThe coefficient being $g(t)^2$ is no coincidence either: the more intense the noise, the larger the push needed to undo it.\n\nThe practical consequence: if you know the score for every $t$ and every $x$, you can start from pure noise and produce data by solving this equation. And that is the only thing the network learns."
         },
         {
           "type": "text",
-          "heading": "11. Probability flow ODE: aynı distribution, rastgelelik yok",
-          "text": "Şimdi asıl ilginç kısım. Aynı marginal'leri veren, içinde hiç rastgelelik olmayan bir denklem daha var:\n\n$$\\frac{dx}{dt} = f(x,t) - \\tfrac{1}{2} g(t)^2 \\nabla_x \\log p_t(x)$$\n\nBuradaki iddia şu: bu ODE'yi çözerek taşıdığın noktaların her $t$'deki distribution'ı, SDE'ninkiyle birebir aynı. Tek tek yollar farklı, ama distribution aynı.\n\nNasıl olabiliyor? Bir distribution'ı hareket ettirmenin iki yolu var. Ya her parçacığı rastgele titretirsin ve kalabalık yayılır, ya da her parçacığı hesaplanmış bir hızla iterek aynı yayılmayı deterministik olarak üretirsin. Sonuçta kalabalığın şekli aynı olur; kimin nereye gittiği farklı olur.\n\n$\\tfrac{1}{2}$ çarpanı da buradan geliyor: SDE'de yayılmanın bir kısmını rastgelelik yapıyordu. Rastgeleliği tamamen kaldırınca, o kaybolan yayılmayı hız alanının tek başına üretmesi gerekiyor ve denge tam olarak yarım katsayıda kuruluyor.\n\nBunun üç sonucu var:\n\nDeterministik üretim mümkün. Başlangıç noktasını seçtiğin anda çıktı belirleniyor. DDIM'in $\\eta = 0$ sampler'ı tam olarak bu ODE'nin bir discretization'ı.\n\nAdım atlamak meşrulaşıyor. Elinde bir ODE varsa solver seçmek serbesttir; adımı büyütmek hatayı artırır ama süreci bozmaz. Stokastik zincirde bu mümkün değildi.\n\nFlow matching'e köprü buradan kuruluyor. Probability flow ODE'nin sağ tarafı bir velocity field. Flow matching ise o alanı score üzerinden dolambaçlı yoldan çıkarmak yerine doğrudan öğreniyor, üstelik yolu düz seçerek. Aynı hedefin daha kısa yoldan kurulmuş hali."
+          "heading": "11. The probability flow ODE: the same distribution, no randomness",
+          "text": "Now the truly interesting part. There is another equation that gives the same marginals and contains no randomness at all:\n\n$$\\frac{dx}{dt} = f(x,t) - \\tfrac{1}{2} g(t)^2 \\nabla_x \\log p_t(x)$$\n\nThe claim here is this: the distribution at every $t$ of the points you transport by solving this ODE is identical to that of the SDE. The individual paths differ, but the distribution is the same.\n\nHow can that be? There are two ways of moving a distribution. Either you jitter every particle randomly and the crowd spreads, or you push every particle with a computed velocity and produce the same spreading deterministically. In the end the shape of the crowd is the same; who ends up where is different.\n\nThe factor of $\\tfrac{1}{2}$ comes from here too: in the SDE part of the spreading was done by the randomness. Once the randomness is removed entirely, the velocity field has to produce that lost spreading on its own, and the balance is struck exactly at one half.\n\nThis has three consequences:\n\nDeterministic generation becomes possible. The moment you choose the starting point the output is determined. DDIM's $\\eta = 0$ sampler is exactly a discretization of this ODE.\n\nSkipping steps becomes legitimate. If you hold an ODE you are free to choose a solver; enlarging the step increases the error but does not break the process. In the stochastic chain this was not possible.\n\nThe bridge to flow matching is built here. The right-hand side of the probability flow ODE is a velocity field. Flow matching, instead of extracting that field indirectly through the score, learns it directly, and moreover chooses the path to be straight. The same target built by a shorter route."
         },
         {
           "type": "table",
-          "heading": "12. Reverse SDE ile PF-ODE — hangisi ne zaman",
+          "heading": "12. Reverse SDE and PF-ODE — which one when",
           "rows": [
             [
               "",
@@ -28087,51 +28087,51 @@
               "Probability flow ODE"
             ],
             [
-              "Denklem",
+              "Equation",
               "$\\bigl[f - g^2 \\nabla_x \\log p_t\\bigr] dt + g\\, d\\bar{w}$",
               "$\\bigl[f - \\tfrac{1}{2} g^2 \\nabla_x \\log p_t\\bigr] dt$"
             ],
             [
-              "Süreç",
+              "Process",
               "stochastic",
               "deterministic"
             ],
             [
-              "Çeşitlilik",
-              "yüksek",
-              "düşük"
+              "Diversity",
+              "high",
+              "low"
             ],
             [
-              "Örnek kalitesi",
-              "yüksek",
-              "düşük"
+              "Sample quality",
+              "high",
+              "low"
             ],
             [
-              "Hız",
-              "yavaş",
-              "hızlı"
+              "Speed",
+              "slow",
+              "fast"
             ]
           ]
         },
         {
           "type": "text",
-          "heading": "Tablodaki üç satırın sebebi",
-          "text": "Çeşitlilik. Reverse SDE her adımda taze noise çekiyor, yani aynı $x_T$'den başlasan bile her çalıştırmada farklı bir görüntü çıkıyor. ODE'de rastgelelik yalnızca başlangıçta; $x_T$ sabitlenirse çıktı da sabit. Çeşitlilik tamamen başlangıç noktasının dağılımından geliyor.\n\nKalite. Buradaki fark sezgisel olarak şu: SDE'nin eklediği noise bir tür hata düzeltme işlevi görüyor. Yol sırasında veriden uzak bir yere savrulursan, sonraki adımlarda score terimi seni geri çekiyor ve eklenen rastgelelik farklı bölgeleri yoklamanı sağlıyor. ODE'de böyle bir düzeltme yok: tek bir yörüngeyi takip ediyorsun ve her adımda yaptığın discretization hatası üstüne biniyor, geri dönüşü olmuyor. Bol adım bütçen varsa SDE genelde daha iyi örnek veriyor.\n\nHız. ODE'nin avantajı tam da determinizminden geliyor. Elinde sıradan bir diferansiyel denklem varsa yüksek mertebeli solver'lar kullanabilir, adımı büyütebilirsin; 20-50 adımda bitirmek mümkün. SDE'de her adım yeni rastgelelik eklediği için adım büyütmek doğrudan kaliteyi bozuyor, o yüzden yüzlerce adım gerekiyor.\n\nPratikteki bölünme de buradan: çok adım bütçen varsa ve çeşitlilik istiyorsan SDE, az adımda hızlı üretim istiyorsan ODE. DDIM'in $\\eta$ düğmesi zaten bu iki ucun arasını geziyor — $\\eta = 1$ SDE tarafı, $\\eta = 0$ ODE tarafı."
+          "heading": "The reason behind the three rows of the table",
+          "text": "Diversity. The reverse SDE draws fresh noise at every step, so even if you start from the same $x_T$ a different image comes out on every run. In the ODE the randomness is only at the beginning; if $x_T$ is fixed the output is fixed too. Diversity comes entirely from the distribution of the starting point.\n\nQuality. The difference here is intuitively this: the noise added by the SDE acts as a kind of error correction. If you are thrown somewhere far from the data along the way, the score term pulls you back in the following steps and the added randomness lets you probe different regions. In the ODE there is no such correction: you follow a single trajectory and the discretization error you make at every step accumulates, with no way back. If you have a generous step budget the SDE generally gives better samples.\n\nSpeed. The ODE's advantage comes exactly from its determinism. If you hold an ordinary differential equation you can use high-order solvers and enlarge the step; finishing in 20 to 50 steps is possible. In the SDE, because every step adds new randomness, enlarging the step directly damages quality, so hundreds of steps are needed.\n\nThe practical division follows from here: if you have a large step budget and want diversity, the SDE; if you want fast generation in few steps, the ODE. DDIM's $\\eta$ dial already travels between these two ends — $\\eta = 1$ is the SDE side, $\\eta = 0$ the ODE side."
         },
         {
           "type": "text",
-          "heading": "13. Aynı network'ün dört kılığı: $x_0$, $\\varepsilon$, score, velocity",
-          "text": "Şimdiye kadar network'ün çıktısını üç farklı isimle gördük ve hepsi birbirine cebirle çevriliyordu. Dördüncüsü de var.\n\n$$\\hat{x}_0 = \\frac{x_t - \\sqrt{1-\\bar{\\alpha}_t}\\, \\varepsilon_\\theta}{\\sqrt{\\bar{\\alpha}_t}} \\qquad s_\\theta = -\\frac{\\varepsilon_\\theta}{\\sqrt{1-\\bar{\\alpha}_t}} \\qquad v_\\theta = \\sqrt{\\bar{\\alpha}_t}\\, \\varepsilon_\\theta - \\sqrt{1-\\bar{\\alpha}_t}\\, \\hat{x}_0$$\n\nSonuncusu velocity, yani v-prediction (Salimans, Ho 2022). Adı \"hız\" çünkü $x_t$'nin $t$'ye göre değişim yönünü veriyor: $x_0$ ile $\\varepsilon$ arasındaki yolda o anda hangi yöne gidildiğini söylüyor.\n\nNeden ayrı bir parametrizasyon gerekti: $\\varepsilon$-prediction küçük $t$'de kötü davranıyor. Orada $x_t$ zaten neredeyse temiz, eklenen noise minik; network'ün onu tahmin etmesi hem zor hem de o tahmindeki hata $\\hat{x}_0$'a bölme yoluyla büyüyor. $x_0$-prediction ise büyük $t$'de aynı sorunu yaşıyor. Velocity ikisinin arasında duran, her $t$'de dengeli davranan bir hedef. Distillation ve az adımlı sampling çalışmalarında tercih edilmesinin sebebi bu.\n\nFlow matching bağlantısı da tam burada: orada network doğrudan bir velocity field öğreniyordu. Probability flow ODE'nin sağ tarafı da bir velocity field. Yani iki yaklaşım aynı nesneyi öğreniyor; diffusion ona score üzerinden dolaşarak varıyor, flow matching düz çizgi kurarak doğrudan."
+          "heading": "13. The four disguises of the same network: $x_0$, $\\varepsilon$, score, velocity",
+          "text": "So far we have seen the network's output under three different names, and all of them converted into one another by algebra. There is a fourth as well.\n\n$$\\hat{x}_0 = \\frac{x_t - \\sqrt{1-\\bar{\\alpha}_t}\\, \\varepsilon_\\theta}{\\sqrt{\\bar{\\alpha}_t}} \\qquad s_\\theta = -\\frac{\\varepsilon_\\theta}{\\sqrt{1-\\bar{\\alpha}_t}} \\qquad v_\\theta = \\sqrt{\\bar{\\alpha}_t}\\, \\varepsilon_\\theta - \\sqrt{1-\\bar{\\alpha}_t}\\, \\hat{x}_0$$\n\nThe last one is the velocity, that is, v-prediction (Salimans, Ho 2022). It is called velocity because it gives the direction of change of $x_t$ with respect to $t$: it says in which direction one is moving at that moment along the road between $x_0$ and $\\varepsilon$.\n\nWhy a separate parametrization was needed: $\\varepsilon$-prediction behaves badly at small $t$. There $x_t$ is already almost clean and the added noise is tiny; predicting it is both hard and the error in that prediction grows through the division in $\\hat{x}_0$. $x_0$-prediction suffers the same problem at large $t$. The velocity is a target that sits between the two and behaves in a balanced way at every $t$. This is why it is preferred in distillation and few-step sampling work.\n\nThe connection to flow matching is exactly here: there the network learned a velocity field directly. The right-hand side of the probability flow ODE is also a velocity field. So the two approaches learn the same object; diffusion arrives at it by going around through the score, flow matching directly, by drawing a straight line."
         },
         {
           "type": "text",
-          "heading": "14. DPM-Solver: ODE'yi bilerek çözmek",
-          "text": "PF-ODE'yi elde ettikten sonra akla gelen ilk şey, onu sıradan bir ODE gibi Euler ile çözmek. DDIM'in yaptığı da bu. Ama bu, denklemin yapısını görmezden geliyor.\n\nDenklem yarı yarıya lineer: bir kısmı $x$'e göre lineer ve kapalı formda çözülebiliyor, geri kalanı ise network çağrısı gerektiren doğrusal olmayan kısım. Euler ikisini birden yaklaşık çözüyor, yani analitik olarak bilinen kısımda bile hata yapıyor.\n\nDPM-Solver (Lu ve ark., NeurIPS 2022) lineer kısmı tam olarak çözüp yalnızca network'lü kısma sayısal yaklaşım uyguluyor. Bunun için değişken değiştiriyor: $\\lambda_t = \\log(\\sqrt{\\bar{\\alpha}_t}/\\sqrt{1-\\bar{\\alpha}_t})$, yani signal-to-noise oranının logaritması. Bu değişkende denklem çok daha düzgün davranıyor ve yüksek mertebeli adımlar kurulabiliyor.\n\nSonuç pratikte büyük: DDIM'in 50 adımda ulaştığı kaliteye 10-20 network çağrısıyla ulaşılıyor. Stable Diffusion arayüzlerinde gördüğün DPM++ seçenekleri bunun geliştirilmiş sürümleri.\n\nBuradaki genel ders, kartın başından beri gelen çizginin devamı: aynı eğitilmiş network duruyor, değişen tek şey ondan nasıl örnek aldığın. Önce zinciri bıraktık (DDIM), sonra süreci ODE olarak gördük, şimdi de o ODE'yi daha akıllı çözüyoruz."
+          "heading": "14. DPM-Solver: solving the ODE knowingly",
+          "text": "Once you have the PF-ODE, the first thing that comes to mind is to solve it with Euler like an ordinary ODE. This is also what DDIM does. But this ignores the structure of the equation.\n\nThe equation is half linear: one part is linear in $x$ and solvable in closed form, and the rest is the non-linear part requiring a network call. Euler solves both approximately, that is, it makes an error even in the part that is known analytically.\n\nDPM-Solver (Lu et al., NeurIPS 2022) solves the linear part exactly and applies a numerical approximation only to the part involving the network. For this it changes variables: $\\lambda_t = \\log(\\sqrt{\\bar{\\alpha}_t}/\\sqrt{1-\\bar{\\alpha}_t})$, that is, the logarithm of the signal-to-noise ratio. In this variable the equation behaves much more smoothly and high-order steps can be built.\n\nThe practical result is large: the quality DDIM reaches in 50 steps is reached with 10 to 20 network calls. The DPM++ options you see in Stable Diffusion interfaces are refined versions of this.\n\nThe general lesson here is the continuation of the line running from the start of this text: the same trained network stays in place, and the only thing that changes is how you sample from it. First we dropped the chain (DDIM), then we saw the process as an ODE, and now we solve that ODE more cleverly."
         },
         {
           "type": "insight",
-          "heading": "Geriye ne kalsın",
-          "text": "Score, density'nin logaritmasının $x$'e göre gradient'i; normalizasyon sabitini öldürdüğü için hesaplanabilir. Gerçek score bilinmiyor ama kendi eklediğin noise'un score'u biliniyor, ve o hedefle eğitmek doğru cevabı veriyor. Bu training DDPM'in $\\varepsilon$-prediction'ı ile aynı şey; ikisi tek bir ölçek çarpanıyla birbirine çevriliyor. Continuous time'a geçince süreç bir SDE oluyor, onun deterministik karşılığı olan probability flow ODE ise DDIM ile flow matching'in ortak zemini."
+          "heading": "What should stay with you",
+          "text": "The score is the gradient of the logarithm of the density with respect to $x$; it is computable because it kills the normalization constant. The true score is unknown but the score of the noise you added yourself is known, and training with that target gives the right answer. This training is the same thing as DDPM's $\\varepsilon$-prediction; the two convert into each other by a single scale factor. Once you move to continuous time the process becomes an SDE, and its deterministic counterpart, the probability flow ODE, is the common ground of DDIM and flow matching."
         },
         {
           "type": "ref",
@@ -28153,8 +28153,8 @@
         },
         {
           "type": "note",
-          "heading": "Nereye bakılır",
-          "text": "Kaynaklar: Hyvärinen 2005 (score matching) · Vincent 2011 (denoising score matching) · Song, Ermon — Generative Modeling by Estimating Gradients of the Data Distribution (NeurIPS 2019) · Song ve ark. — Score-Based Generative Modeling through SDEs (ICLR 2021) · Lu ve ark. — DPM-Solver (NeurIPS 2022).\n\nDers: CME 296, Lecture 2. Devamı için Flow Matching ve Rectified Flow anlatımı; DDPM tarafının tamamı için DDPM anlatımı."
+          "heading": "Where to look",
+          "text": "Sources: Hyvärinen 2005 (score matching) · Vincent 2011 (denoising score matching) · Song, Ermon — Generative Modeling by Estimating Gradients of the Data Distribution (NeurIPS 2019) · Song et al. — Score-Based Generative Modeling through SDEs (ICLR 2021) · Lu et al. — DPM-Solver (NeurIPS 2022).\n\nCourse: CME 296, Lecture 2. For what follows see the Flow Matching and Rectified Flow walkthrough; for the whole of the DDPM side see the DDPM walkthrough."
         }
       ]
     },
