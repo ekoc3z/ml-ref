@@ -26929,7 +26929,7 @@
         {
           "type": "text",
           "heading": "5. Neden boyutun kareköküne bölüyoruz",
-          "text": "Bu, formüldeki en çok ezberlenen ve en az anlaşılan parça.\n\nSorgu ve key bileşenleri kabaca bağımsız ve birim ölçekliyse, nokta çarpımı $d_k$ tane terimin toplamı olduğu için varyansı $d_k$ ile büyüyor. Yani boyut arttıkça skorlar büyük sayılara savruluyor.\n\nSoftmax'a çok büyük sayılar girdiğinde çıktı neredeyse tek bir konuma bir, kalanlara sıfır veriyor. Bu iki şeyi birden bozuyor: dikkat keskinleşip bilgi taşımaz hale geliyor, ve o doygun bölgede softmax'ın gradient'i sıfıra yaklaşıyor — öğrenme duruyor.\n\nKareköküne bölmek varyansı bire geri çekiyor. Yani ölçekleme bir güzellik değil, training'in çalışması için gerekli."
+          "text": "Bu, formüldeki en çok ezberlenen ve en az anlaşılan parça.\n\nQuery ve key bileşenleri kabaca bağımsız ve birim ölçekliyse, nokta çarpımı $d_k$ tane terimin toplamı olduğu için varyansı $d_k$ ile büyüyor. Yani boyut arttıkça skorlar büyük sayılara savruluyor.\n\nSoftmax'a çok büyük sayılar girdiğinde çıktı neredeyse tek bir konuma bir, kalanlara sıfır veriyor. Bu iki şeyi birden bozuyor: dikkat keskinleşip bilgi taşımaz hale geliyor, ve o doygun bölgede softmax'ın gradient'i sıfıra yaklaşıyor — öğrenme duruyor.\n\nKareköküne bölmek varyansı bire geri çekiyor. Yani ölçekleme bir güzellik değil, training'in çalışması için gerekli."
         },
         {
           "type": "svg",
