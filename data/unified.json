@@ -28934,6 +28934,405 @@
           "text": "Course: CME 296, Lecture 6 — the training lifecycle.\n\nTimestep distribution and resolution shift: Esser et al., Scaling Rectified Flow Transformers for High-Resolution Image Synthesis (ICML 2024, SD3) · REPA: Yu et al., Representation Alignment for Generation (2024) · data mixture and curriculum: Qwen-Image Technical Report (2025) · continued training and SFT: Seedream 2.0, ByteDance (2025).\n\nPreference tuning: Xu et al., ImageReward / ReFL (2023) · Liu et al., Flow-GRPO (2025) · Wallace et al., Diffusion-DPO (2023).\n\nTuning: Ruiz et al., DreamBooth (2022) · Hu et al., LoRA (2021).\n\nDistillation: Salimans, Ho, Progressive Distillation (2022) · Liu et al., InstaFlow (2023) and Flow Straight and Fast (2022) · Song et al., Consistency Models (2023) · Yin et al., One-step Diffusion with Distribution Matching Distillation (2023) · Sauer et al., Adversarial Diffusion Distillation (2023) and Latent Adversarial Diffusion Distillation (2024).\n\nThe reflow procedure is in the flow matching walkthrough; the backbone and the entry doors of the condition in the backbone walkthrough; the adversarial loss and the discriminator in the GAN walkthrough."
         }
       ]
+    },
+    "eval": {
+      "title": "Evaluation — From Human Ratings to a Multimodal Judge",
+      "cat": "Walkthrough",
+      "context": "How a generation model is measured · CME 296 Lecture 7",
+      "chapters": [
+        "ida11",
+        "cs13",
+        "mlo21"
+      ],
+      "summary": "The two measurable axes, aesthetics and prompt adherence; the human rating ladder from an absolute scale to pairwise comparison and Elo; why a reference image cannot be used and how FID compares distributions instead; CLIPScore and PickScore; the reference-based chain MSE, PSNR, SSIM, LPIPS; and the multimodal judges TIFA, VQAScore and VIEScore with the benchmarks that separate the failure modes.",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "1. What exactly is being measured",
+          "text": "A generation model takes a prompt and returns an image. There are two separate ways that image can fail, and confusing them is the first mistake in evaluation.\n\nIt can fail to be a good picture: the lighting is implausible, the anatomy is broken, there are artefacts, it does not look real. This axis is called aesthetics, and it covers physical plausibility, perceptual quality, cleanliness and realism.\n\nOr it can be a beautiful image that is not the image that was asked for: the teddy bear is there but it is not reading, there are three objects when two were asked for, the text on the sign is illegible, the style is wrong. This axis is prompt adherence, and it covers object recall, counting, text rendering and style adherence.\n\nBoth have to be measured separately, because a model can be strong on one and weak on the other, and a single number that mixes them tells you nothing about which.\n\nThese two are only the tractable part. There are at least four other dimensions that matter and are harder to measure: safety, diversity, memorisation of training images, and bias."
+        },
+        {
+          "type": "text",
+          "heading": "2. Asking people: rating on a scale",
+          "text": "The most direct method is to show the image to a person and ask for a score.\n\nThe first attempt is a graded scale: very bad to very good, one to five. The model's score is the average of the ratings. The nuance is welcome, but there are two problems. The ratings are noisy, and rating on an absolute scale is hard — what exactly is a four, and is my four your four?\n\nThe second attempt simplifies the task: a binary scale, good or bad. The score becomes the proportion of passes. The task is genuinely easier for the rater, but the core difficulty remains: an absolute judgement is still being asked for."
+        },
+        {
+          "type": "text",
+          "heading": "3. Pairwise comparison and the win rate",
+          "text": "The third attempt removes the absolute judgement altogether. Two models' images for the same prompt are placed side by side and the person is asked which is better, with a tie allowed.\n\n$$\\text{win rate} = \\frac{\\text{number of wins}}{\\text{number of comparisons}}$$\n\nThis is a much easier task, because relative judgement is what people are actually good at.\n\nBut a new problem appears immediately: the win rate depends on whom you were compared against. A model that beat a weak opponent and a model that beat a strong one have the same win rate, and that is clearly wrong. Beating a bad model proves nothing; beating a good model proves a lot."
+        },
+        {
+          "type": "text",
+          "heading": "4. Elo: weighting the win by the strength of the opponent",
+          "text": "The Elo rating, which comes from chess, answers exactly this. Each model carries a number, and every comparison updates it in four steps.\n\nFirst, compute the expected score from the current ratings. Against an opponent rated far higher, your expected score is near zero:\n\n$$E_A = \\frac{1}{1 + 10^{(R_B - R_A)/400}}$$\n\nSecond, take the actual result: 1 for a win, 0.5 for a tie, 0 for a loss.\n\nThird, compare the actual result with the expected one. Fourth, update the rating in proportion to the difference:\n\n$$R_A \\leftarrow R_A + K\\,(S_A - E_A)$$\n\nThe mechanism is in this last line. If you beat an opponent you were expected to beat, $S_A - E_A$ is small and your rating barely moves. If you beat one you were expected to lose to, the difference is large and the rating jumps. The strength of the opponent is thereby priced into the result automatically.\n\nThe public text-to-image leaderboards are built on exactly this."
+        },
+        {
+          "type": "insight",
+          "heading": "5. Why human ratings are not enough",
+          "text": "Human judgement is the ground truth of this field, and yet it cannot be the everyday measurement instrument. Four reasons.\n\nIt is expensive, because every number is paid labour. It is slow, so it cannot sit inside a training loop and cannot answer a question the same afternoon. It is subjective, and the variance between raters is real. And it is not automatically correct either: fatigue, an order effect in which the first image seen anchors the rest, and cultural bias all enter the numbers.\n\nEverything that follows exists to automate this signal. And the last section of this walkthrough returns to the same point: whatever the automatic metric is, it has to be checked against human ratings before it is trusted."
+        },
+        {
+          "type": "text",
+          "heading": "6. Why a reference image cannot be used",
+          "text": "The obvious idea for an automatic metric is to compare the generated image against a correct image. It does not work, and the reason is fundamental rather than technical.\n\nFor the prompt a teddy bear reading a book there are countless valid images. Different poses, different lighting, different backgrounds, different framings — all of them correct. Picking one of them and calling it the answer, then penalising every deviation from it, measures the wrong thing.\n\nThe way out is to change the level at which the comparison is made. Do not compare a single image against a single image; compare the distribution of the generated images against the distribution of the real images. An individual image does not have to match anything. What is asked is that the cloud the model produces sit in the same place as the cloud of real images."
+        },
+        {
+          "type": "text",
+          "heading": "7. FID: the distance between two distributions",
+          "text": "But images cannot be compared as pixels, so both sets are first passed through a pre-trained encoder — classically the Inception network, from which the metric takes its name. Every image becomes a feature vector, and each set becomes a cloud of points in feature space.\n\nThen comes an assumption that makes the computation possible: each cloud is taken to be a Gaussian. A Gaussian is fully described by a mean and a covariance, so all that is left is the distance between two Gaussians. The Fréchet distance between two Gaussians has a closed form:\n\n$$\\text{FID} = \\lVert \\mu_r - \\mu_g \\rVert^2 + \\operatorname{Tr}\\!\\left( \\Sigma_r + \\Sigma_g - 2 (\\Sigma_r \\Sigma_g)^{1/2} \\right)$$\n\nThe expression has two terms and each one measures something different.\n\nThe first is the difference in location, the distance between the two means. This is about quality and style: if the generated images systematically sit somewhere else in feature space, they systematically look different.\n\nThe second is the difference in shape, the mismatch of the covariances. This is about diversity: a model that produces near-identical images has a tiny covariance, and the term catches that even when the mean is in exactly the right place.\n\nLower is better. Zero would mean the two Gaussians coincide."
+        },
+        {
+          "type": "svg",
+          "heading": "The two terms of FID",
+          "svg": "<svg width=\"560\" height=\"290\" viewBox=\"0 0 560 290\" role=\"img\" aria-label=\"FID two terms\"><defs><marker id=\"fidah\" viewBox=\"0 0 10 10\" refX=\"9\" refY=\"5\" markerWidth=\"5\" markerHeight=\"5\" orient=\"auto\"><path class=\"ahf\" d=\"M0,0 L10,5 L0,10 z\"/></marker></defs><line class=\"axis\" x1=\"40\" y1=\"134.5\" x2=\"520\" y2=\"134.5\" stroke-width=\"1\"/><line class=\"axis\" x1=\"222.9\" y1=\"24\" x2=\"222.9\" y2=\"232\" stroke-width=\"1\"/><path class=\"p-curve\" d=\"M 274.1,112.5 L 272.8,111.5 L 271.2,110.6 L 269.6,109.8 L 267.8,109.0 L 265.9,108.3 L 263.9,107.7 L 261.7,107.2 L 259.5,106.7 L 257.1,106.3 L 254.7,105.9 L 252.2,105.7 L 249.5,105.5 L 246.9,105.4 L 244.1,105.4 L 241.3,105.5 L 238.5,105.7 L 235.6,105.9 L 232.6,106.2 L 229.7,106.6 L 226.7,107.0 L 223.7,107.6 L 220.7,108.2 L 217.7,108.9 L 214.7,109.6 L 211.8,110.5 L 208.9,111.3 L 206.0,112.3 L 203.2,113.3 L 200.4,114.4 L 197.7,115.5 L 195.0,116.7 L 192.4,117.9 L 190.0,119.2 L 187.6,120.5 L 185.2,121.8 L 183.0,123.2 L 181.0,124.7 L 179.0,126.1 L 177.1,127.6 L 175.4,129.1 L 173.8,130.6 L 172.3,132.1 L 171.0,133.6 L 169.8,135.1 L 168.8,136.6 L 167.9,138.1 L 167.1,139.6 L 166.6,141.1 L 166.1,142.6 L 165.8,144.1 L 165.7,145.5 L 165.8,146.9 L 165.9,148.2 L 166.3,149.6 L 166.8,150.8 L 167.5,152.1 L 168.3,153.3 L 169.2,154.4 L 170.3,155.5 L 171.6,156.5 L 173.0,157.5 L 174.5,158.4 L 176.1,159.2 L 177.9,160.0 L 179.8,160.7 L 181.9,161.3 L 184.0,161.8 L 186.2,162.3 L 188.6,162.7 L 191.0,163.1 L 193.6,163.3 L 196.2,163.5 L 198.9,163.6 L 201.6,163.6 L 204.4,163.5 L 207.3,163.3 L 210.2,163.1 L 213.1,162.8 L 216.1,162.4 L 219.0,162.0 L 222.0,161.4 L 225.0,160.8 L 228.0,160.1 L 231.0,159.4 L 233.9,158.5 L 236.8,157.7 L 239.7,156.7 L 242.6,155.7 L 245.3,154.6 L 248.1,153.5 L 250.7,152.3 L 253.3,151.1 L 255.8,149.8 L 258.2,148.5 L 260.5,147.2 L 262.7,145.8 L 264.8,144.3 L 266.7,142.9 L 268.6,141.4 L 270.3,139.9 L 271.9,138.4 L 273.4,136.9 L 274.7,135.4 L 275.9,133.9 L 276.9,132.4 L 277.8,130.9 L 278.6,129.4 L 279.2,127.9 L 279.6,126.4 L 279.9,124.9 L 280.0,123.5 L 280.0,122.1 L 279.8,120.8 L 279.4,119.4 L 278.9,118.2 L 278.3,116.9 L 277.5,115.7 L 276.5,114.6 L 275.4,113.5 L 274.1,112.5 Z\" stroke-width=\"1.5\" fill=\"none\" opacity=\"1.0\"/><path class=\"p-curve\" d=\"M 315.2,94.9 L 312.7,93.2 L 309.9,91.5 L 306.9,90.0 L 303.7,88.6 L 300.3,87.4 L 296.6,86.3 L 292.8,85.3 L 288.8,84.4 L 284.5,83.7 L 280.1,83.1 L 275.6,82.7 L 270.9,82.4 L 266.1,82.2 L 261.1,82.2 L 256.1,82.3 L 250.9,82.6 L 245.7,83.0 L 240.4,83.6 L 235.1,84.3 L 229.7,85.1 L 224.4,86.1 L 219.0,87.2 L 213.6,88.4 L 208.3,89.7 L 202.9,91.2 L 197.7,92.8 L 192.5,94.5 L 187.4,96.4 L 182.4,98.3 L 177.5,100.3 L 172.7,102.4 L 168.1,104.6 L 163.6,106.9 L 159.3,109.3 L 155.2,111.7 L 151.2,114.2 L 147.4,116.8 L 143.9,119.4 L 140.5,122.0 L 137.4,124.7 L 134.5,127.4 L 131.9,130.1 L 129.5,132.9 L 127.4,135.6 L 125.5,138.3 L 123.9,141.1 L 122.6,143.8 L 121.5,146.4 L 120.7,149.1 L 120.2,151.7 L 120.0,154.3 L 120.1,156.8 L 120.4,159.2 L 121.0,161.6 L 121.9,163.9 L 123.1,166.1 L 124.6,168.3 L 126.3,170.3 L 128.3,172.3 L 130.5,174.1 L 133.0,175.8 L 135.8,177.5 L 138.8,179.0 L 142.0,180.4 L 145.4,181.6 L 149.1,182.7 L 152.9,183.7 L 157.0,184.6 L 161.2,185.3 L 165.6,185.9 L 170.1,186.3 L 174.8,186.6 L 179.6,186.8 L 184.6,186.8 L 189.6,186.7 L 194.8,186.4 L 200.0,186.0 L 205.3,185.4 L 210.6,184.7 L 216.0,183.9 L 221.3,182.9 L 226.7,181.8 L 232.1,180.6 L 237.5,179.3 L 242.8,177.8 L 248.0,176.2 L 253.2,174.5 L 258.3,172.6 L 263.3,170.7 L 268.2,168.7 L 273.0,166.6 L 277.6,164.4 L 282.1,162.1 L 286.4,159.7 L 290.6,157.3 L 294.5,154.8 L 298.3,152.2 L 301.8,149.6 L 305.2,147.0 L 308.3,144.3 L 311.2,141.6 L 313.8,138.9 L 316.2,136.1 L 318.3,133.4 L 320.2,130.7 L 321.8,127.9 L 323.1,125.2 L 324.2,122.6 L 325.0,119.9 L 325.5,117.3 L 325.7,114.7 L 325.6,112.2 L 325.3,109.8 L 324.7,107.4 L 323.8,105.1 L 322.6,102.9 L 321.1,100.7 L 319.4,98.7 L 317.4,96.7 L 315.2,94.9 Z\" stroke-width=\"1.5\" fill=\"none\" opacity=\"0.45\"/><path class=\"q-line\" d=\"M 425.8,121.3 L 426.6,120.2 L 427.2,119.1 L 427.5,118.0 L 427.6,116.7 L 427.5,115.5 L 427.1,114.1 L 426.5,112.8 L 425.7,111.4 L 424.6,109.9 L 423.3,108.4 L 421.8,106.9 L 420.1,105.4 L 418.2,103.8 L 416.1,102.2 L 413.7,100.6 L 411.2,99.0 L 408.5,97.4 L 405.6,95.8 L 402.5,94.2 L 399.3,92.6 L 395.9,91.0 L 392.4,89.4 L 388.7,87.9 L 384.9,86.3 L 381.0,84.8 L 377.0,83.4 L 372.9,81.9 L 368.7,80.6 L 364.4,79.2 L 360.1,77.9 L 355.7,76.7 L 351.3,75.5 L 346.9,74.4 L 342.5,73.3 L 338.0,72.3 L 333.6,71.4 L 329.2,70.6 L 324.9,69.8 L 320.6,69.1 L 316.3,68.4 L 312.1,67.9 L 308.0,67.4 L 304.0,67.0 L 300.2,66.7 L 296.4,66.5 L 292.7,66.4 L 289.2,66.3 L 285.9,66.3 L 282.7,66.4 L 279.6,66.6 L 276.8,66.9 L 274.1,67.3 L 271.6,67.7 L 269.3,68.2 L 267.2,68.8 L 265.3,69.5 L 263.6,70.3 L 262.1,71.1 L 260.9,72.0 L 259.9,73.0 L 259.1,74.0 L 258.5,75.1 L 258.2,76.3 L 258.1,77.5 L 258.2,78.8 L 258.6,80.1 L 259.2,81.5 L 260.0,82.9 L 261.1,84.3 L 262.4,85.8 L 263.9,87.3 L 265.6,88.9 L 267.5,90.4 L 269.6,92.0 L 272.0,93.6 L 274.5,95.2 L 277.2,96.9 L 280.1,98.5 L 283.2,100.1 L 286.4,101.7 L 289.8,103.3 L 293.3,104.8 L 297.0,106.4 L 300.8,107.9 L 304.7,109.4 L 308.7,110.9 L 312.8,112.3 L 317.0,113.7 L 321.3,115.0 L 325.6,116.3 L 330.0,117.6 L 334.4,118.7 L 338.8,119.9 L 343.2,120.9 L 347.7,121.9 L 352.1,122.8 L 356.5,123.7 L 360.8,124.5 L 365.2,125.2 L 369.4,125.8 L 373.6,126.4 L 377.7,126.8 L 381.7,127.2 L 385.6,127.5 L 389.3,127.8 L 393.0,127.9 L 396.5,128.0 L 399.9,127.9 L 403.1,127.8 L 406.1,127.6 L 409.0,127.3 L 411.6,127.0 L 414.1,126.5 L 416.4,126.0 L 418.5,125.4 L 420.4,124.7 L 422.1,124.0 L 423.6,123.1 L 424.8,122.2 L 425.8,121.3 Z\" stroke-width=\"1.5\" fill=\"none\" opacity=\"1.0\"/><path class=\"q-line\" d=\"M 492.2,140.6 L 493.6,138.7 L 494.7,136.7 L 495.2,134.6 L 495.4,132.4 L 495.2,130.1 L 494.5,127.8 L 493.4,125.3 L 491.9,122.8 L 490.0,120.1 L 487.7,117.5 L 485.0,114.7 L 482.0,112.0 L 478.5,109.1 L 474.6,106.3 L 470.4,103.4 L 465.9,100.5 L 461.0,97.6 L 455.8,94.7 L 450.3,91.8 L 444.4,88.9 L 438.3,86.1 L 432.0,83.2 L 425.4,80.4 L 418.5,77.7 L 411.5,75.0 L 404.3,72.4 L 396.9,69.8 L 389.4,67.3 L 381.7,64.9 L 373.9,62.6 L 366.1,60.4 L 358.1,58.2 L 350.2,56.2 L 342.2,54.3 L 334.2,52.5 L 326.2,50.8 L 318.3,49.3 L 310.5,47.9 L 302.7,46.6 L 295.1,45.5 L 287.6,44.5 L 280.2,43.6 L 273.0,42.9 L 266.0,42.4 L 259.2,42.0 L 252.6,41.7 L 246.3,41.6 L 240.3,41.7 L 234.5,41.9 L 229.0,42.2 L 223.9,42.7 L 219.0,43.4 L 214.5,44.2 L 210.4,45.1 L 206.6,46.2 L 203.2,47.5 L 200.2,48.8 L 197.6,50.3 L 195.3,51.9 L 193.5,53.7 L 192.1,55.6 L 191.1,57.5 L 190.5,59.6 L 190.3,61.8 L 190.5,64.1 L 191.2,66.5 L 192.3,69.0 L 193.8,71.5 L 195.7,74.1 L 198.0,76.8 L 200.7,79.5 L 203.8,82.3 L 207.2,85.1 L 211.1,88.0 L 215.3,90.8 L 219.8,93.7 L 224.7,96.6 L 229.9,99.5 L 235.5,102.4 L 241.3,105.3 L 247.4,108.2 L 253.7,111.0 L 260.3,113.8 L 267.2,116.6 L 274.2,119.2 L 281.4,121.9 L 288.8,124.4 L 296.4,126.9 L 304.0,129.3 L 311.8,131.7 L 319.7,133.9 L 327.6,136.0 L 335.6,138.0 L 343.5,139.9 L 351.5,141.7 L 359.5,143.4 L 367.4,144.9 L 375.2,146.3 L 383.0,147.6 L 390.6,148.8 L 398.2,149.8 L 405.5,150.6 L 412.7,151.3 L 419.7,151.9 L 426.5,152.3 L 433.1,152.5 L 439.4,152.6 L 445.4,152.6 L 451.2,152.4 L 456.7,152.0 L 461.8,151.5 L 466.7,150.9 L 471.2,150.1 L 475.3,149.1 L 479.1,148.0 L 482.5,146.8 L 485.5,145.4 L 488.2,143.9 L 490.4,142.3 L 492.2,140.6 Z\" stroke-width=\"1.5\" fill=\"none\" opacity=\"0.45\"/><circle class=\"dot\" cx=\"222.9\" cy=\"134.5\" r=\"3\"/><circle class=\"dot\" cx=\"342.9\" cy=\"97.1\" r=\"3\"/><line class=\"axis\" x1=\"222.9\" y1=\"134.5\" x2=\"342.9\" y2=\"97.1\" stroke-width=\"1.6\" stroke-dasharray=\"4 3\" marker-end=\"url(#fidah)\"/><text class=\"sm\" x=\"277\" y=\"102\" text-anchor=\"end\">location difference</text><text class=\"sm\" x=\"46\" y=\"200\">real: mean and covariance</text><text class=\"sm\" x=\"303\" y=\"40\">generated: different shape too</text><text class=\"sm\" x=\"371\" y=\"206\">shape difference = diversity</text><text class=\"sm\" x=\"40\" y=\"266\">every point: one image, through the encoder, in feature space</text></svg>"
+        },
+        {
+          "type": "text",
+          "heading": "8. What to be careful about with FID",
+          "text": "FID is the standard number of the field — the curves in the DiT paper and in the REPA results are all FID — but three things about it have to be kept in mind, because comparing two FID numbers from different papers is often meaningless.\n\nIt depends on the sample size. FID is biased downwards as the number of samples grows, so the count has to be reported; the common convention is 50,000 samples, written FID-50k.\n\nIt depends on the reference distribution. The FID of the same model against ImageNet and against COCO are different numbers. There is no absolute scale.\n\nAnd it rests on the normality assumption. The feature clouds are not really Gaussian, and everything beyond the mean and the covariance is discarded by construction. Two distributions with identical first two moments and very different shapes get an FID of zero."
+        },
+        {
+          "type": "text",
+          "heading": "9. Prompt adherence without a reference: CLIPScore and PickScore",
+          "text": "FID says nothing about the prompt. It only asks whether the generated images look like real images; it does not check whether they show what was asked for.\n\nThe measurement of prompt adherence uses CLIP, which was trained to place text and images into a shared space. CLIPScore takes the cosine similarity between the embedding of the prompt and the embedding of the generated image, clips it at zero and rescales it:\n\n$$\\text{CLIPScore} = w \\cdot \\max\\bigl(\\cos(E_{\\text{img}}, E_{\\text{txt}}),\\, 0\\bigr), \\qquad w = 2.5$$\n\nNo reference image is involved, which is why this is a reference-free metric. The model used is plain CLIP as it comes.\n\nPickScore changes one thing: instead of plain CLIP it uses a CLIP fine-tuned on human preference data, from a dataset of pairwise choices between generated images. The formula is the same; what the number measures is not text-image agreement but predicted human preference."
+        },
+        {
+          "type": "text",
+          "heading": "10. When a reference does exist: MSE, PSNR, SSIM, LPIPS",
+          "text": "There are cases where a correct image really does exist, and there the comparison against a reference is legitimate. Three of them come up constantly: the reconstruction of an autoencoder, where the input itself is the target; image editing, where the source image has to be preserved outside the edited region; and distillation, where the teacher's output is the target for the student.\n\nThe chain of metrics here is a chain of dissatisfactions.\n\nMSE is the pixel-wise squared distance. It is not interpretable — a value of 0.003 means nothing on its own — and it is sensitive to position: shift the image by one pixel and the number explodes while the eye sees nothing.\n\nPSNR normalises the same quantity and puts it on a decibel scale:\n\n$$\\text{PSNR} = 10 \\log_{10} \\frac{\\text{MAX}^2}{\\text{MSE}}$$\n\nIt is now interpretable, since numbers of around 30 to 40 dB have a known meaning, but the sensitivity to position is unchanged, because it is still MSE inside."
+        },
+        {
+          "type": "text",
+          "heading": "11. SSIM: comparing statistics rather than pixels",
+          "text": "SSIM takes a different route. Rather than comparing pixels one by one, it compares the statistics of corresponding patches, and it splits that comparison into three questions.\n\nLuminance: is the brightness the same? This is a comparison of the means.\n\nContrast: is the spread the same? This is a comparison of the variances.\n\nStructure: do the pixels move together? This is the correlation, that is the covariance normalised by the two standard deviations.\n\nThe three similarities are multiplied and, with the stabilising constants that keep the ratios from blowing up when a denominator is near zero, the familiar form appears:\n\n$$\\text{SSIM}(x,y) = \\frac{(2\\mu_x \\mu_y + C_1)(2\\sigma_{xy} + C_2)}{(\\mu_x^2 + \\mu_y^2 + C_1)(\\sigma_x^2 + \\sigma_y^2 + C_2)}$$\n\nIt is computed on a sliding window and averaged over the image. The value is between minus one and one, and one means identical.\n\nSSIM is much closer to perception than PSNR, but the same weakness survives: it is still vulnerable to a spatial shift. Displace the whole image slightly and the patch statistics no longer line up."
+        },
+        {
+          "type": "text",
+          "heading": "12. LPIPS: comparing in the feature space of a trained network",
+          "text": "The last step gives up on hand-designed statistics. LPIPS passes both images through a pre-trained network, normalises the activations of several layers, takes a weighted squared distance between them and sums over the layers. The weights are themselves fitted on human judgements of which of two distortions looks worse.\n\nSince the comparison is now made over features rather than pixels, a small shift, a slight change of texture or a minor colour drift are tolerated, while a structural difference that the eye notices is punished. This is why LPIPS is used as the polishing loss in distillation while MSE serves only as the warm-up.\n\nIts cost is interpretability. An LPIPS of 0.18 has no intrinsic meaning; the number is only usable as a comparison between two systems measured the same way. And it depends on the backbone network it was built on."
+        },
+        {
+          "type": "insight",
+          "heading": "13. The gap that the fixed metrics leave",
+          "text": "Look at the list that has accumulated: FID, CLIPScore, PickScore, PSNR, SSIM, LPIPS. There are many of them, they operate at different levels — some on distributions, some on single images, some on text-image agreement — and none of them can say why.\n\nA CLIPScore of 0.922 does not tell you which part of the prompt was missed. The meaning is fragmented across several numbers, and a mismatch between what the metric rewards and what a person would prefer is inevitable.\n\nThe idea that fills this gap is to use a model that can speak. Language models can explain their judgement; the question is how to make them look at images. That is the multimodal LLM, and the rest of this walkthrough is about turning it into an evaluator."
+        },
+        {
+          "type": "text",
+          "heading": "14. How a multimodal LLM is built: two ideas",
+          "text": "The task is to get an image and a text into the same model. Two architectures answered it and both are still worth knowing.\n\nThe first idea keeps the original encoder-decoder transformer and feeds the image in as the keys and values of cross-attention. The text passes through the decoder as usual, and at every layer it attends to the image features. Flamingo (2022) is the reference point, and the image path is separate from the text path throughout.\n\nThe second idea is simpler and is what won. Treat the image as ordinary input to a decoder-only language model: pass it through a vision encoder, project the resulting patch features into the token embedding space, and place them in the sequence in front of the text tokens. From the model's point of view nothing unusual is happening, it is reading a sequence. LLaVA (2023) is the reference point.\n\nThe current trend is a decoder with joint attention, in which text and image tokens attend to each other in the same stack. This is structurally the same move as MM-DiT on the generation side: rather than one modality conditioning the other, both are carried as citizens of the same sequence.\n\nWhat these models can do now goes beyond captioning: working across resolutions, spatial awareness, OCR, other modalities, and explicit reasoning before answering. Those capabilities are precisely what makes them usable as judges."
+        },
+        {
+          "type": "text",
+          "heading": "15. TIFA: breaking the score into atomic questions",
+          "text": "The first use is the most direct one. If the complaint is that a single number cannot be debugged, then produce several small, checkable numbers instead.\n\nTIFA takes the prompt and generates a set of yes-or-no questions from it with a language model. For a cute teddy bear is reading a book: is there a teddy bear, is the teddy bear cute, is there a book, is the teddy bear reading the book. A visual question answering model then answers each question by looking at the generated image, and the score is the proportion of yes answers.\n\nThe gain is diagnosis. A score of 75 does not merely say it is not good enough; it names the question that failed, and that is the part of the prompt the model ignored.\n\nThe drawbacks are two. All questions weigh the same, so a question about the main subject counts exactly as much as one about a background detail — conveying per-claim importance is not easy. And the generation of the questions is itself error-prone; a badly formed question produces a wrong score in a way that is hard to notice."
+        },
+        {
+          "type": "text",
+          "heading": "16. VQAScore: the failure of CLIPScore on composition",
+          "text": "There is a second, sharper complaint. Take two prompts: a cute teddy bear is reading a book, and a cute book is reading a teddy bear. The words are the same, the meaning is reversed. CLIPScore gives an image roughly the same score for both, because the embedding is largely a bag of concepts and does not carry who is doing what to whom.\n\nVQAScore uses a multimodal LLM as a judge instead. It asks a single question — does this figure show the prompt, answer yes or no — and takes the score not as the answer but as the probability the model assigns to the token yes:\n\n$$\\text{VQAScore} = P(\\text{yes} \\mid \\text{image},\\ \\text{\"Does this figure show [prompt]?\"})$$\n\nBecause the judge is a language model, the grammatical structure of the sentence is genuinely processed, and the two prompts above now separate.\n\nIts limitations. It assumes access to the token probabilities, which is not available behind every API. Running TIFA and VQAScore together means several calls to a multimodal model per image, which is not cheap. And the general feeling is that both are still engineered: a fixed question format is being imposed on the judge."
+        },
+        {
+          "type": "text",
+          "heading": "17. VIEScore and MLLM-as-a-Judge: give a rubric, ask for evidence",
+          "text": "The final step drops the fixed question format. Instead of engineering the outcome, let the judge infer it: hand the model the generated image, the prompt and a rubric, and ask for a graded judgement with its reasoning.\n\nVIEScore works in exactly this shape. The rubric names the axes, typically two: semantic consistency, meaning how well the image matches the conditions, and perceptual quality, meaning how authentic and natural it looks. The judge is asked to return structured output — a rationale field and a score field, in JSON.\n\nThe order matters: the evidence is asked for before the score. A judge that first describes what it sees and then grades produces a more consistent number than one that grades first and justifies afterwards.\n\nThe workflow around it has three stages. Seed: collect human ratings on the task at hand. Calibrate: tune the judge's prompt and rubric until its scores agree with those human ratings. Automate: only then let the judge run on the general case. The human ratings do not disappear, they become the calibration set."
+        },
+        {
+          "type": "table",
+          "heading": "18. The three ways of using a judge",
+          "rows": [
+            [
+              "Mode",
+              "What is asked",
+              "Where it fits"
+            ],
+            [
+              "Pointwise",
+              "grade the quality of this one output",
+              "diagnosis, per-image debugging"
+            ],
+            [
+              "Pairwise",
+              "which of these two is better",
+              "comparing models, feeds a win rate or Elo"
+            ],
+            [
+              "Batch ranking",
+              "rank these outputs",
+              "sensitive to the ordering, rarely used in practice"
+            ]
+          ]
+        },
+        {
+          "type": "text",
+          "heading": "19. Best practices for a judge",
+          "text": "Five rules, and each one repairs a known failure.\n\nParse the score into atomic criteria rather than asking for one global number, for the same reason TIFA exists: a single number cannot be debugged.\n\nAsk the judge to describe the evidence before it gives a score, so that the judgement is grounded in what is visible rather than in a first impression.\n\nUse a low temperature and structured output, so that the same input does not produce a different number on a second run and the parsing does not break.\n\nRandomise the A and B order in pairwise judging, because judges have a position bias and systematically favour one slot.\n\nAnd validate the judge's scores against human ratings before trusting it. The judge is a model too, and an uncalibrated judge simply replaces one unknown bias with another."
+        },
+        {
+          "type": "table",
+          "heading": "20. Benchmarks: which one tests what",
+          "rows": [
+            [
+              "Benchmark",
+              "What it tests",
+              "Scale",
+              "How it is judged"
+            ],
+            [
+              "GenEval",
+              "objects, counts, colours, position, colour attribution",
+              "about 600 prompts, 6 tasks",
+              "object detection, geometry, colour classification; yes/no per task"
+            ],
+            [
+              "DPG-Bench",
+              "following a long, dense prompt without dropping detail",
+              "about 1,000 prompts, about 14,000 questions",
+              "a graph of entity/attribute/relation questions, answered by a VQA judge"
+            ],
+            [
+              "LongText-Bench",
+              "rendering readable multi-line text inside the image",
+              "160 English + 160 Chinese prompts, 8 scenarios",
+              "OCR extraction and match against the requested text"
+            ],
+            [
+              "GEdit-Bench",
+              "editing an image without destroying the rest of it",
+              "about 600 examples, 11 categories",
+              "a VIEScore-style multimodal judge"
+            ]
+          ]
+        },
+        {
+          "type": "text",
+          "heading": "21. Why these four and not one",
+          "text": "The four benchmarks are not alternatives, they measure different failures.\n\nGenEval is compositional: it catches the model that draws a beautiful cat when two cats were asked for, or that puts the red on the wrong object. Its value is fine-grained diagnosis, because the failure is attributable to a specific task type.\n\nDPG-Bench is about semantic completeness. As the prompt lengthens, models drop details, and the question graph checks each entity, attribute and relation separately.\n\nLongText-Bench isolates text rendering, which for a long time was the visible weak spot of generation models and which OCR can score objectively.\n\nGEdit-Bench measures editing, where the criterion is double: the requested change has to happen, and everything else has to survive. There is no fixed metric for that pair, which is why the judge is a multimodal model."
+        },
+        {
+          "type": "insight",
+          "heading": "22. The last warning: sample images are not evidence",
+          "text": "Every model release comes with a page of striking images. Those images are chosen, and they are chosen from among many generations by the people who want the model to look good.\n\nA sample is a demonstration of capability, not a measurement of it. What a measurement requires is a fixed prompt set, a fixed number of samples, a declared metric and the same procedure applied to the compared model. Otherwise you are looking at the best case of one model against the average case of another.\n\nThe same warning applies in the other direction, to your own work: when you report your results, report the prompt set, the sample count and the settings, or the number cannot be compared with anything."
+        },
+        {
+          "type": "insight",
+          "heading": "What should stay with you",
+          "text": "Evaluation splits into two measurable axes, aesthetics and prompt adherence, and they must not be mixed into one number.\n\nHuman judgement is the ground truth but it does not scale. The move from an absolute scale to a binary one to pairwise comparison makes the task progressively easier for the rater; the win rate then depends on the opponent, and Elo fixes that by weighting each result with the opponent's strength.\n\nA reference image cannot be used, because there are many valid images for one prompt. FID therefore compares distributions: the real and the generated sets are pushed through an encoder, each is taken to be a Gaussian, and the distance has two terms — the mean difference, which is quality and style, and the covariance difference, which is diversity. Its caveats are the sample size, the reference set and the normality assumption.\n\nPrompt adherence is measured reference-free with CLIPScore, and with PickScore when human preference is wanted instead. Where a reference genuinely exists the chain runs MSE, PSNR, SSIM, LPIPS, and each step exists because the previous one was too attached to exact pixel positions.\n\nThe fixed metrics cannot say why, which is where multimodal LLMs come in: TIFA breaks the prompt into atomic yes-or-no questions, VQAScore reads the probability of the token yes and thereby catches compositional reversals that CLIPScore misses, and VIEScore hands the judge a rubric and asks for evidence before a score. The judge itself must be calibrated against human ratings before it is trusted.\n\nBenchmarks separate the failure modes: GenEval for composition, DPG-Bench for dense prompts, LongText-Bench for text rendering, GEdit-Bench for editing. And a page of sample images is a demonstration, not a measurement."
+        },
+        {
+          "type": "ref",
+          "heading": "Related cards",
+          "items": [
+            {
+              "id": "cs13-conditional-generation-and-classifier-free-guidance-cfg",
+              "label": "CS231n — conditional generation and CFG"
+            },
+            {
+              "id": "ida11-conditional-diffusion-and-text-to-image-generation",
+              "label": "Conditional diffusion and text-to-image"
+            }
+          ]
+        },
+        {
+          "type": "note",
+          "heading": "Where to look",
+          "text": "Course: CME 296, Lecture 7 — evaluation.\n\nDistribution metrics: Heusel et al., GANs Trained by a Two Time-Scale Update Rule (2017), the FID paper.\n\nReference-free prompt adherence: Hessel et al., CLIPScore (2021) · Kirstain et al., Pick-a-Pic / PickScore (2023) · Radford et al., CLIP (2021).\n\nReference-based: Wang et al., Image Quality Assessment: From Error Visibility to Structural Similarity (2004), SSIM · Zhang et al., The Unreasonable Effectiveness of Deep Features as a Perceptual Metric (2018), LPIPS.\n\nMultimodal LLMs: Alayrac et al., Flamingo (2022) · Liu et al., Visual Instruction Tuning / LLaVA (2023) · Qwen3-VL Technical Report (2025).\n\nJudges: Hu et al., TIFA (2023) · Lin et al., Evaluating Text-to-Visual Generation with Image-to-Text Generation / VQAScore (2024) · Ku et al., VIEScore (2023) · Chen et al., MLLM-as-a-Judge (2024).\n\nBenchmarks: Ghosh et al., GenEval (2023) · Hu et al., ELLA / DPG-Bench (2024) · Geng et al., X-Omni / LongText-Bench (2025) · Liu et al., Step1X-Edit / GEdit-Bench (2025).\n\nCLIP itself and the contrastive objective are in the conditioning signal walkthrough; MM-DiT and the entry doors of the condition in the backbone walkthrough; where LPIPS is used as a distillation loss in the training lifecycle walkthrough."
+        }
+      ]
+    },
+    "frontier": {
+      "title": "The Frontier — Current Models, Video, Editing and Diffusion for Text",
+      "cat": "Walkthrough",
+      "context": "Where the field stands and where it is going · CME 296 Lecture 8",
+      "chapters": [
+        "ida11",
+        "cs13",
+        "mlo21"
+      ],
+      "summary": "The six axes any generation system reads off and how today's open models fill them; the trend back to pixel space; what the time dimension drags along in video; editing with guardrails instead of generating; what the image world borrowed from the text world and the return journey, diffusion language models with masking as noise and commit-and-remask decoding; and the four open problems.",
+      "sections": [
+        {
+          "type": "table",
+          "heading": "1. The six axes a generation model is made of",
+          "rows": [
+            [
+              "Axis",
+              "The question it answers",
+              "Where it is built"
+            ],
+            [
+              "Generation paradigm",
+              "what does the network predict: noise, score or velocity",
+              "DDPM, score, flow matching walkthroughs"
+            ],
+            [
+              "Image representation",
+              "in what space is the diffusion run: pixels or a VAE latent",
+              "autoencoder and VAE walkthrough"
+            ],
+            [
+              "Condition",
+              "how does the prompt enter the model",
+              "conditioning signal walkthrough"
+            ],
+            [
+              "Model architecture",
+              "which network computes the prediction: U-Net or DiT",
+              "backbone walkthrough"
+            ],
+            [
+              "Model training",
+              "pre-training, post-training, tuning, distillation",
+              "training lifecycle walkthrough"
+            ],
+            [
+              "Evaluation",
+              "how is the result measured",
+              "evaluation walkthrough"
+            ]
+          ]
+        },
+        {
+          "type": "text",
+          "heading": "2. Why the axes matter more than the model names",
+          "text": "Any current text-to-image system can be read off these six axes, and this is the most durable thing to carry out of the whole subject: model names change every few months, the axes do not.\n\nA worked example. FLUX.2 is rectified flow as the paradigm, a VAE latent as the representation, text embeddings from a language model as the condition, a hybrid dual and single stream MM-DiT as the architecture. Qwen-Image is a flow matching loss, again a VAE latent, embeddings from a vision-language model, a double-stream MM-DiT.\n\nTwo different systems, the same six slots, different choices in three of them. Once you can do this reading, a technical report becomes a table rather than a novelty.\n\nThe current state of the field in one line: the best-performing models come from the large labs and are closed, but the open-weights models are not far behind, and their reports are where these axes are actually visible."
+        },
+        {
+          "type": "insight",
+          "heading": "3. The trend to watch: back to pixel space",
+          "text": "One of those slots is currently under pressure. HiDream-O1 keeps the flow matching loss and the transformer architecture, but changes two things: the VAE is removed and the diffusion runs directly in pixel space, and there is no separate pre-trained text encoder — the text is handled inside the same unified transformer.\n\nThis is worth watching because latent diffusion was the move that made everything affordable in 2021, and the VAE has sat in every pipeline since. Two things have changed in the meantime: compute is cheaper, and the VAE has become a visible source of error, since whatever it loses in encoding can never be recovered by the decoder.\n\nRemoving the disjoint text encoder points in the same direction as MM-DiT: rather than a text tower and an image tower joined at a seam, a single model in which both modalities are citizens.\n\nNot a settled outcome, a direction. But it is exactly the kind of move that is worth spotting early, because a slot that everyone treats as fixed is the slot where a contribution is still available."
+        },
+        {
+          "type": "text",
+          "heading": "4. Video: one extra dimension and everything it drags along",
+          "text": "Moving from image to video adds a single axis, time, and four separate consequences follow.\n\nTemporal consistency. Each frame on its own can be perfectly good while the sequence is unusable: the identity of the subject drifts, the colour of a garment changes between frames, an object appears and disappears. This is a property the per-frame loss does not see.\n\nComputation. The token count is multiplied by the number of frames, and attention is quadratic in the token count. This is the reason the compression has to be spatio-temporal: the VAE compresses along time as well as space, so that several frames collapse into one latent frame.\n\nMetrics. FID does not carry over, because it scores each frame separately and is blind to temporal incoherence. Its counterpart is FVD, the Fréchet Video Distance, which runs the same Fréchet construction over the features of a network trained on video, so that the features themselves carry motion.\n\nArchitecture. The leading open model, Wan, is built exactly this way: a spatio-temporal VAE first, then a diffusion transformer over the compressed latent video."
+        },
+        {
+          "type": "text",
+          "heading": "5. An alternative to generating: let the model edit",
+          "text": "There is a failure mode that no amount of scaling removes. Ask a text-and-image to image model to make this image black and white, and it will generate a new image: greyscale as requested, but the face is slightly different, the objects have moved, a detail has vanished. It regenerated when it should have preserved.\n\nThe reformulation is to stop generating altogether for such tasks. A vision-language model looks at the image and the instruction and emits editing actions — desaturate, adjust the curve, mask this region — and those actions are applied by ordinary editing software.\n\nThe gain is guardrails. The pixels that were not asked to change cannot change, because nothing regenerates them. What the model contributes is the understanding of the instruction, not the pixels.\n\nThis is the same pattern as tool use in the language world, and it is the reasonable answer wherever the requirement is preservation rather than creation."
+        },
+        {
+          "type": "table",
+          "heading": "6. What the image world borrowed from the text world",
+          "rows": [
+            [
+              "From text",
+              "To image",
+              "What was carried over"
+            ],
+            [
+              "Transformer (2017)",
+              "DiT (2022)",
+              "the backbone itself, with adaLN in place of the text decoder"
+            ],
+            [
+              "DPO (2023)",
+              "Diffusion-DPO (2023)",
+              "preference optimisation without a reward model"
+            ],
+            [
+              "GRPO (2024)",
+              "Flow-GRPO (2025)",
+              "group-relative online RL, on flow models"
+            ],
+            [
+              "Next-token prediction",
+              "the thing being replaced",
+              "see the following sections: diffusion is now going the other way"
+            ]
+          ]
+        },
+        {
+          "type": "text",
+          "heading": "7. Diffusion for text: why anyone would want it",
+          "text": "The traffic has been one-way for years, from text to image. The last section of the course is about the return journey.\n\nA language model generates by next-token prediction: one token at a time, each conditioned on all the previous ones. That is a hard structural constraint — producing $N$ tokens takes $N$ sequential forward passes, and no hardware parallelism removes the dependency.\n\nThe diffusion idea breaks exactly that. Start from a fully corrupted text, refine the whole sequence at once, and repeat. The cost then stops being the number of tokens and becomes the number of diffusion steps, which is a number you choose. This is the entire motivation."
+        },
+        {
+          "type": "text",
+          "heading": "8. What is noise for text",
+          "text": "Carrying diffusion over to text requires answering one question, and it is not a detail: what plays the role of Gaussian noise.\n\nIn images the data is continuous and the noise is Gaussian, so a partially corrupted image is a meaningful object — an intermediate point between the image and the noise.\n\nText is discrete, and there is no natural halfway point between two tokens. Worse, corrupting by replacing tokens at random does not give something meaningless: a random token is still a word, and it carries a definite meaning that actively misleads the model.\n\nThe answer that worked is a special token: [MASK]. The corruption is not perturbation but erasure. The noise level becomes the fraction of tokens masked — zero masked is the clean text, all masked is pure noise. The axis is recovered without needing a continuous space."
+        },
+        {
+          "type": "text",
+          "heading": "9. Training: learn to fill in the blanks",
+          "text": "With that settled the training loop is short, and it is the exact counterpart of the image one.\n\nDraw a text, draw a noise level, and mask that fraction of the tokens at random. Give the corrupted sequence to the model and ask it to predict the tokens that were masked. The loss is the cross-entropy on the masked positions.\n\nThis is where the relation to BERT's masked language modelling becomes visible, and also where the difference lies. BERT masks a small, fixed fraction — around fifteen percent — and is used as an encoder. Here the mask ratio is drawn across the whole range up to complete masking, which is what turns the model into a generator: it has to be able to produce text from nothing, not only to fill small gaps."
+        },
+        {
+          "type": "text",
+          "heading": "10. Inference: commit and revise",
+          "text": "Generation starts from a fully masked sequence and proceeds coarse to fine.\n\nAt each round the model predicts every masked position at once. Then it commits: the positions it is most confident about are kept, written into the sequence and never asked again. The rest are masked back and passed into the next round.\n\nThat remasking step is the important one, and it is what an autoregressive model cannot do. A token an ARM has emitted is final; if it went wrong at position three, everything after it is conditioned on the mistake. Here a token that was tentatively written can be erased and reconsidered in the light of what has since been decided elsewhere in the sequence.\n\nIn the figure below the first round commits A, is and the end token, writes brown and sleeping tentatively and then takes them back; the second round, now seeing the committed context, arrives at teddy and reading."
+        },
+        {
+          "type": "svg",
+          "heading": "Commit and remask over two rounds",
+          "svg": "<svg width=\"594\" height=\"204\" viewBox=\"0 0 594 204\" role=\"img\" aria-label=\"diffusion LLM decoding\"><text class=\"sm\" x=\"64\" y=\"44\" text-anchor=\"end\">start</text><rect class=\"cell-box\" x=\"76\" y=\"26\" width=\"78\" height=\"26\" rx=\"2\" stroke-width=\"1.2\"/><text class=\"num\" x=\"115.0\" y=\"43\" text-anchor=\"middle\">[M]</text><rect class=\"cell-box\" x=\"160\" y=\"26\" width=\"78\" height=\"26\" rx=\"2\" stroke-width=\"1.2\"/><text class=\"num\" x=\"199.0\" y=\"43\" text-anchor=\"middle\">[M]</text><rect class=\"cell-box\" x=\"244\" y=\"26\" width=\"78\" height=\"26\" rx=\"2\" stroke-width=\"1.2\"/><text class=\"num\" x=\"283.0\" y=\"43\" text-anchor=\"middle\">[M]</text><rect class=\"cell-box\" x=\"328\" y=\"26\" width=\"78\" height=\"26\" rx=\"2\" stroke-width=\"1.2\"/><text class=\"num\" x=\"367.0\" y=\"43\" text-anchor=\"middle\">[M]</text><rect class=\"cell-box\" x=\"412\" y=\"26\" width=\"78\" height=\"26\" rx=\"2\" stroke-width=\"1.2\"/><text class=\"num\" x=\"451.0\" y=\"43\" text-anchor=\"middle\">[M]</text><rect class=\"cell-box\" x=\"496\" y=\"26\" width=\"78\" height=\"26\" rx=\"2\" stroke-width=\"1.2\"/><text class=\"num\" x=\"535.0\" y=\"43\" text-anchor=\"middle\">[M]</text><text class=\"sm\" x=\"64\" y=\"80\" text-anchor=\"end\">round 1</text><rect class=\"hi-box\" x=\"76\" y=\"62\" width=\"78\" height=\"26\" rx=\"2\" stroke-width=\"1.2\"/><text class=\"num\" x=\"115.0\" y=\"79\" text-anchor=\"middle\">A</text><rect class=\"cell-box\" x=\"160\" y=\"62\" width=\"78\" height=\"26\" rx=\"2\" stroke-width=\"1.2\"/><text class=\"num\" x=\"199.0\" y=\"79\" text-anchor=\"middle\">brown</text><rect class=\"cell-box\" x=\"244\" y=\"62\" width=\"78\" height=\"26\" rx=\"2\" stroke-width=\"1.2\"/><text class=\"num\" x=\"283.0\" y=\"79\" text-anchor=\"middle\">bear</text><rect class=\"hi-box\" x=\"328\" y=\"62\" width=\"78\" height=\"26\" rx=\"2\" stroke-width=\"1.2\"/><text class=\"num\" x=\"367.0\" y=\"79\" text-anchor=\"middle\">is</text><rect class=\"cell-box\" x=\"412\" y=\"62\" width=\"78\" height=\"26\" rx=\"2\" stroke-width=\"1.2\"/><text class=\"num\" x=\"451.0\" y=\"79\" text-anchor=\"middle\">sleeping</text><rect class=\"hi-box\" x=\"496\" y=\"62\" width=\"78\" height=\"26\" rx=\"2\" stroke-width=\"1.2\"/><text class=\"num\" x=\"535.0\" y=\"79\" text-anchor=\"middle\">[EOS]</text><text class=\"sm\" x=\"64\" y=\"116\" text-anchor=\"end\">remask</text><rect class=\"hi-box\" x=\"76\" y=\"98\" width=\"78\" height=\"26\" rx=\"2\" stroke-width=\"1.2\"/><text class=\"num\" x=\"115.0\" y=\"115\" text-anchor=\"middle\">A</text><rect class=\"cell-box\" x=\"160\" y=\"98\" width=\"78\" height=\"26\" rx=\"2\" stroke-width=\"1.2\"/><text class=\"num\" x=\"199.0\" y=\"115\" text-anchor=\"middle\">[M]</text><rect class=\"cell-box\" x=\"244\" y=\"98\" width=\"78\" height=\"26\" rx=\"2\" stroke-width=\"1.2\"/><text class=\"num\" x=\"283.0\" y=\"115\" text-anchor=\"middle\">[M]</text><rect class=\"hi-box\" x=\"328\" y=\"98\" width=\"78\" height=\"26\" rx=\"2\" stroke-width=\"1.2\"/><text class=\"num\" x=\"367.0\" y=\"115\" text-anchor=\"middle\">is</text><rect class=\"cell-box\" x=\"412\" y=\"98\" width=\"78\" height=\"26\" rx=\"2\" stroke-width=\"1.2\"/><text class=\"num\" x=\"451.0\" y=\"115\" text-anchor=\"middle\">[M]</text><rect class=\"hi-box\" x=\"496\" y=\"98\" width=\"78\" height=\"26\" rx=\"2\" stroke-width=\"1.2\"/><text class=\"num\" x=\"535.0\" y=\"115\" text-anchor=\"middle\">[EOS]</text><text class=\"sm\" x=\"64\" y=\"152\" text-anchor=\"end\">round 2</text><rect class=\"hi-box\" x=\"76\" y=\"134\" width=\"78\" height=\"26\" rx=\"2\" stroke-width=\"1.2\"/><text class=\"num\" x=\"115.0\" y=\"151\" text-anchor=\"middle\">A</text><rect class=\"hi-box\" x=\"160\" y=\"134\" width=\"78\" height=\"26\" rx=\"2\" stroke-width=\"1.2\"/><text class=\"num\" x=\"199.0\" y=\"151\" text-anchor=\"middle\">teddy</text><rect class=\"hi-box\" x=\"244\" y=\"134\" width=\"78\" height=\"26\" rx=\"2\" stroke-width=\"1.2\"/><text class=\"num\" x=\"283.0\" y=\"151\" text-anchor=\"middle\">bear</text><rect class=\"hi-box\" x=\"328\" y=\"134\" width=\"78\" height=\"26\" rx=\"2\" stroke-width=\"1.2\"/><text class=\"num\" x=\"367.0\" y=\"151\" text-anchor=\"middle\">is</text><rect class=\"hi-box\" x=\"412\" y=\"134\" width=\"78\" height=\"26\" rx=\"2\" stroke-width=\"1.2\"/><text class=\"num\" x=\"451.0\" y=\"151\" text-anchor=\"middle\">reading</text><rect class=\"hi-box\" x=\"496\" y=\"134\" width=\"78\" height=\"26\" rx=\"2\" stroke-width=\"1.2\"/><text class=\"num\" x=\"535.0\" y=\"151\" text-anchor=\"middle\">[EOS]</text><text class=\"sm\" x=\"76\" y=\"194\">highlighted = committed tokens; the rest are masked again and revised</text></svg>"
+        },
+        {
+          "type": "text",
+          "heading": "11. Where diffusion LLMs win and what they still cost",
+          "text": "The speed gain is real and is quoted at about ten times against an autoregressive model of comparable quality, because the sequential dependency on the token count has been replaced by a chosen number of steps.\n\nThe structural gain is a better fit for tasks where the text is not written left to right. Filling in the middle is the natural example, and this is why coding is the first serious application: a coding agent usually has to insert into an existing file with context on both sides, and speed is the bottleneck of such agents.\n\nThe costs are equally concrete. Training is significantly more expensive, since the model has to learn to fill every mask ratio rather than a single next-token task. The whole toolbox built around autoregressive models over the past years — the post-training methods, the preference tuning, the serving infrastructure, the key-value cache — does not carry over unchanged and has to be adapted. And the best results at the moment come from hybrids that interpolate between the two: autoregressive across blocks, diffusion inside a block."
+        },
+        {
+          "type": "text",
+          "heading": "12. Four open problems",
+          "text": "The course closes on what is not solved, and the list is worth keeping because it is where the work is.\n\nCost. Both training and inference are expensive, and part of the search has moved down to the hardware, towards in-memory computing for attention.\n\nData quality. Generated images are now on the open internet in volume, and a model trained on its own kind of output degrades — the effect known as model collapse, where variance shrinks with each generation and the outputs converge on an average. Knowing the provenance of the data is no longer optional.\n\nTrust. Whether an image is generated should be discoverable. The metadata standard, C2PA, has a trivial flaw: a screenshot strips it. Which is why the effort has moved to watermarking, a signal embedded in the pixels themselves that survives ordinary manipulation, such as SynthID.\n\nSafety. Deepfakes and impersonation are already the practical problem, and legislation is moving far slower than the capability."
+        },
+        {
+          "type": "table",
+          "heading": "13. Where the field is going, by horizon",
+          "rows": [
+            [
+              "Horizon",
+              "What is expected",
+              "Concrete form"
+            ],
+            [
+              "Now",
+              "democratisation of what already exists",
+              "the same capability through cheap APIs from several providers"
+            ],
+            [
+              "Near term",
+              "carrying over the wins from other modalities",
+              "reasoning before generating; generating through tools, such as building the image in design software"
+            ],
+            [
+              "Long term",
+              "consequences in other industries",
+              "robotics: custom training environments · medicine: accelerated MRI · design: shorter iteration cycles"
+            ]
+          ]
+        },
+        {
+          "type": "text",
+          "heading": "14. How to stay current",
+          "text": "The concrete advice from the course, and it matches what has to be done anyway.\n\nPapers: arXiv under computer vision and pattern recognition for the daily flow; the general ML venues NeurIPS, ICML and ICLR alongside the vision venues CVPR and ECCV for the filtered view.\n\nCode: the authors' own repositories, linked from the papers, and paperswithcode for finding the current state of the art on a given task.\n\nThe rest: course websites such as CS231n, the accounts of active researchers, and the technical blogs of the labs.\n\nOne thing to add that the slides do not say. A general-ML venue is where an idea is born and a domain venue is where it is applied, so the two lists are not interchangeable: reading only the domain venues makes you a follower of ideas that are already two or three years old."
+        },
+        {
+          "type": "insight",
+          "heading": "What should stay with you",
+          "text": "Any generation system reads off six axes — paradigm, representation, condition, architecture, training, evaluation — and model names are far less durable than that reading. Today's open models fill them with rectified flow or flow matching, a VAE latent, embeddings from a language or vision-language model, and a dual-stream MM-DiT.\n\nThe trend worth watching is the removal of two components that everyone treats as fixed: the VAE, with diffusion returning to pixel space, and the separate text encoder, with the text folded into the same transformer.\n\nVideo adds one dimension and four consequences: temporal consistency, which per-frame losses cannot see; a token count that forces spatio-temporal compression; FVD in place of FID; and a spatio-temporal VAE ahead of the transformer.\n\nWhere the requirement is preservation rather than creation, generating is the wrong tool: a vision-language model emitting editing actions into editing software gives guardrails that a regenerating model cannot.\n\nDiffusion for text replaces the sequential cost in the token count with a chosen number of steps. The role of noise is played by masking, because text is discrete and a random token carries a misleading meaning. Training fills masks at every ratio; inference commits the confident positions and remasks the rest, which is the capacity for revision that an autoregressive model lacks. The gains are speed and fill-in-the-middle tasks; the costs are expensive training and a toolbox that does not carry over.\n\nThe open problems are cost, data quality under model collapse, trust through watermarking rather than strippable metadata, and safety."
+        },
+        {
+          "type": "ref",
+          "heading": "Related cards",
+          "items": [
+            {
+              "id": "ida11-conditional-diffusion-and-text-to-image-generation",
+              "label": "Conditional diffusion and text-to-image"
+            },
+            {
+              "id": "cs13-conditional-generation-and-classifier-free-guidance-cfg",
+              "label": "CS231n — conditional generation and CFG"
+            }
+          ]
+        },
+        {
+          "type": "note",
+          "heading": "Where to look",
+          "text": "Course: CME 296, Lecture 8 — the closing lecture. The course's own cheatsheet is on GitHub under stanford-cme-296-diffusion-large-vision-models, and the sister course on transformers and language models is CME 295.\n\nCurrent models: FLUX.2, Black Forest Labs (2025) · Qwen-Image Technical Report (2025) · HiDream-O1-Image, Cai et al. (2026), pixel-space unified transformer.\n\nVideo: Unterthiner et al., Towards Accurate Generative Models of Video (2018), FVD · Ho et al., Video Diffusion Models (2022) · Blattmann et al., Stable Video Diffusion (2023) · Kong et al., HunyuanVideo (2024) · Wan (2025).\n\nEditing as an agent: Huang et al., SmartEdit (2024) · Dutt et al., MonetGPT (2025) · Lin et al., JarvisArt (2025) · Wu et al., RetouchIQ (2026).\n\nDiffusion language models: Austin et al., Structured Denoising Diffusion Models in Discrete State-Spaces (2021) · Nie et al., Large Language Diffusion Models (2025) · Arriola et al., Block Diffusion (2025) · Song et al., Seed Diffusion (2025) · Li et al., A Survey on Diffusion Language Models (2025).\n\nOpen problems: Alemohammad et al., Self-Consuming Generative Models Go MAD (2023), model collapse · C2PA, the content provenance standard · Gowal et al., SynthID-Image (2025).\n\nThe six axes of the first section are each built in their own walkthrough: DDPM, score, flow matching, autoencoder and VAE, conditioning signal, backbone, training lifecycle, evaluation."
+        }
+      ]
     }
   },
   "mlo": [
