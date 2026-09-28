@@ -26908,12 +26908,12 @@
         {
           "type": "text",
           "heading": "3. Dönüm noktası: query'yi de girdiden üret",
-          "text": "Kritik soru şu: decoder'ın durumuna neden ihtiyacımız var? O da sonuçta bir vektör. Onu da doğrudan girdiden üretemez miyiz?\n\nÜretebiliriz. Ve ürettiğin anda decoder'a olan bağımlılık ortadan kalkıyor.\n\nHer konum artık kendi sorusunu kendisi üretiyor. Her konum aynı anda, birbirinden bağımsız olarak, dizinin tamamına bakabiliyor. Sıralılık kayboluyor.\n\nBuna self-attention deniyor, ve eski attention'dan farkı tek bir şey: query dışarıdan gelmiyor, girdinin kendisinden üretiliyor.\n\nEşleştirme şöyle: eskiden decoder durumunun yaptığı işi artık query yapıyor; uyum fonksiyonunun yerini nokta çarpımı ve key aldı; kaynak vektörlerin weighted toplamdaki rolünü değer üstlendi."
+          "text": "Kritik soru şu: decoder'ın durumuna neden ihtiyacımız var? O da sonuçta bir vektör. Onu da doğrudan girdiden üretemez miyiz?\n\nÜretebiliriz. Ve ürettiğin anda decoder'a olan bağımlılık ortadan kalkıyor.\n\nHer konum artık kendi sorusunu kendisi üretiyor. Her konum aynı anda, birbirinden bağımsız olarak, dizinin tamamına bakabiliyor. Sıralılık kayboluyor.\n\nBuna self-attention deniyor, ve eski attention'dan farkı tek bir şey: query dışarıdan gelmiyor, girdinin kendisinden üretiliyor.\n\nEşleştirme şöyle: eskiden decoder durumunun yaptığı işi artık query yapıyor; uyum fonksiyonunun yerini nokta çarpımı ve key aldı; kaynak vektörlerin weighted toplamdaki rolünü value üstlendi."
         },
         {
           "type": "text",
           "heading": "4. Neden üç ayrı vektör",
-          "text": "Her konum için üç vektör üretiliyor — query, key, değer — ve üçü de aynı girdiden, üç ayrı öğrenilen matrisle çıkıyor. Neden üç?\n\nSorgu açık: ne arıyorum.\n\nAsıl soru key ile değerin neden ayrı olduğu. Ayrı olmasalardı aynı vektör hem \"ben nasıl aranırım\" hem \"bulununca ne veririm\" demek zorunda kalırdı.\n\nTelefon rehberi analojisi bunu tam oturtuyor: isimle ararsın, numarayı alırsın. İkisi aynı olsaydı, \"Ahmet\" diye arayıp \"Ahmet\" alırdın — işe yaramaz.\n\nSomut örnek: \"The cat sat on the mat\" cümlesinde \"sat\" kelimesi şunu soruyor — benim öznem kim? \"cat\" kelimesinin iki ayrı vektörü var. Anahtarı şunu söylüyor: ben bir isimim, cümlenin başındayım, büyük ihtimalle özneyim. Değeri ise bambaşka bir şey söylüyor: ben kediyim, canlıyım, tekilim, şu semantik özelliklere sahibim.\n\nArama kriteri ile taşınan içerik farklı şeyler. Ayrı tutunca model ikisini bağımsız optimize edebiliyor."
+          "text": "Her konum için üç vektör üretiliyor — query, key, value — ve üçü de aynı girdiden, üç ayrı öğrenilen matrisle çıkıyor. Neden üç?\n\nQuery açık: ne arıyorum.\n\nAsıl soru key ile value'nun neden ayrı olduğu. Ayrı olmasalardı aynı vektör hem \"ben nasıl aranırım\" hem \"bulununca ne veririm\" demek zorunda kalırdı.\n\nTelefon rehberi analojisi bunu tam oturtuyor: isimle ararsın, numarayı alırsın. İkisi aynı olsaydı, \"Ahmet\" diye arayıp \"Ahmet\" alırdın — işe yaramaz.\n\nSomut örnek: \"The cat sat on the mat\" cümlesinde \"sat\" kelimesi şunu soruyor — benim öznem kim? \"cat\" kelimesinin iki ayrı vektörü var. Anahtarı şunu söylüyor: ben bir isimim, cümlenin başındayım, büyük ihtimalle özneyim. Değeri ise bambaşka bir şey söylüyor: ben kediyim, canlıyım, tekilim, şu semantik özelliklere sahibim.\n\nArama kriteri ile taşınan içerik farklı şeyler. Ayrı tutunca model ikisini bağımsız optimize edebiliyor."
         },
         {
           "type": "svg",
@@ -26950,7 +26950,7 @@
         {
           "type": "text",
           "heading": "8. Multi-head attention",
-          "text": "Tek bir attention hesabı, her konum için tek bir weight distribution'u üretiyor — yani tek tür ilişki.\n\nAma bir kelimenin aynı anda birden çok ilişkisi var: fiilinin öznesi, bağlı olduğu edat, gönderme yaptığı zamir, konusal bağlamı. Tek distribution bunları aynı anda taşıyamıyor; hepsinin ortalamasını alıyor.\n\nÇözüm, aynı hesabı paralel olarak birkaç kez yapmak. Her kafa kendi query, key ve değer matrislerine sahip; her biri farklı türde bir ilişkiye uzmanlaşabiliyor. Çıktılar birleştirilip tek bir doğrusal layer'dan geçiriliyor.\n\nMaliyeti artmıyor, çünkü her kafanın boyutu toplam boyutun kafaya bölünmüş hali. Yani aynı hesap bütçesini tek geniş ilişki yerine birkaç dar ilişkiye bölüyorsun."
+          "text": "Tek bir attention hesabı, her konum için tek bir weight distribution'u üretiyor — yani tek tür ilişki.\n\nAma bir kelimenin aynı anda birden çok ilişkisi var: fiilinin öznesi, bağlı olduğu edat, gönderme yaptığı zamir, konusal bağlamı. Tek distribution bunları aynı anda taşıyamıyor; hepsinin ortalamasını alıyor.\n\nÇözüm, aynı hesabı paralel olarak birkaç kez yapmak. Her kafa kendi query, key ve value matrislerine sahip; her biri farklı türde bir ilişkiye uzmanlaşabiliyor. Çıktılar birleştirilip tek bir doğrusal layer'dan geçiriliyor.\n\nMaliyeti artmıyor, çünkü her kafanın boyutu toplam boyutun kafaya bölünmüş hali. Yani aynı hesap bütçesini tek geniş ilişki yerine birkaç dar ilişkiye bölüyorsun."
         },
         {
           "type": "text",
@@ -26971,7 +26971,7 @@
         {
           "type": "text",
           "heading": "10. Cross-attention: query bir yerden, key başka yerden",
-          "text": "Şimdiye kadar üç vektör de aynı diziden geliyordu. Sorguyu bir kaynaktan, key ve değeri başka bir kaynaktan alırsan cross-attention elde edersin.\n\nÇeviride decoder bunu kullanıyor: query'ler üretilen çeviriden, key ve value'lar encoder'ın çıktısından. Yani \"şu an ürettiğim kelime için kaynak cümlenin neresine bakmalıyım\".\n\nAynı mekanizma modaliteler arasında da çalışıyor. Image captioning'de query'ler metinden, key ve value'lar görüntü feature'larınden geliyor. Metinden görüntü üreten diffusion modellerinde ise yön tersine dönüyor: query'ler görüntüden, key ve value'lar metinden — her piksel hangi kelimenin kendisini ilgilendirdiğini seçiyor.\n\nYani \"koşulu modele nasıl veririm\" sorusunun en genel cevabı bu mekanizma."
+          "text": "Şimdiye kadar üç vektör de aynı diziden geliyordu. Query'yi bir kaynaktan, key ve value'yu başka bir kaynaktan alırsan cross-attention elde edersin.\n\nÇeviride decoder bunu kullanıyor: query'ler üretilen çeviriden, key ve value'lar encoder'ın çıktısından. Yani \"şu an ürettiğim kelime için kaynak cümlenin neresine bakmalıyım\".\n\nAynı mekanizma modaliteler arasında da çalışıyor. Image captioning'de query'ler metinden, key ve value'lar görüntü feature'larınden geliyor. Metinden görüntü üreten diffusion modellerinde ise yön tersine dönüyor: query'ler görüntüden, key ve value'lar metinden — her piksel hangi kelimenin kendisini ilgilendirdiğini seçiyor.\n\nYani \"koşulu modele nasıl veririm\" sorusunun en genel cevabı bu mekanizma."
         },
         {
           "type": "text",
@@ -26997,7 +26997,7 @@
         {
           "type": "note",
           "heading": "Nereye bakılır",
-          "text": "Sorgu-key-değer ayrımı, pozisyon kodlamasının gerekçesi, multi-head yapının matematiği ve encoder-decoder boyut akışı ch12'de; RNN attention'dan self-attention'a geçişin adım adım eşleştirmesi yine ch12'de; CS231n tarafı cs07'de; görüntü tarafı (ViT, Swin, DETR) ida07 ve ida08'de; uygulama için labtc captioning oturumunda. Metin koşullamasının diffusion'daki hali için DDPM konu anlatımına bak."
+          "text": "Query-key-value ayrımı, pozisyon kodlamasının gerekçesi, multi-head yapının matematiği ve encoder-decoder boyut akışı ch12'de; RNN attention'dan self-attention'a geçişin adım adım eşleştirmesi yine ch12'de; CS231n tarafı cs07'de; görüntü tarafı (ViT, Swin, DETR) ida07 ve ida08'de; uygulama için labtc captioning oturumunda. Metin koşullamasının diffusion'daki hali için DDPM konu anlatımına bak."
         }
       ]
     },
