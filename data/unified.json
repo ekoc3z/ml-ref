@@ -7218,38 +7218,141 @@
         },
         {
           "type": "text",
-          "heading": "2. Divergence: bir noktadan net ne kaçıyor",
-          "text": "Uzayı su dolu bir boru gibi düşün, tek boyutta. $f(x)$ o noktadaki suyun hızı; işareti yönü veriyor, $f>0$ sağa, $f<0$ sola.\n\nŞimdi borunun $x$ ile $x+\\Delta$ arasındaki minik bir parçasına bak. Bu parçanın \"yüzeyi\" iki uçtan ibaret: soldan su giriyor, sağdan çıkıyor.\n\n$$\\text{net çıkış} = f(x+\\Delta) - f(x)$$\n\nParçanın uzunluğuna bölüp $\\Delta \\to 0$ limitini alınca tam olarak türev kalıyor:\n\n$$\\operatorname{div} f = \\frac{\\partial f}{\\partial x}$$\n\nSayıyla: $f(x) = x$ ve parça $[1,2]$ olsun. Sol uçtan 1 birim/saniye giriyor, sağ uçtan 2 birim/saniye çıkıyor, net $+1$. Parça boşalıyor.\n\nYorum: divergence pozitifse o nokta kaynak gibi davranıyor, orada yoğunluk azalıyor. Negatifse kuyu, orada birikme var. Sıfırsa giren çıkana eşit, yoğunluk sabit kalıyor.\n\nYüksek boyutta tanım aynı, sadece bütün yönlerdeki katkılar toplanıyor:\n\n$$\\operatorname{div} u = \\sum_{i=1}^{d} \\frac{\\partial u_i}{\\partial x_i}$$"
-        },
-        {
-          "type": "insight",
-          "heading": "Slaytın elipsi ne",
-          "text": "CME 296'nın 3. dersindeki divergence slaytında ince bir elips çizili. O elips, $x$ ekseni üzerindeki minik bir aralığın kendisi — 1D'de kutunun eni olmadığı için incecik çiziliyor.\n\nOklar ise o kutunun iki ucundaki hız: soldan giren, sağdan çıkan. Slayttaki iki resim de pozitif divergence'ın iki farklı görüntüsü. Üstte yavaş girip hızlı çıkıyor; altta iki uçtan birden dışarı akıyor. İkisinde de $f$ soldan sağa artıyor, yani türev pozitif."
+          "heading": "2. Dört tanım: trajectory, flow, probability path, velocity field",
+          "text": "Bu konunun dili dört terimden oluşuyor ve ikisi kolayca karışıyor.\n\nTrajectory, tek bir parçacığın izlediği yol: $t \\mapsto x_t$. Bir başlangıç noktası seçtiğinde ortaya çıkan tek bir eğri.\n\nFlow, bütün başlangıç noktaları için bu eğrilerin toplamı: $\\psi_t(x_0)$. Yani \"nereden başlarsan başla, $t$ anında neredesin\" kuralı. Trajectory tek bir kayık, flow bütün kayıkların haritası.\n\nProbability path, distribution'ın zaman içindeki yolu: $p_t$. Bir uçta noise, diğer uçta veri; aradakiler geçiş distribution'ları.\n\nVelocity field, $u_t(x)$: her konuma ve her ana bir hız atayan alan. Trajectory'leri üreten şey bu, probability path da onun sonucu.\n\nKonvansiyon uyarısı: hangi ucun noise olduğu kaynağa göre değişiyor. Lipman'ın flow matching paperında ve CME 296'da $t=0$ noise, $t=1$ veri; CS231n ve rectified flow paperında tersi. İki kaynakta işaretlerin ters görünmesinin sebebi çoğu zaman gerçek bir fark değil, bu konvansiyon farkı."
         },
         {
           "type": "text",
-          "heading": "3. Continuity equation: kütle korunumu",
-          "text": "Şimdi taşınan şeyin miktarı korunuyorsa (parçacık ne yaratılıyor ne yok ediliyor), yoğunluğun değişimi yalnızca akıştan gelebilir:\n\n$$\\frac{\\partial p_t(x)}{\\partial t} + \\operatorname{div}\\bigl( p_t(x)\\, u_t(x) \\bigr) = 0$$\n\nTerimleri oku. $p_t(x)\\, u_t(x)$ akı: o noktada ne kadar yoğunluk var ve ne hızla taşınıyor. Divergence'ı o noktadan net kaçışı veriyor. Denklem de şunu söylüyor:\n\n$$\\text{yoğunluğun artış hızı} = -(\\text{net kaçış})$$\n\nYani bir noktada yoğunluk ancak oraya dışarıdan akış geldiği için artabilir. Bu, fizikteki kütle korunumunun ta kendisi; olasılıkta da toplam kütle her zaman 1 olduğu için aynı denklem geçerli."
+          "heading": "3. Velocity ile score farkı",
+          "text": "İkisi de uzayın her noktasına bir vektör atıyor, ama farklı soruları cevaplıyorlar.\n\nScore, $\\nabla_x \\log p_t(x)$: bu noktadan hangi yöne gidilirse density artar. Tek bir anın fotoğrafına bakıyor, zamanla ilgisi yok; yalnızca o anki distribution'ın şeklini tarif ediyor.\n\nVelocity, $u_t(x)$: bu noktadaki parçacık şu anda hangi yöne, ne hızla hareket ediyor. Zaman içinde bir taşıma tarif ediyor.\n\nBağlantı diffusion'da kuruluyor: probability flow ODE'nin sağ tarafı, score'dan hesaplanmış bir velocity. Yani score bir velocity üretebiliyor ama kendisi velocity değil. Flow matching bu ara adımı atlayıp doğrudan velocity öğreniyor."
+        },
+        {
+          "type": "text",
+          "heading": "4. Divergence: bir noktadan net ne kaçıyor",
+          "text": "Uzayı su dolu bir boru gibi düşün, tek boyutta. $f(x)$ o noktadaki suyun hızı; işareti yönü veriyor, $f>0$ sağa, $f<0$ sola.\n\nŞimdi borunun $x$ ile $x+\\Delta$ arasındaki minik bir parçasına bak. Bu parçanın \"yüzeyi\" iki uçtan ibaret: soldan su giriyor, sağdan çıkıyor.\n\n$$\\text{net çıkış} = f(x+\\Delta) - f(x)$$\n\nParçanın uzunluğuna bölüp $\\Delta \\to 0$ limitini alınca tam olarak türev kalıyor:\n\n$$\\operatorname{div} f = \\frac{\\partial f}{\\partial x}$$\n\nSayıyla: $f(x) = x$ ve parça $[1,2]$ olsun. Sol uçtan 1 birim/saniye giriyor, sağ uçtan 2 birim/saniye çıkıyor, net $+1$. Parça boşalıyor.\n\nYorum: divergence pozitifse o nokta kaynak gibi davranıyor, orada density azalıyor. Negatifse kuyu, orada birikme var. Sıfırsa giren çıkana eşit, density sabit kalıyor.\n\nYüksek boyutta tanım aynı, sadece bütün yönlerdeki katkılar toplanıyor:\n\n$$\\operatorname{div} u = \\sum_{i=1}^{d} \\frac{\\partial u_i}{\\partial x_i}$$"
         },
         {
           "type": "insight",
-          "heading": "4. Flow matching'in şartı tam olarak bu",
+          "heading": "1D resmini okumak",
+          "text": "Divergence tek boyutta çizilirken genellikle x ekseni üzerinde ince bir elips görülür. O elips minik bir aralığın kendisidir; 1D'de kutunun eni olmadığı için incecik çizilir. Uçlarındaki oklar da o aralığın iki ucundaki hızdır: soldan giren, sağdan çıkan.\n\nBu çizimin iki tipik hâli var. Birincisinde sol uçtaki ok kısa, sağ uçtaki uzun: yavaş girip hızlı çıkıyor. İkincisinde oklar iki uçtan da dışarı bakıyor: sol uçta akış sola, sağ uçta sağa. İkisi de aynı şeyi gösteriyor, çünkü her ikisinde de f soldan sağa artıyor, yani türev pozitif ve aralık boşalıyor."
+        },
+        {
+          "type": "text",
+          "heading": "5. Continuity equation: kütle korunumu",
+          "text": "Şimdi taşınan şeyin miktarı korunuyorsa (parçacık ne yaratılıyor ne yok ediliyor), density'nin değişimi yalnızca akıştan gelebilir:\n\n$$\\frac{\\partial p_t(x)}{\\partial t} + \\operatorname{div}\\bigl( p_t(x)\\, u_t(x) \\bigr) = 0$$\n\nTerimleri oku. $p_t(x)\\, u_t(x)$ akı: o noktada ne kadar density var ve ne hızla taşınıyor. Divergence'ı o noktadan net kaçışı veriyor. Denklem de şunu söylüyor:\n\n$$\\text{density'nin artış hızı} = -(\\text{net kaçış})$$\n\nYani bir noktada density ancak oraya dışarıdan akış geldiği için artabilir. Bu, fizikteki kütle korunumunun ta kendisi; olasılıkta da toplam kütle her zaman 1 olduğu için aynı denklem geçerli."
+        },
+        {
+          "type": "text",
+          "heading": "Divergence neyin divergence'ı",
+          "text": "Continuity equation'da divergence'ın uygulandığı şey velocity değil, akı: $p_t(x)\\, u_t(x)$.\n\nFark önemli. Velocity tek başına ne kadar hızlı gidildiğini söylüyor; akı ise ne kadar maddenin ne kadar hızlı taşındığını. Hızın büyük ama density'nin sıfır olduğu bir bölgede taşınan bir şey yok, dolayısıyla o bölgenin density dengesine katkısı da yok.\n\nDenklemin $\\operatorname{div}(p_t u_t)$ içermesinin, $\\operatorname{div}(u_t)$ içermemesinin sebebi bu."
+        },
+        {
+          "type": "table",
+          "heading": "Aynı alana iki bakış",
+          "rows": [
+            [
+              "",
+              "Tek parçacık",
+              "Distribution"
+            ],
+            [
+              "Soru",
+              "bu nokta nereye gidiyor",
+              "kalabalığın şekli nasıl değişiyor"
+            ],
+            [
+              "Denklem",
+              "$\\frac{dx}{dt} = u_t(x)$",
+              "$\\partial_t p_t + \\operatorname{div}(p_t u_t) = 0$"
+            ],
+            [
+              "Verilen",
+              "başlangıç noktası",
+              "başlangıç distribution'ı"
+            ],
+            [
+              "Çıktı",
+              "trajectory",
+              "probability path"
+            ],
+            [
+              "Nerede kullanılır",
+              "sampling, ODE çözümü",
+              "teorik şart: velocity doğru mu"
+            ]
+          ]
+        },
+        {
+          "type": "insight",
+          "heading": "6. Flow matching'in şartı tam olarak bu",
           "text": "Flow matching'in hedefi şuydu: $t=0$'da noise, $t=1$'de veri olacak şekilde bir yol kurmak ve o yolu üreten velocity field'ı öğrenmek.\n\n\"Yolu üretmek\" cümlesinin matematiksel karşılığı continuity equation. Bir $u_t$ ile bir $p_t$ ikilisi ancak bu denklemi sağlıyorsa birbirine uygun; yani $u_t$'yi takip eden parçacıkların dağılımı gerçekten $p_t$ oluyor.\n\nBuradan iki sonuç çıkıyor:\n\nAynı $p_t$ yolunu üreten birden fazla $u_t$ olabilir. Denklem $u$'yu tek bir çözüme zorlamıyor. Rectified flow'un düz yolu, diffusion'ın probability flow ODE'si — ikisi de meşru seçimler.\n\nTersi de doğru: bir $u_t$ verildiğinde ürettiği $p_t$ belirli. Bu yüzden network'e velocity öğretmek, dolaylı olarak bir distribution yolu öğretmek demek."
         },
         {
           "type": "text",
-          "heading": "5. Tarihçe: normalizing flow'dan flow matching'e",
+          "heading": "7. Conditional'dan marginal'e: flow matching'in asıl hamlesi",
+          "text": "Continuity equation bir şart veriyor ama hedef velocity'yi elimize vermiyor. Marginal velocity field bütün veri distribution'ına bağlı olduğu için kapalı formda yazılamıyor.\n\nFlow matching'in çözümü problemi tek bir veri noktasına koşullamak. Tek bir $z$ sabitlendiğinde hem path hem velocity kapalı formda yazılabiliyor:\n\n$$p_t(x \\mid z) = \\mathcal{N}\\bigl(x;\\ \\mu_t(z),\\ \\sigma_t^2 I\\bigr)$$\n\nDüz çizgili tercihte bu path'i üreten velocity sabit bir yöne işaret ediyor, yani hesaplanacak bir şey kalmıyor.\n\nMarginal path, koşullu path'lerin veri üzerinden ortalaması:\n\n$$p_t(x) = \\int p_t(x \\mid z)\\, q(z)\\, dz$$\n\nMarginal velocity ise koşullu velocity'lerin ağırlıklı ortalaması; ağırlık, o $x$ noktasına hangi $z$'nin ne kadar katkı verdiği:\n\n$$u_t(x) = \\int u_t(x \\mid z)\\, \\frac{p_t(x \\mid z)\\, q(z)}{p_t(x)}\\, dz$$\n\nBu integral de hesaplanamıyor. Ama flow matching paperının teoremi şunu söylüyor: koşullu hedefle kurulan regression loss'un gradient'i, marginal hedefle kurulan loss'un gradient'iyle aynı. Yani marginal velocity hiç hesaplanmadan, koşullu hedeflerle eğitim doğru çözümü veriyor.\n\nMekanizma MSE'nin doğasından geliyor: aynı girdiye karşılık birbirinden farklı hedefler veriliyorsa, MSE'yi minimize eden tahmin o hedeflerin koşullu ortalamasıdır. O ortalama da tam olarak yukarıdaki integral."
+        },
+        {
+          "type": "text",
+          "heading": "8. Tarihçe: normalizing flow'dan flow matching'e",
           "text": "Bu fikir üç aşamada olgunlaştı, ve her aşama bir öncekinin darboğazını kaldırdı.\n\nNormalizing flows (2015 civarı). Basit bir distribution alıp tersinir dönüşümlerle karmaşık hale getiriyorsun. Likelihood hesaplanabiliyor ama bedeli ağır: her katmanın Jacobian determinantını hesaplaman gerekiyor, bu da mimariyi ciddi biçimde kısıtlıyor (tersinir olmak zorunda, determinant ucuz olmalı).\n\nContinuous normalizing flows (Neural ODE, 2018). Ayrık katmanlar yerine sürekli bir ODE. Jacobian determinantı yerine divergence geliyor ve likelihood şöyle akıyor:\n\n$$\\frac{d \\log p_t(x)}{dt} = -\\operatorname{div} u_t(x)$$\n\nBu formül continuity equation'ın parçacık boyunca yazılmış hali. Mimari kısıtı kalkıyor, ama yeni bir sorun var: eğitim için ODE'yi baştan sona simüle etmen gerekiyor, her adımda network çağrısı. Büyük görüntülerde pratik değil.\n\nFlow matching (2022). Likelihood'u hiç hesaplamıyorsun. Bunun yerine hedef velocity'yi doğrudan regression ile öğreniyorsun, ve hedefi tek bir veri-noise çiftine koşullayarak elde ediyorsun. ODE simülasyonu eğitimden tamamen çıkıyor. \"Simulation-free\" denen şey bu."
         },
         {
           "type": "insight",
-          "heading": "6. Diffusion ile bağ, tek satırda",
+          "heading": "9. Diffusion ile bağ, tek satırda",
           "text": "Probability flow ODE'nin sağ tarafına bak:\n\n$$\\frac{dx}{dt} = f(x,t) - \\tfrac{1}{2} g(t)^2 \\nabla_x \\log p_t(x)$$\n\nBu ifade bir velocity field. Yani diffusion da aslında bir flow tanımlıyor; sadece velocity'yi doğrudan öğrenmiyor, score üzerinden dolaşarak hesaplıyor.\n\nFlow matching aynı nesneyi kısa yoldan kuruyor: velocity'yi doğrudan hedef alıyor ve yolu düz seçiyor. İkisi de continuity equation'ı sağlayan birer $(p_t, u_t)$ ikilisi; fark, hangi yolu seçtikleri ve network'e neyi tahmin ettirdikleri.\n\nBu yüzden CME 296'nın 3. dersi de 2. dersi de aynı cümleyle bitiyor: parallel with diffusion. Üç çerçeve tek bir matematiğin farklı giriş kapıları."
+        },
+        {
+          "type": "table",
+          "heading": "Üç paradigmanın birleşik görünümü",
+          "rows": [
+            [
+              "",
+              "Discrete-time diffusion",
+              "Score-based diffusion",
+              "Flow matching"
+            ],
+            [
+              "Forward",
+              "Markov zinciri, adım adım noise",
+              "SDE, continuous time",
+              "düz interpolasyon $x_t=(1-t)x_0+tz$"
+            ],
+            [
+              "Öğrenilen",
+              "$\\varepsilon_\\theta$",
+              "$s_\\theta = \\nabla_x \\log p_t$",
+              "$u_\\theta$, velocity"
+            ],
+            [
+              "Üretim",
+              "ancestral sampling",
+              "reverse-time SDE",
+              "ODE çözümü"
+            ],
+            [
+              "Deterministik hali",
+              "DDIM",
+              "probability flow ODE",
+              "zaten deterministik"
+            ],
+            [
+              "Türetme",
+              "ELBO",
+              "denoising score matching",
+              "conditional regression"
+            ]
+          ]
+        },
+        {
+          "type": "text",
+          "heading": "Üç paradigma neden aynı yere çıkıyor",
+          "text": "Tabloya satır satır bakınca aynı iskeletin üç farklı giydirilmiş hali görünüyor: bir forward süreç veriyi tanınmaz hale getiriyor, network o sürecin bir özelliğini tahmin etmeyi öğreniyor, üretim de o tahminle geriye yürüyor.\n\nFarklar üç yerde toplanıyor. Birincisi yolun şekli: diffusion eğri, flow matching düz. İkincisi network'ün hedefi: noise, score ya da velocity, ki bunlar sabit katsayılarla birbirine çevriliyor. Üçüncüsü üretimin stokastik mi deterministik mi olduğu, ki o da bir sampler tercihi.\n\nStochastic interpolants çerçevesi (Albergo, Vanden-Eijnden) üçünü tek bir tanımın özel halleri olarak yazıyor. Pratik sonucu şu: bir paper okurken sorulacak soru \"yeni bir generative model mi\" değil, \"yol mu, hedef mi, sampler mı değişmiş\" olmalı."
         },
         {
           "type": "insight",
           "heading": "Geriye ne kalsın",
-          "text": "Divergence, bir noktadan net kaçışı ölçüyor; 1D'de hızın türevi. Continuity equation bunu kütle korunumuyla birleştiriyor: yoğunluk ancak akış getirdiği kadar artar. Flow matching'in \"velocity field distribution'ı taşıyor\" cümlesinin tamamı bu denklem. Aynı distribution yolunu üreten birçok velocity field olabilir, ve diffusion'ın probability flow ODE'si de bunlardan biri — flow matching farkı, o alanı dolambaçsız öğrenmesi."
+          "text": "Divergence, bir noktadan net kaçışı ölçüyor; 1D'de hızın türevi. Continuity equation bunu kütle korunumuyla birleştiriyor: density ancak akış getirdiği kadar artar. Flow matching'in \"velocity field distribution'ı taşıyor\" cümlesinin tamamı bu denklem. Aynı distribution yolunu üreten birçok velocity field olabilir, ve diffusion'ın probability flow ODE'si de bunlardan biri — flow matching farkı, o alanı dolambaçsız öğrenmesi."
         },
         {
           "type": "ref",
@@ -7281,6 +7384,131 @@
         "DDPM",
         "denoising",
         "noise schedule"
+      ]
+    },
+    {
+      "title": "Guidance — Classifier'dan Classifier-Free'ye",
+      "cat": "Theory",
+      "summary": "Condition'ı input olarak vermek uyumu zayıf bırakıyor. Guidance bunu sampling sırasında güçlendiriyor: Bayes kuralı score üzerinde yazılınca koşullu score, koşulsuz score artı classifier gradient'ine ayrışıyor. Classifier guidance bu terimi ayrı bir modelden alıyor, classifier-free guidance ise aynı bilginin koşullu ile koşulsuz tahminin farkında zaten var olduğunu görüp o modeli siliyor.",
+      "context": "Koşullu üretim — Dhariwal, Nichol 2021 · Ho, Salimans 2022 · CME 296 Lecture 4",
+      "mlo_only": true,
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Tek cümle",
+          "text": "Guidance, koşullu üretimde condition'ın etkisini yapay olarak güçlendirme tekniği. Önce ayrı bir classifier'ın gradient'i ile yapıldı, sonra o classifier'ı tamamen ortadan kaldıran bir yöntem bulundu.\n\nİki yöntem de training'i değil sampling'i değiştiriyor; ikincisi ise training'e tek bir küçük ekleme yapıyor."
+        },
+        {
+          "type": "text",
+          "heading": "1. Problem: condition'ı vermek yetmiyor",
+          "text": "Koşullu üretimin en doğrudan yolu, condition $y$'yi network'e ek input olarak vermek: $\\varepsilon_\\theta(x_t, y, t)$. Training sırasında da (görüntü, etiket) çiftleriyle eğitirsin.\n\nBu çalışıyor ama zayıf çalışıyor. Üretilen örnekler etiketle uyumlu oluyor, ancak uyum gevşek: \"golden retriever\" dediğinde köpek geliyor, fakat bazen belirsiz bir köpek, bazen konu dışı ayrıntılarla dolu bir sahne.\n\nSebep şu: model $p(x \\mid y)$'yi öğreniyor ve o distribution'dan dürüstçe örnek alıyor. Distribution'ın içinde etikete zayıf uyan bölgeler de var ve örnekleme onları da ziyaret ediyor. İstenen şey ise \"etikete en tipik uyan\" bölgeler.\n\nGuidance'ın çıkış noktası bu: örnekleme sırasında condition'ın ağırlığını arttırmak."
+        },
+        {
+          "type": "text",
+          "heading": "2. Classifier guidance: fikir",
+          "text": "Dhariwal ve Nichol (2021) şunu önerdi: koşulsuz olarak eğitilmiş bir generation model'in yanına, ayrı eğitilmiş bir classifier koy. Classifier \"bu görüntü hangi sınıfa ait\" sorusunu cevaplıyor; onun gradient'i de \"bu görüntüyü hangi yönde değiştirirsem daha çok o sınıfa benzer\" bilgisini veriyor.\n\nSampling sırasında her adımda bu yön, modelin kendi adımına ekleniyor. Yani generation model nereye gideceğini söylüyor, classifier ise o yönü sınıfa doğru büküyor."
+        },
+        {
+          "type": "text",
+          "heading": "3. Türetme: Bayes'i score üzerinde uygulamak",
+          "text": "İstenen şey koşullu score, yani $\\nabla_x \\log p_t(x \\mid y)$. Bayes kuralını yazıp logaritma alınca:\n\n$$\\log p_t(x \\mid y) = \\log p_t(x) + \\log p_t(y \\mid x) - \\log p_t(y)$$\n\nSon terim $x$'e bağlı değil, dolayısıyla $x$'e göre gradient alınca düşüyor:\n\n$$\\nabla_x \\log p_t(x \\mid y) = \\nabla_x \\log p_t(x) + \\nabla_x \\log p_t(y \\mid x)$$\n\nDenklemin okunuşu şu: koşullu score, koşulsuz score artı classifier'ın gradient'i. İlk terimi zaten eğitilmiş diffusion model veriyor, ikincisini classifier.\n\nSlaytlardaki iki ara adım bu sonucu sampling formülüne bağlıyor. Birincisi, DDPM'in adım kuralında koşulsuz geçişin Gaussian olduğunu kullanıyor. İkincisi, $\\log p_t(y \\mid x)$'i adımın merkezinde birinci mertebeden Taylor açılımıyla doğrusallaştırıyor. İkisi birleşince ortaya çıkan ifade yine bir Gaussian, ama ortalaması kaymış:\n\n$$\\mu_{\\text{guided}} = \\mu_\\theta(x_t,t) + \\Sigma \\cdot \\nabla_x \\log p_t(y \\mid x)$$\n\nYani classifier'ın tek etkisi adımın merkezini sınıfa doğru itmek.\n\nBu Taylor adımı bir yaklaşıklık; guidance'ın \"teorik olarak temiz değil ama pratikte çalışıyor\" tarafı buradan geliyor."
+        },
+        {
+          "type": "insight",
+          "heading": "4. Guidance scale: neden 1'den büyük",
+          "text": "Türetme doğal olarak classifier teriminin katsayısını 1 veriyor. Ama deneyde 1 ile iyi sonuç alınmıyor; katsayıyı büyütmek gerekiyor:\n\n$$\\nabla_x \\log p_t(x) + s \\cdot \\nabla_x \\log p_t(y \\mid x), \\qquad s > 1$$\n\nBunun anlamı artık $p(x \\mid y)$'den örnek almamak. Efektif olarak $p(x) \\cdot p(y \\mid x)^s$ gibi, sınıf olasılığı keskinleştirilmiş bir distribution'dan örnek alıyorsun. Sonuç: etikete çok daha tipik, daha \"temiz\" görüntüler, ama daha az çeşitlilik.\n\nTakas her zaman aynı yönde: $s$ büyüdükçe kalite ve uyum artıyor, çeşitlilik düşüyor. Çok büyük $s$'te görüntüler doygun ve klişe hale geliyor."
+        },
+        {
+          "type": "text",
+          "heading": "5. Classifier guidance'ın bedeli",
+          "text": "Yöntem çalışıyor ama üç yük getiriyor.\n\nEtiketli veri ve ayrı bir model gerekiyor. Classifier'ı ayrıca eğitmen lazım.\n\nHazır classifier kullanılamıyor. Guidance her noise seviyesinde uygulandığı için classifier'ın $x_t$ gibi bozulmuş girdilerde çalışması gerekiyor. Normal bir ImageNet classifier temiz görüntülerle eğitildiği için işe yaramıyor; noise'lu veriyle yeniden eğitmen gerekiyor.\n\nHer adımda ekstra maliyet. Sampling'in her adımında classifier'dan geçip gradient almak gerekiyor, üstelik $s$ ayrıca ayarlanması gereken yeni bir parametre.\n\nAyrıca sınıf etiketiyle sınırlı: serbest metinle koşullama bu çerçevede doğal değil."
+        },
+        {
+          "type": "insight",
+          "heading": "6. Classifier-free guidance: classifier'ı silmek",
+          "text": "Ho ve Salimans (2022) türetmedeki denklemi ters çevirip baktı. Aynı eşitlikten classifier terimi yalnız bırakılabiliyor:\n\n$$\\nabla_x \\log p_t(y \\mid x) = \\nabla_x \\log p_t(x \\mid y) - \\nabla_x \\log p_t(x)$$\n\nYani classifier'ın verdiği bilgi, koşullu ve koşulsuz score'un farkında zaten mevcut. Ayrı bir model kurmaya gerek yok; ikisini de üretebilen tek bir network yeter.\n\nBunun için training'e tek bir ekleme yapılıyor: örneklerin bir kısmında condition rastgele düşürülüyor ve yerine boş bir token konuyor. Aynı network böylece hem koşullu hem koşulsuz tahmin üretmeyi öğreniyor.\n\nSampling'de iki tahmin alınıp aradaki fark büyütülüyor:\n\n$$\\tilde{\\varepsilon} = \\varepsilon_\\theta(x_t, \\varnothing, t) + w \\cdot \\bigl[ \\varepsilon_\\theta(x_t, y, t) - \\varepsilon_\\theta(x_t, \\varnothing, t) \\bigr]$$\n\nParantez içi \"condition'ın getirdiği fark\" yönü; $w$ o yönü ne kadar abartacağını söylüyor. $w = 1$ sıradan koşullu üretim, $w > 1$ guidance."
+        },
+        {
+          "type": "table",
+          "heading": "7. İki yöntemin karşılaştırması",
+          "rows": [
+            [
+              "",
+              "Classifier guidance",
+              "Classifier-free guidance"
+            ],
+            [
+              "Ek model",
+              "evet, noise'lu veride eğitilmiş classifier",
+              "hayır"
+            ],
+            [
+              "Training'e etkisi",
+              "yok, saf sampling tekniği",
+              "condition dropout eklenir"
+            ],
+            [
+              "Koşullama tipi",
+              "sınıf etiketi",
+              "metin, görüntü, herhangi bir embedding"
+            ],
+            [
+              "Inference maliyeti",
+              "her adımda classifier + gradient",
+              "her adımda 2 network çağrısı"
+            ],
+            [
+              "Yaklaşıklık",
+              "Taylor açılımı",
+              "yok"
+            ],
+            [
+              "Pratikteki yeri",
+              "tarihsel, ilk çözüm",
+              "bugünkü standart"
+            ]
+          ]
+        },
+        {
+          "type": "text",
+          "heading": "8. Bedeli ve pratik notlar",
+          "text": "Classifier-free guidance'ın maliyeti sampling'i iki katına çıkarması: her adımda network bir kez koşullu, bir kez koşulsuz çalışıyor. Distillation çalışmalarının bir kısmı tam olarak bu ikinci çağrıyı ortadan kaldırmayı hedefliyor.\n\nCondition'ın nasıl temsil edildiği serbest. Metinle koşullamada CLIP ya da T5 gibi bir text encoder'ın embedding'i kullanılıyor; network bu vektörü cross-attention ya da adaLN üzerinden alıyor. Guidance'ın matematiği condition'ın ne olduğuna bakmıyor, sadece \"koşullu ve koşulsuz tahmin\" ikilisine ihtiyaç duyuyor.\n\n$w$ değeri modele göre ayarlanıyor; tipik aralık 2 ile 8 arası. Görüntü üretim arayüzlerindeki \"CFG scale\" ya da \"guidance scale\" ayarı tam olarak bu sayı.\n\nSon olarak guidance parametrizasyondan bağımsız: aynı işlem $\\varepsilon$, score ya da velocity tahminleri üzerinde birebir aynı biçimde yazılabiliyor, çünkü üçü birbirine sabit katsayılarla bağlı."
+        },
+        {
+          "type": "insight",
+          "heading": "Geriye ne kalsın",
+          "text": "Condition'ı input olarak vermek uyumu zayıf bırakıyor; guidance bu uyumu örnekleme sırasında güçlendiriyor. Bayes kuralı score üzerinde yazıldığında koşullu score, koşulsuz score artı classifier gradient'i olarak ayrışıyor. Classifier guidance bu ikinci terimi ayrı bir modelden alıyor ve noise'lu veride eğitilmiş bir classifier gerektiriyor. Classifier-free guidance ise aynı terimin koşullu ile koşulsuz tahminin farkında zaten var olduğunu görüp ayrı modeli siliyor; bedeli adım başına iki network çağrısı. Guidance scale büyüdükçe uyum ve kalite artıyor, çeşitlilik azalıyor."
+        },
+        {
+          "type": "ref",
+          "heading": "İlgili kartlar",
+          "items": [
+            {
+              "id": "cs13-conditional-generation-and-classifier-free-guidance-cfg",
+              "label": "CS231n — CFG formülleri ve kodu"
+            },
+            {
+              "id": "ida11-score-matching-neden-gradient-i-ogreniyoruz-ve-ddpm-le-nasil",
+              "label": "Score matching — score'un ne olduğu"
+            },
+            {
+              "id": "ida11-conditional-diffusion-and-text-to-image-generation",
+              "label": "Conditional diffusion ve text-to-image"
+            }
+          ]
+        },
+        {
+          "type": "note",
+          "heading": "Nereye bakılır",
+          "text": "Kaynaklar: Dhariwal, Nichol — Diffusion Models Beat GANs on Image Synthesis (2021), classifier guidance · Ho, Salimans — Classifier-Free Diffusion Guidance (2022).\n\nDers: CME 296, Lecture 4, Part 3. Aynı dersin birinci bölümü (pixel space'ten latent space'e, AE → VAE → perceptual ve adversarial loss) Autoencoder ve VAE konu anlatımında, ikinci bölümü (transformer, ViT, contrastive learning, CLIP) CS231n 15 kartlarında."
+        }
+      ],
+      "id": "ida11-guidance-classifier-dan-classifier-free-ye",
+      "keywords": [
+        "Bayes",
+        "Bayes theorem",
+        "prior",
+        "posterior"
       ]
     }
   ],
@@ -28567,6 +28795,7 @@
         "ida11-ddpm-training-inference-tam-parametreler-ve-dimensionlar",
         "ida11-score-matching-neden-gradient-i-ogreniyoruz-ve-ddpm-le-nasil",
         "ida11-continuity-equation-velocity-field-bir-distribution-i-nasil",
+        "ida11-guidance-classifier-dan-classifier-free-ye",
         "cs13-diffusion-models-intuition-and-rectified-flow",
         "cs13-conditional-generation-and-classifier-free-guidance-cfg",
         "cs13-noise-schedules-optimal-prediction-analysis",
