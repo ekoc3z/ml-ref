@@ -1924,7 +1924,7 @@ function guidesFor(sec){
 }
 function guideButtons(sec){
   return guidesFor(sec).map(k =>
-    `<button class="guide-btn" onclick="showGuide('${k}')">Konu Anlatımı — ${esc(GUIDES[k].title.replace(/ — .*$/,''))} &rarr;</button>`
+    `<button class="guide-btn" onclick="showGuide('${k}')">Walkthrough — ${esc(GUIDES[k].title.replace(/ — .*$/,''))} &rarr;</button>`
   ).join('');
 }
 /* Konu anlatimini kart popup'inda goster — sections semasi ayni, yeni renderer yok */
@@ -1933,7 +1933,7 @@ function showGuide(key){
   const anim = g.anim ? (OVERVIEWS._anims||{})[g.anim] : null;
   const secs = g.sections.slice();
   if(anim) secs.splice(1, 0, anim);       // girisin hemen altina
-  showPopup({title:g.title, cat:g.cat||'Konu Anlatimi', context:g.context,
+  showPopup({title:g.title, cat:g.cat||'Walkthrough', context:g.context,
              summary:g.summary, sections:secs});
 }
 function showOverview(sec){
@@ -2853,7 +2853,7 @@ function applyData(d){
 }
 
 
-fetch('./data/unified.json?v=20260928153028')
+fetch('./data/unified.json?v=20260928155055')
   .then(r => { if(!r.ok) throw new Error(r.status); return r.json() })
   .then(applyData)
   .catch(() => {
