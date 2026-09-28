@@ -7168,6 +7168,169 @@
         "prior",
         "posterior"
       ]
+    },
+    {
+      "title": "Backbone Seçimi — U-Net'ten DiT'e, Paradigmadan Bağımsız Eksen",
+      "cat": "Theory",
+      "mlo_only": true,
+      "context": "Mimari ekseni · CME 296 Lecture 5",
+      "summary": "Epsilon, score ve velocity aynı şekilli çıktılar olduğu için backbone ile generative paradigm birbirinden bağımsız seçilebiliyor. U-Net'in bu işe neden oturduğu, iki yapısal sıkıntısı, DiT'in yalnızca backbone'u değiştirmesi, koşulun üç giriş kapısı (in-context, cross-attention, adaLN-Zero), MM-DiT'in çift yönlü akışı ve maliyet düğmeleri.",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Tek cümle",
+          "text": "Generative paradigm ile backbone iki ayrı eksen. DDPM, score-based diffusion ve flow matching \"neyi tahmin edeceğini\" belirliyor; U-Net ya da DiT ise \"o tahmini hangi network'ün hesaplayacağını\". İkisi birbirini şart koşmuyor.\n\nBu kartın konusu ikinci eksen: backbone'dan ne isteniyor, U-Net neden oturdu, neden yerini transformer'a bıraktı, ve koşul sinyali bu mimarinin neresinden giriyor."
+        },
+        {
+          "type": "text",
+          "heading": "1. Backbone'dan istenen şey, hedeften bağımsız",
+          "text": "Üç paradigmanın da network'ten istediği şey aynı biçimde: bozulmuş girdiyi ve zaman bilgisini al, girdiyle aynı şekilde bir çıktı üret.\n\n$$\\varepsilon_\\theta(x_t, t) \\qquad s_\\theta(x_t, t) \\qquad v_\\theta(x_t, t)$$\n\nÜçü de $x_t$ ile aynı boyutta. Üçü birbirine sabit katsayılarla çevrilebiliyor. Dolayısıyla backbone'un ne tahmin edildiğini bilmesine bile gerek yok: aynı mimari, loss'u değiştirerek üçünden herhangi birini üretebiliyor.\n\nBuradan çıkan pratik sonuç: mimari tercihi ile paradigma tercihi ayrı ayrı yapılabiliyor. SD3 rectified flow kullanıyor ama backbone'u DiT; DDPM epsilon tahmin ediyor ama backbone'u U-Net. Dört kombinasyonun dördü de meşru."
+        },
+        {
+          "type": "text",
+          "heading": "2. Bu iş neden dense prediction",
+          "text": "Çıktının girdiyle aynı şekilde olması, problemi tanıdık bir sınıfa sokuyor: her konum için bir değer üretmek.\n\nSegmentation'da her piksel için bir label üretiliyordu. Burada her piksel (ya da her latent konumu) için bir sayı üretiliyor. İki problemin şekli aynı.\n\nAma bir ek zorluk var: üretilen değer hem yerel dokuya hem görüntünün genel yapısına bağlı. Bir noise tahmini yaparken, o bölgenin dokusunu bilmek kadar \"bu görüntü bir yüz mü manzara mı\" bilgisi de gerekiyor. Mimarinin hem yerel hem küresel bilgi taşıması şart.\n\nU-Net'in seçilmesinin sebebi buydu: segmentation için zaten çözülmüş bir problemdi ve hazır cevabı vardı."
+        },
+        {
+          "type": "text",
+          "heading": "3. U-Net: parçalar ve görevleri",
+          "text": "Encoder aşağı iniyor, çözünürlük düşüyor, receptive field büyüyor. Derinlerde her konum görüntünün geniş bir bölgesini özetliyor — küresel bilgi buradan geliyor.\n\nDecoder yukarı çıkıyor. Skip connection'lar encoder'ın erken layer'larındaki ince ayrıntıyı doğrudan karşıya taşıyor; olmasaydı aşağıda kaybolan yüksek frekanslar geri gelmezdi.\n\nAttention blokları düşük çözünürlüklü layer'larda duruyor. Convolution yerel olduğu için görüntünün iki ucunun tutarlı olmasını sağlayamıyor; attention o işi görüyor. Tam çözünürlükte konmuyor, çünkü maliyeti konum sayısının karesiyle büyüyor.\n\nTimestep sinüzoidal embedding'e çevrilip her ResBlock'un içine ekleniyor. Ekleme bütün konumlara aynı şekilde yayılıyor, çünkü \"şu an ne kadar noise var\" sorusu konuma göre değişmiyor."
+        },
+        {
+          "type": "insight",
+          "heading": "4. U-Net'in iki sıkıntısı",
+          "text": "Birincisi görüşün yerel olması. Convolution komşuluğa bakıyor; uzak bölgeler arasındaki ilişkiyi ancak derinleşerek kurabiliyor. Bu yüzden zaten U-Net'in içine attention blokları konuyordu — yani transformer çoktan sızmıştı, ama yama olarak.\n\nİkincisi ve asıl olanı: U-Net'in büyütme reçetesi yok. Kaç seviye inileceği, hangi çözünürlükte attention konacağı, kanal sayılarının nasıl artacağı, skip'lerin nereye bağlanacağı — hepsi elle ayarlanmış tasarım kararları. Modeli iki katına çıkarmak istediğinde çevireceğin tek bir düğme yok, ve büyütünce ne kadar kazanacağını da bilmiyorsun.\n\nTransformer'da bunun tersi geçerli: derinliği ve genişliği artır, veriyi ve compute'u artır, performans öngörülebilir biçimde iyileşiyor. Mühendislik olarak bir mimariden istenecek en değerli özellik bu."
+        },
+        {
+          "type": "text",
+          "heading": "5. DiT: backbone'u değiştir, diffusion'a dokunma",
+          "text": "En kolay kaçırılan nokta: DiT yeni bir generative model değil. Forward süreç aynı, loss aynı, sampling aynı. Değişen tek şey tahmini hesaplayan network'ün içi.\n\nGörüntüyü transformer'a sokmak için ViT'in yolu aynen kullanılıyor. Latent $32 \\times 32 \\times 4$ olsun; $2 \\times 2$'lik patch'lere bölünüyor, her patch lineer bir projeksiyonla bir token'a dönüşüyor, $16 \\times 16 = 256$ token çıkıyor. Üstüne positional embedding ekleniyor. Sonra N tane standart transformer bloğu, en sonda lineer layer ve reshape ile token'lar tekrar grid'e dönüyor.\n\nLatent üzerinde çalışmak burada bir ön koşul. Attention token sayısının karesiyle büyüdüğü için pikselde çalışsaydın $256 \\times 256$ görüntü on binlerce token demek olurdu. Latent diffusion'ın sıkıştırması DiT'i mümkün kılan şey.\n\nPatch boyutu doğrudan bir kalite-maliyet düğmesi: küçültmek token sayısını artırıp kaliteyi yükseltiyor, maliyeti de aynı oranda büyütüyor."
+        },
+        {
+          "type": "table",
+          "heading": "6. Koşul nereden giriyor — üç seçenek",
+          "rows": [
+            [
+              "Yöntem",
+              "Nasıl çalışıyor",
+              "Maliyet",
+              "Gücü"
+            ],
+            [
+              "In-context",
+              "koşul fazladan bir token olarak dizinin başına ekleniyor",
+              "neredeyse sıfır",
+              "zayıf; koşul diğer token'larla yarışıyor"
+            ],
+            [
+              "Cross-attention",
+              "query görüntüden, key ve value koşuldan",
+              "her bloğa ek attention",
+              "güçlü; koşul bir dizi ise doğal seçim"
+            ],
+            [
+              "adaLN",
+              "koşul, LayerNorm'un scale ve shift'ini belirliyor",
+              "küçük bir MLP",
+              "güçlü ve ucuz; DiT'in tercihi"
+            ],
+            [
+              "adaLN-Zero",
+              "adaLN + blok çıkışında sıfırdan başlayan bir gate",
+              "aynı",
+              "en iyi sonuç; blok başta kimliğe yakın davranıyor"
+            ]
+          ]
+        },
+        {
+          "type": "text",
+          "heading": "7. adaLN sezgisi ve neden zero",
+          "text": "LayerNorm bir vektörü normalize edip öğrenilmiş bir ölçek ve kaydırma uyguluyor. adaLN'in tek fikri şu: o ölçek ve kaydırmayı sabit parametre olmaktan çıkarıp koşuldan üretmek. Timestep embedding'i ile koşul embedding'i toplanıp küçük bir MLP'den geçiyor, çıkan vektör bloğun içindeki modülasyon katsayılarına bölünüyor.\n\nEtkisi şu: koşul, aktivasyonlara eklenen bir terim olmaktan çıkıp aktivasyonların ölçeğini belirleyen bir düğmeye dönüşüyor. Toplama sinyali seyreltiyordu; modülasyon her bloğun davranışını doğrudan yönlendiriyor.\n\nadaLN-Zero bunun üstüne bir gate ekliyor ve o gate'i sıfırdan başlatıyor. Böylece training'in ilk adımlarında her blok kimlik fonksiyonuna yakın davranıyor, yani derin yığın başlangıçta bozulmuyor; bloklar katkılarını yavaşça açıyor. DiT paperının ablasyonunda en iyi sonucu veren varyant bu."
+        },
+        {
+          "type": "text",
+          "heading": "8. MM-DiT: metin ile görüntüyü eşit vatandaş yapmak",
+          "text": "Tek bir pooled vektörle koşullama nüansı kaçırıyor. \\\"Kırmızı küp mavi kürenin solunda\\\" gibi bir cümlede hangi sıfatın hangi nesneye ait olduğu tek bir vektöre sığmıyor.\n\nCross-attention bir adım ileri: koşul dizi olarak tutuluyor ve görüntü token'ları ona bakabiliyor. Ama akış tek yönlü — metin token'ları görüntüden hiçbir şey öğrenmiyor ve kendi aralarında görüntü bağlamında güncellenmiyor.\n\nMM-DiT (SD3) iki diziyi birleştiriyor: metin token'ları ve görüntü token'ları aynı attention işlemine giriyor, yani her iki yön de birbirini görüyor. Ama ağırlıklar paylaşılmıyor — iki modalitenin kendi projeksiyon ve MLP ağırlıkları var. Buna double-stream deniyor; SD3 ve Qwen-Image bu yapıda.\n\nKazanç, koşulun üretim boyunca görüntüyle birlikte güncellenen bir temsile dönüşmesi. Bedeli, dizi uzunluğunun metin token'ları kadar artması."
+        },
+        {
+          "type": "text",
+          "heading": "9. Maliyet nerede ve hangi düğmeler var",
+          "text": "Attention maliyeti token sayısının karesiyle, feed-forward maliyeti ise token sayısıyla doğrusal büyüyor. Yüksek çözünürlükte baskın terim attention.\n\nElindeki düğmeler:\n\nLatent sıkıştırma oranı. 8 kat yerine 16 kat sıkıştırırsan token sayısı dörde bölünüyor, ama decoder'ın geri açamadığı ayrıntı kalıcı olarak kayboluyor.\n\nPatch boyutu. $2 \\times 2$ yerine $4 \\times 4$ patch token sayısını dörde bölüyor; kalite düşüyor.\n\nAttention uygulaması. Bellek hareketini azaltan çekirdekler (flash attention türü) aynı matematiği çok daha hızlı çalıştırıyor.\n\nPozisyon kodlaması. Sabit sinüzoidal yerine RoPE benzeri göreli kodlamalar, training'de görülmeyen çözünürlüklere daha iyi genelliyor.\n\nKarma hassasiyet ve gradient checkpointing. Bellek tarafındaki standart iki araç; ikincisi hesabı artırıp belleği düşürüyor."
+        },
+        {
+          "type": "table",
+          "heading": "10. Hangi backbone ne zaman",
+          "rows": [
+            [
+              "",
+              "U-Net",
+              "DiT"
+            ],
+            [
+              "Veri az",
+              "daha iyi; yerellik önyargısı bedava geliyor",
+              "zayıf; her şeyi veriden öğreniyor"
+            ],
+            [
+              "Ölçek büyütme",
+              "reçete yok",
+              "öngörülebilir, scaling law geçerli"
+            ],
+            [
+              "Yüksek çözünürlük",
+              "convolution ucuz",
+              "latent olmadan attention patlıyor"
+            ],
+            [
+              "Koşullama",
+              "cross-attention blokları eklenerek",
+              "adaLN ve MM-DiT doğal"
+            ],
+            [
+              "Tipik kullanım",
+              "medikal görüntüleme, küçük veri, 3B hacim",
+              "büyük text-to-image ve video modelleri"
+            ]
+          ]
+        },
+        {
+          "type": "insight",
+          "heading": "Geriye ne kalsın",
+          "text": "Paradigma ile backbone ayrı eksenler: epsilon, score ve velocity aynı şekilli çıktılar olduğu için aynı network hepsini hesaplayabiliyor. Backbone'dan istenen şey dense prediction; hem yerel doku hem küresel yapı gerekiyor. U-Net bu işe hazır cevaptı ama görüşü yerel ve büyütme reçetesi yok. DiT diffusion'a dokunmadan yalnızca backbone'u değiştiriyor ve ölçeklenebilirliği getiriyor; latent üzerinde çalışmak bunun ön koşulu. Koşul üç kapıdan girebiliyor, ve adaLN-Zero en iyi sonucu veriyor. MM-DiT metni görüntüyle aynı attention'a sokup çift yönlü hale getiriyor. Maliyetin baskın terimi attention, ve düğmeler sıkıştırma oranı ile patch boyutu."
+        },
+        {
+          "type": "ref",
+          "heading": "İlgili kartlar",
+          "items": [
+            {
+              "id": "cs13-diffusion-transformer-dit-architecture-and-conditioning",
+              "label": "DiT — U-Net neden bırakıldı"
+            },
+            {
+              "id": "cs13-latent-diffusion-models-ldms-vae-gan-diffusion",
+              "label": "Latent diffusion — VAE + GAN + diffusion"
+            },
+            {
+              "id": "ida11-ddpm-unet-dahil-bastan-sona",
+              "label": "DDPM — U-Net dahil baştan sona"
+            },
+            {
+              "id": "cs13-text-to-image-and-text-to-video-pipelines",
+              "label": "Text-to-image ve text-to-video boru hatları"
+            }
+          ]
+        },
+        {
+          "type": "note",
+          "heading": "Nereye bakılır",
+          "text": "Kaynaklar: Peebles, Xie — Scalable Diffusion Models with Transformers (DiT, ICCV 2023) · Esser ve ark. — Scaling Rectified Flow Transformers (SD3, ICML 2024, MM-DiT) · Ronneberger ve ark. — U-Net (2015) · Dosovitskiy ve ark. — ViT (ICLR 2021).\n\nDers: CME 296, Lecture 5. Convolution ve receptive field için CNN anlatımı; attention mekaniği ve cross-attention için Attention and Transformer anlatımı; koşul sinyalinin nereden geldiği için Conditioning Signal anlatımı; paradigmaların kendisi için DDPM, Score Matching ve Flow Matching anlatımları."
+        }
+      ],
+      "id": "ida11-backbone-secimi-u-net-ten-dit-e-paradigmadan-bagimsiz-eksen",
+      "keywords": [
+        "encoder-decoder",
+        "skip connection"
+      ]
     }
   ],
   "ida12": [
@@ -29012,6 +29175,7 @@
         "ida11-ddpm-unet-dahil-bastan-sona",
         "ida11-ddpm-training-inference-tam-parametreler-ve-dimensionlar",
         "ida11-guidance-classifier-dan-classifier-free-ye",
+        "ida11-backbone-secimi-u-net-ten-dit-e-paradigmadan-bagimsiz-eksen",
         "cs13-diffusion-models-intuition-and-rectified-flow",
         "cs13-conditional-generation-and-classifier-free-guidance-cfg",
         "cs13-noise-schedules-optimal-prediction-analysis",
