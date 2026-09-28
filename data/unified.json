@@ -7198,6 +7198,90 @@
         "denoising",
         "noise schedule"
       ]
+    },
+    {
+      "title": "Continuity Equation — Velocity Field Bir Distribution'ı Nasıl Taşıyor",
+      "cat": "Theory",
+      "summary": "Flow matching'in altındaki tek denklem: continuity equation. Divergence'ın ne ölçtüğü (1D'de hızın türevi, net kaçış), kütle korunumuyla nasıl birleştiği, ve \"velocity field distribution'ı taşıyor\" cümlesinin tam olarak ne demek olduğu. Normalizing flow → Neural ODE → flow matching hattı ve probability flow ODE ile bağlantısı.",
+      "context": "Flow matching'in altyapısı — CME 296 Lecture 3",
+      "mlo_only": true,
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Tek cümle",
+          "text": "Flow matching'in bütün çatısı tek bir denkleme dayanıyor: continuity equation. Bu denklem, \"uzayın her noktasına bir hız atarsam distribution zamanla nasıl değişir\" sorusunun cevabı.\n\nDenklemi anlamadan flow matching ezber kalıyor: velocity neden distribution'ı taşıyor, \"marginal'leri koruyor\" ne demek, hepsi buradan çıkıyor."
+        },
+        {
+          "type": "text",
+          "heading": "1. Kurulum: velocity field ne yapıyor",
+          "text": "Elinde bir velocity field var: $u_t(x)$, yani her konuma ve her ana bir hız atayan fonksiyon. Bir parçacığı bırakıp bu hızları takip ettiriyorsun:\n\n$$\\frac{dx}{dt} = u_t(x)$$\n\nTek parçacık kolay. Ama bizim ilgilendiğimiz şey tek parçacık değil: başlangıçta bir distribution'dan çekilmiş milyonlarca parçacık var ve hepsi aynı alanı takip ediyor. Soru şu: bu kalabalığın distribution'ı zamanla nasıl değişiyor?\n\nCevabı continuity equation veriyor. Ama önce divergence'ı anlamak gerekiyor, çünkü denklemin içindeki asıl kavram o."
+        },
+        {
+          "type": "text",
+          "heading": "2. Divergence: bir noktadan net ne kaçıyor",
+          "text": "Uzayı su dolu bir boru gibi düşün, tek boyutta. $f(x)$ o noktadaki suyun hızı; işareti yönü veriyor, $f>0$ sağa, $f<0$ sola.\n\nŞimdi borunun $x$ ile $x+\\Delta$ arasındaki minik bir parçasına bak. Bu parçanın \"yüzeyi\" iki uçtan ibaret: soldan su giriyor, sağdan çıkıyor.\n\n$$\\text{net çıkış} = f(x+\\Delta) - f(x)$$\n\nParçanın uzunluğuna bölüp $\\Delta \\to 0$ limitini alınca tam olarak türev kalıyor:\n\n$$\\operatorname{div} f = \\frac{\\partial f}{\\partial x}$$\n\nSayıyla: $f(x) = x$ ve parça $[1,2]$ olsun. Sol uçtan 1 birim/saniye giriyor, sağ uçtan 2 birim/saniye çıkıyor, net $+1$. Parça boşalıyor.\n\nYorum: divergence pozitifse o nokta kaynak gibi davranıyor, orada yoğunluk azalıyor. Negatifse kuyu, orada birikme var. Sıfırsa giren çıkana eşit, yoğunluk sabit kalıyor.\n\nYüksek boyutta tanım aynı, sadece bütün yönlerdeki katkılar toplanıyor:\n\n$$\\operatorname{div} u = \\sum_{i=1}^{d} \\frac{\\partial u_i}{\\partial x_i}$$"
+        },
+        {
+          "type": "insight",
+          "heading": "Slaytın elipsi ne",
+          "text": "CME 296'nın 3. dersindeki divergence slaytında ince bir elips çizili. O elips, $x$ ekseni üzerindeki minik bir aralığın kendisi — 1D'de kutunun eni olmadığı için incecik çiziliyor.\n\nOklar ise o kutunun iki ucundaki hız: soldan giren, sağdan çıkan. Slayttaki iki resim de pozitif divergence'ın iki farklı görüntüsü. Üstte yavaş girip hızlı çıkıyor; altta iki uçtan birden dışarı akıyor. İkisinde de $f$ soldan sağa artıyor, yani türev pozitif."
+        },
+        {
+          "type": "text",
+          "heading": "3. Continuity equation: kütle korunumu",
+          "text": "Şimdi taşınan şeyin miktarı korunuyorsa (parçacık ne yaratılıyor ne yok ediliyor), yoğunluğun değişimi yalnızca akıştan gelebilir:\n\n$$\\frac{\\partial p_t(x)}{\\partial t} + \\operatorname{div}\\bigl( p_t(x)\\, u_t(x) \\bigr) = 0$$\n\nTerimleri oku. $p_t(x)\\, u_t(x)$ akı: o noktada ne kadar yoğunluk var ve ne hızla taşınıyor. Divergence'ı o noktadan net kaçışı veriyor. Denklem de şunu söylüyor:\n\n$$\\text{yoğunluğun artış hızı} = -(\\text{net kaçış})$$\n\nYani bir noktada yoğunluk ancak oraya dışarıdan akış geldiği için artabilir. Bu, fizikteki kütle korunumunun ta kendisi; olasılıkta da toplam kütle her zaman 1 olduğu için aynı denklem geçerli."
+        },
+        {
+          "type": "insight",
+          "heading": "4. Flow matching'in şartı tam olarak bu",
+          "text": "Flow matching'in hedefi şuydu: $t=0$'da noise, $t=1$'de veri olacak şekilde bir yol kurmak ve o yolu üreten velocity field'ı öğrenmek.\n\n\"Yolu üretmek\" cümlesinin matematiksel karşılığı continuity equation. Bir $u_t$ ile bir $p_t$ ikilisi ancak bu denklemi sağlıyorsa birbirine uygun; yani $u_t$'yi takip eden parçacıkların dağılımı gerçekten $p_t$ oluyor.\n\nBuradan iki sonuç çıkıyor:\n\nAynı $p_t$ yolunu üreten birden fazla $u_t$ olabilir. Denklem $u$'yu tek bir çözüme zorlamıyor. Rectified flow'un düz yolu, diffusion'ın probability flow ODE'si — ikisi de meşru seçimler.\n\nTersi de doğru: bir $u_t$ verildiğinde ürettiği $p_t$ belirli. Bu yüzden network'e velocity öğretmek, dolaylı olarak bir distribution yolu öğretmek demek."
+        },
+        {
+          "type": "text",
+          "heading": "5. Tarihçe: normalizing flow'dan flow matching'e",
+          "text": "Bu fikir üç aşamada olgunlaştı, ve her aşama bir öncekinin darboğazını kaldırdı.\n\nNormalizing flows (2015 civarı). Basit bir distribution alıp tersinir dönüşümlerle karmaşık hale getiriyorsun. Likelihood hesaplanabiliyor ama bedeli ağır: her katmanın Jacobian determinantını hesaplaman gerekiyor, bu da mimariyi ciddi biçimde kısıtlıyor (tersinir olmak zorunda, determinant ucuz olmalı).\n\nContinuous normalizing flows (Neural ODE, 2018). Ayrık katmanlar yerine sürekli bir ODE. Jacobian determinantı yerine divergence geliyor ve likelihood şöyle akıyor:\n\n$$\\frac{d \\log p_t(x)}{dt} = -\\operatorname{div} u_t(x)$$\n\nBu formül continuity equation'ın parçacık boyunca yazılmış hali. Mimari kısıtı kalkıyor, ama yeni bir sorun var: eğitim için ODE'yi baştan sona simüle etmen gerekiyor, her adımda network çağrısı. Büyük görüntülerde pratik değil.\n\nFlow matching (2022). Likelihood'u hiç hesaplamıyorsun. Bunun yerine hedef velocity'yi doğrudan regression ile öğreniyorsun, ve hedefi tek bir veri-noise çiftine koşullayarak elde ediyorsun. ODE simülasyonu eğitimden tamamen çıkıyor. \"Simulation-free\" denen şey bu."
+        },
+        {
+          "type": "insight",
+          "heading": "6. Diffusion ile bağ, tek satırda",
+          "text": "Probability flow ODE'nin sağ tarafına bak:\n\n$$\\frac{dx}{dt} = f(x,t) - \\tfrac{1}{2} g(t)^2 \\nabla_x \\log p_t(x)$$\n\nBu ifade bir velocity field. Yani diffusion da aslında bir flow tanımlıyor; sadece velocity'yi doğrudan öğrenmiyor, score üzerinden dolaşarak hesaplıyor.\n\nFlow matching aynı nesneyi kısa yoldan kuruyor: velocity'yi doğrudan hedef alıyor ve yolu düz seçiyor. İkisi de continuity equation'ı sağlayan birer $(p_t, u_t)$ ikilisi; fark, hangi yolu seçtikleri ve network'e neyi tahmin ettirdikleri.\n\nBu yüzden CME 296'nın 3. dersi de 2. dersi de aynı cümleyle bitiyor: parallel with diffusion. Üç çerçeve tek bir matematiğin farklı giriş kapıları."
+        },
+        {
+          "type": "insight",
+          "heading": "Geriye ne kalsın",
+          "text": "Divergence, bir noktadan net kaçışı ölçüyor; 1D'de hızın türevi. Continuity equation bunu kütle korunumuyla birleştiriyor: yoğunluk ancak akış getirdiği kadar artar. Flow matching'in \"velocity field distribution'ı taşıyor\" cümlesinin tamamı bu denklem. Aynı distribution yolunu üreten birçok velocity field olabilir, ve diffusion'ın probability flow ODE'si de bunlardan biri — flow matching farkı, o alanı dolambaçsız öğrenmesi."
+        },
+        {
+          "type": "ref",
+          "heading": "İlgili kartlar",
+          "items": [
+            {
+              "id": "ida11-score-matching-neden-gradient-i-ogreniyoruz-ve-ddpm-le-nasil",
+              "label": "Score matching — SDE ve probability flow ODE"
+            },
+            {
+              "id": "cs13-diffusion-models-intuition-and-rectified-flow",
+              "label": "CS231n — rectified flow kodu"
+            },
+            {
+              "id": "cs13-generalized-diffusion-vp-ve-score-functions-and-sdes",
+              "label": "Genelleştirilmiş diffusion — VP, VE, score, SDE"
+            }
+          ]
+        },
+        {
+          "type": "note",
+          "heading": "Nereye bakılır",
+          "text": "Ders: CME 296, Lecture 3 (motivation behind flows, history on flows, conditional flow matching, rectified flow). Conditional flow matching'in kendisi, eğitim ve sampling döngüleri, reflow ve üç ICLR 2023 paperının farkı için sitedeki Flow Matching ve Rectified Flow konu anlatımına bak; bu kart onun altyapısını veriyor.\n\nKaynaklar: Chen ve ark. — Neural ODE (NeurIPS 2018) · Lipman ve ark. — Flow Matching for Generative Modeling (ICLR 2023) · Liu, Gong, Liu — Rectified Flow (ICLR 2023)."
+        }
+      ],
+      "id": "ida11-continuity-equation-velocity-field-bir-distribution-i-nasil",
+      "keywords": [
+        "diffusion",
+        "DDPM",
+        "denoising",
+        "noise schedule"
+      ]
     }
   ],
   "ida12": [
@@ -28482,6 +28566,7 @@
         "ida11-ddpm-unet-dahil-bastan-sona",
         "ida11-ddpm-training-inference-tam-parametreler-ve-dimensionlar",
         "ida11-score-matching-neden-gradient-i-ogreniyoruz-ve-ddpm-le-nasil",
+        "ida11-continuity-equation-velocity-field-bir-distribution-i-nasil",
         "cs13-diffusion-models-intuition-and-rectified-flow",
         "cs13-conditional-generation-and-classifier-free-guidance-cfg",
         "cs13-noise-schedules-optimal-prediction-analysis",
