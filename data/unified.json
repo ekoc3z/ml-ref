@@ -26976,7 +26976,7 @@
         {
           "type": "text",
           "heading": "11. Bloğun geri kalanı süs değil",
-          "text": "Transformer bloğu yalnızca attention'dan ibaret değil; her biri belirli bir arızayı çözen üç parça daha var.\n\nResidual connection. Attention çıktısı girdiye ekleniyor. Bu, derin yığınlarda gradient'in kestirme bir yoldan geriye akmasını sağlıyor; onsuz derin Transformer eğitilemiyor.\n\nLayer normalizasyonu. Attention ve toplama sonrası ölçekler kayıyor; normalizasyon aktivasyonları sabit bir bantta tutuyor.\n\nİleri beslemeli layer. Attention aslında sadece bir weighted ortalama — konumlar arasında bilgi taşıyor ama tek bir konumun içinde doğrusal olmayan bir işlem yapmıyor. O işi bu layer yapıyor: her konuma ayrı ayrı uygulanan, genişletip daraltan küçük bir ağ.\n\nİkisinin iş bölümü net: attention konumlar arasında karıştırır, ileri beslemeli layer konumun içinde işler."
+          "text": "Transformer bloğu yalnızca attention'dan ibaret değil; her biri belirli bir arızayı çözen üç parça daha var.\n\nResidual connection. Attention çıktısı girdiye ekleniyor. Bu, derin yığınlarda gradient'in kestirme bir yoldan geriye akmasını sağlıyor; onsuz derin Transformer eğitilemiyor.\n\nLayer normalizasyonu. Attention ve toplama sonrası ölçekler kayıyor; normalizasyon aktivasyonları sabit bir bantta tutuyor.\n\nİleri beslemeli layer. Attention aslında sadece bir weighted ortalama — konumlar arasında bilgi taşıyor ama tek bir konumun içinde doğrusal olmayan bir işlem yapmıyor. O işi bu layer yapıyor: her konuma ayrı ayrı uygulanan, genişletip daraltan küçük bir network.\n\nİkisinin iş bölümü net: attention konumlar arasında karıştırır, ileri beslemeli layer konumun içinde işler."
         },
         {
           "type": "text",
