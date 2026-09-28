@@ -28699,6 +28699,241 @@
           "text": "Sources: Peebles, Xie — Scalable Diffusion Models with Transformers (DiT, ICCV 2023) · Esser et al. — Scaling Rectified Flow Transformers (SD3, ICML 2024, MM-DiT) · Ronneberger et al. — U-Net (2015) · Dosovitskiy et al. — ViT (ICLR 2021).\n\nCourse: CME 296, Lecture 5. For convolution and the receptive field see the CNN walkthrough; for the mechanics of attention and cross-attention the Attention and Transformer walkthrough; for where the conditioning signal comes from the Conditioning Signal walkthrough; for the paradigms themselves the DDPM, Score Matching and Flow Matching walkthroughs."
         }
       ]
+    },
+    "lifecycle": {
+      "title": "Training Lifecycle — From Pre-training to Distillation",
+      "cat": "Walkthrough",
+      "context": "How a generation model is actually built · CME 296 Lecture 6",
+      "chapters": [
+        "ida11",
+        "cs13",
+        "mlo21"
+      ],
+      "summary": "The four stages that turn a diffusion model into a product: pre-training, post-training, tuning, distillation. Why the timestep should not be drawn uniformly, why the schedule shifts with resolution, REPA, the data mixture and the curriculum, continued training against supervised fine-tuning, the three preference tuning methods, DreamBooth and LoRA, and the distillation chain in which each method is born out of the limitation of the previous one.",
+      "sections": [
+        {
+          "type": "table",
+          "heading": "1. The four stages of the lifecycle",
+          "rows": [
+            [
+              "Stage",
+              "What is learned",
+              "Typical cost"
+            ],
+            [
+              "Pre-training",
+              "how to generate images at all",
+              "the largest share, weeks of GPU time"
+            ],
+            [
+              "Post-training",
+              "how to generate good images",
+              "small next to pre-training"
+            ],
+            [
+              "Tuning",
+              "how to generate images for one special case",
+              "a few images, minutes to hours"
+            ],
+            [
+              "Distillation",
+              "how to generate images fast",
+              "a separate training run over the teacher"
+            ]
+          ]
+        },
+        {
+          "type": "text",
+          "heading": "2. Why each stage exists",
+          "text": "A pre-trained model produces an image that matches the prompt, but it is not necessarily the image a person would prefer: the lighting is flat, the composition is ordinary, a detail of the instruction has been skipped. Post-training is about that gap.\n\nTuning is a different need again: the model knows teddy bears in general, but not your teddy bear. A handful of photographs have to teach it one specific subject.\n\nAnd distillation is about the clock. A model that needs fifty network calls for one image is unusable in an interactive interface, in a high-volume service or in animation, where a user typically has limited compute, limited money and limited time.\n\nThe four stages are separate trainings and the order is not negotiable: each one starts from the weights the previous one left."
+        },
+        {
+          "type": "text",
+          "heading": "3. One loop, three targets",
+          "text": "Before the lifecycle there is one thing to settle, because everything that follows sits on it: the training loop of DDPM, score matching and flow matching is the same loop. Draw a clean example, draw a noise, mix them according to $t$, ask the network for something, take an MSE. What changes is only what is asked.\n\nIn DDPM the target is the noise $\\varepsilon$ that was added. In score matching it is the gradient of the log-density, $\\nabla_x \\log p_t(x)$. In flow matching it is the velocity, $z - x_0$, that carries the point from data towards noise.\n\nThe three are connected to each other by fixed coefficients, so none of them is a separate architecture. This is why everything in this walkthrough — the choice of timestep distribution, the alignment loss, preference tuning, distillation — applies to all three in the same way."
+        },
+        {
+          "type": "text",
+          "heading": "4. What the network is asked changes with t",
+          "text": "Lay the noise level out on an axis. At one end sits the clean image, at the other pure noise, and in between the mixture.\n\nNear the clean end the task is easy. The input is almost the image itself; the correct answer to what was added to this is nearly readable from the input.\n\nNear the noise end the task is easy for a different reason. There is no information left in the input, so the best answer is the average of the dataset; the network cannot do better and it is not expected to.\n\nThe difficulty is in the middle. There the input still holds a structure, but that structure is compatible with several different images at once. The question of which way should I go from here has a real answer, and the answer is neither trivial nor hopeless. Most of the generative work is done exactly in this band."
+        },
+        {
+          "type": "text",
+          "heading": "5. Consequence: do not draw the timestep uniformly",
+          "text": "The classical training loop draws $t$ from the uniform distribution. Seen through the previous section that is a waste: half the draws go to bands where the task is either trivial or hopeless.\n\nThe proposal of SD3 (Esser et al., 2024) is to draw the timestep from a logit-normal distribution instead. You draw a normal variable and squash it into the interval $(0,1)$ with the logistic function:\n\n$$u \\sim \\mathcal{N}(m, s^2), \\qquad t = \\frac{1}{1 + e^{-u}}$$\n\nThe density is then concentrated in the middle of the interval and thins out towards the two ends. Two parameters remain in your hand: $m$ shifts the centre of the emphasis (positive values push it towards the noise side), and $s$ sets how sharp the emphasis is.\n\nNothing else in the training changes. The same loss, the same network, only the distribution the timestep comes from."
+        },
+        {
+          "type": "svg",
+          "heading": "Where the timestep draws fall",
+          "svg": "<svg width=\"560\" height=\"230\" viewBox=\"0 0 560 230\" role=\"img\" aria-label=\"timestep distribution\"><line class=\"axis\" x1=\"48\" y1=\"180\" x2=\"530\" y2=\"180\" stroke-width=\"1\"/><line class=\"axis\" x1=\"48\" y1=\"26\" x2=\"48\" y2=\"180\" stroke-width=\"1\"/><line class=\"axis\" x1=\"48\" y1=\"126.9\" x2=\"530\" y2=\"126.9\" stroke-width=\"1.4\" stroke-dasharray=\"5 4\"/><text class=\"sm\" x=\"526\" y=\"120.9\" text-anchor=\"end\">uniform</text><path class=\"p-curve\" d=\"M 49.2,180.0 L 50.4,180.0 L 51.6,180.0 L 52.8,179.9 L 54.0,179.9 L 55.2,179.8 L 56.4,179.6 L 57.6,179.4 L 58.8,179.2 L 60.0,178.9 L 61.3,178.6 L 62.5,178.3 L 63.7,177.9 L 64.9,177.4 L 66.1,177.0 L 67.3,176.5 L 68.5,175.9 L 69.7,175.4 L 70.9,174.8 L 72.1,174.2 L 73.3,173.5 L 74.5,172.9 L 75.7,172.2 L 76.9,171.5 L 78.1,170.8 L 79.3,170.0 L 80.5,169.3 L 81.7,168.5 L 82.9,167.8 L 84.2,167.0 L 85.4,166.2 L 86.6,165.4 L 87.8,164.6 L 89.0,163.8 L 90.2,163.0 L 91.4,162.2 L 92.6,161.4 L 93.8,160.6 L 95.0,159.8 L 96.2,158.9 L 97.4,158.1 L 98.6,157.3 L 99.8,156.5 L 101.0,155.7 L 102.2,154.9 L 103.4,154.1 L 104.6,153.2 L 105.8,152.4 L 107.0,151.6 L 108.2,150.8 L 109.5,150.0 L 110.7,149.2 L 111.9,148.5 L 113.1,147.7 L 114.3,146.9 L 115.5,146.1 L 116.7,145.4 L 117.9,144.6 L 119.1,143.8 L 120.3,143.1 L 121.5,142.3 L 122.7,141.6 L 123.9,140.9 L 125.1,140.1 L 126.3,139.4 L 127.5,138.7 L 128.7,138.0 L 129.9,137.3 L 131.1,136.6 L 132.3,135.9 L 133.6,135.2 L 134.8,134.5 L 136.0,133.9 L 137.2,133.2 L 138.4,132.5 L 139.6,131.9 L 140.8,131.2 L 142.0,130.6 L 143.2,130.0 L 144.4,129.3 L 145.6,128.7 L 146.8,128.1 L 148.0,127.5 L 149.2,126.9 L 150.4,126.3 L 151.6,125.7 L 152.8,125.2 L 154.0,124.6 L 155.2,124.0 L 156.4,123.5 L 157.7,122.9 L 158.9,122.4 L 160.1,121.8 L 161.3,121.3 L 162.5,120.8 L 163.7,120.2 L 164.9,119.7 L 166.1,119.2 L 167.3,118.7 L 168.5,118.2 L 169.7,117.7 L 170.9,117.2 L 172.1,116.8 L 173.3,116.3 L 174.5,115.8 L 175.7,115.4 L 176.9,114.9 L 178.1,114.5 L 179.3,114.0 L 180.6,113.6 L 181.8,113.2 L 183.0,112.7 L 184.2,112.3 L 185.4,111.9 L 186.6,111.5 L 187.8,111.1 L 189.0,110.7 L 190.2,110.3 L 191.4,109.9 L 192.6,109.5 L 193.8,109.2 L 195.0,108.8 L 196.2,108.4 L 197.4,108.1 L 198.6,107.7 L 199.8,107.4 L 201.0,107.1 L 202.2,106.7 L 203.4,106.4 L 204.7,106.1 L 205.9,105.7 L 207.1,105.4 L 208.3,105.1 L 209.5,104.8 L 210.7,104.5 L 211.9,104.2 L 213.1,103.9 L 214.3,103.7 L 215.5,103.4 L 216.7,103.1 L 217.9,102.8 L 219.1,102.6 L 220.3,102.3 L 221.5,102.1 L 222.7,101.8 L 223.9,101.6 L 225.1,101.3 L 226.3,101.1 L 227.5,100.9 L 228.8,100.7 L 230.0,100.4 L 231.2,100.2 L 232.4,100.0 L 233.6,99.8 L 234.8,99.6 L 236.0,99.4 L 237.2,99.2 L 238.4,99.1 L 239.6,98.9 L 240.8,98.7 L 242.0,98.5 L 243.2,98.4 L 244.4,98.2 L 245.6,98.0 L 246.8,97.9 L 248.0,97.7 L 249.2,97.6 L 250.4,97.4 L 251.6,97.3 L 252.8,97.2 L 254.1,97.1 L 255.3,96.9 L 256.5,96.8 L 257.7,96.7 L 258.9,96.6 L 260.1,96.5 L 261.3,96.4 L 262.5,96.3 L 263.7,96.2 L 264.9,96.1 L 266.1,96.0 L 267.3,95.9 L 268.5,95.9 L 269.7,95.8 L 270.9,95.7 L 272.1,95.7 L 273.3,95.6 L 274.5,95.6 L 275.7,95.5 L 276.9,95.5 L 278.2,95.4 L 279.4,95.4 L 280.6,95.4 L 281.8,95.3 L 283.0,95.3 L 284.2,95.3 L 285.4,95.3 L 286.6,95.3 L 287.8,95.3 L 289.0,95.3 L 290.2,95.3 L 291.4,95.3 L 292.6,95.3 L 293.8,95.3 L 295.0,95.3 L 296.2,95.3 L 297.4,95.4 L 298.6,95.4 L 299.8,95.4 L 301.1,95.5 L 302.3,95.5 L 303.5,95.6 L 304.7,95.6 L 305.9,95.7 L 307.1,95.7 L 308.3,95.8 L 309.5,95.9 L 310.7,95.9 L 311.9,96.0 L 313.1,96.1 L 314.3,96.2 L 315.5,96.3 L 316.7,96.4 L 317.9,96.5 L 319.1,96.6 L 320.3,96.7 L 321.5,96.8 L 322.7,96.9 L 323.9,97.1 L 325.1,97.2 L 326.4,97.3 L 327.6,97.4 L 328.8,97.6 L 330.0,97.7 L 331.2,97.9 L 332.4,98.0 L 333.6,98.2 L 334.8,98.4 L 336.0,98.5 L 337.2,98.7 L 338.4,98.9 L 339.6,99.1 L 340.8,99.2 L 342.0,99.4 L 343.2,99.6 L 344.4,99.8 L 345.6,100.0 L 346.8,100.2 L 348.0,100.4 L 349.2,100.7 L 350.5,100.9 L 351.7,101.1 L 352.9,101.3 L 354.1,101.6 L 355.3,101.8 L 356.5,102.1 L 357.7,102.3 L 358.9,102.6 L 360.1,102.8 L 361.3,103.1 L 362.5,103.4 L 363.7,103.7 L 364.9,103.9 L 366.1,104.2 L 367.3,104.5 L 368.5,104.8 L 369.7,105.1 L 370.9,105.4 L 372.1,105.7 L 373.4,106.1 L 374.6,106.4 L 375.8,106.7 L 377.0,107.1 L 378.2,107.4 L 379.4,107.7 L 380.6,108.1 L 381.8,108.4 L 383.0,108.8 L 384.2,109.2 L 385.4,109.5 L 386.6,109.9 L 387.8,110.3 L 389.0,110.7 L 390.2,111.1 L 391.4,111.5 L 392.6,111.9 L 393.8,112.3 L 395.0,112.7 L 396.2,113.2 L 397.4,113.6 L 398.7,114.0 L 399.9,114.5 L 401.1,114.9 L 402.3,115.4 L 403.5,115.8 L 404.7,116.3 L 405.9,116.8 L 407.1,117.2 L 408.3,117.7 L 409.5,118.2 L 410.7,118.7 L 411.9,119.2 L 413.1,119.7 L 414.3,120.2 L 415.5,120.8 L 416.7,121.3 L 417.9,121.8 L 419.1,122.4 L 420.3,122.9 L 421.6,123.5 L 422.8,124.0 L 424.0,124.6 L 425.2,125.2 L 426.4,125.7 L 427.6,126.3 L 428.8,126.9 L 430.0,127.5 L 431.2,128.1 L 432.4,128.7 L 433.6,129.3 L 434.8,130.0 L 436.0,130.6 L 437.2,131.2 L 438.4,131.9 L 439.6,132.5 L 440.8,133.2 L 442.0,133.9 L 443.2,134.5 L 444.4,135.2 L 445.6,135.9 L 446.9,136.6 L 448.1,137.3 L 449.3,138.0 L 450.5,138.7 L 451.7,139.4 L 452.9,140.1 L 454.1,140.9 L 455.3,141.6 L 456.5,142.3 L 457.7,143.1 L 458.9,143.8 L 460.1,144.6 L 461.3,145.4 L 462.5,146.1 L 463.7,146.9 L 464.9,147.7 L 466.1,148.5 L 467.3,149.2 L 468.5,150.0 L 469.8,150.8 L 471.0,151.6 L 472.2,152.4 L 473.4,153.2 L 474.6,154.1 L 475.8,154.9 L 477.0,155.7 L 478.2,156.5 L 479.4,157.3 L 480.6,158.1 L 481.8,158.9 L 483.0,159.8 L 484.2,160.6 L 485.4,161.4 L 486.6,162.2 L 487.8,163.0 L 489.0,163.8 L 490.2,164.6 L 491.4,165.4 L 492.6,166.2 L 493.9,167.0 L 495.1,167.8 L 496.3,168.5 L 497.5,169.3 L 498.7,170.0 L 499.9,170.8 L 501.1,171.5 L 502.3,172.2 L 503.5,172.9 L 504.7,173.5 L 505.9,174.2 L 507.1,174.8 L 508.3,175.4 L 509.5,175.9 L 510.7,176.5 L 511.9,177.0 L 513.1,177.4 L 514.3,177.9 L 515.5,178.3 L 516.7,178.6 L 518.0,178.9 L 519.2,179.2 L 520.4,179.4 L 521.6,179.6 L 522.8,179.8 L 524.0,179.9 L 525.2,179.9 L 526.4,180.0 L 527.6,180.0 L 528.8,180.0\" stroke-width=\"1.6\" fill=\"none\"/><path class=\"q-line\" d=\"M 49.2,180.0 L 50.4,180.0 L 51.6,180.0 L 52.8,180.0 L 54.0,180.0 L 55.2,180.0 L 56.4,180.0 L 57.6,180.0 L 58.8,180.0 L 60.0,180.0 L 61.3,180.0 L 62.5,180.0 L 63.7,180.0 L 64.9,180.0 L 66.1,180.0 L 67.3,180.0 L 68.5,180.0 L 69.7,180.0 L 70.9,180.0 L 72.1,180.0 L 73.3,180.0 L 74.5,180.0 L 75.7,180.0 L 76.9,180.0 L 78.1,180.0 L 79.3,180.0 L 80.5,180.0 L 81.7,180.0 L 82.9,180.0 L 84.2,180.0 L 85.4,180.0 L 86.6,180.0 L 87.8,180.0 L 89.0,180.0 L 90.2,180.0 L 91.4,180.0 L 92.6,180.0 L 93.8,180.0 L 95.0,180.0 L 96.2,180.0 L 97.4,180.0 L 98.6,180.0 L 99.8,180.0 L 101.0,180.0 L 102.2,180.0 L 103.4,180.0 L 104.6,179.9 L 105.8,179.9 L 107.0,179.9 L 108.2,179.9 L 109.5,179.9 L 110.7,179.9 L 111.9,179.9 L 113.1,179.9 L 114.3,179.8 L 115.5,179.8 L 116.7,179.8 L 117.9,179.8 L 119.1,179.8 L 120.3,179.7 L 121.5,179.7 L 122.7,179.7 L 123.9,179.6 L 125.1,179.6 L 126.3,179.6 L 127.5,179.5 L 128.7,179.5 L 129.9,179.4 L 131.1,179.3 L 132.3,179.3 L 133.6,179.2 L 134.8,179.2 L 136.0,179.1 L 137.2,179.0 L 138.4,178.9 L 139.6,178.8 L 140.8,178.7 L 142.0,178.6 L 143.2,178.5 L 144.4,178.4 L 145.6,178.3 L 146.8,178.2 L 148.0,178.1 L 149.2,177.9 L 150.4,177.8 L 151.6,177.6 L 152.8,177.5 L 154.0,177.3 L 155.2,177.1 L 156.4,176.9 L 157.7,176.7 L 158.9,176.5 L 160.1,176.3 L 161.3,176.1 L 162.5,175.9 L 163.7,175.6 L 164.9,175.4 L 166.1,175.1 L 167.3,174.9 L 168.5,174.6 L 169.7,174.3 L 170.9,174.0 L 172.1,173.7 L 173.3,173.4 L 174.5,173.0 L 175.7,172.7 L 176.9,172.3 L 178.1,172.0 L 179.3,171.6 L 180.6,171.2 L 181.8,170.8 L 183.0,170.3 L 184.2,169.9 L 185.4,169.5 L 186.6,169.0 L 187.8,168.5 L 189.0,168.0 L 190.2,167.5 L 191.4,167.0 L 192.6,166.5 L 193.8,165.9 L 195.0,165.4 L 196.2,164.8 L 197.4,164.2 L 198.6,163.6 L 199.8,163.0 L 201.0,162.4 L 202.2,161.7 L 203.4,161.1 L 204.7,160.4 L 205.9,159.7 L 207.1,159.0 L 208.3,158.2 L 209.5,157.5 L 210.7,156.8 L 211.9,156.0 L 213.1,155.2 L 214.3,154.4 L 215.5,153.6 L 216.7,152.7 L 217.9,151.9 L 219.1,151.0 L 220.3,150.1 L 221.5,149.2 L 222.7,148.3 L 223.9,147.4 L 225.1,146.5 L 226.3,145.5 L 227.5,144.5 L 228.8,143.6 L 230.0,142.6 L 231.2,141.5 L 232.4,140.5 L 233.6,139.5 L 234.8,138.4 L 236.0,137.3 L 237.2,136.2 L 238.4,135.1 L 239.6,134.0 L 240.8,132.9 L 242.0,131.7 L 243.2,130.6 L 244.4,129.4 L 245.6,128.2 L 246.8,127.0 L 248.0,125.8 L 249.2,124.6 L 250.4,123.4 L 251.6,122.2 L 252.8,120.9 L 254.1,119.6 L 255.3,118.4 L 256.5,117.1 L 257.7,115.8 L 258.9,114.5 L 260.1,113.2 L 261.3,111.9 L 262.5,110.5 L 263.7,109.2 L 264.9,107.9 L 266.1,106.5 L 267.3,105.2 L 268.5,103.8 L 269.7,102.4 L 270.9,101.1 L 272.1,99.7 L 273.3,98.3 L 274.5,96.9 L 275.7,95.5 L 276.9,94.1 L 278.2,92.7 L 279.4,91.3 L 280.6,90.0 L 281.8,88.6 L 283.0,87.2 L 284.2,85.8 L 285.4,84.4 L 286.6,83.0 L 287.8,81.6 L 289.0,80.2 L 290.2,78.8 L 291.4,77.4 L 292.6,76.1 L 293.8,74.7 L 295.0,73.3 L 296.2,72.0 L 297.4,70.6 L 298.6,69.3 L 299.8,67.9 L 301.1,66.6 L 302.3,65.3 L 303.5,64.0 L 304.7,62.7 L 305.9,61.4 L 307.1,60.2 L 308.3,58.9 L 309.5,57.7 L 310.7,56.4 L 311.9,55.2 L 313.1,54.0 L 314.3,52.9 L 315.5,51.7 L 316.7,50.6 L 317.9,49.4 L 319.1,48.3 L 320.3,47.3 L 321.5,46.2 L 322.7,45.2 L 323.9,44.1 L 325.1,43.2 L 326.4,42.2 L 327.6,41.2 L 328.8,40.3 L 330.0,39.4 L 331.2,38.6 L 332.4,37.7 L 333.6,36.9 L 334.8,36.2 L 336.0,35.4 L 337.2,34.7 L 338.4,34.0 L 339.6,33.4 L 340.8,32.7 L 342.0,32.2 L 343.2,31.6 L 344.4,31.1 L 345.6,30.6 L 346.8,30.2 L 348.0,29.7 L 349.2,29.4 L 350.5,29.0 L 351.7,28.7 L 352.9,28.5 L 354.1,28.3 L 355.3,28.1 L 356.5,28.0 L 357.7,27.9 L 358.9,27.8 L 360.1,27.8 L 361.3,27.8 L 362.5,27.9 L 363.7,28.0 L 364.9,28.2 L 366.1,28.4 L 367.3,28.6 L 368.5,28.9 L 369.7,29.3 L 370.9,29.6 L 372.1,30.1 L 373.4,30.5 L 374.6,31.1 L 375.8,31.6 L 377.0,32.2 L 378.2,32.9 L 379.4,33.6 L 380.6,34.3 L 381.8,35.1 L 383.0,36.0 L 384.2,36.9 L 385.4,37.8 L 386.6,38.8 L 387.8,39.8 L 389.0,40.9 L 390.2,42.0 L 391.4,43.1 L 392.6,44.3 L 393.8,45.6 L 395.0,46.9 L 396.2,48.2 L 397.4,49.6 L 398.7,51.0 L 399.9,52.5 L 401.1,54.0 L 402.3,55.5 L 403.5,57.1 L 404.7,58.7 L 405.9,60.3 L 407.1,62.0 L 408.3,63.8 L 409.5,65.5 L 410.7,67.3 L 411.9,69.1 L 413.1,71.0 L 414.3,72.9 L 415.5,74.8 L 416.7,76.7 L 417.9,78.7 L 419.1,80.7 L 420.3,82.7 L 421.6,84.7 L 422.8,86.8 L 424.0,88.9 L 425.2,90.9 L 426.4,93.0 L 427.6,95.2 L 428.8,97.3 L 430.0,99.4 L 431.2,101.6 L 432.4,103.7 L 433.6,105.9 L 434.8,108.0 L 436.0,110.2 L 437.2,112.3 L 438.4,114.5 L 439.6,116.6 L 440.8,118.8 L 442.0,120.9 L 443.2,123.0 L 444.4,125.1 L 445.6,127.2 L 446.9,129.3 L 448.1,131.3 L 449.3,133.3 L 450.5,135.3 L 451.7,137.3 L 452.9,139.2 L 454.1,141.1 L 455.3,143.0 L 456.5,144.9 L 457.7,146.7 L 458.9,148.4 L 460.1,150.1 L 461.3,151.8 L 462.5,153.5 L 463.7,155.1 L 464.9,156.6 L 466.1,158.1 L 467.3,159.6 L 468.5,161.0 L 469.8,162.3 L 471.0,163.6 L 472.2,164.8 L 473.4,166.0 L 474.6,167.2 L 475.8,168.2 L 477.0,169.3 L 478.2,170.2 L 479.4,171.2 L 480.6,172.0 L 481.8,172.8 L 483.0,173.6 L 484.2,174.3 L 485.4,174.9 L 486.6,175.5 L 487.8,176.1 L 489.0,176.6 L 490.2,177.0 L 491.4,177.5 L 492.6,177.8 L 493.9,178.2 L 495.1,178.5 L 496.3,178.7 L 497.5,178.9 L 498.7,179.1 L 499.9,179.3 L 501.1,179.5 L 502.3,179.6 L 503.5,179.7 L 504.7,179.8 L 505.9,179.8 L 507.1,179.9 L 508.3,179.9 L 509.5,179.9 L 510.7,180.0 L 511.9,180.0 L 513.1,180.0 L 514.3,180.0 L 515.5,180.0 L 516.7,180.0 L 518.0,180.0 L 519.2,180.0 L 520.4,180.0 L 521.6,180.0 L 522.8,180.0 L 524.0,180.0 L 525.2,180.0 L 526.4,180.0 L 527.6,180.0 L 528.8,180.0\" stroke-width=\"1.6\" fill=\"none\"/><text class=\"sm\" x=\"289\" y=\"87\" text-anchor=\"middle\">m=0, s=1</text><text class=\"sm\" x=\"385\" y=\"22\" text-anchor=\"middle\">m=0.5, s=0.6</text><line class=\"axis\" x1=\"48.0\" y1=\"180\" x2=\"48.0\" y2=\"184\" stroke-width=\"1\"/><text class=\"num\" x=\"48.0\" y=\"197\" text-anchor=\"middle\">0</text><line class=\"axis\" x1=\"168.5\" y1=\"180\" x2=\"168.5\" y2=\"184\" stroke-width=\"1\"/><text class=\"num\" x=\"168.5\" y=\"197\" text-anchor=\"middle\">0.25</text><line class=\"axis\" x1=\"289.0\" y1=\"180\" x2=\"289.0\" y2=\"184\" stroke-width=\"1\"/><text class=\"num\" x=\"289.0\" y=\"197\" text-anchor=\"middle\">0.5</text><line class=\"axis\" x1=\"409.5\" y1=\"180\" x2=\"409.5\" y2=\"184\" stroke-width=\"1\"/><text class=\"num\" x=\"409.5\" y=\"197\" text-anchor=\"middle\">0.75</text><line class=\"axis\" x1=\"530.0\" y1=\"180\" x2=\"530.0\" y2=\"184\" stroke-width=\"1\"/><text class=\"num\" x=\"530.0\" y=\"197\" text-anchor=\"middle\">1</text><text class=\"sm\" x=\"48\" y=\"214\" text-anchor=\"start\">t = 0  clean image</text><text class=\"sm\" x=\"530\" y=\"214\" text-anchor=\"end\">t = 1  pure noise</text><text class=\"sm\" x=\"289\" y=\"214\" text-anchor=\"middle\">the middle: the hard task</text><text class=\"sm\" x=\"42\" y=\"30\" text-anchor=\"end\">density</text></svg>"
+        },
+        {
+          "type": "text",
+          "heading": "6. The same noise level does not mean the same difficulty at every resolution",
+          "text": "There is a second adjustment and its reason is not obvious.\n\nTake an image and its version at twice the resolution, and add noise of exactly the same variance to both. In the high resolution image the noise is perceptually less destructive, because neighbouring pixels carry nearly the same information; the redundancy is higher, and averaging over the neighbourhood recovers the signal. The same noise level destroys less at high resolution.\n\nThe consequence is that a schedule tuned at low resolution places the hard band in the wrong place when the same model is trained at high resolution. The solution is to shift the timestep towards the noise side as the resolution grows, so that the perceived difficulty stays the same.\n\nA note on the convention, because it is the easiest place to get the sign wrong: in the SD3 paper $t=0$ is the clean image and $t=1$ is noise. CS231n and the flow walkthrough on this site use the same convention, while Lipman's flow matching paper uses the opposite one."
+        },
+        {
+          "type": "insight",
+          "heading": "7. REPA: give the network a representation instead of making it find one",
+          "text": "A diffusion transformer has to do two things at once: understand what is in the image, and produce the target from that understanding. The first of the two is a problem that large pre-trained encoders have already solved.\n\nThe idea of REPA (Representation Alignment, Yu et al., 2024) is to hand that solution over. While training the generation model, take the clean image and pass it through a frozen pre-trained encoder such as DINOv2. Separately take the output of one of the early transformer blocks of the generation model. Push the second through a small trainable projection head and ask that the two match, measuring the match with cosine similarity. This term is added to the ordinary diffusion loss.\n\nThree results are worth remembering. The speedup is large: the same quality is reached in a fraction of the training steps. Aligning only the early layers works best, because the later layers have to do generation, not representation. And the larger the diffusion model, the more it benefits — which is the opposite of what one would expect from a training aid.\n\nThe projection head is thrown away at inference. REPA changes training, not the model you ship."
+        },
+        {
+          "type": "text",
+          "heading": "8. Pre-training: the data mixture and the curriculum",
+          "text": "Pre-training is the stage that teaches the model to generate images at all, and most of the total compute goes here.\n\nTwo things are decided and neither of them is about the architecture.\n\nThe data mixture. Which fraction of the dataset is natural photographs, which fraction is design and illustration, which fraction is text-bearing images, which fraction is synthetic data. This composition directly determines what the model will be good at.\n\nThe curriculum. Training does not start at the final difficulty. It starts easy — low resolution, a fixed square aspect ratio, short and simple prompts — and is made harder in stages: higher resolution, variable aspect ratios, long and detailed prompts. The reason is cost as much as pedagogy: a step at low resolution is cheap, and the model learns the coarse structure of the world there."
+        },
+        {
+          "type": "text",
+          "heading": "9. Why variable resolution is not a problem for a DiT",
+          "text": "The curriculum demands that the same model work at different resolutions and different aspect ratios, and it is here that the choice of backbone pays off.\n\nA DiT cuts the image into patches and turns each patch into a token. When the resolution rises the patches do not change size; their number changes. The transformer has no fixed input length, so a longer sequence is not a structural problem — the position encoding and the compute are what has to carry it.\n\nThis is the practical reason why the field moved from the U-Net to the transformer, alongside scaling. A convolutional stack with fixed downsampling ratios negotiates much less comfortably with variable aspect ratios."
+        },
+        {
+          "type": "table",
+          "heading": "10. Post-training: two separate moves",
+          "rows": [
+            [
+              "",
+              "Continued training (CT)",
+              "Supervised fine-tuning (SFT)"
+            ],
+            [
+              "Aim",
+              "knowledge",
+              "behaviour"
+            ],
+            [
+              "What it adds",
+              "facts and concepts missing from the pre-training data",
+              "lighting, aesthetics, composition, instruction following"
+            ],
+            [
+              "Data",
+              "large, ordinary quality",
+              "small, deliberately selected high quality"
+            ],
+            [
+              "Analogy in the LLM world",
+              "continued pre-training",
+              "instruction tuning"
+            ]
+          ]
+        },
+        {
+          "type": "text",
+          "heading": "11. Preference tuning: putting the human judgement into the loss",
+          "text": "SFT teaches the model what a good image looks like through examples. Preference tuning goes one step further and puts a judgement signal, which image would a person prefer, directly into the objective. Three methods are worth knowing and they differ in where the signal comes from.\n\nReFL (Reward Feedback Learning, Xu et al., 2023) trains a reward model on human comparisons first. Then, during generation, the sampling chain is run to a late step, the image is decoded there, the reward model scores it, and the gradient of that score is backpropagated into the generator. Running only to a late step is what makes it affordable.\n\nFlow-GRPO (Liu et al., 2025) carries the group-relative policy optimisation of the LLM world over to flow models. For one prompt several images are generated, the reward of each is compared with the mean of the group, and the ones above the mean are reinforced. Because it is online reinforcement learning the sampling has to be stochastic — a deterministic ODE sampler gives no exploration.\n\nDiffusion-DPO (Wallace et al., 2023) removes the reward model altogether. It works directly on pairs of preferred and rejected images: the objective raises the model's likelihood on the preferred one relative to the rejected one. The same trick as DPO in language models, written on the diffusion loss."
+        },
+        {
+          "type": "text",
+          "heading": "12. Prompt enhancement: fixing the input, not the model",
+          "text": "There is a cheaper move next to these. The user writes a short prompt, and a language model expands it into a long, detailed description before it reaches the generator: the material of the fabric, the direction and warmth of the light, the depth of field, the mood.\n\nNothing in the model changes. The reason it works is that the generator was trained on long and detailed captions, so a long prompt lands closer to the region it knows well.\n\nThis is the fastest of the four stages to deploy and the easiest to undo, which is why it sits in almost every production text-to-image system."
+        },
+        {
+          "type": "text",
+          "heading": "13. Tuning: DreamBooth and the rare token",
+          "text": "Now the special case. You have four or five photographs of one particular teddy bear and you want the model to be able to place that bear in new scenes.\n\nDreamBooth (Ruiz et al., 2022) ties the subject to a rare token. A rarely used string is chosen, for example [V], and the model is fine-tuned on captions of the form a photo of a [V] teddy bear. A rare token is chosen deliberately: a common word already carries a strong meaning and fine-tuning would overwrite that meaning.\n\nBut fine-tuning on five images has an obvious danger: the model forgets what a teddy bear in general looks like and turns every bear into this bear. This is called language drift, and DreamBooth's remedy is to train, alongside the new examples, on images the model itself generated for the plain caption a photo of a teddy bear. That second term is the prior preservation loss, and it holds the general class in place while the specific subject is learned.\n\nAt inference the rare token is used inside any prompt: [V] teddy bear attending a lecture."
+        },
+        {
+          "type": "text",
+          "heading": "14. LoRA: changing few weights instead of all of them",
+          "text": "DreamBooth as described updates the whole model, which is expensive and produces a full copy of the weights per subject.\n\nLoRA (Hu et al., 2021) starts from an observation: the update a fine-tune makes to a weight matrix is of low rank in practice. So instead of learning the full update, learn it as the product of two thin matrices:\n\n$$W' = W + BA, \\qquad B \\in \\mathbb{R}^{d \\times r}, \\quad A \\in \\mathbb{R}^{r \\times k}, \\quad r \\ll \\min(d,k)$$\n\nThe original $W$ stays frozen; only $A$ and $B$ are trained. With a rank of a few tens this is a tiny fraction of the parameters, and the quality is comparable to a full fine-tune.\n\nAt inference $BA$ can be added into $W$ once, so nothing is slower afterwards. What you hand around is a file of a few megabytes rather than a full model.\n\nThe costs are on the other side of the ledger: the training run itself still takes time and money, and the result is tied to one subject and one base model — it is not reusable elsewhere. The method pays off when many images of the same subject will be generated."
+        },
+        {
+          "type": "text",
+          "heading": "15. Distillation: the problem and why the obvious attempt fails",
+          "text": "The last stage is about speed. The teacher is a trained, good, slow model; the student is usually a network of the same size, and what is asked of it is to do in few steps — ideally one — what the teacher does in many.\n\nNote that this is not the traditional distillation of the classification world. There the student is small and the teacher large; here the sizes are typically equal and what is being compressed is the number of steps, not the parameters.\n\nThe first attempt is the obvious one: take the teacher's fifty-step result and ask the student to produce it in a single step. It does not work. The map from noise to image is heavily curved, and asking a network to learn the whole of that curve in one jump is too hard a regression problem.\n\nEverything that follows is a series of answers to that difficulty, and each one is born out of the limitation of the previous."
+        },
+        {
+          "type": "text",
+          "heading": "16. Progressive distillation: halve the number of steps at each round",
+          "text": "Salimans et al. (2022) made the problem tractable by shrinking it. Instead of asking for the whole way at once, ask the student to reproduce two teacher steps in one step. That is a small regression and it is learnable.\n\nWhen the round is over the student has become a model that generates in half the number of steps. That student is then made the new teacher and the same procedure is repeated. From 1024 steps to 512, to 256, and onwards down to a handful.\n\nBecause each round halves, reaching a single step needs on the order of $\\log_2 T$ rounds. The quality at a given number of function evaluations comes out better than DDIM with the same budget.\n\nIts limitations are three and they are what motivate the next method. The paths being distilled are curved, and that curvature is a constraint fixed in advance. The result requires the same discrete, fixed sampling grid at inference time. And the procedure needs that many separate training rounds."
+        },
+        {
+          "type": "text",
+          "heading": "17. InstaFlow: straighten the path first, then distil",
+          "text": "Here the mindset changes. Rather than trying to learn a curved path better, make the path straight and then the distillation becomes easy.\n\nThe tool is reflow, which comes from rectified flow. You take the trained model, generate pairs of noise and image with it, and retrain the model on those pairs with straight lines between them. The previously crossing, curved trajectories are thereby straightened. Most of the gain comes from the first reflow; the following rounds add little.\n\nOnce the path is straight, a single Euler step is nearly enough, and the distillation of the remaining gap is a small job. InstaFlow (Liu et al., 2023) distils the N-step model into a one-step one in exactly this way, and the loss is measured between the teacher's output and the student's.\n\nThe distance function is chosen in two stages: MSE first as a warm-up, then LPIPS, a perceptual distance, to polish. The reason is that MSE pulls towards the average and blurs, while LPIPS compares in the feature space of a pre-trained network and therefore tolerates small pixel shifts.\n\nIts limitation is the computational burden. Before any of this begins the teacher has to pave the entire way — generating the noise-image pairs is a full sampling run per pair. And the learned intermediate paths are then simply skipped over."
+        },
+        {
+          "type": "text",
+          "heading": "18. Consistency models: one map to the clean image from every point on the path",
+          "text": "The next change of mindset is about what is learned. Instead of learning a global map from one end of the path to the other, attach a local rule to every point of the path.\n\nConsistency models (Song et al., 2023) ask this of the network: from wherever you are on the deterministic ODE trajectory, predict the clean image at the end of that trajectory. The property this demands is self-consistency — two different points on the same trajectory must produce the same output.\n\n$$f_\\theta(x_t, t) = f_\\theta(x_{t'}, t') \\quad \\text{for every } t, t' \\text{ on the same trajectory}$$\n\nThere are two ways of training it. In consistency distillation a teacher generates the neighbouring point on the trajectory and the student is asked to agree on the two. In consistency training there is no teacher; the neighbouring point is obtained from the forward noising process itself. In the results distillation comes out ahead.\n\nA fair objection: could the network not satisfy this condition by outputting the same constant everywhere? It could, and two design choices prevent it. The boundary condition pins the function at the clean end to the identity, so the output is anchored to the real image there. And the target branch is kept under a stop-gradient with an EMA copy of the weights, so the two sides cannot collapse onto each other together.\n\nThe limitation is quality. Because the loss is a regression towards the target pixels, the solution regresses towards the mean and the outputs come out smoothed and blurred. An image that is perfectly valid and realistic is still penalised if its pixels do not coincide with the target."
+        },
+        {
+          "type": "text",
+          "heading": "19. DMD: match the distribution instead of the sample",
+          "text": "If penalising the exact pixels is the problem, then stop asking for the exact pixels. Distribution matching distillation (Yin et al., 2023) asks that the distribution of the student's outputs match the distribution of the teacher's outputs, and says nothing about individual images.\n\nThe objective is a KL divergence between the two distributions. Written directly it is intractable, because neither density is available. But its gradient can be expressed in a form that needs only the two scores — the score of the teacher's distribution and the score of the student's current output distribution.\n\nThe first is the trained teacher. The second does not exist, so it has to be manufactured: a second diffusion model is trained on the fly on the student's own outputs, purely to provide that score. The update then pushes the student in the direction of the difference between the two scores: more of what the teacher says, less of what the student already says.\n\nThe results are competitive at a single step. The costs are heavy. There is a small diffusion training loop running inside the distillation loop. Two models are computing nearly the same thing. And the signal that steers the student is soft — a difference of scores, not a definite verdict on any particular image."
+        },
+        {
+          "type": "text",
+          "heading": "20. ADD and LADD: bring in a discriminator",
+          "text": "The last change of mindset replaces the soft signal with a hard one. What gives a definite verdict on a single image is a discriminator, and that is the GAN's own instrument.\n\nAdversarial diffusion distillation (ADD, Sauer et al., 2023) trains the student under two terms at once. One is the distillation term that keeps it close to the teacher's output. The other is an adversarial term: a discriminator tries to separate the student's images from real ones, and the student tries to fool it. The first keeps the student from drifting away from the teacher, and the second removes the blur, because a blurred image is easy for a discriminator to catch.\n\nIts limitation is plumbing. The discriminator works in pixel space, so the student's latent output has to be decoded at every step, and the real images have to be moved into the same space. These conversions are the expensive part.\n\nLADD (Sauer et al., 2024) removes them. The discriminator is moved into the latent space, and the feature extractor it works on is the teacher itself — a model that is already there and already knows what images look like. No decoding, no conversion, and the discriminator now sees features at several noise levels rather than raw pixels. This is the scheme behind the fast versions of the current large models."
+        },
+        {
+          "type": "table",
+          "heading": "21. The distillation chain at a glance",
+          "rows": [
+            [
+              "Method",
+              "The core move",
+              "The limitation that gave rise to the next"
+            ],
+            [
+              "Progressive distillation",
+              "halve the step count each round",
+              "curved paths, fixed sampling grid, many rounds"
+            ],
+            [
+              "InstaFlow / reflow",
+              "straighten the path, then distil",
+              "the teacher must pave the whole way first"
+            ],
+            [
+              "Consistency models",
+              "from any point, map to the clean end",
+              "regression to the mean, blurring"
+            ],
+            [
+              "DMD",
+              "match distributions, not samples",
+              "a diffusion loop inside the loop, soft signal"
+            ],
+            [
+              "ADD",
+              "add a discriminator's hard verdict",
+              "pixel-space discriminator forces conversions"
+            ],
+            [
+              "LADD",
+              "move the discriminator into the latent space",
+              "—"
+            ]
+          ]
+        },
+        {
+          "type": "insight",
+          "heading": "What should stay with you",
+          "text": "The lifecycle has four stages and they are separate trainings: pre-training teaches generation, post-training teaches quality, tuning teaches one special case, distillation teaches speed. All of it sits on a single training loop in which only the target changes between the epsilon, score and velocity parametrizations.\n\nTwo adjustments to that loop are worth carrying: draw the timestep from a logit-normal rather than the uniform, because the task is hardest in the middle of the noise axis; and shift the timesteps towards noise as the resolution grows, because the same noise level destroys less when neighbouring pixels are redundant. REPA is a third: align the early layers with a frozen pre-trained encoder and the training gets substantially faster.\n\nIn tuning, DreamBooth ties the subject to a rare token and holds the general class in place with a prior preservation loss; LoRA makes the same fine-tune cheap by learning the update as a low-rank product.\n\nThe distillation chain reads as a sequence of limitations. Progressive distillation halves the steps but stays on curved paths; reflow straightens the path but the teacher must pave it first; consistency models learn a local map but regress to the mean and blur; DMD matches distributions but needs a diffusion loop inside the loop and gives a soft signal; ADD brings the discriminator's hard verdict but pays for pixel-space conversions; LADD moves the discriminator into the latent space using the teacher as the feature extractor. The recurring ingredients across all of them: a regression loss (MSE or LPIPS), distributional or adversarial pressure, and training in the latent space."
+        },
+        {
+          "type": "ref",
+          "heading": "Related cards",
+          "items": [
+            {
+              "id": "cs13-conditional-generation-and-classifier-free-guidance-cfg",
+              "label": "CS231n — CFG, which the distilled models have to reproduce"
+            },
+            {
+              "id": "ida11-conditional-diffusion-and-text-to-image-generation",
+              "label": "Conditional diffusion and text-to-image"
+            }
+          ]
+        },
+        {
+          "type": "note",
+          "heading": "Where to look",
+          "text": "Course: CME 296, Lecture 6 — the training lifecycle.\n\nTimestep distribution and resolution shift: Esser et al., Scaling Rectified Flow Transformers for High-Resolution Image Synthesis (ICML 2024, SD3) · REPA: Yu et al., Representation Alignment for Generation (2024) · data mixture and curriculum: Qwen-Image Technical Report (2025) · continued training and SFT: Seedream 2.0, ByteDance (2025).\n\nPreference tuning: Xu et al., ImageReward / ReFL (2023) · Liu et al., Flow-GRPO (2025) · Wallace et al., Diffusion-DPO (2023).\n\nTuning: Ruiz et al., DreamBooth (2022) · Hu et al., LoRA (2021).\n\nDistillation: Salimans, Ho, Progressive Distillation (2022) · Liu et al., InstaFlow (2023) and Flow Straight and Fast (2022) · Song et al., Consistency Models (2023) · Yin et al., One-step Diffusion with Distribution Matching Distillation (2023) · Sauer et al., Adversarial Diffusion Distillation (2023) and Latent Adversarial Diffusion Distillation (2024).\n\nThe reflow procedure is in the flow matching walkthrough; the backbone and the entry doors of the condition in the backbone walkthrough; the adversarial loss and the discriminator in the GAN walkthrough."
+        }
+      ]
     }
   },
   "mlo": [
