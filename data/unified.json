@@ -27079,9 +27079,9 @@
       ]
     },
     "mle": {
-      "title": "MLE — Baştan Sona Konu Anlatımı",
+      "title": "MLE — A Complete Walkthrough",
       "cat": "Konu Anlatımı",
-      "context": "Maximum Likelihood · ML ch03 · EE499 vs03 · Math 06 · CS231n 12 — tek oturumda okunmak için",
+      "context": "Maximum Likelihood · ML ch03 · EE499 vs03 · Math 06 · CS231n 12 — to be read in one sitting",
       "chapters": [
         "ch03",
         "vs03",
@@ -27090,42 +27090,42 @@
         "cs12",
         "mlo03"
       ],
-      "summary": "Maximum likelihood'ın tek sorusundan başlayıp, neden log alındığına, Gaussian ve Bernoulli türetmelerine, MSE ve cross-entropy'nin oradan nasıl çıktığına, bir sinir ağı eğitmenin neden MLE olduğuna, MAP'in tek çarpan farkına ve weight decay'in neden bir prior olduğuna kadar tek akış.",
+      "summary": "One continuous thread from the single question of maximum likelihood, to why the log is taken, the Gaussian and Bernoulli derivations, how MSE and cross-entropy come out of them, why training a neural network is MLE, the single-factor difference of MAP, and why weight decay is a prior.",
       "sections": [
         {
           "type": "text",
-          "heading": "Bu metin ne için",
-          "text": "MLE, bu sitedeki en çok tekrar eden kavram: ML dersinde density estimation olarak, EE499'da sinyal tahmini olarak, CS231n'de generative modellerin training ilkesi olarak, lab kartlarında ise doğrudan loss fonksiyonu olarak geçiyor. Kartlar bu parçaları ayrı ayrı doğru anlatıyor ama aralarındaki bağı kurmuyor.\n\nOysa hepsi tek bir cümlenin farklı kılıkları. Bu metin o cümleden başlayıp, günlük olarak yazdığın `nn.MSELoss()` ve `weight_decay=1e-4` satırlarına kadar kesintisiz gidiyor.\n\nSonunda şunu görmen lazım: bir sinir ağı eğitmek yeni bir şey değil, MLE'nin ta kendisi."
+          "heading": "What this text is for",
+          "text": "MLE is the most repeated concept on this site: in the ML course as density estimation, in EE499 as signal estimation, in CS231n as the training principle of generative models, and in the lab cards directly as a loss function. The cards explain these pieces correctly one by one, but they do not connect them.\n\nYet all of them are different disguises of a single sentence. This text starts from that sentence and goes without interruption all the way to the `nn.MSELoss()` and `weight_decay=1e-4` lines you write every day.\n\nBy the end you should see this: training a neural network is not something new, it is maximum likelihood itself."
         },
         {
           "type": "text",
-          "heading": "1. Tek soru",
-          "text": "Elinde beş sayı var: 2.1, 3.4, 2.8, 3.9, 3.0. Bir sayı doğrusuna nokta nokta diz — hepsi 3 civarında kümelenmiş.\n\nŞimdi elinde bir çan eğrisi olduğunu düşün ve onu doğru boyunca sağa sola kaydırabiliyorsun. Soru şu: eğriyi nereye koyarsan bu beş nokta en beklendik hale gelir?\n\nEğriyi 10'a koy: noktalar eğrinin çok solunda, kuyrukta kalır. Öyle bir dünyada tam bu beş sayıyı görmek şaşırtıcı olurdu. Eğriyi 3'e koy: noktalar tepenin altına düşer, hiç şaşırtıcı değil.\n\nMLE bu kadar: bilinmeyeni oynata oynata, gördüğün veriyi en az şaşırtıcı yapan yeri bulmak. Buradaki cevap 3.04, yani beş sayının ortalaması.\n\nSitenin her yerinde aynı hareket yapılıyor. Değişen tek şey, kaydırdığın nesnenin ne olduğu: bazen bir sayı, bazen bir sinyal vektörü, bazen bir ağın milyonlarca weight'i."
+          "heading": "1. The single question",
+          "text": "You have five numbers: 2.1, 3.4, 2.8, 3.9, 3.0. Lay them out one by one on a number line — they all cluster around 3.\n\nNow imagine you hold a bell curve and can slide it left and right along that line. The question is: where do you put the curve so that these five points become the least surprising?\n\nPut the curve at 10: the points fall far to the left of the curve, in the tail. In such a world, seeing exactly these five numbers would be astonishing. Put the curve at 3: the points fall under the peak, not surprising at all.\n\nMLE is just this: by sliding the unknown around, finding the place that makes the data you observed the least surprising. The answer here is 3.04, that is, the mean of the five numbers.\n\nThe same move is made everywhere on this site. The only thing that changes is what the object you slide is: sometimes a single number, sometimes a signal vector, sometimes the millions of weights of a network."
         },
         {
           "type": "text",
-          "heading": "2. Harfler",
-          "text": "$x$ — gördüğün şey, veri. Burada o beş sayı.\n\n$\\theta$ — aradığın şey, bilinmeyen. Burada eğrinin nereye oturduğu, yani ortalama.\n\n$p(x \\mid \\theta)$ — likelihood: \"$\\theta$ şu değer olsaydı, tam bu veriyi görme ihtimalim ne olurdu?\"\n\nHepsi bu. Formül, bu ihtimali en büyük yapan $\\theta$'yı seçmekten ibaret."
+          "heading": "2. The letters",
+          "text": "$x$ — what you see, the data. Here, those five numbers.\n\n$\\theta$ — what you are looking for, the unknown. Here, where the curve sits, that is, the mean.\n\n$p(x \\mid \\theta)$ — the likelihood: \\\"if $\\theta$ had this value, what would my chance of seeing exactly this data be?\\\"\n\nThat is all. The formula amounts to choosing the $\\theta$ that makes this chance largest."
         },
         {
           "type": "formula",
-          "heading": "Tanım",
-          "text": "$$\\hat{\\theta}_{\\text{MLE}} = \\operatorname*{arg\\,max}_{\\theta}\\ p(x \\mid \\theta)$$\n\nVeri bağımsız ve aynı distribution'dan geliyorsa likelihood bir çarpıma açılır:\n$$p(x \\mid \\theta) = \\prod_{i=1}^{N} p(x_i \\mid \\theta)$$"
+          "heading": "Definition",
+          "text": "$$\\hat{\\theta}_{\\text{MLE}} = \\operatorname*{arg\\,max}_{\\theta}\\ p(x \\mid \\theta)$$\n\nIf the data are independent and come from the same distribution, the likelihood unfolds into a product:\n$$p(x \\mid \\theta) = \\prod_{i=1}^{N} p(x_i \\mid \\theta)$$"
         },
         {
           "type": "text",
-          "heading": "3. Likelihood bir olasılık distribution'u değil",
-          "text": "Burası en çok karıştırılan yer, ve adıyla öldürmek gerekiyor.\n\nElinde $p(x \\mid \\theta)$ diye tek bir fonksiyon var, ama ona iki ayrı gözle bakabilirsin.\n\nBirinci göz: $\\theta$ sabit, $x$ değişken. \"Gerçek ortalama 3 ise, ölçtüğüm sayı ne çıkar?\" Cevap 3 merkezli bir çan eğrisi. Bu gerçek bir olasılık distribution'u — x üzerinden integrali 1.\n\nİkinci göz: $x$ sabit, $\\theta$ değişken. Ölçümü zaten yaptın, veri elinde. Soru tersine döndü: hangi $\\theta$ bu veriyi en olası kılar? Aynı fonksiyona bu sefer $\\theta$'nın fonksiyonu olarak bakıyorsun. Buna likelihood deniyor.\n\nVe likelihood bir olasılık distribution'u değil. $\\theta$ üzerinden integralinin 1 etmesi gerekmiyor, etmez de. Bu yüzden \"$\\theta$'nın olasılığı\" diye bir şeyden bahsetmiyorsun — MLE sana $\\theta$'nın ne kadar olası olduğunu söylemiyor, sadece hangi $\\theta$'nın veriyi en iyi açıkladığını söylüyor.\n\nBu ayrımı kaçırırsan MAP ile MLE arasındaki fark da anlaşılmaz hale geliyor, çünkü fark tam olarak burada."
+          "heading": "3. The likelihood is not a probability distribution",
+          "text": "This is the most confused point, and it has to be killed by name.\n\nYou have a single function $p(x \\mid \\theta)$, but you can look at it with two different eyes.\n\nFirst eye: $\\theta$ fixed, $x$ varying. \\\"If the true mean is 3, what number will I measure?\\\" The answer is a bell curve centred at 3. This is a genuine probability distribution — its integral over x is 1.\n\nSecond eye: $x$ fixed, $\\theta$ varying. You have already taken the measurement, the data is in your hands. The question is reversed: which $\\theta$ makes this data most probable? You are now looking at the same function as a function of $\\theta$. This is called the likelihood.\n\nAnd the likelihood is not a probability distribution. Its integral over $\\theta$ does not have to be 1, and it is not. That is why you are not talking about anything like \\\"the probability of $\\theta$\\\" — MLE does not tell you how probable $\\theta$ is, only which $\\theta$ explains the data best.\n\nIf you miss this distinction, the difference between MAP and MLE also becomes incomprehensible, because the difference is exactly here."
         },
         {
           "type": "text",
-          "heading": "4. Neden hep logaritma alıyoruz",
-          "text": "Üç ayrı sebep var ve üçü de pratik.\n\nSayısal taşma. Likelihood, 0 ile 1 arasında binlerce sayının çarpımı. N biraz büyüdüğünde çarpım kayan noktalı aritmetikte tam olarak sıfıra iniyor, ve sıfırı maksimize edemezsin. Log, çarpımı toplama çeviriyor ve (0,1) aralığını (eksi sonsuz, 0) aralığına açıyor.\n\nCevabı değiştirmiyor. Log monoton artan, dolayısıyla $\\log L$'yi maksimize eden $\\theta$ ile $L$'yi maksimize eden $\\theta$ aynı. Bedava bir dönüşüm.\n\nTüreve hazırlıyor. Gaussian'ın içinde bir üstel var; log onu yiyor ve geriye ikinci dereceden bir ifade kalıyor. Türev alıp sıfıra eşitlemek elle yapılabilir hale geliyor.\n\nVe optimizasyon tarafında negatifini alıyoruz: maksimizasyon yerine minimizasyon, çünkü bütün optimizasyon kütüphaneleri minimize ediyor. Negative log-likelihood tam olarak bu."
+          "heading": "4. Why we always take the logarithm",
+          "text": "There are three separate reasons and all three are practical.\n\nNumerical underflow. The likelihood is a product of thousands of numbers between 0 and 1. When N grows a little, the product drops to exactly zero in floating point arithmetic, and you cannot maximise zero. The log turns the product into a sum and opens the interval (0,1) into (minus infinity, 0).\n\nIt does not change the answer. The log is monotonically increasing, so the $\\theta$ that maximises $\\log L$ is the same as the one that maximises $L$. A free transformation.\n\nIt prepares the ground for differentiation. There is an exponential inside the Gaussian; the log eats it and what remains is a quadratic expression. Taking the derivative and setting it to zero becomes something you can do by hand.\n\nAnd on the optimisation side we take the negative: minimisation instead of maximisation, because all optimisation libraries minimise. The negative log-likelihood is exactly this."
         },
         {
           "type": "text",
-          "heading": "5. Gaussian'a uygula: ortalama nereden çıkıyor",
-          "text": "Çan eğrisi örneğine dön. Gaussian density'sinin logaritmasını al: üstel kayboluyor, geriye bir sabit artı $-(x_i-\\mu)^2 / 2\\sigma^2$ kalıyor. Bütün veri noktaları için topla. $\\mu$'ye göre maksimize ederken sabitler hiçbir şeyi değiştirmediği için onları at. Elinde kalan:\n\nLikelihood'ı maksimize etmek = kareler toplamını minimize etmek.\n\nTüretip sıfıra eşitlersen cevap sample mean. Baştaki 3.04 buradan geliyor.\n\nBu, metnin en önemli cümlesinin ilk görünüşü: bir olasılık sorusu, bir loss fonksiyonuna dönüştü ve o loss fonksiyonu MSE."
+          "heading": "5. Apply it to the Gaussian: where the mean comes from",
+          "text": "Return to the bell curve example. Take the logarithm of the Gaussian density: the exponential disappears and what remains is a constant plus $-(x_i-\\mu)^2 / 2\\sigma^2$. Sum over all data points. While maximising over $\\mu$ the constants change nothing, so drop them. What you are left with:\n\nMaximising the likelihood = minimising the sum of squares.\n\nIf you differentiate and set it to zero the answer is the sample mean. The 3.04 from the beginning comes from here.\n\nThis is the first appearance of the most important sentence in this text: a probability question turned into a loss function, and that loss function is MSE."
         },
         {
           "type": "formula",
@@ -27134,127 +27134,126 @@
         },
         {
           "type": "text",
-          "heading": "6. Varyans neden yanlı çıkıyor",
-          "text": "Ortalama tahmini yansız. Varyans tahmini değil — sistematik olarak küçük çıkıyor, ve sebebi öğretici.\n\nVaryans formülünde gerçek ortalama yerine aynı veriden hesaplanmış tahmin kullanılıyor. Ama sample mean tanımı gereği o veriye en yakın nokta: kareler toplamını minimize eden şey zaten o. Dolayısıyla veri noktalarının ondan uzaklıkları, gerçek ortalamadan uzaklıklarından ortalama olarak daha küçük.\n\nYanlılığın büyüklüğü tam olarak $\\sigma^2/N$. Sezgisel karşılığı: bir serbestlik derecesi $\\mu$'yü tahmin etmeye harcandı. $1/N$ yerine $1/(N-1)$ kullanınca (Bessel düzeltmesi) tahmin yansız hale geliyor.\n\nBuradan çıkan genel ders: MLE her zaman yansız tahmin vermez. Verdiği garanti başka — çok veri limitinde doğruya yakınsıyor, ama sonlu veride yanlı olabilir."
+          "heading": "6. Why the variance comes out biased",
+          "text": "The estimate of the mean is unbiased. The estimate of the variance is not — it comes out systematically too small, and the reason is instructive.\n\nIn the variance formula, instead of the true mean the estimate computed from the same data is used. But the sample mean is by definition the point closest to that data: it is precisely the thing that minimises the sum of squares. Therefore the distances of the data points from it are on average smaller than their distances from the true mean.\n\nThe magnitude of the bias is exactly $\\sigma^2/N$. Its intuitive counterpart: one degree of freedom was spent estimating $\\mu$. When you use $1/(N-1)$ instead of $1/N$ (Bessel's correction) the estimate becomes unbiased.\n\nThe general lesson from here: MLE does not always give an unbiased estimate. The guarantee it gives is different — it converges to the truth in the large data limit, but it can be biased with finite data."
         },
         {
           "type": "text",
-          "heading": "7. Üç çalışılmış örnek",
-          "text": "Bernoulli. n deneme, k tanesi 1 (10 atışta 7 tura). Log-likelihood $k\\log p + (n-k)\\log(1-p)$; türev sıfır dediğinde $p = k/n$. MLE, gözlenen frekansın kendisi.\n\nExponential. Log-likelihood $n\\log\\lambda - \\lambda\\sum_i x_i$; türevden $\\lambda = n/\\sum_i x_i$, yani sample mean'in tersi. Mantıklı, çünkü $\\mathrm{Exp}(\\lambda)$ distribution'unun ortalaması $1/\\lambda$.\n\n$\\mathrm{Uniform}(0,\\theta)$. Burada yöntem değişiyor ve asıl ders bu. Likelihood, $\\theta$ gözlenen en büyük değerden küçükse sıfır (o gözlem imkansız olurdu), büyükse $1/\\theta^n$. İkinci durumda $\\theta$ büyüdükçe likelihood düşüyor. Yani en iyi $\\theta$, mümkün olan en küçük $\\theta$: gözlenen en büyük değer.\n\nDikkat: burada türev alıp sıfıra eşitlemek işe yaramaz, çünkü maksimum bir iç noktada değil sınırda. \"MLE demek türev alıp sıfıra eşitlemek demek\" ezberi tam burada kırılıyor. MLE bir arg max, türev sadece onu bulmanın bir yolu."
+          "heading": "7. Three worked examples",
+          "text": "Bernoulli. n trials, k of them 1 (7 heads in 10 tosses). The log-likelihood is $k\\log p + (n-k)\\log(1-p)$; setting the derivative to zero gives $p = k/n$. The MLE is the observed frequency itself.\n\nExponential. The log-likelihood is $n\\log\\lambda - \\lambda\\sum_i x_i$; from the derivative $\\lambda = n/\\sum_i x_i$, that is, the reciprocal of the sample mean. This makes sense, because the mean of the $\\mathrm{Exp}(\\lambda)$ distribution is $1/\\lambda$.\n\n$\\mathrm{Uniform}(0,\\theta)$. Here the method changes, and this is the real lesson. The likelihood is zero if $\\theta$ is smaller than the largest observed value (that observation would have been impossible), and $1/\\theta^n$ if it is larger. In the second case the likelihood falls as $\\theta$ grows. So the best $\\theta$ is the smallest possible $\\theta$: the largest observed value.\n\nNote: taking a derivative and setting it to zero does not work here, because the maximum is not at an interior point but on the boundary. The memorised rule \\\"MLE means taking a derivative and setting it to zero\\\" breaks exactly here. MLE is an arg max; the derivative is merely one way of finding it."
         },
         {
           "type": "text",
-          "heading": "8. Dönüm noktası: MLE bir loss fonksiyonudur",
-          "text": "Şimdi metnin çatısı kuruluyor.\n\nBir regresyon modeli düşün: $y = f(x;\\theta) + \\epsilon$, ve $\\epsilon$ Gaussian. Bir veri noktasının olasılığı, Gaussian density'sinin $f(x_i;\\theta)$ merkezli hali. Log al, bütün noktalar için topla, $\\theta$'ya bağlı olmayan sabitleri at. Elinde kalan tam olarak şu: $y_i$ ile $f(x_i;\\theta)$ arasındaki farkların kareleri toplamı.\n\nYani MSE, keyfi seçilmiş bir maliyet fonksiyonu değil. Gaussian noise varsayımı altında maximum likelihood'ın kendisi.\n\nAynı hareketi sınıflandırmada yap. Model her örnek için $p_i$ olasılığı üretiyor, label $t_i$ ise 0 ya da 1. Doğru olasılığı elle seçmek yerine Bernoulli formülü bunu otomatik yapıyor: $p_i^{t_i}(1-p_i)^{1-t_i}$. Label 1 ise ilk çarpan aktif, 0 ise ikincisi. Bütün örnekler için çarp, log al, negatifini al — çıkan şey binary cross-entropy.\n\nÇok sınıflıda softmax ile aynı hesap: log-likelihood toplamı, sadece doğru sınıfın log olasılıklarının toplamına iniyor, negatifi cross-entropy."
+          "heading": "8. The turning point: MLE is a loss function",
+          "text": "Now the frame of the text is built.\n\nThink of a regression model: $y = f(x;\\theta) + \\epsilon$, with $\\epsilon$ Gaussian. The probability of one data point is the Gaussian density centred at $f(x_i;\\theta)$. Take the log, sum over all points, drop the constants that do not depend on $\\theta$. What remains is exactly this: the sum of the squares of the differences between $y_i$ and $f(x_i;\\theta)$.\n\nSo MSE is not an arbitrarily chosen cost function. Under the assumption of Gaussian noise it is maximum likelihood itself.\n\nMake the same move in classification. The model produces a probability $p_i$ for every example, and the label $t_i$ is either 0 or 1. Instead of picking the correct probability by hand, the Bernoulli formula does it automatically: $p_i^{t_i}(1-p_i)^{1-t_i}$. If the label is 1 the first factor is active, if it is 0 the second one is. Multiply over all examples, take the log, take the negative — what comes out is binary cross-entropy.\n\nIn the multi-class case the same computation with softmax: the sum of log-likelihoods reduces to the sum of the log probabilities of the correct classes only, and its negative is cross-entropy."
         },
         {
           "type": "formula",
-          "heading": "İki türetmenin sonucu",
+          "heading": "The result of the two derivations",
           "text": "Gaussian noise:\n$$-\\log p(y \\mid x,\\theta) \\;\\propto\\; \\sum_i \\bigl(y_i - f(x_i;\\theta)\\bigr)^2 \\quad\\Rightarrow\\quad \\text{MSE}$$\n\nBernoulli label:\n$$-\\log p(t \\mid w) = -\\sum_i \\bigl[\\, t_i \\log p_i + (1-t_i)\\log(1-p_i) \\,\\bigr] \\quad\\Rightarrow\\quad \\text{BCE}$$"
         },
         {
           "type": "table",
-          "heading": "Noise varsayımı, çıkan loss",
+          "heading": "Noise assumption, resulting loss",
           "rows": [
             [
-              "Varsayım",
-              "MLE'nin verdiği problem",
-              "Bilinen adı"
+              "Assumption",
+              "The problem MLE gives",
+              "Known name"
             ],
             [
-              "Gaussian, bağımsız",
-              "kareler toplamını minimize et",
-              "MSE / en küçük kareler"
+              "Gaussian, independent",
+              "minimise the sum of squares",
+              "MSE / least squares"
             ],
             [
-              "Korelasyonlu Gaussian",
-              "kovaryansla weighted kareler",
-              "genelleştirilmiş en küçük kareler"
+              "Correlated Gaussian",
+              "squares weighted by the covariance",
+              "generalised least squares"
             ],
             [
-              "Laplace (kalın kuyruk)",
-              "mutlak farkları minimize et",
+              "Laplace (heavy tails)",
+              "minimise the absolute differences",
               "MAE / L1"
             ],
             [
               "Bernoulli",
-              "negatif log olasılık toplamı",
+              "sum of negative log probabilities",
               "BCE"
             ],
             [
-              "Kategorik (softmax)",
-              "doğru sınıfın negatif log olasılığı",
+              "Categorical (softmax)",
+              "negative log probability of the correct class",
               "cross-entropy"
             ],
             [
-              "Poisson (foton sayımı)",
-              "KL ıraksamasını minimize et",
-              "Poisson loss'u"
+              "Poisson (photon counting)",
+              "minimise the KL divergence",
+              "Poisson loss"
             ]
-          ],
-          "text": ""
+          ]
         },
         {
           "type": "text",
-          "heading": "9. Loss seçmek, noise seçmektir",
-          "text": "Yukarıdaki tablonun okunuş yönü önemli. Genelde soldan sağa okunuyor: \"verim şöyleyse şu loss'u kullanırım.\" Asıl aydınlatıcı olan sağdan sola okumak.\n\nKodda L2 yazdığın an, farkında olmadan \"hata Gaussian dağılıyor\" demiş oluyorsun. L1 yazdığın an \"hata Laplace dağılıyor, ara sıra çok sapan ölçümler gelir\" demiş oluyorsun.\n\nBu, aykırı değer sorusunun da cevabı. Gaussian varsayımı altında MLE sana ortalamayı verir; Laplace varsayımı altında medyanı. Medyanın aykırı değerlere neden dayanıklı olduğu buradan çıkıyor: Laplace'ın kuyrukları kalın, yani model zaten ara sıra uç bir gözlem bekliyor, o yüzden tek bir uç değer tahmini sürükleyemiyor.\n\nDönüm noktası tek cümlede: deterministik görünen her loss fonksiyonunun altında saklı bir olasılık modeli var."
+          "heading": "9. Choosing a loss is choosing a noise model",
+          "text": "The reading direction of the table above matters. It is usually read from left to right: \\\"if my data looks like this, I use that loss.\\\" What is truly illuminating is reading it from right to left.\n\nThe moment you write L2 in code, you are saying, without noticing, \\\"the error is Gaussian distributed.\\\" The moment you write L1 you are saying \\\"the error is Laplace distributed, occasionally very deviant measurements arrive.\\\"\n\nThis is also the answer to the outlier question. Under the Gaussian assumption MLE gives you the mean; under the Laplace assumption, the median. Why the median is robust to outliers follows from here: the tails of the Laplace are heavy, that is, the model already expects an extreme observation now and then, so a single extreme value cannot drag the estimate.\n\nThe turning point in one sentence: under every loss function that looks deterministic there is a hidden probability model."
         },
         {
           "type": "text",
-          "heading": "10. Sinir ağı eğitmek zaten MLE yapmaktır",
-          "text": "Şimdi ölçeği büyüt, hareket aynı kalsın.\n\nÇan eğrisi örneğinde kaydırdığın şey tek bir sayıydı. Bir MLP'de kaydırdığın şey milyonlarca weight. Soru değişmiyor: weight'leri öyle ayarla ki training verisini görme olasılığı en büyük olsun.\n\nBağlantıyı tam kuran cümle şu: ağın son layer'ı bir sayı değil, bir distribution'un parametresini üretiyor.\n\nRegresyonda ağın çıktısı, y'yi üreten Gaussian'ın ortalaması. Sınıflandırmada softmax çıktısı, kategorik distribution'un olasılıkları. İkisinde de ağ bir olasılık modeli kuruyor, sen de o modelin log olabilirliğini maksimize ediyorsun.\n\nDolayısıyla training döngün — ileri geçiş, loss, backpropagation, adım — maximum likelihood probleminin gradient inişiyle çözülmesinden ibaret. Kapalı formda çözülemediği için (Gaussian ortalamasındaki gibi) sayısal olarak çözülüyor, farkın tamamı bu.\n\nBir bağlantı daha: training verisi üzerinden log olabilirliği maksimize etmek, model distribution'u ile gerçek veri distribution'u arasındaki KL ıraksamasını minimize etmekle aynı şey. Generative modellerin \"gerçek distribution'a yaklaşıyoruz\" cümlesinin arkasında bu duruyor."
+          "heading": "10. Training a neural network is already doing MLE",
+          "text": "Now scale it up, keeping the move the same.\n\nIn the bell curve example the thing you slid was a single number. In an MLP the thing you slide is millions of weights. The question does not change: set the weights so that the probability of seeing the training data is largest.\n\nThe sentence that completes the connection is this: the last layer of the network does not produce a number, it produces the parameter of a distribution.\n\nIn regression the output of the network is the mean of the Gaussian that generates y. In classification the softmax output is the set of probabilities of a categorical distribution. In both cases the network builds a probability model and you maximise the log-likelihood of that model.\n\nTherefore your training loop — forward pass, loss, backpropagation, step — amounts to solving a maximum likelihood problem by gradient descent. Because it cannot be solved in closed form (as in the Gaussian mean), it is solved numerically; that is the whole difference.\n\nOne more connection: maximising the log-likelihood over the training data is the same as minimising the KL divergence between the model distribution and the true data distribution. This is what stands behind the sentence \\\"we are approaching the true distribution\\\" in generative modelling."
         },
         {
           "type": "code",
-          "heading": "Aynı üç adım, üç ölçekte",
-          "text": "                      aradığın theta        çözüm yolu\n─────────────────────────────────────────────────────────────\nbeş sayı, mu          tek sayı              kapalı form (ortalama)\ny = Ax + n            sinyal vektoru        kapalı form (en kucuk kareler)\nMLP / VAE / DDPM      milyonlarca agirlik   gradient inisi\n\nUc satirda da yapilan is ayni:\n  1. bir olasilik modeli yaz          p(veri | theta)\n  2. log al, isareti cevir            -log p\n  3. theta uzerinde minimize et"
+          "heading": "The same three steps at three scales",
+          "text": "                      the theta you seek    route to the solution\n─────────────────────────────────────────────────────────────────────\nfive numbers, mu      a single number       closed form (the mean)\ny = Ax + n            a signal vector       closed form (least squares)\nMLP / VAE / DDPM      millions of weights   gradient descent\n\nIn all three rows the job is the same:\n  1. write a probability model       p(data | theta)\n  2. take the log, flip the sign     -log p\n  3. minimise over theta"
         },
         {
           "type": "text",
-          "heading": "11. MLE ne zaman yetmiyor",
-          "text": "Üç tane para atışı yaptın, üçü de tura geldi. MLE'nin cevabı p = 1: \"bu para asla yazı gelmez.\"\n\nCevap matematiksel olarak doğru — o veriyi en olası kılan gerçekten p = 1. Ama saçma, çünkü elindeki bilgi çok az ve MLE onu sorgusuz kabul ediyor.\n\nGenel arıza biçimi bu: MLE verideki noise'u de sinyal sanıp fit ediyor. Aşırı öğrenmenin (overfitting) olasılıksal tarifi tam olarak budur. Veri arttıkça sorun kendiliğinden hafifliyor, ama az veride ciddi.\n\nUniform örneğinde de aynı arıza var: tahmin, gözlenen en büyük değer. Gerçek üst sınır neredeyse kesinlikle bundan büyük, ama MLE onu göremiyor çünkü elinde sadece gördüğü var.\n\nİki çıkış yolu: daha çok veri, ya da veriyi görmeden önceki bilgiyi hesaba katmak."
+          "heading": "11. When MLE is not enough",
+          "text": "You tossed a coin three times and got heads three times. MLE's answer is p = 1: \\\"this coin never comes up tails.\\\"\n\nThe answer is mathematically correct — what truly makes that data most probable is p = 1. But it is absurd, because the information you hold is very little and MLE accepts it without question.\n\nThis is the general failure mode: MLE mistakes the noise in the data for signal and fits it. This is precisely the probabilistic description of overfitting. As data grows the problem eases by itself, but with little data it is serious.\n\nThe same failure is in the Uniform example: the estimate is the largest observed value. The true upper bound is almost certainly larger than that, but MLE cannot see it because all it holds is what it has seen.\n\nTwo ways out: more data, or taking into account what you knew before seeing the data."
         },
         {
           "type": "text",
-          "heading": "12. MAP: ayrı bir yöntem değil, tek bir çarpan",
-          "text": "MAP, MLE'ye $\\theta$ üzerinde bir inanç ekliyor: veriyi görmeden önce $\\theta$ hakkında ne düşünüyordun?\n\nBayes kuralında posterior, likelihood çarpı prior ile orantılı. MAP bu çarpımı maksimize ediyor. Log alınca çarpım toplama dönüşüyor, yani MAP'in loss fonksiyonu MLE'nin loss fonksiyonu artı bir ceza terimi.\n\nÜç tura örneğine dön: paranın hilesiz olmaya yakın olduğuna dair makul bir prior koyarsan, cevap 1 değil, 1'e doğru itilmiş ama makul bir sayı çıkıyor. Veri arttıkça likelihood terimi prior'ı bastırıyor ve MAP, MLE'ye yaklaşıyor. Prior'ın weight'i veri miktarıyla ters orantılı — az veride belirleyici, çok veride görünmez.\n\nAyırt edici tek soru şu, ve ezberlenmesi gereken cümle bu: prior, tahmin ettiğin şeyin üzerinde mi? Başka bir şeyin üzerindeki prior seni MAP'e geçirmiyor."
+          "heading": "12. MAP: not a separate method, a single extra factor",
+          "text": "MAP adds a belief about $\\theta$ to MLE: what did you think about $\\theta$ before seeing the data?\n\nIn Bayes' rule the posterior is proportional to the likelihood times the prior. MAP maximises this product. Taking the log turns the product into a sum, so MAP's loss function is MLE's loss function plus a penalty term.\n\nReturn to the three-heads example: if you place a reasonable prior saying the coin is close to fair, the answer is not 1 but a reasonable number pushed towards 1. As data grows the likelihood term overwhelms the prior and MAP approaches MLE. The weight of the prior is inversely proportional to the amount of data — decisive with little data, invisible with a lot.\n\nThe one distinguishing question, and the sentence worth memorising, is this: is the prior on the thing you are estimating? A prior on something else does not move you to MAP."
         },
         {
           "type": "formula",
-          "heading": "MLE ve MAP",
+          "heading": "MLE and MAP",
           "text": "$$\\hat{\\theta}_{\\text{MLE}} = \\operatorname*{arg\\,max}_{\\theta} \\log p(x \\mid \\theta) \\qquad \\hat{\\theta}_{\\text{MAP}} = \\operatorname*{arg\\,max}_{\\theta} \\bigl[\\log p(x \\mid \\theta) + \\log p(\\theta)\\bigr]$$"
         },
         {
           "type": "text",
-          "heading": "13. Weight decay tam olarak burada",
-          "text": "Weight'lerin üzerine sıfır ortalamalı Gaussian bir prior koy: \"weight'lerin küçük olmasını bekliyorum.\"\n\nGaussian'ın logaritması, weight vektörünün normunun karesini eksi işaretiyle veriyor. Minimize etme diline çevirince loss fonksiyonun şu hale geliyor: veri terimi artı $\\lambda$ çarpı weight'lerin karesi.\n\nBu, kodda her gün yazdığın weight decay.\n\nDönüm noktası tek cümlede: L2 regularization, weight'lerin üzerine Gaussian prior koyup MAP yapmaktır. Keyfi bir hile değil, bir cümlenin matematiği.\n\nAynı mantıkla L1 regularization, weight'lere Laplace prior koymaktır — ve Laplace'ın sivri tepesi, çözümün tam sıfırlara oturmasını teşvik ettiği için sparsity üretiyor.\n\nYani modelinde iki tane gizli olasılık varsayımı var: loss fonksiyonun noise'u seçiyor, regularization terimin weight'lerin prior'ını seçiyor."
+          "heading": "13. Weight decay is exactly here",
+          "text": "Place a zero-mean Gaussian prior on the weights: \\\"I expect the weights to be small.\\\"\n\nThe logarithm of a Gaussian gives the square of the norm of the weight vector with a minus sign. Translated into the language of minimisation, your loss function becomes: the data term plus $\\lambda$ times the square of the weights.\n\nThis is the weight decay you write in code every day.\n\nThe turning point in one sentence: L2 regularization is placing a Gaussian prior on the weights and doing MAP. Not an arbitrary trick, but the mathematics of a sentence.\n\nBy the same logic L1 regularization is placing a Laplace prior on the weights — and because the sharp peak of the Laplace encourages the solution to sit exactly at zero, it produces sparsity.\n\nSo your model contains two hidden probabilistic assumptions: your loss function chooses the noise, and your regularization term chooses the prior on the weights."
         },
         {
           "type": "text",
-          "heading": "14. VAE: aradığın şey weight'ler, z değil",
-          "text": "VAE'de bir de z var, latent değişken. Onu da mı arıyoruz? Hayır, ve fark konunun kilidi.\n\nBeş sayı örneğinde $\\mu$'yü bulduğunda iş bitiyordu, elinde 3.04 vardı. VAE'de \"z'yi buldum\" diyebileceğin bir an yok, çünkü z her resim için ayrı. 200.000 resmin 200.000 z'si var ve sen tek tek onların peşinde değilsin. \"Bu resmin z'si 3.2'dir\" demiyorsun; \"bu resmin z'si şu distribution'dan geliyor\" diyorsun.\n\nAradığın şey, o distribution'u üreten kural — yani yine weight'ler. Training bittiğinde elinde encoder ve decoder var, z'lerin kendisi ortada yok. z tahmin edilen bir şey değil, üzerinden integral alınan bir şey.\n\nBuradan çok sorulan soru çıkıyor: VAE'nin içinde p(z) var, o bir prior değil mi? Prior, evet — ama z'nin üzerinde, ve z tahmin edilmiyor. Tahmin edilen şey weight'ler, ve onların üzerinde prior yok.\n\nSonuç: VAE, adında variational geçmesine ve içinde bir prior bulunmasına rağmen, weight'ler açısından MLE yapıyor. KL terimi de bir regularization değil — encoder'ın ürettiği distribution'ları standart normal etrafında tutuyor ki üretim zamanında çektiğin z, decoder'ın tanıdığı bir bölgeye düşsün."
+          "heading": "14. VAE: what you are looking for is the weights, not z",
+          "text": "In a VAE there is also a z, the latent variable. Are we looking for that too? No, and the difference is the key to the topic.\n\nIn the five-number example, once you found $\\mu$ the job was done, you held 3.04. In a VAE there is no moment at which you can say \\\"I found z\\\", because z is separate for every image. There are 200,000 images with 200,000 z's and you are not chasing them one by one. You do not say \\\"the z of this image is 3.2\\\"; you say \\\"the z of this image comes from this distribution.\\\"\n\nWhat you are looking for is the rule that produces that distribution — that is, the weights again. When training ends you hold an encoder and a decoder; the z's themselves are nowhere. z is not something estimated, it is something integrated over.\n\nFrom here comes a frequently asked question: there is a p(z) inside the VAE, is that not a prior? A prior, yes — but on z, and z is not being estimated. What is being estimated is the weights, and there is no prior on them.\n\nThe conclusion: the VAE, despite having variational in its name and a prior inside it, is doing MLE with respect to the weights. The KL term is also not a regularization — it keeps the distributions produced by the encoder around the standard normal so that the z you draw at generation time falls into a region the decoder recognises."
         },
         {
           "type": "text",
-          "heading": "15. ELBO neden devreye giriyor",
-          "text": "VAE'de log olabilirliği doğrudan maksimize edemiyorsun, çünkü p(x) hesaplanabilmesi için z üzerinden integral alınması gerekiyor ve o integral kapalı formda yok.\n\nÇözüm alt sınırla çalışmak: gerçek hedefin altında kalan, ama hesaplanabilen bir ifade türetip onu maksimize ediyorsun. Adı ELBO.\n\nÖnemli olan şu: hedef değişmedi. Hâlâ maximum likelihood yapıyorsun, sadece doğrudan tırmanamadığın için altındaki bir merdiveni tırmanıyorsun.\n\nAynı hikaye diffusion modellerinde de geçerli, orada integral T adımlı bir yol üzerinden. Türetmenin tamamı ve iki modelin satır satır karşılaştırması için DDPM konu anlatımına bak — bu metnin bittiği yerden orası başlıyor."
+          "heading": "15. Why the ELBO comes into play",
+          "text": "In a VAE you cannot maximise the log-likelihood directly, because computing p(x) requires integrating over z and that integral has no closed form.\n\nThe solution is to work with a lower bound: you derive an expression that stays below the real target but is computable, and maximise that. Its name is the ELBO.\n\nWhat matters is this: the target did not change. You are still doing maximum likelihood, you are just climbing a ladder underneath it because you cannot climb directly.\n\nThe same story holds in diffusion models, where the integral runs over a path of T steps. For the full derivation and a line by line comparison of the two models see the DDPM guide — it begins where this text ends."
         },
         {
           "type": "insight",
-          "heading": "Geriye ne kalsın",
-          "text": "Bilinmeyeni oynata oynata, gördüğünü en az şaşırtıcı yapan yeri bul. Likelihood bir olasılık distribution'u değil, veriyi açıklama gücünün ölçüsü. Log almak cevabı değiştirmiyor, sadece çarpımı toplama çevirip hesabı mümkün kılıyor. Gaussian varsayarsan MSE, Bernoulli varsayarsan cross-entropy çıkıyor — yani loss fonksiyonu seçmek noise distribution'u seçmektir. Sinir ağı eğitmek bunun büyük ölçekli hali: ağ bir distribution'un parametresini üretiyor, gradient inişi log olabilirliği tırmanıyor. Aradığın şeyin üzerine prior koyarsan MAP olur, ve Gaussian prior'ın adı weight decay'dir. VAE ve DDPM'de hedef hâlâ maximum likelihood; değişen tek şey, integral alınamadığı için alt sınırla çalışılması."
+          "heading": "What should stay with you",
+          "text": "By sliding the unknown around, find the place that makes what you observed least surprising. The likelihood is not a probability distribution, it is a measure of explanatory power over the data. Taking the log does not change the answer, it only turns a product into a sum and makes the computation possible. If you assume Gaussian you get MSE, if you assume Bernoulli you get cross-entropy — that is, choosing a loss function is choosing a noise distribution. Training a neural network is the large-scale version of this: the network produces the parameter of a distribution and gradient descent climbs the log-likelihood. If you put a prior on the thing you are estimating it becomes MAP, and the name of the Gaussian prior is weight decay. In the VAE and in DDPM the target is still maximum likelihood; the only change is that, since the integral cannot be taken, one works with a lower bound."
         },
         {
           "type": "note",
-          "heading": "Nereye bakılır",
-          "text": "Bu metin sırayı verir, ayrıntı kartlarda: Gaussian türetmesi ve varyansın yanlılığı ch03'te; Bernoulli, Exponential ve Uniform çalışılmış örnekleri math06'da; MLE'den MSE ve BCE'ye adım adım türetmeler vs04'te; MLE-MAP-Bayesian geçişi, prior kimin üzerinde tartışması, MAP ile regularizasyon bağlantısı ve LMMSE tarafı vs03'te; generative modeller için MLE ve KL yorumu cs12'de; ELBO'nun diffusion'daki hali ida11'de."
+          "heading": "Where to look",
+          "text": "This text gives the order, the details are in the cards: the Gaussian derivation and the bias of the variance in ch03; the Bernoulli, Exponential and Uniform worked examples in math06; the step by step derivations from MLE to MSE and BCE in vs04; the MLE-MAP-Bayesian transition, the discussion of whom the prior is on, the connection between MAP and regularization and the LMMSE side in vs03; MLE and the KL reading for generative models in cs12; the diffusion form of the ELBO in ida11."
         }
       ]
     },
     "generative": {
-      "title": "Generative Models — Genel Çerçeve",
+      "title": "Generative Models — The General Frame",
       "cat": "Konu Anlatımı",
-      "context": "Generative Models · CS231n 12-13 · IDA 10-11 · ML-OVERALL 19-21 — diğer üç anlatımın girişi",
+      "context": "Generative Models · CS231n 12-13 · IDA 10-11 · ML-OVERALL 19-21 — the introduction to the other three walkthroughs",
       "chapters": [
         "cs12",
         "cs13",
@@ -27266,66 +27265,66 @@
         "mlo20",
         "mlo21"
       ],
-      "summary": "Sınıflandırmak ile üretmek arasındaki farktan başlayıp, üretmenin neden yapısal olarak daha zor olduğuna, modellerin hangi eksene göre ayrıldığına (açık/örtük density) ve autoregressive, VAE, GAN, diffusion'ın bu haritada nereye oturduğuna kadar. VAE, GAN ve DDPM anlatımlarının girişi.",
+      "summary": "From the difference between classifying and generating, to why generating is structurally harder, to the axis along which the models separate (explicit or implicit density) and where autoregressive models, the VAE, the GAN and diffusion sit on that map. The introduction to the VAE, GAN and DDPM walkthroughs.",
       "sections": [
         {
           "type": "text",
-          "heading": "Bu metin ne için",
-          "text": "VAE, GAN ve diffusion'ın ayrı ayrı anlatımları var. Ama üçünün de aynı problemin farklı cevapları olduğunu görmeden okunursa, birbirinden bağımsız üç mimari gibi duruyorlar.\n\nBu metin o ortak zemini kuruyor: hangi problem, neden zor, ve hangi yol ayrımında kim nereye saptı. Diğer üçünden önce okunmak için yazıldı."
+          "heading": "What this text is for",
+          "text": "VAE, GAN and diffusion each have their own walkthrough. But if they are read without seeing that all three are different answers to the same problem, they look like three unrelated architectures.\n\nThis text builds that common ground: which problem, why it is hard, and at which fork each of them turned where. It was written to be read before the other three."
         },
         {
           "type": "text",
-          "heading": "1. Üç soru, üç model tipi",
-          "text": "Bir köpek fotoğrafı düşün. Ona bakarak üç farklı şey sorabilirsin, ve üçü üç ayrı model demek.\n\nBirincisi: bu fotoğrafta ne var? Model, görüntüyü alıp label üretiyor. Öğrendiği şey, görüntü verildiğinde label'ın olasılığı. Buna discriminative model deniyor — bildiğin classifier.\n\nİkincisi: bana yeni bir fotoğraf üret. Label yok, girdi yok. Model, görüntülerin distribution'unun kendisini öğrenmek zorunda. Generative model bu.\n\nÜçüncüsü: bana bir köpek fotoğrafı üret. Label'ı sen veriyorsun, model o label'a uyan görüntüleri üretiyor. Koşullu generative model.\n\nÜçü de aynı ailedenmiş gibi görünüyor ama zorlukları arasında uçurum var, ve sebebi çok basit bir şeyde saklı."
+          "heading": "1. Three questions, three model types",
+          "text": "Think of a photograph of a dog. Looking at it you can ask three different things, and the three mean three separate models.\n\nThe first: what is in this photograph? The model takes the image and produces a label. What it learns is the probability of the label given the image. This is called a discriminative model — the classifier you already know.\n\nThe second: produce a new photograph for me. There is no label and no input. The model has to learn the distribution of images itself. This is a generative model.\n\nThe third: produce a photograph of a dog for me. You supply the label and the model produces images matching that label. A conditional generative model.\n\nAll three look like they belong to the same family, but there is a chasm between their difficulties, and the reason is hidden in something very simple."
         },
         {
           "type": "text",
-          "heading": "2. Density yarışı: üretmek neden daha zor",
-          "text": "Olasılıkların toplamı bire eşit olmak zorunda. Kritik soru şu: ne yarışıyor?\n\nClassifier'da, tek bir görüntü için label'lar yarışıyor. Köpek mi kedi mi kuş mu — bin tane label'ın var diyelim, bin şey bir birim olasılığı paylaşıyor. Model yalnızca o bin şeyi sıralayabilmek zorunda.\n\nGenerative modelde ise bütün olası görüntüler yarışıyor. Bu fotoğrafa yüksek olasılık vermek, başka bir görüntüden olasılık almak demek. Ve o başka görüntüler, var olabilecek her görüntü — bütün köpekler, bütün kediler, bütün manzaralar, ve bunların yanında anlamsız piksel yığınlarının astronomik çokluğu.\n\nModel hepsini tutarlı biçimde sıralayabilmek zorunda. Gerçek bir fotoğrafa, noise'dan daha yüksek olasılık vermeyi kendi öğrenmek zorunda.\n\nDönüm noktası tek cümlede: sınıflandırmak sonlu bir yarışı çözmek, üretmek bütün görüntü uzayını sıralamak.\n\nKoşullu generative model arada duruyor: yarış hâlâ bütün görüntüler arasında ama her sınıf için ayrı ayrı bölünmüş. Sınıflandırmaktan zor, koşulsuz üretmekten kolay."
+          "heading": "2. The density competition: why generating is harder",
+          "text": "Probabilities have to sum to one. The critical question is: what is competing?\n\nIn a classifier, the labels compete for a single image. Dog or cat or bird — say you have a thousand labels, and a thousand things share one unit of probability. The model only has to be able to rank those thousand things.\n\nIn a generative model all possible images compete. Giving this photograph a high probability means taking probability away from some other image. And those other images are every image that could exist — all dogs, all cats, all landscapes, and beside them the astronomical multitude of meaningless pixel piles.\n\nThe model has to be able to rank all of them consistently. It has to learn by itself to give a real photograph a higher probability than noise.\n\nThe turning point in one sentence: classifying is solving a finite competition, generating is ranking the entire space of images.\n\nThe conditional generative model sits in between: the competition is still among all images but is split separately for each class. Harder than classifying, easier than unconditional generation."
         },
         {
           "type": "formula",
-          "heading": "Üç model, üç normalizasyon",
-          "text": "$$\\text{discriminative: } p(y \\mid x), \\quad \\sum_y p(y \\mid x) = 1 \\qquad \\text{(label'lar yarışır)}$$\n$$\\text{generator: } p(x), \\quad \\int p(x)\\,dx = 1 \\qquad \\text{(tüm görüntüler yarışır)}$$\n$$\\text{koşullu generative: } p(x \\mid y) \\qquad \\text{(her sınıf içinde tüm görüntüler yarışır)}$$"
+          "heading": "Three models, three normalisations",
+          "text": "$$\\text{discriminative: } p(y \\mid x), \\quad \\sum_y p(y \\mid x) = 1 \\qquad \\text{(labels compete)}$$\n$$\\text{generator: } p(x), \\quad \\int p(x)\\,dx = 1 \\qquad \\text{(all images compete)}$$\n$$\\text{conditional generative: } p(x \\mid y) \\qquad \\text{(all images compete within each class)}$$"
         },
         {
           "type": "text",
-          "heading": "3. İkisi arasındaki köprü",
-          "text": "Üçü birbirinden kopuk değil. Bayes kuralı koşullu generative modeli, elindeki bir classifier ile bir generative modelden kurmanı sağlıyor: classifier'ın verdiği oranı, koşulsuz density ile ağırlıklandırıyorsun.\n\nBu yalnızca teorik bir bağ değil. Diffusion'da classifier guidance tam olarak buydu — ayrı eğitilmiş bir classifier'ın gradient'ini kullanarak üretimi bir sınıfa doğru itmek. Classifier-free guidance ise aynı işi tek modelin içinde yapıyor.\n\nYani \"koşulu modele nasıl veririm\" sorusunun kökü burada."
+          "heading": "3. The bridge between them",
+          "text": "The three are not disconnected. Bayes' rule lets you build a conditional generative model out of a classifier and a generative model you already hold: you weight the ratio given by the classifier with the unconditional density.\n\nThis is not only a theoretical link. In diffusion this was exactly classifier guidance — using the gradient of a separately trained classifier to push generation towards a class. Classifier-free guidance then does the same job inside a single model.\n\nSo the root of the question \\\"how do I give the condition to the model\\\" is here."
         },
         {
           "type": "text",
-          "heading": "4. Bu modeller ne işe yarıyor",
-          "text": "Üretim akla ilk geleni ama listenin tamamı daha geniş, ve bazıları daha kullanışlı.\n\nÖrnek üretmek: sentez, veri çoğaltma, eksik modalite tamamlama.\n\nAnomali tespiti: modelin düşük olasılık verdiği örnekler aykırı demektir. Bunun için modelin gerçekten olasılık hesaplayabilmesi gerekiyor — birazdan gelecek ayrımın pratik karşılığı bu.\n\nLabel'sız feature öğrenme: veriyi modellemeyi öğrenen ağ, yapıyı da öğreniyor; sonra küçük bir label'lı kümeyle üstüne classifier takılabiliyor.\n\nBelirsizliği modellemek: bir girdiye karşılık birden çok doğru çıktı olabildiği durumlar. Metinden görüntü üretimi böyle — tek doğru cevap yok, bir distribution var. Classifier mantığı burada çöküyor, çünkü ortalama almak anlamsız bir çıktı veriyor."
+          "heading": "4. What these models are good for",
+          "text": "Generation is what comes to mind first, but the full list is wider, and some of the items are more useful.\n\nProducing samples: synthesis, data augmentation, completing a missing modality.\n\nAnomaly detection: examples to which the model assigns low probability are outliers. For this the model must actually be able to compute a probability — that is the practical counterpart of the distinction coming shortly.\n\nLearning features without labels: a network that learns to model the data also learns its structure; a classifier can then be attached on top with a small labelled set.\n\nModelling uncertainty: cases where a single input admits several correct outputs. Text to image generation is like this — there is no single correct answer, there is a distribution. Classifier logic collapses here, because taking an average produces a meaningless output."
         },
         {
           "type": "text",
-          "heading": "5. Asıl ayrım: density'yi yazabiliyor musun",
-          "text": "Generative modelleri ayıran temel eksen, mimari değil şu soru: model, önüne konan bir görüntüye olasılık verebiliyor mu?\n\nAçık density. Model p(x)'i hesaplayabiliyor. Bir görüntünün ne kadar olası olduğunu söyleyebiliyor, dolayısıyla anomali tespitinde ve model karşılaştırmasında kullanılabiliyor.\n\nÖrtük density. Model p(x)'i hesaplayamıyor ama ondan örnek çekebiliyor. Sana görüntü üretiyor, ama \"bu görüntü ne kadar olası\" sorusuna cevap veremiyor.\n\nAçık olanlar da kendi içinde ikiye ayrılıyor: density'yi tam olarak hesaplayabilenler, ve ancak bir alt sınırla yaklaşabilenler.\n\nBütün harita bu iki soruya göre kuruluyor."
+          "heading": "5. The real distinction: can you write down the density",
+          "text": "The fundamental axis separating generative models is not the architecture but this question: can the model assign a probability to an image placed in front of it?\n\nExplicit density. The model can compute p(x). It can say how probable an image is, and can therefore be used in anomaly detection and model comparison.\n\nImplicit density. The model cannot compute p(x) but can draw samples from it. It produces images for you, but cannot answer the question \\\"how probable is this image\\\".\n\nThe explicit ones split in two among themselves: those that can compute the density exactly, and those that can only approach it with a lower bound.\n\nThe entire map is built on these two questions."
         },
         {
           "type": "code",
-          "heading": "Harita",
-          "text": "Uretici modeller\n├── Acik yogunluk  (p(x) hesaplanabiliyor)\n│   ├── Tam hesap\n│   │   └── Autoregressive       zincir kurali, tam log-likelihood\n│   └── Yaklasik hesap\n│       ├── VAE                  ELBO, alt sinir\n│       └── Difuzyon             ELBO, alt sinir\n└── Ortuk yogunluk  (p(x) hesaplanamiyor, ornek cekilebiliyor)\n    └── GAN                      adversarial egitim"
+          "heading": "The map",
+          "text": "Generative models\n├── Explicit density  (p(x) computable)\n│   ├── Exact\n│   │   └── Autoregressive       chain rule, full log-likelihood\n│   └── Approximate\n│       ├── VAE                  ELBO, lower bound\n│       └── Diffusion            ELBO, lower bound\n└── Implicit density  (p(x) not computable, samples drawable)\n    └── GAN                      adversarial training"
         },
         {
           "type": "text",
-          "heading": "6. Autoregressive: density'yi parçalara bölmek",
-          "text": "En doğrudan yol. Görüntüyü ya da metni bir dizi olarak düşün, ve olasılığı zincir kuralıyla parçala: ilk öğenin olasılığı, çarpı ikincinin birinciye koşullu olasılığı, çarpı üçüncünün ilk ikisine koşullu olasılığı, ve böyle gider.\n\nHer çarpan küçük bir tahmin problemi ve bir ağ tarafından modelleniyor. Çarpımın tamamı gerçek olasılık — yaklaşım yok, alt sınır yok. Bu yüzden training sinyali en dürüst olan bu ailede.\n\nDil modellerinin tamamı bu. Nedensel maskeli bir Transformer, tam olarak bunu paralel biçimde eğitiyor.\n\nBedeli üretimde ortaya çıkıyor: örnekler sırayla üretilmek zorunda. Bin yirmi dörde bin yirmi dört bir görüntüyü ham piksel üzerinden üretmek milyonlarca sıralı adım demek — pratikte imkansız.\n\nModern çözüm ham pikseli bırakmak: görüntüyü önce ayrık kodlara sıkıştır, sonra o kısa kod dizisini autoregressive üret. Milyonlarca adım yerine birkaç bin adım."
+          "heading": "6. Autoregressive: splitting the density into pieces",
+          "text": "The most direct route. Think of the image or the text as a sequence and split the probability with the chain rule: the probability of the first element, times the probability of the second conditioned on the first, times the probability of the third conditioned on the first two, and so on.\n\nEvery factor is a small prediction problem modelled by a network. The whole product is the true probability — no approximation, no lower bound. That is why the training signal is the most honest in this family.\n\nAll language models are of this kind. A causally masked Transformer trains exactly this, in parallel.\n\nThe cost shows up at generation: samples have to be produced in order. Generating a 1024 by 1024 image over raw pixels means millions of sequential steps — practically impossible.\n\nThe modern solution is to abandon raw pixels: first compress the image into discrete codes, then generate that short code sequence autoregressively. A few thousand steps instead of millions."
         },
         {
           "type": "text",
-          "heading": "7. Autoencoder: neden generative model değil",
-          "text": "Autoencoder sıkıştırıp geri açıyor: encoder dar bir koda indiriyor, decoder geri kuruyor, loss da reconstruction hatası. Label gerekmiyor ve öğrendiği kod gerçekten anlamlı — label'sız feature öğrenmenin klasik yolu, modern kendinden denetimli yöntemlerin atası.\n\nAma üretemiyor, ve sebebi öğretici: yeni bir görüntü üretmek için yeni bir kod sample alman gerekiyor, ve hangi kodların geçerli olduğunu söyleyen hiçbir şey yok. Kod uzayında delikler var, aralar çöp üretiyor.\n\nYani geçerli bir kod üretmek, doğrudan geçerli bir görüntü üretmek kadar zor. Hiçbir şey kazanmadın.\n\nEksik olan tek şey, kodun nereden geldiğinin belli olması. VAE tam olarak bunu ekliyor."
+          "heading": "7. The autoencoder: why it is not a generative model",
+          "text": "An autoencoder compresses and unfolds: the encoder reduces to a narrow code, the decoder rebuilds, and the loss is the reconstruction error. No labels are needed and the code it learns is genuinely meaningful — the classical route to learning features without labels, the ancestor of modern self-supervised methods.\n\nBut it cannot generate, and the reason is instructive: to produce a new image you have to sample a new code, and nothing tells you which codes are valid. There are holes in the code space, and the gaps produce garbage.\n\nSo producing a valid code is as hard as directly producing a valid image. You have gained nothing.\n\nThe only thing missing is knowing where the code comes from. The VAE adds exactly that."
         },
         {
           "type": "text",
-          "heading": "8. Üç cevap, üç farklı taviz",
-          "text": "VAE. Kodu bilinen bir distribution'dan gelmeye zorluyor, böylece üretim zamanında nereden örnekleyeceğini biliyorsun. Bedeli, marjinal olasılığın artık hesaplanamaması — bir alt sınırla çalışıyorsun. Training'i stabil, latent uzayı okunaklı, çıktısı bulanık.\n\nGAN. Olasılık hesaplamayı tamamen bırakıyor. Sadece örnekleyen bir model kuruyor ve kaliteyi bir discriminator'e ölçtürüyor. Çıktısı keskin ve üretim tek adımda, ama training bir denge arayışı; izleyebileceğin dürüst bir sayı yok ve mode collapse yapısal bir risk.\n\nDiffusion. Zor problemi bin kolay probleme bölüyor: tek adımda üretmek yerine, noise'dan görüntüye küçük adımlarla gidiyor. Training'i VAE kadar stabil, kalitesi GAN'dan iyi, mod kapsaması en iyisi. Bedeli üretim hızı — tek ileri geçiş yerine onlarca.\n\nÜç tavizin ortak paydası şu: kalite, çeşitlilik, hız ve training stabilitesi aynı anda alınamıyor. Her model bu dörtlüden hangisini feda ettiğiyle tanımlanıyor."
+          "heading": "8. Three answers, three different trade-offs",
+          "text": "VAE. It forces the code to come from a known distribution, so at generation time you know where to sample from. The cost is that the marginal likelihood is no longer computable — you work with a lower bound. Its training is stable, its latent space legible, its output blurry.\n\nGAN. It abandons computing probabilities entirely. It builds a model that only samples and has the quality measured by a discriminator. Its output is sharp and generation is single-step, but training is a search for an equilibrium; there is no honest number you can track, and mode collapse is a structural risk.\n\nDiffusion. It splits the hard problem into a thousand easy ones: instead of generating in one step, it walks from noise to image in small steps. Its training is as stable as the VAE's, its quality better than the GAN's, and its mode coverage the best. The cost is generation speed — dozens of forward passes instead of one.\n\nThe common denominator of the three trade-offs is this: quality, diversity, speed and training stability cannot all be had at once. Every model is defined by which of these four it sacrifices."
         },
         {
           "type": "table",
-          "heading": "Karşılaştırma",
+          "heading": "Comparison",
           "rows": [
             [
               "",
@@ -27335,69 +27334,68 @@
               "Diffusion"
             ],
             [
-              "p(x) hesaplanır mı",
-              "evet, tam",
-              "alt sınır",
-              "hayır",
-              "alt sınır"
+              "Is p(x) computable",
+              "yes, exactly",
+              "lower bound",
+              "no",
+              "lower bound"
             ],
             [
-              "Üretim hızı",
-              "çok yavaş (sıralı)",
-              "tek adım",
-              "tek adım",
-              "yavaş (çok adım)"
+              "Generation speed",
+              "very slow (sequential)",
+              "one step",
+              "one step",
+              "slow (many steps)"
             ],
             [
               "Training",
-              "stabil",
-              "stabil",
-              "kırılgan",
-              "stabil"
+              "stable",
+              "stable",
+              "fragile",
+              "stable"
             ],
             [
-              "Örnek kalitesi",
-              "yüksek",
-              "düşük (bulanık)",
-              "yüksek (keskin)",
-              "en yüksek"
+              "Sample quality",
+              "high",
+              "low (blurry)",
+              "high (sharp)",
+              "highest"
             ],
             [
-              "Mod kapsaması",
-              "iyi",
-              "iyi",
-              "zayıf",
-              "iyi"
+              "Mode coverage",
+              "good",
+              "good",
+              "weak",
+              "good"
             ],
             [
-              "Latent uzay",
-              "yok",
-              "yapılandırılmış",
-              "yapılandırılmamış",
-              "veriyle aynı boyutta"
+              "Latent space",
+              "none",
+              "structured",
+              "unstructured",
+              "same size as the data"
             ]
-          ],
-          "text": ""
+          ]
         },
         {
           "type": "text",
-          "heading": "9. Üçünün altındaki ortak ilke",
-          "text": "GAN dışındaki hepsinin training ilkesi aynı: maximum likelihood. Training verisini en olası kılan parametreleri arıyorsun.\n\nAutoregressive modeller bunu doğrudan yapıyor, çünkü olasılığı tam hesaplayabiliyorlar. VAE ve diffusion doğrudan yapamıyor — ilkinde gizli değişken üzerinden, ikincisinde T adımlı yol üzerinden alınamayan bir integral var — o yüzden hesaplanabilir bir alt sınırla çalışıyorlar. Hedef değişmiyor, sadece tırmanılan merdiven değişiyor.\n\nGAN bu çizginin dışında duruyor, ve bütün karakteri buradan geliyor: optimize ettiği dürüst bir olabilirlik yok, onun yerine öğrenilen bir ölçüt var.\n\nMLE'nin kendisini hatırlaman gerekiyorsa MLE konu anlatımına bak; oradaki \"noise seçmek loss seçmektir\" cümlesi burada da geçerli — VAE'nin reconstruction terimi tam olarak o yüzden kareler toplamı."
+          "heading": "9. The common principle underneath the three",
+          "text": "The training principle of all of them except the GAN is the same: maximum likelihood. You look for the parameters that make the training data most probable.\n\nAutoregressive models do this directly, because they can compute the probability exactly. The VAE and diffusion cannot do it directly — in the first there is an intractable integral over a latent variable, in the second over a T-step path — so they work with a computable lower bound. The target does not change, only the ladder being climbed changes.\n\nThe GAN stands outside this line, and its whole character comes from that: there is no honest likelihood it optimises, and in its place there is a learned criterion.\n\nIf you need to recall MLE itself, see the MLE guide; the sentence there, \\\"choosing a noise is choosing a loss\\\", applies here too — that is exactly why the reconstruction term of the VAE is a sum of squares."
         },
         {
           "type": "text",
-          "heading": "10. Bugün nerede durulduğu",
-          "text": "Ailelerin yarıştığı dönem bitti; modern sistemler üçünü birden kullanıyor.\n\nMetinden görüntü üreten bir model tipik olarak şöyle kurulu: bir VAE görüntüyü küçük bir latent uzaya sıkıştırıyor, o VAE'nin decoder'ını keskin tutan şey bir GAN discriminator'ü, ve asıl üretimi latent uzayda bir diffusion modeli yapıyor. Koşul metinden geliyor ve cross-attention ile bağlanıyor.\n\nDil tarafı ise autoregressive kaldı, ve görüntü üretimine de geri döndü: görüntüyü ayrık kodlara çevirip o kodları autoregressive üretmek yeniden rekabetçi.\n\nYani harita bir sıralama değil, bir alet çantası. Doğru soru \"hangisi en iyi\" değil, \"bu problemde neyi feda edebilirim\"."
+          "heading": "10. Where things stand today",
+          "text": "The era in which the families competed is over; modern systems use all three at once.\n\nA text to image model is typically built like this: a VAE compresses the image into a small latent space, what keeps that VAE's decoder sharp is a GAN discriminator, and the actual generation is done by a diffusion model in the latent space. The condition comes from text and is attached with cross-attention.\n\nThe language side remained autoregressive, and it has come back to image generation too: converting the image into discrete codes and generating those codes autoregressively is competitive again.\n\nSo the map is not a ranking, it is a toolbox. The right question is not \\\"which one is best\\\" but \\\"what can I sacrifice in this problem\\\"."
         },
         {
           "type": "insight",
-          "heading": "Geriye ne kalsın",
-          "text": "Sınıflandırmada label'lar tek bir görüntü için yarışır, üretimde bütün görüntüler evrensel olarak yarışır — üretmenin yapısal olarak zor olmasının tek sebebi bu. Modelleri ayıran asıl eksen mimari değil, density'yi hesaplayabilip hesaplayamadıkları. Autoregressive tam hesaplar ama yavaş üretir; VAE ve diffusion alt sınırla çalışır; GAN hesaplamayı tamamen bırakır. Sıradan autoencoder üretemez çünkü geçerli kodun nereden geleceği belli değildir. Kalite, çeşitlilik, hız ve stabilite aynı anda alınamaz; her model hangisini feda ettiğiyle tanımlanır. GAN hariç hepsinin altında maximum likelihood vardır."
+          "heading": "What should stay with you",
+          "text": "In classification the labels compete for a single image, in generation all images compete universally — this is the only reason generating is structurally hard. The real axis separating the models is not architecture but whether they can compute the density. Autoregressive computes it exactly but generates slowly; the VAE and diffusion work with a lower bound; the GAN abandons computation entirely. A plain autoencoder cannot generate because there is no telling where a valid code comes from. Quality, diversity, speed and stability cannot be had at once; every model is defined by which one it sacrifices. Under all of them except the GAN lies maximum likelihood."
         },
         {
           "type": "note",
-          "heading": "Sonra nereye",
-          "text": "Bu metin giriş; devamı üç ayrı konu anlatımında: VAE (kodun nereden geldiğini nasıl çözdüğü, ELBO, reparameterization), GAN (öğrenilen loss, mode collapse, DCGAN-StyleGAN-CycleGAN) ve DDPM (forward-reverse süreç, ELBO'nun MSE'ye çökmesi, CFG, latent diffusion). Kart tarafında: discriminative-generative ayrımı ve taksonomi cs12'de, autoregressive zincir kuralı yine cs12'de, GAN teorisi ve diffusion ailesinin geniş çerçevesi cs13'te."
+          "heading": "Where to go next",
+          "text": "This text is the introduction; it continues in three separate walkthroughs: VAE (how it solved where the code comes from, the ELBO, reparameterization), GAN (the learned loss, mode collapse, DCGAN-StyleGAN-CycleGAN) and DDPM (the forward and reverse process, the collapse of the ELBO into MSE, CFG, latent diffusion). On the card side: the discriminative-generative distinction and the taxonomy are in cs12, the autoregressive chain rule also in cs12, GAN theory and the wide frame of the diffusion family in cs13."
         }
       ]
     },
