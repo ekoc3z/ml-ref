@@ -28516,7 +28516,7 @@
       ]
     },
     "clip": {
-      "title": "Koşullama Sinyali — CLIP ve Metin-Görüntü Temsili",
+      "title": "Conditioning Signal — CLIP ve Metin-Görüntü Temsili",
       "cat": "Konu Anlatımı",
       "context": "Metinden görüntüye üretimin ilk yarısı · CME 296 Lecture 4 Part 2",
       "chapters": [
