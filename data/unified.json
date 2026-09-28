@@ -6944,449 +6944,6 @@
       ]
     },
     {
-      "title": "Score Matching — Neden Gradient'i Öğreniyoruz ve DDPM'le Nasıl Aynı Şey",
-      "cat": "Theory",
-      "summary": "Score, log-density'nin $x$'e göre gradient'i; normalizasyon sabitini denklemden sildiği için hesaplanabilir hale geliyor. Gerçek score bilinmiyor ama kendi eklediğin noise'unki biliniyor — denoising score matching bu hileyle eğitiyor ve sonuçta DDPM'in $\\varepsilon$-prediction'ı ile aynı loss'a çıkıyor. SDE ve probability flow ODE bağlantısı da buradan.",
-      "context": "Score-based generative modeling — Song ve Ermon 2019, Song ve ark. 2021",
-      "mlo_only": true,
-      "sections": [
-        {
-          "type": "text",
-          "heading": "Tek cümle",
-          "text": "Score matching, distribution'ı doğrudan öğrenmek yerine onun logaritmasının gradient'ini öğreniyor: $\\nabla_x \\log p(x)$. Bu tek hamle, hesaplanamayan normalizasyon sabitini denklemden siliyor.\n\nDDPM ile ayrı bir yöntem değil, aynı şeyin başka dilde yazılmış hali — sonda birebir aynı loss'a çıkıyor."
-        },
-        {
-          "type": "text",
-          "heading": "1. Problem: normalizasyon sabiti",
-          "text": "Bir distribution'ı parametreyle yazmanın doğal yolu şu: bir enerji fonksiyonu $E_\\theta(x)$ tanımla, olasılığı ona bağla.\n\n$$p_\\theta(x) = \\frac{e^{-E_\\theta(x)}}{Z_\\theta}, \\qquad Z_\\theta = \\int e^{-E_\\theta(x)}\\, dx$$\n\nSorun $Z_\\theta$'da. Bu integral bütün görüntü uzayı üzerinden alınıyor, yani $256 \\times 256 \\times 3$ boyutlu bir uzayda. Hesaplanamıyor, ve $\\theta$'ya bağlı olduğu için maximum likelihood da yapılamıyor.\n\nDiffusion öncesi generative modellerin taksonomisi büyük ölçüde bu sorunun etrafında şekillenmişti: VAE alt sınıra kaçıyor, GAN likelihood'u hiç hesaplamıyor, autoregressive modeller zinciri parçalara bölüyor."
-        },
-        {
-          "type": "text",
-          "heading": "2. Gradient alınca sabit ölüyor",
-          "text": "Logaritmayı al ve $x$'e göre türev al:\n\n$$\\nabla_x \\log p_\\theta(x) = \\nabla_x \\bigl[ -E_\\theta(x) - \\log Z_\\theta \\bigr] = -\\nabla_x E_\\theta(x)$$\n\n$\\log Z_\\theta$ sabit bir sayı — $x$'e bağlı değil, dolayısıyla gradient'i sıfır. Hesaplanamayan terim kendiliğinden düşüyor.\n\nBu gradient'e score deniyor:\n\n$$s(x) := \\nabla_x \\log p(x)$$\n\nDikkat: türev $\\theta$'ya göre değil, $x$'e göre. Karışması kolay, çünkü likelihood tartışmalarında alıştığın türev $\\theta$'ya göre olandı."
-        },
-        {
-          "type": "insight",
-          "heading": "Score sezgisel olarak ne",
-          "text": "Görüntü uzayının her noktasına bir ok yerleştir: o noktadan hangi yöne gidersen distribution'ın density'si en hızlı artar. Score bu ok alanı.\n\nGerçekçi görüntülerin bulunduğu bölgelerde oklar o bölgeye doğru bakıyor; uzak, noise'lu bölgelerde ise \"veriye doğru\" yönü gösteriyor. Üretim de bu okları takip etmek oluyor.\n\nFlow matching'deki velocity field ile aynı türden bir nesne: ikisi de uzaydaki her noktaya bir vektör atıyor. Fark, neyi gösterdikleri — biri density'nin artış yönünü, diğeri veriye giden yolun hızını."
-        },
-        {
-          "type": "text",
-          "heading": "3. Naive score matching neden çalışmıyor",
-          "text": "Hedef belli: network'ün tahmini $s_\\theta(x)$ gerçek score'a yakın olsun.\n\n$$J(\\theta) = \\mathbb{E}_{x \\sim p_{\\text{data}}} \\bigl\\| s_\\theta(x) - \\nabla_x \\log p_{\\text{data}}(x) \\bigr\\|^2$$\n\nAma sağdaki terim elimizde yok: $p_{\\text{data}}$'yı bilseydik zaten problem kalmazdı.\n\nHyvärinen (2005) kısmi integrasyonla bu terimi denklemden çıkarmayı başardı; geriye $\\operatorname{tr}(\\nabla_x s_\\theta(x))$, yani Jacobian'ın izi kalıyor. Teorik olarak çözüm, pratikte değil: yüksek boyutta Jacobian'ın izini hesaplamak her adımda $d$ tane geri yayılım demek."
-        },
-        {
-          "type": "text",
-          "heading": "4. Denoising score matching: hile",
-          "text": "Vincent (2011) şunu fark etti: veriye kendi eklediğin noise'un score'u kapalı formda biliniyor.\n\n$\\tilde{x} = x + \\sigma \\varepsilon$ olsun, $\\varepsilon \\sim \\mathcal{N}(0,I)$. O zaman $q(\\tilde{x} \\mid x)$ bir Gaussian ve score'u doğrudan yazılabiliyor:\n\n$$\\nabla_{\\tilde{x}} \\log q(\\tilde{x} \\mid x) = -\\frac{\\tilde{x} - x}{\\sigma^2} = -\\frac{\\varepsilon}{\\sigma}$$\n\nHedef artık bilinmeyen bir şey değil, kendi çektiğin $\\varepsilon$. Loss basit bir regression'a dönüşüyor:\n\n$$J(\\theta) = \\mathbb{E}_{x,\\, \\varepsilon,\\, \\sigma} \\Bigl\\| s_\\theta(\\tilde{x}, \\sigma) + \\frac{\\varepsilon}{\\sigma} \\Bigr\\|^2$$\n\nKanıtlanan şey şu: bu loss'u minimize eden network, noise'lu distribution'ın gerçek score'unu öğreniyor. Yani hedefi bilmeden doğru cevaba varıyorsun — DDPM'deki \"tek örneğin noise'unu hedef al, ortalaması doğru çıksın\" hilesinin aynısı."
-        },
-        {
-          "type": "insight",
-          "heading": "5. DDPM ile birebir aynı loss",
-          "text": "Diffusion'ın forward süreci $x_t = \\sqrt{\\bar{\\alpha}_t}\\, x_0 + \\sqrt{1-\\bar{\\alpha}_t}\\, \\varepsilon$ zaten \"veriye bilinen miktarda noise eklemek\". Yani DDPM'in training'i tam olarak denoising score matching.\n\nBağlantı tek satır:\n\n$$s_\\theta(x_t, t) = -\\frac{\\varepsilon_\\theta(x_t, t)}{\\sqrt{1-\\bar{\\alpha}_t}}$$\n\n$\\varepsilon$-prediction ile score prediction aynı network'ün iki farklı ölçeklenmiş hali. Biri \"eklenen noise neydi\" diye soruyor, diğeri \"density hangi yöne artıyor\" diye — cevap aynı vektör, işareti ve ölçeği farklı.\n\nBu yüzden CME 296'nın 2. dersi \"parallel with diffusion\" diye bitiyor: yeni bir model ailesi değil, aynı eğitimin başka türetmesi."
-        },
-        {
-          "type": "text",
-          "heading": "6. Score ile nasıl sample alınır: Langevin",
-          "text": "Score elindeyse üretim, okları takip edip üstüne biraz rastgelelik eklemek:\n\n$$x_{k+1} = x_k + \\frac{\\delta}{2}\\, s_\\theta(x_k) + \\sqrt{\\delta}\\, z_k, \\qquad z_k \\sim \\mathcal{N}(0,I)$$\n\nBuna Langevin dynamics deniyor. Yeterince adım sonra $x_k$, $p(x)$'ten gelen bir örnek gibi davranıyor. Noise terimi olmasaydı sadece en yakın tepeye tırmanır, tek bir noktaya saplanırdın; rastgelelik distribution'ın tamamını gezmeyi sağlıyor.\n\nNeden tek bir noise seviyesi yetmiyor: gerçek veri yüksek boyutlu uzayda ince bir bölgeye sıkışmış durumda. Bu bölgenin uzağında $p(x)$ neredeyse sıfır, dolayısıyla orada ne veri var ne de network'ün öğrenebileceği bir sinyal — score tahmini çöp çıkıyor. Rastgele bir noktadan başlarsan tam da o çöp bölgedesin.\n\nÇözüm: birçok noise seviyesi. Yüksek $\\sigma$'da distribution her yere yayılıyor ve score her yerde anlamlı; seviye seviye azaltarak veriye yaklaşıyorsun. Song ve Ermon'un NCSN'i (2019) bu fikir, ve DDPM'in schedule'ı ile aynı şeye bakıyor."
-        },
-        {
-          "type": "table",
-          "heading": "7. Aynı sürecin üç dili",
-          "rows": [
-            [
-              "",
-              "Latent variable",
-              "Score",
-              "SDE"
-            ],
-            [
-              "Network ne tahmin ediyor",
-              "$\\varepsilon_\\theta(x_t,t)$",
-              "$s_\\theta(x_t,t)$",
-              "aynı network, continuous $t$"
-            ],
-            [
-              "Türetme",
-              "ELBO",
-              "denoising score matching",
-              "stokastik diferansiyel denklem"
-            ],
-            [
-              "Sampling",
-              "ancestral (DDPM)",
-              "annealed Langevin",
-              "reverse-time SDE solver"
-            ],
-            [
-              "Kaynak",
-              "Ho ve ark. 2020",
-              "Song, Ermon 2019",
-              "Song ve ark. 2021"
-            ]
-          ]
-        },
-        {
-          "type": "text",
-          "heading": "Neden continuous time'a geçiyoruz",
-          "text": "Önce şunu sormak lazım: ayrık zincir çalışıyordu, continuous time'a geçmenin derdi ne.\n\nAyrık hâlde adım sayısı modelin tanımının parçası. $T = 1000$ seçtiğinde $\\beta_t$ değerleri, $\\bar{\\alpha}_t$ çarpımları, posterior katsayıları — hepsi o sayıya göre kurulmuş oluyor. Continuous time'a geçince $T$ bir tanım olmaktan çıkıp solver tercihine dönüşüyor. Merdiven ile rampa farkı: merdivende basamak yüksekliği sabittir, rampada istediğin yere basarsın.\n\nDört somut getirisi var.\n\nBirleştirme. Ayrık hâlde DDPM ile NCSN birbirinden bağımsız iki yöntem gibi duruyordu; biri görüntüyü küçültüp noise ekliyor, diğeri sadece üstüne yığıyordu. Sürekli hâlde ikisi de tek bir denklemin farklı $f$ ve $g$ seçimi, yani VP ile VE. Song ve ark.'nın paperının asıl katkısı bu birleştirme.\n\nAdım sayısının serbest kalması. Model bir kez eğitiliyor, sonra aynı network ile 1000 de 50 de 20 adımla da örnek alabiliyorsun. Ayrık tanımda katsayılar $T$'ye gömülü olduğu için bu esneklik yoktu; DDIM'in respacing ile açtığı kapı, continuous time dilinde kendiliğinden geliyor.\n\nHazır matematiğe erişim. SDE'lerin zamanda tersine çözülmesi, probability flow ODE, yüksek mertebeli sayısal solver'lar — bunlar onlarca yıldır var olan araçlar. Süreci bir SDE olarak yazdığın anda hepsi kullanılabilir hale geliyor. DPM-Solver da tam bu kapıdan giriyor.\n\nNoise seviyesinin continuous olması. $t$'yi 1 ile 1000 arasından değil $[0,1]$ aralığından çekiyorsun, network herhangi bir ara seviyede de çalışıyor. Flow matching'in logit-normal zaman örneklemesi gibi tercihler de ancak bu zeminde anlamlı.\n\nYani yeni bir model icat edilmiyor: aynı süreç daha genel bir dille yazılıyor, ve o dilin getirdiği araç çantası kullanılıyor."
-        },
-        {
-          "type": "text",
-          "heading": "8. Continuous time'a geçiş: SDE nereden çıkıyor",
-          "text": "DDPM'in forward adımı şuydu: $x_t = \\sqrt{1-\\beta_t}\\, x_{t-1} + \\sqrt{\\beta_t}\\, z$. Adım sayısını 1000'den 10000'e çıkarsaydın her adımda daha az noise eklemen gerekirdi, yoksa toplam bozulma değişirdi. Yani $\\beta_t$ aslında \"birim zamanda ne kadar noise\" demek, ve adım süresine bağlı.\n\nBunu açıkça yazalım. $t$ artık 1, 2, 3 diye sayılan bir indeks değil, 0 ile 1 arasında continuous bir sayı; iki ardışık adım arasındaki süre $\\Delta t$. Adım sayısını ikiye katlarsan $\\Delta t$ yarıya iner ve her adımda eklenen noise da yarıya inmeli, yoksa toplam bozulma değişir. Demek ki adımdan bağımsız olan büyüklük \"birim zamanda eklenen noise\", ona $\\beta(t)$ diyelim:\n\n$$\\beta_t = \\beta(t)\\, \\Delta t$$\n\nŞimdi karekökü küçük $\\Delta t$ için açıyoruz. Kullanılan kural $(1+u)^a \\approx 1 + a u$, burada $u = -\\beta(t)\\Delta t$ ve $a = \\tfrac{1}{2}$:\n\n$$\\sqrt{1-\\beta(t)\\Delta t} \\approx 1 - \\tfrac{1}{2}\\beta(t)\\Delta t$$\n\nSayıyla kontrol: $\\beta(t)\\Delta t = 0.01$ için gerçek değer $0.994987$, yaklaşım $0.995$. Adım küçüldükçe fark daha da kapanıyor, limitte tamamen kayboluyor.\n\nBunu $x_t = \\sqrt{1-\\beta_t}\\, x_{t-1} + \\sqrt{\\beta_t}\\, z$ içine koyup $x_t - x_{t-1}$ farkını yazınca bir adımdaki değişim şu hale geliyor:\n\n$$\\Delta x = -\\tfrac{1}{2}\\beta(t)\\, x\\, \\Delta t + \\sqrt{\\beta(t)}\\, \\sqrt{\\Delta t}\\, z$$\n\n$\\Delta t \\to 0$ limitinde bu bir stochastic differential equation oluyor:\n\n$$dx = \\underbrace{f(x,t)}_{\\text{drift}}\\, dt + \\underbrace{g(t)}_{\\text{diffusion}}\\, dw$$\n\nİki terimin anlamı ayrı ayrı çok somut:\n\n$f(x,t)$ drift, yani deterministik sürüklenme. Yukarıdaki örnekte $-\\tfrac{1}{2}\\beta(t)x$, yani her an görüntüyü biraz sıfıra doğru çekiyor. Rüzgârsız bir nehirde akıntının seni taşıması gibi.\n\n$g(t)$ diffusion, yani rastgele titreşimin şiddeti. $dw$ Brownian hareket: her anda çekilen sonsuz küçük, bağımsız bir noise. Suyun üstündeki toz zerresinin titremesi.\n\nDikkat çeken ayrıntı: noise terimi $\\Delta t$ ile değil $\\sqrt{\\Delta t}$ ile ölçekleniyor. Bağımsız rastgele adımların varyansları toplandığı için, standart sapma adım sayısının kareköküyle büyüyor. Rastgele yürüyüşün temel özelliği bu ve SDE'lerin ayrı bir matematik dalı olmasının sebebi."
-        },
-        {
-          "type": "table",
-          "heading": "9. VP ve VE — iki tasarım tercihi",
-          "rows": [
-            [
-              "",
-              "VP-SDE (variance preserving)",
-              "VE-SDE (variance exploding)"
-            ],
-            [
-              "Kim kullanıyor",
-              "DDPM",
-              "NCSN (Song, Ermon 2019)"
-            ],
-            [
-              "Drift $f$",
-              "$-\\tfrac{1}{2}\\beta(t)\\, x$ — görüntüyü küçültüyor",
-              "$0$ — görüntüye dokunulmuyor"
-            ],
-            [
-              "Diffusion $g$",
-              "$\\sqrt{\\beta(t)}$",
-              "$\\sigma(t)$, hızla büyüyen"
-            ],
-            [
-              "$x_t$'nin ölçeği",
-              "sabit, varyans hep $1$",
-              "sürekli büyüyor, sonda $\\sigma_{\\max}$ devasa"
-            ],
-            [
-              "Sondaki durum",
-              "$\\mathcal{N}(0,I)$",
-              "$\\mathcal{N}(x_0, \\sigma_{\\max}^2 I)$, pratikte veriden bağımsız"
-            ],
-            [
-              "Avantajı",
-              "network'ün girdisi hep aynı büyüklükte",
-              "veri hiç bozulmuyor, sadece üstüne ekleniyor"
-            ],
-            [
-              "Zorluğu",
-              "sinyal ile noise iç içe ölçekleniyor",
-              "network çok geniş bir $\\sigma$ aralığını idare etmeli"
-            ]
-          ]
-        },
-        {
-          "type": "insight",
-          "heading": "VP ile VE arasındaki fark neden önemli",
-          "text": "İkisi de aynı işi yapıyor: veriyi tanınmaz hale getirip sonunda bilinen bir distribution bırakmak. Fark, bunu nasıl yaptıkları.\n\nVP her adımda görüntüyü biraz küçültüp yerine noise koyuyor, böylece toplam büyüklük sabit kalıyor. Bir bardak boyalı suyun yarısını dökeyim, yerine su ekleyeyim gibi: seviye hep aynı, renk kayboluyor. Network'ün girdisi her $t$'de aynı ölçekte olduğu için normalization ve mimari açısından rahat.\n\nVE görüntüye hiç dokunmuyor, sadece üstüne giderek daha büyük noise yığıyor. Boyalı suyu hiç dökmeyip üstüne kovalarca berrak su eklemek gibi: renk yine kayboluyor ama kap taşıyor. Buradaki zorluk ölçek: $\\sigma$ 0.01'den 50'ye kadar değişebiliyor ve network'ün hepsinde çalışması gerekiyor.\n\nSong ve ark. (2021) ikisinin de aynı çerçevenin özel hali olduğunu gösterdi. Bu birleştirme, DDPM ile NCSN'in birbirinden bağımsız iki icat değil, tek bir denklemin iki ayarı olduğunu ortaya çıkardı — paperın asıl katkısı bu."
-        },
-        {
-          "type": "text",
-          "heading": "Tabloyu somutlaştıralım: network ne görüyor",
-          "text": "Network'ün girdisi her iki kurulumda da $x_t$, yani o $t$ seviyesindeki bozulmuş görüntü. Aradaki fark, bu girdinin sayısal olarak neye benzediği.\n\nVP'de iki katsayının kareleri toplamı hep 1 olduğu için piksel değerleri her $t$'de aynı bantta kalıyor:\n\n$$x_t = \\sqrt{\\bar{\\alpha}_t}\\, x_0 + \\sqrt{1-\\bar{\\alpha}_t}\\, \\varepsilon$$\n\n$$t \\text{ küçük: } 0.99\\, x_0 + 0.10\\, \\varepsilon \\qquad t \\text{ orta: } 0.71\\, x_0 + 0.71\\, \\varepsilon \\qquad t \\text{ büyük: } 0.10\\, x_0 + 0.99\\, \\varepsilon$$\n\nVE'de ise görüntünün katsayısı hiç değişmiyor, sadece üstüne eklenen noise büyüyor:\n\n$$x_t = x_0 + \\sigma(t)\\, \\varepsilon$$\n\n$\\sigma = 0.01$ iken $x_t$ neredeyse temiz görüntü, değerler $-1$ ile $1$ arasında. $\\sigma = 50$ iken aynı görüntünün değerleri $-150$ ile $150$ bandına yayılıyor ve içindeki yapı tamamen kayboluyor. \"Veri hiç bozulmuyor, sadece üstüne ekleniyor\" cümlesi bunu anlatıyor: $x_0$ terimi hiç küçültülmüyor."
-        },
-        {
-          "type": "text",
-          "heading": "Her iki tarafın bedeli ne",
-          "text": "VE'nin bedeli ölçek. Network aynı weight'lerle hem $\\sigma = 0.01$ hem $\\sigma = 50$ durumunu idare etmek zorunda, yani girdi büyüklüğü binlerce kat değişiyor. Sinir ağları bunu sevmiyor: aktivasyonlar ya doyuyor ya sıfıra iniyor. Pratikte girdiyi $\\sigma$'ya bölmek, $\\sigma$'yı ayrıca bir input olarak vermek gibi ön işlemlerle çözülüyor.\n\nVP'nin bedeli ise sinyal ile noise'un birlikte ölçeklenmesi. Orada $x_0$'ın katsayısı $t$ büyüdükçe sıfıra gidiyor, ve $x_0$'ı geri çıkarmak için ona bölmen gerekiyor:\n\n$$\\hat{x}_0 = \\frac{x_t - \\sqrt{1-\\bar{\\alpha}_t}\\, \\varepsilon_\\theta}{\\sqrt{\\bar{\\alpha}_t}}$$\n\n$t$ büyükken bu bölme $0.10$'a bölmek demek: $\\varepsilon_\\theta$'daki küçük bir hata $\\hat{x}_0$'da on katına çıkıyor. Büyük $t$'de $x̂_0$ tahminlerinin neden bulanık ve güvenilmez olduğunun sebebi bu — DDIM'de tek adımda üretemememizin de arkasında aynı mekanizma var.\n\nYani ikisi de aynı işi yapıyor ama zorluğu farklı yere koyuyor: VE ölçek aralığına, VP geri çevirme hassasiyetine."
-        },
-        {
-          "type": "text",
-          "heading": "Ara not: $p_t(x)$ tam olarak ne",
-          "text": "Denklemlerde $p_t(x)$ diye bir şey belirdi, açalım.\n\n$p_t$, $t$ seviyesindeki noise'lu verinin distribution'ı. Yani bütün veri setini alıp her örneğe $t$ kadar noise ekleseydin, elde edeceğin bulutun dağılımı.\n\n$$p_0 = p_{\\text{data}} \\qquad p_1 \\approx \\mathcal{N}(0,I)$$\n\nAradaki her $t$ için $p_t$, veri distribution'ının biraz daha bulanıklaşmış hali. Forward süreç boyunca keskin yapılar erimeye başlıyor, mod'lar birbirine karışıyor, sonunda tek bir Gaussian tepesi kalıyor.\n\nİki nokta önemli:\n\nBunu hiçbir zaman açıkça hesaplamıyoruz. $p_t$'nin formülü yok, çünkü $p_{\\text{data}}$'nın formülü yok. Sadece ondan örnek üretebiliyoruz: bir $x_0$ çek, üstüne uygun noise ekle, elindeki $x_t$ zaten $p_t$'den bir örnek.\n\nNetwork'ün öğrendiği şey tam olarak bunun score'u: $\\nabla_x \\log p_t(x)$. Her $t$ için ayrı bir score alanı var, ve $t$ network'e input olarak verildiği için tek bir network hepsini birden öğreniyor.\n\nReverse denklemde $p_t$'nin görünmesinin sebebi de bu: zamanda geriye gitmek \"veri şu anda nerede yoğun\" bilgisini gerektiriyor, o bilgi de $p_t$'nin score'unda duruyor."
-        },
-        {
-          "type": "text",
-          "heading": "10. Zamanda geriye gitmek: score neden zorunlu",
-          "text": "Forward süreç bilgi yok ediyor. Elinde yalnızca $x_t$ varken \"bu noise hangi görüntüden geldi\" sorusunun tek bir cevabı yok, çünkü birçok farklı görüntü aynı $x_t$'ye götürebilir.\n\nAnderson'un 1982'de ispatladığı sonuç şu: bir SDE zamanda tersine çevrilebiliyor, ama ters denklem fazladan bir terim taşıyor ve o terim score:\n\n$$dx = \\bigl[ f(x,t) - g(t)^2 \\nabla_x \\log p_t(x) \\bigr] dt + g(t)\\, d\\bar{w}$$\n\nTerimleri tek tek oku:\n\n$f(x,t)$ — ileri giderken seni sürükleyen akıntı, geri giderken de aynı akıntı işin içinde.\n\n$-g(t)^2 \\nabla_x \\log p_t(x)$ — yeni olan terim. Score, density'nin arttığı yönü gösteriyordu; bu terim seni o yöne itiyor. Sezgisi doğrudan: ileri giderken noise seni veriden uzaklaştırdı, geri dönerken birinin sana \"veri şu tarafta\" demesi gerekiyor. Score tam olarak bu bilgi.\n\n$g(t)\\, d\\bar{w}$ — geri giderken de rastgelelik var. Aynı $x_T$'den başlayıp farklı görüntüler üretebilmenin sebebi bu.\n\nKatsayının $g(t)^2$ olması da tesadüf değil: noise ne kadar şiddetliyse, onu geri almak için gereken itme o kadar büyük.\n\nPratik sonuç: eğer her $t$ ve her $x$ için score'u bilirsen, saf noise'tan başlayıp bu denklemi çözerek veri üretebilirsin. Network'ün öğrendiği tek şey de zaten bu."
-        },
-        {
-          "type": "text",
-          "heading": "11. Probability flow ODE: aynı distribution, rastgelelik yok",
-          "text": "Şimdi asıl ilginç kısım. Aynı marginal'leri veren, içinde hiç rastgelelik olmayan bir denklem daha var:\n\n$$\\frac{dx}{dt} = f(x,t) - \\tfrac{1}{2} g(t)^2 \\nabla_x \\log p_t(x)$$\n\nBuradaki iddia şu: bu ODE'yi çözerek taşıdığın noktaların her $t$'deki distribution'ı, SDE'ninkiyle birebir aynı. Tek tek yollar farklı, ama distribution aynı.\n\nNasıl olabiliyor? Bir distribution'ı hareket ettirmenin iki yolu var. Ya her parçacığı rastgele titretirsin ve kalabalık yayılır, ya da her parçacığı hesaplanmış bir hızla iterek aynı yayılmayı deterministik olarak üretirsin. Sonuçta kalabalığın şekli aynı olur; kimin nereye gittiği farklı olur.\n\n$\\tfrac{1}{2}$ çarpanı da buradan geliyor: SDE'de yayılmanın bir kısmını rastgelelik yapıyordu. Rastgeleliği tamamen kaldırınca, o kaybolan yayılmayı hız alanının tek başına üretmesi gerekiyor ve denge tam olarak yarım katsayıda kuruluyor.\n\nBunun üç sonucu var:\n\nDeterministik üretim mümkün. Başlangıç noktasını seçtiğin anda çıktı belirleniyor. DDIM'in $\\eta = 0$ sampler'ı tam olarak bu ODE'nin bir discretization'ı.\n\nAdım atlamak meşrulaşıyor. Elinde bir ODE varsa solver seçmek serbesttir; adımı büyütmek hatayı artırır ama süreci bozmaz. Stokastik zincirde bu mümkün değildi.\n\nFlow matching'e köprü buradan kuruluyor. Probability flow ODE'nin sağ tarafı bir velocity field. Flow matching ise o alanı score üzerinden dolambaçlı yoldan çıkarmak yerine doğrudan öğreniyor, üstelik yolu düz seçerek. Aynı hedefin daha kısa yoldan kurulmuş hali."
-        },
-        {
-          "type": "table",
-          "heading": "12. Reverse SDE ile PF-ODE — hangisi ne zaman",
-          "rows": [
-            [
-              "",
-              "Reverse SDE",
-              "Probability flow ODE"
-            ],
-            [
-              "Denklem",
-              "$\\bigl[f - g^2 \\nabla_x \\log p_t\\bigr] dt + g\\, d\\bar{w}$",
-              "$\\bigl[f - \\tfrac{1}{2} g^2 \\nabla_x \\log p_t\\bigr] dt$"
-            ],
-            [
-              "Süreç",
-              "stochastic",
-              "deterministic"
-            ],
-            [
-              "Çeşitlilik",
-              "yüksek",
-              "düşük"
-            ],
-            [
-              "Örnek kalitesi",
-              "yüksek",
-              "düşük"
-            ],
-            [
-              "Hız",
-              "yavaş",
-              "hızlı"
-            ]
-          ]
-        },
-        {
-          "type": "text",
-          "heading": "Tablodaki üç satırın sebebi",
-          "text": "Çeşitlilik. Reverse SDE her adımda taze noise çekiyor, yani aynı $x_T$'den başlasan bile her çalıştırmada farklı bir görüntü çıkıyor. ODE'de rastgelelik yalnızca başlangıçta; $x_T$ sabitlenirse çıktı da sabit. Çeşitlilik tamamen başlangıç noktasının dağılımından geliyor.\n\nKalite. Buradaki fark sezgisel olarak şu: SDE'nin eklediği noise bir tür hata düzeltme işlevi görüyor. Yol sırasında veriden uzak bir yere savrulursan, sonraki adımlarda score terimi seni geri çekiyor ve eklenen rastgelelik farklı bölgeleri yoklamanı sağlıyor. ODE'de böyle bir düzeltme yok: tek bir yörüngeyi takip ediyorsun ve her adımda yaptığın discretization hatası üstüne biniyor, geri dönüşü olmuyor. Bol adım bütçen varsa SDE genelde daha iyi örnek veriyor.\n\nHız. ODE'nin avantajı tam da determinizminden geliyor. Elinde sıradan bir diferansiyel denklem varsa yüksek mertebeli solver'lar kullanabilir, adımı büyütebilirsin; 20-50 adımda bitirmek mümkün. SDE'de her adım yeni rastgelelik eklediği için adım büyütmek doğrudan kaliteyi bozuyor, o yüzden yüzlerce adım gerekiyor.\n\nPratikteki bölünme de buradan: çok adım bütçen varsa ve çeşitlilik istiyorsan SDE, az adımda hızlı üretim istiyorsan ODE. DDIM'in $\\eta$ düğmesi zaten bu iki ucun arasını geziyor — $\\eta = 1$ SDE tarafı, $\\eta = 0$ ODE tarafı."
-        },
-        {
-          "type": "text",
-          "heading": "13. Aynı network'ün dört kılığı: $x_0$, $\\varepsilon$, score, velocity",
-          "text": "Şimdiye kadar network'ün çıktısını üç farklı isimle gördük ve hepsi birbirine cebirle çevriliyordu. Dördüncüsü de var.\n\n$$\\hat{x}_0 = \\frac{x_t - \\sqrt{1-\\bar{\\alpha}_t}\\, \\varepsilon_\\theta}{\\sqrt{\\bar{\\alpha}_t}} \\qquad s_\\theta = -\\frac{\\varepsilon_\\theta}{\\sqrt{1-\\bar{\\alpha}_t}} \\qquad v_\\theta = \\sqrt{\\bar{\\alpha}_t}\\, \\varepsilon_\\theta - \\sqrt{1-\\bar{\\alpha}_t}\\, \\hat{x}_0$$\n\nSonuncusu velocity, yani v-prediction (Salimans, Ho 2022). Adı \"hız\" çünkü $x_t$'nin $t$'ye göre değişim yönünü veriyor: $x_0$ ile $\\varepsilon$ arasındaki yolda o anda hangi yöne gidildiğini söylüyor.\n\nNeden ayrı bir parametrizasyon gerekti: $\\varepsilon$-prediction küçük $t$'de kötü davranıyor. Orada $x_t$ zaten neredeyse temiz, eklenen noise minik; network'ün onu tahmin etmesi hem zor hem de o tahmindeki hata $\\hat{x}_0$'a bölme yoluyla büyüyor. $x_0$-prediction ise büyük $t$'de aynı sorunu yaşıyor. Velocity ikisinin arasında duran, her $t$'de dengeli davranan bir hedef. Distillation ve az adımlı sampling çalışmalarında tercih edilmesinin sebebi bu.\n\nFlow matching bağlantısı da tam burada: orada network doğrudan bir velocity field öğreniyordu. Probability flow ODE'nin sağ tarafı da bir velocity field. Yani iki yaklaşım aynı nesneyi öğreniyor; diffusion ona score üzerinden dolaşarak varıyor, flow matching düz çizgi kurarak doğrudan."
-        },
-        {
-          "type": "text",
-          "heading": "14. DPM-Solver: ODE'yi bilerek çözmek",
-          "text": "PF-ODE'yi elde ettikten sonra akla gelen ilk şey, onu sıradan bir ODE gibi Euler ile çözmek. DDIM'in yaptığı da bu. Ama bu, denklemin yapısını görmezden geliyor.\n\nDenklem yarı yarıya lineer: bir kısmı $x$'e göre lineer ve kapalı formda çözülebiliyor, geri kalanı ise network çağrısı gerektiren doğrusal olmayan kısım. Euler ikisini birden yaklaşık çözüyor, yani analitik olarak bilinen kısımda bile hata yapıyor.\n\nDPM-Solver (Lu ve ark., NeurIPS 2022) lineer kısmı tam olarak çözüp yalnızca network'lü kısma sayısal yaklaşım uyguluyor. Bunun için değişken değiştiriyor: $\\lambda_t = \\log(\\sqrt{\\bar{\\alpha}_t}/\\sqrt{1-\\bar{\\alpha}_t})$, yani signal-to-noise oranının logaritması. Bu değişkende denklem çok daha düzgün davranıyor ve yüksek mertebeli adımlar kurulabiliyor.\n\nSonuç pratikte büyük: DDIM'in 50 adımda ulaştığı kaliteye 10-20 network çağrısıyla ulaşılıyor. Stable Diffusion arayüzlerinde gördüğün DPM++ seçenekleri bunun geliştirilmiş sürümleri.\n\nBuradaki genel ders, kartın başından beri gelen çizginin devamı: aynı eğitilmiş network duruyor, değişen tek şey ondan nasıl örnek aldığın. Önce zinciri bıraktık (DDIM), sonra süreci ODE olarak gördük, şimdi de o ODE'yi daha akıllı çözüyoruz."
-        },
-        {
-          "type": "insight",
-          "heading": "Geriye ne kalsın",
-          "text": "Score, density'nin logaritmasının $x$'e göre gradient'i; normalizasyon sabitini öldürdüğü için hesaplanabilir. Gerçek score bilinmiyor ama kendi eklediğin noise'un score'u biliniyor, ve o hedefle eğitmek doğru cevabı veriyor. Bu eğitim DDPM'in $\\varepsilon$-prediction'ı ile aynı şey; ikisi tek bir ölçek çarpanıyla birbirine çevriliyor. Continuous time'a geçince süreç bir SDE oluyor, onun deterministik karşılığı olan probability flow ODE ise DDIM ile flow matching'in ortak zemini."
-        },
-        {
-          "type": "ref",
-          "heading": "İlgili kartlar",
-          "items": [
-            {
-              "id": "cs13-generalized-diffusion-vp-ve-score-functions-and-sdes",
-              "label": "Genelleştirilmiş diffusion — VP, VE, score, SDE"
-            },
-            {
-              "id": "ida11-ddim-ayni-ag-neden-atlayabiliyoruz-ve-eta-ne-yapiyor",
-              "label": "DDIM — neden atlayabiliyoruz, η ne yapıyor"
-            },
-            {
-              "id": "ida11-ddpm-matematiksel-ozet-forward-reverse-prediction-ve-l-simpl",
-              "label": "DDPM — matematiksel özet"
-            }
-          ]
-        },
-        {
-          "type": "note",
-          "heading": "Nereye bakılır",
-          "text": "Kaynaklar: Hyvärinen 2005 (score matching) · Vincent 2011 (denoising score matching) · Song, Ermon — Generative Modeling by Estimating Gradients of the Data Distribution (NeurIPS 2019) · Song ve ark. — Score-Based Generative Modeling through SDEs (ICLR 2021).\n\nDers: CME 296, Lecture 2. Flow matching tarafının devamı için Flow Matching ve Rectified Flow konu anlatımı."
-        }
-      ],
-      "id": "ida11-score-matching-neden-gradient-i-ogreniyoruz-ve-ddpm-le-nasil",
-      "keywords": [
-        "diffusion",
-        "denoising",
-        "noise schedule"
-      ]
-    },
-    {
-      "title": "Continuity Equation — Velocity Field Bir Distribution'ı Nasıl Taşıyor",
-      "cat": "Theory",
-      "summary": "Flow matching'in altındaki tek denklem: continuity equation. Divergence'ın ne ölçtüğü (1D'de hızın türevi, net kaçış), kütle korunumuyla nasıl birleştiği, ve \"velocity field distribution'ı taşıyor\" cümlesinin tam olarak ne demek olduğu. Normalizing flow → Neural ODE → flow matching hattı ve probability flow ODE ile bağlantısı.",
-      "context": "Flow matching'in altyapısı — CME 296 Lecture 3",
-      "mlo_only": true,
-      "sections": [
-        {
-          "type": "text",
-          "heading": "Tek cümle",
-          "text": "Flow matching'in bütün çatısı tek bir denkleme dayanıyor: continuity equation. Bu denklem, \"uzayın her noktasına bir hız atarsam distribution zamanla nasıl değişir\" sorusunun cevabı.\n\nDenklemi anlamadan flow matching ezber kalıyor: velocity neden distribution'ı taşıyor, \"marginal'leri koruyor\" ne demek, hepsi buradan çıkıyor."
-        },
-        {
-          "type": "text",
-          "heading": "1. Kurulum: velocity field ne yapıyor",
-          "text": "Elinde bir velocity field var: $u_t(x)$, yani her konuma ve her ana bir hız atayan fonksiyon. Bir parçacığı bırakıp bu hızları takip ettiriyorsun:\n\n$$\\frac{dx}{dt} = u_t(x)$$\n\nTek parçacık kolay. Ama bizim ilgilendiğimiz şey tek parçacık değil: başlangıçta bir distribution'dan çekilmiş milyonlarca parçacık var ve hepsi aynı alanı takip ediyor. Soru şu: bu kalabalığın distribution'ı zamanla nasıl değişiyor?\n\nCevabı continuity equation veriyor. Ama önce divergence'ı anlamak gerekiyor, çünkü denklemin içindeki asıl kavram o."
-        },
-        {
-          "type": "text",
-          "heading": "2. Dört tanım: trajectory, flow, probability path, velocity field",
-          "text": "Bu konunun dili dört terimden oluşuyor ve ikisi kolayca karışıyor.\n\nTrajectory, tek bir parçacığın izlediği yol: $t \\mapsto x_t$. Bir başlangıç noktası seçtiğinde ortaya çıkan tek bir eğri.\n\nFlow, bütün başlangıç noktaları için bu eğrilerin toplamı: $\\psi_t(x_0)$. Yani \"nereden başlarsan başla, $t$ anında neredesin\" kuralı. Trajectory tek bir kayık, flow bütün kayıkların haritası.\n\nProbability path, distribution'ın zaman içindeki yolu: $p_t$. Bir uçta noise, diğer uçta veri; aradakiler geçiş distribution'ları.\n\nVelocity field, $u_t(x)$: her konuma ve her ana bir hız atayan alan. Trajectory'leri üreten şey bu, probability path da onun sonucu.\n\nKonvansiyon uyarısı: hangi ucun noise olduğu kaynağa göre değişiyor. Lipman'ın flow matching paperında ve CME 296'da $t=0$ noise, $t=1$ veri; CS231n ve rectified flow paperında tersi. İki kaynakta işaretlerin ters görünmesinin sebebi çoğu zaman gerçek bir fark değil, bu konvansiyon farkı."
-        },
-        {
-          "type": "text",
-          "heading": "3. Velocity ile score farkı",
-          "text": "İkisi de uzayın her noktasına bir vektör atıyor, ama farklı soruları cevaplıyorlar.\n\nScore, $\\nabla_x \\log p_t(x)$: bu noktadan hangi yöne gidilirse density artar. Tek bir anın fotoğrafına bakıyor, zamanla ilgisi yok; yalnızca o anki distribution'ın şeklini tarif ediyor.\n\nVelocity, $u_t(x)$: bu noktadaki parçacık şu anda hangi yöne, ne hızla hareket ediyor. Zaman içinde bir taşıma tarif ediyor.\n\nBağlantı diffusion'da kuruluyor: probability flow ODE'nin sağ tarafı, score'dan hesaplanmış bir velocity. Yani score bir velocity üretebiliyor ama kendisi velocity değil. Flow matching bu ara adımı atlayıp doğrudan velocity öğreniyor."
-        },
-        {
-          "type": "text",
-          "heading": "4. Divergence: bir noktadan net ne kaçıyor",
-          "text": "Uzayı su dolu bir boru gibi düşün, tek boyutta. $f(x)$ o noktadaki suyun hızı; işareti yönü veriyor, $f>0$ sağa, $f<0$ sola.\n\nŞimdi borunun $x$ ile $x+\\Delta$ arasındaki minik bir parçasına bak. Bu parçanın \"yüzeyi\" iki uçtan ibaret: soldan su giriyor, sağdan çıkıyor.\n\n$$\\text{net çıkış} = f(x+\\Delta) - f(x)$$\n\nParçanın uzunluğuna bölüp $\\Delta \\to 0$ limitini alınca tam olarak türev kalıyor:\n\n$$\\operatorname{div} f = \\frac{\\partial f}{\\partial x}$$\n\nSayıyla: $f(x) = x$ ve parça $[1,2]$ olsun. Sol uçtan 1 birim/saniye giriyor, sağ uçtan 2 birim/saniye çıkıyor, net $+1$. Parça boşalıyor.\n\nYorum: divergence pozitifse o nokta kaynak gibi davranıyor, orada density azalıyor. Negatifse kuyu, orada birikme var. Sıfırsa giren çıkana eşit, density sabit kalıyor.\n\nYüksek boyutta tanım aynı, sadece bütün yönlerdeki katkılar toplanıyor:\n\n$$\\operatorname{div} u = \\sum_{i=1}^{d} \\frac{\\partial u_i}{\\partial x_i}$$"
-        },
-        {
-          "type": "insight",
-          "heading": "1D resmini okumak",
-          "text": "Divergence tek boyutta çizilirken genellikle x ekseni üzerinde ince bir elips görülür. O elips minik bir aralığın kendisidir; 1D'de kutunun eni olmadığı için incecik çizilir. Uçlarındaki oklar da o aralığın iki ucundaki hızdır: soldan giren, sağdan çıkan.\n\nBu çizimin iki tipik hâli var. Birincisinde sol uçtaki ok kısa, sağ uçtaki uzun: yavaş girip hızlı çıkıyor. İkincisinde oklar iki uçtan da dışarı bakıyor: sol uçta akış sola, sağ uçta sağa. İkisi de aynı şeyi gösteriyor, çünkü her ikisinde de f soldan sağa artıyor, yani türev pozitif ve aralık boşalıyor."
-        },
-        {
-          "type": "text",
-          "heading": "5. Continuity equation: kütle korunumu",
-          "text": "Şimdi taşınan şeyin miktarı korunuyorsa (parçacık ne yaratılıyor ne yok ediliyor), density'nin değişimi yalnızca akıştan gelebilir:\n\n$$\\frac{\\partial p_t(x)}{\\partial t} + \\operatorname{div}\\bigl( p_t(x)\\, u_t(x) \\bigr) = 0$$\n\nTerimleri oku. $p_t(x)\\, u_t(x)$ akı: o noktada ne kadar density var ve ne hızla taşınıyor. Divergence'ı o noktadan net kaçışı veriyor. Denklem de şunu söylüyor:\n\n$$\\text{density'nin artış hızı} = -(\\text{net kaçış})$$\n\nYani bir noktada density ancak oraya dışarıdan akış geldiği için artabilir. Bu, fizikteki kütle korunumunun ta kendisi; olasılıkta da toplam kütle her zaman 1 olduğu için aynı denklem geçerli."
-        },
-        {
-          "type": "text",
-          "heading": "Divergence neyin divergence'ı",
-          "text": "Continuity equation'da divergence'ın uygulandığı şey velocity değil, akı: $p_t(x)\\, u_t(x)$.\n\nFark önemli. Velocity tek başına ne kadar hızlı gidildiğini söylüyor; akı ise ne kadar maddenin ne kadar hızlı taşındığını. Hızın büyük ama density'nin sıfır olduğu bir bölgede taşınan bir şey yok, dolayısıyla o bölgenin density dengesine katkısı da yok.\n\nDenklemin $\\operatorname{div}(p_t u_t)$ içermesinin, $\\operatorname{div}(u_t)$ içermemesinin sebebi bu."
-        },
-        {
-          "type": "table",
-          "heading": "Aynı alana iki bakış",
-          "rows": [
-            [
-              "",
-              "Tek parçacık",
-              "Distribution"
-            ],
-            [
-              "Soru",
-              "bu nokta nereye gidiyor",
-              "kalabalığın şekli nasıl değişiyor"
-            ],
-            [
-              "Denklem",
-              "$\\frac{dx}{dt} = u_t(x)$",
-              "$\\partial_t p_t + \\operatorname{div}(p_t u_t) = 0$"
-            ],
-            [
-              "Verilen",
-              "başlangıç noktası",
-              "başlangıç distribution'ı"
-            ],
-            [
-              "Çıktı",
-              "trajectory",
-              "probability path"
-            ],
-            [
-              "Nerede kullanılır",
-              "sampling, ODE çözümü",
-              "teorik şart: velocity doğru mu"
-            ]
-          ]
-        },
-        {
-          "type": "insight",
-          "heading": "6. Flow matching'in şartı tam olarak bu",
-          "text": "Flow matching'in hedefi şuydu: $t=0$'da noise, $t=1$'de veri olacak şekilde bir yol kurmak ve o yolu üreten velocity field'ı öğrenmek.\n\n\"Yolu üretmek\" cümlesinin matematiksel karşılığı continuity equation. Bir $u_t$ ile bir $p_t$ ikilisi ancak bu denklemi sağlıyorsa birbirine uygun; yani $u_t$'yi takip eden parçacıkların dağılımı gerçekten $p_t$ oluyor.\n\nBuradan iki sonuç çıkıyor:\n\nAynı $p_t$ yolunu üreten birden fazla $u_t$ olabilir. Denklem $u$'yu tek bir çözüme zorlamıyor. Rectified flow'un düz yolu, diffusion'ın probability flow ODE'si — ikisi de meşru seçimler.\n\nTersi de doğru: bir $u_t$ verildiğinde ürettiği $p_t$ belirli. Bu yüzden network'e velocity öğretmek, dolaylı olarak bir distribution yolu öğretmek demek."
-        },
-        {
-          "type": "text",
-          "heading": "7. Conditional'dan marginal'e: flow matching'in asıl hamlesi",
-          "text": "Continuity equation bir şart veriyor ama hedef velocity'yi elimize vermiyor. Marginal velocity field bütün veri distribution'ına bağlı olduğu için kapalı formda yazılamıyor.\n\nFlow matching'in çözümü problemi tek bir veri noktasına koşullamak. Tek bir $z$ sabitlendiğinde hem path hem velocity kapalı formda yazılabiliyor:\n\n$$p_t(x \\mid z) = \\mathcal{N}\\bigl(x;\\ \\mu_t(z),\\ \\sigma_t^2 I\\bigr)$$\n\nDüz çizgili tercihte bu path'i üreten velocity sabit bir yöne işaret ediyor, yani hesaplanacak bir şey kalmıyor.\n\nMarginal path, koşullu path'lerin veri üzerinden ortalaması:\n\n$$p_t(x) = \\int p_t(x \\mid z)\\, q(z)\\, dz$$\n\nMarginal velocity ise koşullu velocity'lerin ağırlıklı ortalaması; ağırlık, o $x$ noktasına hangi $z$'nin ne kadar katkı verdiği:\n\n$$u_t(x) = \\int u_t(x \\mid z)\\, \\frac{p_t(x \\mid z)\\, q(z)}{p_t(x)}\\, dz$$\n\nBu integral de hesaplanamıyor. Ama flow matching paperının teoremi şunu söylüyor: koşullu hedefle kurulan regression loss'un gradient'i, marginal hedefle kurulan loss'un gradient'iyle aynı. Yani marginal velocity hiç hesaplanmadan, koşullu hedeflerle eğitim doğru çözümü veriyor.\n\nMekanizma MSE'nin doğasından geliyor: aynı girdiye karşılık birbirinden farklı hedefler veriliyorsa, MSE'yi minimize eden tahmin o hedeflerin koşullu ortalamasıdır. O ortalama da tam olarak yukarıdaki integral."
-        },
-        {
-          "type": "text",
-          "heading": "8. Tarihçe: normalizing flow'dan flow matching'e",
-          "text": "Bu fikir üç aşamada olgunlaştı, ve her aşama bir öncekinin darboğazını kaldırdı.\n\nNormalizing flows (2015 civarı). Basit bir distribution alıp tersinir dönüşümlerle karmaşık hale getiriyorsun. Likelihood hesaplanabiliyor ama bedeli ağır: her katmanın Jacobian determinantını hesaplaman gerekiyor, bu da mimariyi ciddi biçimde kısıtlıyor (tersinir olmak zorunda, determinant ucuz olmalı).\n\nContinuous normalizing flows (Neural ODE, 2018). Ayrık katmanlar yerine sürekli bir ODE. Jacobian determinantı yerine divergence geliyor ve likelihood şöyle akıyor:\n\n$$\\frac{d \\log p_t(x)}{dt} = -\\operatorname{div} u_t(x)$$\n\nBu formül continuity equation'ın parçacık boyunca yazılmış hali. Mimari kısıtı kalkıyor, ama yeni bir sorun var: eğitim için ODE'yi baştan sona simüle etmen gerekiyor, her adımda network çağrısı. Büyük görüntülerde pratik değil.\n\nFlow matching (2022). Likelihood'u hiç hesaplamıyorsun. Bunun yerine hedef velocity'yi doğrudan regression ile öğreniyorsun, ve hedefi tek bir veri-noise çiftine koşullayarak elde ediyorsun. ODE simülasyonu eğitimden tamamen çıkıyor. \"Simulation-free\" denen şey bu."
-        },
-        {
-          "type": "insight",
-          "heading": "9. Diffusion ile bağ, tek satırda",
-          "text": "Probability flow ODE'nin sağ tarafına bak:\n\n$$\\frac{dx}{dt} = f(x,t) - \\tfrac{1}{2} g(t)^2 \\nabla_x \\log p_t(x)$$\n\nBu ifade bir velocity field. Yani diffusion da aslında bir flow tanımlıyor; sadece velocity'yi doğrudan öğrenmiyor, score üzerinden dolaşarak hesaplıyor.\n\nFlow matching aynı nesneyi kısa yoldan kuruyor: velocity'yi doğrudan hedef alıyor ve yolu düz seçiyor. İkisi de continuity equation'ı sağlayan birer $(p_t, u_t)$ ikilisi; fark, hangi yolu seçtikleri ve network'e neyi tahmin ettirdikleri.\n\nBu yüzden CME 296'nın 3. dersi de 2. dersi de aynı cümleyle bitiyor: parallel with diffusion. Üç çerçeve tek bir matematiğin farklı giriş kapıları."
-        },
-        {
-          "type": "table",
-          "heading": "Üç paradigmanın birleşik görünümü",
-          "rows": [
-            [
-              "",
-              "Discrete-time diffusion",
-              "Score-based diffusion",
-              "Flow matching"
-            ],
-            [
-              "Forward",
-              "Markov zinciri, adım adım noise",
-              "SDE, continuous time",
-              "düz interpolasyon $x_t=(1-t)x_0+tz$"
-            ],
-            [
-              "Öğrenilen",
-              "$\\varepsilon_\\theta$",
-              "$s_\\theta = \\nabla_x \\log p_t$",
-              "$u_\\theta$, velocity"
-            ],
-            [
-              "Üretim",
-              "ancestral sampling",
-              "reverse-time SDE",
-              "ODE çözümü"
-            ],
-            [
-              "Deterministik hali",
-              "DDIM",
-              "probability flow ODE",
-              "zaten deterministik"
-            ],
-            [
-              "Türetme",
-              "ELBO",
-              "denoising score matching",
-              "conditional regression"
-            ]
-          ]
-        },
-        {
-          "type": "text",
-          "heading": "Üç paradigma neden aynı yere çıkıyor",
-          "text": "Tabloya satır satır bakınca aynı iskeletin üç farklı giydirilmiş hali görünüyor: bir forward süreç veriyi tanınmaz hale getiriyor, network o sürecin bir özelliğini tahmin etmeyi öğreniyor, üretim de o tahminle geriye yürüyor.\n\nFarklar üç yerde toplanıyor. Birincisi yolun şekli: diffusion eğri, flow matching düz. İkincisi network'ün hedefi: noise, score ya da velocity, ki bunlar sabit katsayılarla birbirine çevriliyor. Üçüncüsü üretimin stokastik mi deterministik mi olduğu, ki o da bir sampler tercihi.\n\nStochastic interpolants çerçevesi (Albergo, Vanden-Eijnden) üçünü tek bir tanımın özel halleri olarak yazıyor. Pratik sonucu şu: bir paper okurken sorulacak soru \"yeni bir generative model mi\" değil, \"yol mu, hedef mi, sampler mı değişmiş\" olmalı."
-        },
-        {
-          "type": "insight",
-          "heading": "Geriye ne kalsın",
-          "text": "Divergence, bir noktadan net kaçışı ölçüyor; 1D'de hızın türevi. Continuity equation bunu kütle korunumuyla birleştiriyor: density ancak akış getirdiği kadar artar. Flow matching'in \"velocity field distribution'ı taşıyor\" cümlesinin tamamı bu denklem. Aynı distribution yolunu üreten birçok velocity field olabilir, ve diffusion'ın probability flow ODE'si de bunlardan biri — flow matching farkı, o alanı dolambaçsız öğrenmesi."
-        },
-        {
-          "type": "ref",
-          "heading": "İlgili kartlar",
-          "items": [
-            {
-              "id": "ida11-score-matching-neden-gradient-i-ogreniyoruz-ve-ddpm-le-nasil",
-              "label": "Score matching — SDE ve probability flow ODE"
-            },
-            {
-              "id": "cs13-diffusion-models-intuition-and-rectified-flow",
-              "label": "CS231n — rectified flow kodu"
-            },
-            {
-              "id": "cs13-generalized-diffusion-vp-ve-score-functions-and-sdes",
-              "label": "Genelleştirilmiş diffusion — VP, VE, score, SDE"
-            }
-          ]
-        },
-        {
-          "type": "note",
-          "heading": "Nereye bakılır",
-          "text": "Ders: CME 296, Lecture 3 (motivation behind flows, history on flows, conditional flow matching, rectified flow). Conditional flow matching'in kendisi, eğitim ve sampling döngüleri, reflow ve üç ICLR 2023 paperının farkı için sitedeki Flow Matching ve Rectified Flow konu anlatımına bak; bu kart onun altyapısını veriyor.\n\nKaynaklar: Chen ve ark. — Neural ODE (NeurIPS 2018) · Lipman ve ark. — Flow Matching for Generative Modeling (ICLR 2023) · Liu, Gong, Liu — Rectified Flow (ICLR 2023)."
-        }
-      ],
-      "id": "ida11-continuity-equation-velocity-field-bir-distribution-i-nasil",
-      "keywords": [
-        "diffusion",
-        "DDPM",
-        "denoising",
-        "noise schedule"
-      ]
-    },
-    {
       "title": "Guidance — Classifier'dan Classifier-Free'ye",
       "cat": "Theory",
       "summary": "Condition'ı input olarak vermek uyumu zayıf bırakıyor. Guidance bunu sampling sırasında güçlendiriyor: Bayes kuralı score üzerinde yazılınca koşullu score, koşulsuz score artı classifier gradient'ine ayrışıyor. Classifier guidance bu terimi ayrı bir modelden alıyor, classifier-free guidance ise aynı bilginin koşullu ile koşulsuz tahminin farkında zaten var olduğunu görüp o modeli siliyor.",
@@ -28180,11 +27737,266 @@
         }
       ]
     },
+    "score": {
+      "title": "Score Matching — Baştan Sona Konu Anlatımı",
+      "cat": "Konu Anlatımı",
+      "context": "Diffusion'ın ikinci dili · CME 296 Lecture 2 — tek oturumda okunmak için",
+      "chapters": [
+        "ida11",
+        "cs13",
+        "mlo21"
+      ],
+      "summary": "Score, log-density'nin $x$'e göre gradient'i; normalizasyon sabitini denklemden sildiği için hesaplanabilir hale geliyor. Gerçek score bilinmiyor ama kendi eklediğin noise'unki biliniyor — denoising score matching bu hileyle eğitiyor ve sonuçta DDPM'in $\\varepsilon$-prediction'ı ile aynı loss'a çıkıyor. SDE ve probability flow ODE bağlantısı da buradan.",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Bu metin ne için",
+          "text": "Diffusion'ın üç dilinden ikincisi. Birinci dil DDPM'in kendi türetmesi, gizli değişkenli model ve ELBO; bu metin ikinci dili kuruyor: score, yani log-density'nin gradient'i.\n\nSıra şu: normalizasyon sabitinin neden problem olduğu, score'un onu nasıl ortadan kaldırdığı, gerçek score bilinmezken nasıl eğitildiği, bunun DDPM ile neden aynı şey olduğu, ve continuous time'a geçilince ortaya çıkan SDE ile probability flow ODE. Sonda DDIM ile flow matching'in ortak zemini de buradan görünüyor."
+        },
+        {
+          "type": "text",
+          "heading": "1. Problem: normalizasyon sabiti",
+          "text": "Bir distribution'ı parametreyle yazmanın doğal yolu şu: bir enerji fonksiyonu $E_\\theta(x)$ tanımla, olasılığı ona bağla.\n\n$$p_\\theta(x) = \\frac{e^{-E_\\theta(x)}}{Z_\\theta}, \\qquad Z_\\theta = \\int e^{-E_\\theta(x)}\\, dx$$\n\nSorun $Z_\\theta$'da. Bu integral bütün görüntü uzayı üzerinden alınıyor, yani $256 \\times 256 \\times 3$ boyutlu bir uzayda. Hesaplanamıyor, ve $\\theta$'ya bağlı olduğu için maximum likelihood da yapılamıyor.\n\nDiffusion öncesi generative modellerin taksonomisi büyük ölçüde bu sorunun etrafında şekillenmişti: VAE alt sınıra kaçıyor, GAN likelihood'u hiç hesaplamıyor, autoregressive modeller zinciri parçalara bölüyor."
+        },
+        {
+          "type": "text",
+          "heading": "2. Gradient alınca sabit ölüyor",
+          "text": "Logaritmayı al ve $x$'e göre türev al:\n\n$$\\nabla_x \\log p_\\theta(x) = \\nabla_x \\bigl[ -E_\\theta(x) - \\log Z_\\theta \\bigr] = -\\nabla_x E_\\theta(x)$$\n\n$\\log Z_\\theta$ sabit bir sayı — $x$'e bağlı değil, dolayısıyla gradient'i sıfır. Hesaplanamayan terim kendiliğinden düşüyor.\n\nBu gradient'e score deniyor:\n\n$$s(x) := \\nabla_x \\log p(x)$$\n\nDikkat: türev $\\theta$'ya göre değil, $x$'e göre. Karışması kolay, çünkü likelihood tartışmalarında alıştığın türev $\\theta$'ya göre olandı."
+        },
+        {
+          "type": "insight",
+          "heading": "Score sezgisel olarak ne",
+          "text": "Görüntü uzayının her noktasına bir ok yerleştir: o noktadan hangi yöne gidersen distribution'ın density'si en hızlı artar. Score bu ok alanı.\n\nGerçekçi görüntülerin bulunduğu bölgelerde oklar o bölgeye doğru bakıyor; uzak, noise'lu bölgelerde ise \"veriye doğru\" yönü gösteriyor. Üretim de bu okları takip etmek oluyor.\n\nFlow matching'deki velocity field ile aynı türden bir nesne: ikisi de uzaydaki her noktaya bir vektör atıyor. Fark, neyi gösterdikleri — biri density'nin artış yönünü, diğeri veriye giden yolun hızını."
+        },
+        {
+          "type": "text",
+          "heading": "3. Naive score matching neden çalışmıyor",
+          "text": "Hedef belli: network'ün tahmini $s_\\theta(x)$ gerçek score'a yakın olsun.\n\n$$J(\\theta) = \\mathbb{E}_{x \\sim p_{\\text{data}}} \\bigl\\| s_\\theta(x) - \\nabla_x \\log p_{\\text{data}}(x) \\bigr\\|^2$$\n\nAma sağdaki terim elimizde yok: $p_{\\text{data}}$'yı bilseydik zaten problem kalmazdı.\n\nHyvärinen (2005) kısmi integrasyonla bu terimi denklemden çıkarmayı başardı; geriye $\\operatorname{tr}(\\nabla_x s_\\theta(x))$, yani Jacobian'ın izi kalıyor. Teorik olarak çözüm, pratikte değil: yüksek boyutta Jacobian'ın izini hesaplamak her adımda $d$ tane geri yayılım demek."
+        },
+        {
+          "type": "text",
+          "heading": "4. Denoising score matching: hile",
+          "text": "Vincent (2011) şunu fark etti: veriye kendi eklediğin noise'un score'u kapalı formda biliniyor.\n\n$\\tilde{x} = x + \\sigma \\varepsilon$ olsun, $\\varepsilon \\sim \\mathcal{N}(0,I)$. O zaman $q(\\tilde{x} \\mid x)$ bir Gaussian ve score'u doğrudan yazılabiliyor:\n\n$$\\nabla_{\\tilde{x}} \\log q(\\tilde{x} \\mid x) = -\\frac{\\tilde{x} - x}{\\sigma^2} = -\\frac{\\varepsilon}{\\sigma}$$\n\nHedef artık bilinmeyen bir şey değil, kendi çektiğin $\\varepsilon$. Loss basit bir regression'a dönüşüyor:\n\n$$J(\\theta) = \\mathbb{E}_{x,\\, \\varepsilon,\\, \\sigma} \\Bigl\\| s_\\theta(\\tilde{x}, \\sigma) + \\frac{\\varepsilon}{\\sigma} \\Bigr\\|^2$$\n\nKanıtlanan şey şu: bu loss'u minimize eden network, noise'lu distribution'ın gerçek score'unu öğreniyor. Yani hedefi bilmeden doğru cevaba varıyorsun — DDPM'deki \"tek örneğin noise'unu hedef al, ortalaması doğru çıksın\" hilesinin aynısı."
+        },
+        {
+          "type": "insight",
+          "heading": "5. DDPM ile birebir aynı loss",
+          "text": "Diffusion'ın forward süreci $x_t = \\sqrt{\\bar{\\alpha}_t}\\, x_0 + \\sqrt{1-\\bar{\\alpha}_t}\\, \\varepsilon$ zaten \"veriye bilinen miktarda noise eklemek\". Yani DDPM'in training'i tam olarak denoising score matching.\n\nBağlantı tek satır:\n\n$$s_\\theta(x_t, t) = -\\frac{\\varepsilon_\\theta(x_t, t)}{\\sqrt{1-\\bar{\\alpha}_t}}$$\n\n$\\varepsilon$-prediction ile score prediction aynı network'ün iki farklı ölçeklenmiş hali. Biri \"eklenen noise neydi\" diye soruyor, diğeri \"density hangi yöne artıyor\" diye — cevap aynı vektör, işareti ve ölçeği farklı.\n\nBu yüzden CME 296'nın 2. dersi \"parallel with diffusion\" diye bitiyor: yeni bir model ailesi değil, aynı eğitimin başka türetmesi."
+        },
+        {
+          "type": "text",
+          "heading": "6. Score ile nasıl sample alınır: Langevin",
+          "text": "Score elindeyse üretim, okları takip edip üstüne biraz rastgelelik eklemek:\n\n$$x_{k+1} = x_k + \\frac{\\delta}{2}\\, s_\\theta(x_k) + \\sqrt{\\delta}\\, z_k, \\qquad z_k \\sim \\mathcal{N}(0,I)$$\n\nBuna Langevin dynamics deniyor. Yeterince adım sonra $x_k$, $p(x)$'ten gelen bir örnek gibi davranıyor. Noise terimi olmasaydı sadece en yakın tepeye tırmanır, tek bir noktaya saplanırdın; rastgelelik distribution'ın tamamını gezmeyi sağlıyor.\n\nNeden tek bir noise seviyesi yetmiyor: gerçek veri yüksek boyutlu uzayda ince bir bölgeye sıkışmış durumda. Bu bölgenin uzağında $p(x)$ neredeyse sıfır, dolayısıyla orada ne veri var ne de network'ün öğrenebileceği bir sinyal — score tahmini çöp çıkıyor. Rastgele bir noktadan başlarsan tam da o çöp bölgedesin.\n\nÇözüm: birçok noise seviyesi. Yüksek $\\sigma$'da distribution her yere yayılıyor ve score her yerde anlamlı; seviye seviye azaltarak veriye yaklaşıyorsun. Song ve Ermon'un NCSN'i (2019) bu fikir, ve DDPM'in schedule'ı ile aynı şeye bakıyor."
+        },
+        {
+          "type": "table",
+          "heading": "7. Aynı sürecin üç dili",
+          "rows": [
+            [
+              "",
+              "Latent variable",
+              "Score",
+              "SDE"
+            ],
+            [
+              "Network ne tahmin ediyor",
+              "$\\varepsilon_\\theta(x_t,t)$",
+              "$s_\\theta(x_t,t)$",
+              "aynı network, continuous $t$"
+            ],
+            [
+              "Türetme",
+              "ELBO",
+              "denoising score matching",
+              "stokastik diferansiyel denklem"
+            ],
+            [
+              "Sampling",
+              "ancestral (DDPM)",
+              "annealed Langevin",
+              "reverse-time SDE solver"
+            ],
+            [
+              "Kaynak",
+              "Ho ve ark. 2020",
+              "Song, Ermon 2019",
+              "Song ve ark. 2021"
+            ]
+          ]
+        },
+        {
+          "type": "text",
+          "heading": "Neden continuous time'a geçiyoruz",
+          "text": "Önce şunu sormak lazım: ayrık zincir çalışıyordu, continuous time'a geçmenin derdi ne.\n\nAyrık hâlde adım sayısı modelin tanımının parçası. $T = 1000$ seçtiğinde $\\beta_t$ değerleri, $\\bar{\\alpha}_t$ çarpımları, posterior katsayıları — hepsi o sayıya göre kurulmuş oluyor. Continuous time'a geçince $T$ bir tanım olmaktan çıkıp solver tercihine dönüşüyor. Merdiven ile rampa farkı: merdivende basamak yüksekliği sabittir, rampada istediğin yere basarsın.\n\nDört somut getirisi var.\n\nBirleştirme. Ayrık hâlde DDPM ile NCSN birbirinden bağımsız iki yöntem gibi duruyordu; biri görüntüyü küçültüp noise ekliyor, diğeri sadece üstüne yığıyordu. Sürekli hâlde ikisi de tek bir denklemin farklı $f$ ve $g$ seçimi, yani VP ile VE. Song ve ark.'nın paperının asıl katkısı bu birleştirme.\n\nAdım sayısının serbest kalması. Model bir kez eğitiliyor, sonra aynı network ile 1000 de 50 de 20 adımla da örnek alabiliyorsun. Ayrık tanımda katsayılar $T$'ye gömülü olduğu için bu esneklik yoktu; DDIM'in respacing ile açtığı kapı, continuous time dilinde kendiliğinden geliyor.\n\nHazır matematiğe erişim. SDE'lerin zamanda tersine çözülmesi, probability flow ODE, yüksek mertebeli sayısal solver'lar — bunlar onlarca yıldır var olan araçlar. Süreci bir SDE olarak yazdığın anda hepsi kullanılabilir hale geliyor. DPM-Solver da tam bu kapıdan giriyor.\n\nNoise seviyesinin continuous olması. $t$'yi 1 ile 1000 arasından değil $[0,1]$ aralığından çekiyorsun, network herhangi bir ara seviyede de çalışıyor. Flow matching'in logit-normal zaman örneklemesi gibi tercihler de ancak bu zeminde anlamlı.\n\nYani yeni bir model icat edilmiyor: aynı süreç daha genel bir dille yazılıyor, ve o dilin getirdiği araç çantası kullanılıyor."
+        },
+        {
+          "type": "text",
+          "heading": "8. Continuous time'a geçiş: SDE nereden çıkıyor",
+          "text": "DDPM'in forward adımı şuydu: $x_t = \\sqrt{1-\\beta_t}\\, x_{t-1} + \\sqrt{\\beta_t}\\, z$. Adım sayısını 1000'den 10000'e çıkarsaydın her adımda daha az noise eklemen gerekirdi, yoksa toplam bozulma değişirdi. Yani $\\beta_t$ aslında \"birim zamanda ne kadar noise\" demek, ve adım süresine bağlı.\n\nBunu açıkça yazalım. $t$ artık 1, 2, 3 diye sayılan bir indeks değil, 0 ile 1 arasında continuous bir sayı; iki ardışık adım arasındaki süre $\\Delta t$. Adım sayısını ikiye katlarsan $\\Delta t$ yarıya iner ve her adımda eklenen noise da yarıya inmeli, yoksa toplam bozulma değişir. Demek ki adımdan bağımsız olan büyüklük \"birim zamanda eklenen noise\", ona $\\beta(t)$ diyelim:\n\n$$\\beta_t = \\beta(t)\\, \\Delta t$$\n\nŞimdi karekökü küçük $\\Delta t$ için açıyoruz. Kullanılan kural $(1+u)^a \\approx 1 + a u$, burada $u = -\\beta(t)\\Delta t$ ve $a = \\tfrac{1}{2}$:\n\n$$\\sqrt{1-\\beta(t)\\Delta t} \\approx 1 - \\tfrac{1}{2}\\beta(t)\\Delta t$$\n\nSayıyla kontrol: $\\beta(t)\\Delta t = 0.01$ için gerçek değer $0.994987$, yaklaşım $0.995$. Adım küçüldükçe fark daha da kapanıyor, limitte tamamen kayboluyor.\n\nBunu $x_t = \\sqrt{1-\\beta_t}\\, x_{t-1} + \\sqrt{\\beta_t}\\, z$ içine koyup $x_t - x_{t-1}$ farkını yazınca bir adımdaki değişim şu hale geliyor:\n\n$$\\Delta x = -\\tfrac{1}{2}\\beta(t)\\, x\\, \\Delta t + \\sqrt{\\beta(t)}\\, \\sqrt{\\Delta t}\\, z$$\n\n$\\Delta t \\to 0$ limitinde bu bir stochastic differential equation oluyor:\n\n$$dx = \\underbrace{f(x,t)}_{\\text{drift}}\\, dt + \\underbrace{g(t)}_{\\text{diffusion}}\\, dw$$\n\nİki terimin anlamı ayrı ayrı çok somut:\n\n$f(x,t)$ drift, yani deterministik sürüklenme. Yukarıdaki örnekte $-\\tfrac{1}{2}\\beta(t)x$, yani her an görüntüyü biraz sıfıra doğru çekiyor. Rüzgârsız bir nehirde akıntının seni taşıması gibi.\n\n$g(t)$ diffusion, yani rastgele titreşimin şiddeti. $dw$ Brownian hareket: her anda çekilen sonsuz küçük, bağımsız bir noise. Suyun üstündeki toz zerresinin titremesi.\n\nDikkat çeken ayrıntı: noise terimi $\\Delta t$ ile değil $\\sqrt{\\Delta t}$ ile ölçekleniyor. Bağımsız rastgele adımların varyansları toplandığı için, standart sapma adım sayısının kareköküyle büyüyor. Rastgele yürüyüşün temel özelliği bu ve SDE'lerin ayrı bir matematik dalı olmasının sebebi."
+        },
+        {
+          "type": "table",
+          "heading": "9. VP ve VE — iki tasarım tercihi",
+          "rows": [
+            [
+              "",
+              "VP-SDE (variance preserving)",
+              "VE-SDE (variance exploding)"
+            ],
+            [
+              "Kim kullanıyor",
+              "DDPM",
+              "NCSN (Song, Ermon 2019)"
+            ],
+            [
+              "Drift $f$",
+              "$-\\tfrac{1}{2}\\beta(t)\\, x$ — görüntüyü küçültüyor",
+              "$0$ — görüntüye dokunulmuyor"
+            ],
+            [
+              "Diffusion $g$",
+              "$\\sqrt{\\beta(t)}$",
+              "$\\sigma(t)$, hızla büyüyen"
+            ],
+            [
+              "$x_t$'nin ölçeği",
+              "sabit, varyans hep $1$",
+              "sürekli büyüyor, sonda $\\sigma_{\\max}$ devasa"
+            ],
+            [
+              "Sondaki durum",
+              "$\\mathcal{N}(0,I)$",
+              "$\\mathcal{N}(x_0, \\sigma_{\\max}^2 I)$, pratikte veriden bağımsız"
+            ],
+            [
+              "Avantajı",
+              "network'ün girdisi hep aynı büyüklükte",
+              "veri hiç bozulmuyor, sadece üstüne ekleniyor"
+            ],
+            [
+              "Zorluğu",
+              "sinyal ile noise iç içe ölçekleniyor",
+              "network çok geniş bir $\\sigma$ aralığını idare etmeli"
+            ]
+          ]
+        },
+        {
+          "type": "insight",
+          "heading": "VP ile VE arasındaki fark neden önemli",
+          "text": "İkisi de aynı işi yapıyor: veriyi tanınmaz hale getirip sonunda bilinen bir distribution bırakmak. Fark, bunu nasıl yaptıkları.\n\nVP her adımda görüntüyü biraz küçültüp yerine noise koyuyor, böylece toplam büyüklük sabit kalıyor. Bir bardak boyalı suyun yarısını dökeyim, yerine su ekleyeyim gibi: seviye hep aynı, renk kayboluyor. Network'ün girdisi her $t$'de aynı ölçekte olduğu için normalization ve mimari açısından rahat.\n\nVE görüntüye hiç dokunmuyor, sadece üstüne giderek daha büyük noise yığıyor. Boyalı suyu hiç dökmeyip üstüne kovalarca berrak su eklemek gibi: renk yine kayboluyor ama kap taşıyor. Buradaki zorluk ölçek: $\\sigma$ 0.01'den 50'ye kadar değişebiliyor ve network'ün hepsinde çalışması gerekiyor.\n\nSong ve ark. (2021) ikisinin de aynı çerçevenin özel hali olduğunu gösterdi. Bu birleştirme, DDPM ile NCSN'in birbirinden bağımsız iki icat değil, tek bir denklemin iki ayarı olduğunu ortaya çıkardı — paperın asıl katkısı bu."
+        },
+        {
+          "type": "text",
+          "heading": "Tabloyu somutlaştıralım: network ne görüyor",
+          "text": "Network'ün girdisi her iki kurulumda da $x_t$, yani o $t$ seviyesindeki bozulmuş görüntü. Aradaki fark, bu girdinin sayısal olarak neye benzediği.\n\nVP'de iki katsayının kareleri toplamı hep 1 olduğu için piksel değerleri her $t$'de aynı bantta kalıyor:\n\n$$x_t = \\sqrt{\\bar{\\alpha}_t}\\, x_0 + \\sqrt{1-\\bar{\\alpha}_t}\\, \\varepsilon$$\n\n$$t \\text{ küçük: } 0.99\\, x_0 + 0.10\\, \\varepsilon \\qquad t \\text{ orta: } 0.71\\, x_0 + 0.71\\, \\varepsilon \\qquad t \\text{ büyük: } 0.10\\, x_0 + 0.99\\, \\varepsilon$$\n\nVE'de ise görüntünün katsayısı hiç değişmiyor, sadece üstüne eklenen noise büyüyor:\n\n$$x_t = x_0 + \\sigma(t)\\, \\varepsilon$$\n\n$\\sigma = 0.01$ iken $x_t$ neredeyse temiz görüntü, değerler $-1$ ile $1$ arasında. $\\sigma = 50$ iken aynı görüntünün değerleri $-150$ ile $150$ bandına yayılıyor ve içindeki yapı tamamen kayboluyor. \"Veri hiç bozulmuyor, sadece üstüne ekleniyor\" cümlesi bunu anlatıyor: $x_0$ terimi hiç küçültülmüyor."
+        },
+        {
+          "type": "text",
+          "heading": "Her iki tarafın bedeli ne",
+          "text": "VE'nin bedeli ölçek. Network aynı weight'lerle hem $\\sigma = 0.01$ hem $\\sigma = 50$ durumunu idare etmek zorunda, yani girdi büyüklüğü binlerce kat değişiyor. Sinir ağları bunu sevmiyor: aktivasyonlar ya doyuyor ya sıfıra iniyor. Pratikte girdiyi $\\sigma$'ya bölmek, $\\sigma$'yı ayrıca bir input olarak vermek gibi ön işlemlerle çözülüyor.\n\nVP'nin bedeli ise sinyal ile noise'un birlikte ölçeklenmesi. Orada $x_0$'ın katsayısı $t$ büyüdükçe sıfıra gidiyor, ve $x_0$'ı geri çıkarmak için ona bölmen gerekiyor:\n\n$$\\hat{x}_0 = \\frac{x_t - \\sqrt{1-\\bar{\\alpha}_t}\\, \\varepsilon_\\theta}{\\sqrt{\\bar{\\alpha}_t}}$$\n\n$t$ büyükken bu bölme $0.10$'a bölmek demek: $\\varepsilon_\\theta$'daki küçük bir hata $\\hat{x}_0$'da on katına çıkıyor. Büyük $t$'de $x̂_0$ tahminlerinin neden bulanık ve güvenilmez olduğunun sebebi bu — DDIM'de tek adımda üretemememizin de arkasında aynı mekanizma var.\n\nYani ikisi de aynı işi yapıyor ama zorluğu farklı yere koyuyor: VE ölçek aralığına, VP geri çevirme hassasiyetine."
+        },
+        {
+          "type": "text",
+          "heading": "Ara not: $p_t(x)$ tam olarak ne",
+          "text": "Denklemlerde $p_t(x)$ diye bir şey belirdi, açalım.\n\n$p_t$, $t$ seviyesindeki noise'lu verinin distribution'ı. Yani bütün veri setini alıp her örneğe $t$ kadar noise ekleseydin, elde edeceğin bulutun dağılımı.\n\n$$p_0 = p_{\\text{data}} \\qquad p_1 \\approx \\mathcal{N}(0,I)$$\n\nAradaki her $t$ için $p_t$, veri distribution'ının biraz daha bulanıklaşmış hali. Forward süreç boyunca keskin yapılar erimeye başlıyor, mod'lar birbirine karışıyor, sonunda tek bir Gaussian tepesi kalıyor.\n\nİki nokta önemli:\n\nBunu hiçbir zaman açıkça hesaplamıyoruz. $p_t$'nin formülü yok, çünkü $p_{\\text{data}}$'nın formülü yok. Sadece ondan örnek üretebiliyoruz: bir $x_0$ çek, üstüne uygun noise ekle, elindeki $x_t$ zaten $p_t$'den bir örnek.\n\nNetwork'ün öğrendiği şey tam olarak bunun score'u: $\\nabla_x \\log p_t(x)$. Her $t$ için ayrı bir score alanı var, ve $t$ network'e input olarak verildiği için tek bir network hepsini birden öğreniyor.\n\nReverse denklemde $p_t$'nin görünmesinin sebebi de bu: zamanda geriye gitmek \"veri şu anda nerede yoğun\" bilgisini gerektiriyor, o bilgi de $p_t$'nin score'unda duruyor."
+        },
+        {
+          "type": "text",
+          "heading": "10. Zamanda geriye gitmek: score neden zorunlu",
+          "text": "Forward süreç bilgi yok ediyor. Elinde yalnızca $x_t$ varken \"bu noise hangi görüntüden geldi\" sorusunun tek bir cevabı yok, çünkü birçok farklı görüntü aynı $x_t$'ye götürebilir.\n\nAnderson'un 1982'de ispatladığı sonuç şu: bir SDE zamanda tersine çevrilebiliyor, ama ters denklem fazladan bir terim taşıyor ve o terim score:\n\n$$dx = \\bigl[ f(x,t) - g(t)^2 \\nabla_x \\log p_t(x) \\bigr] dt + g(t)\\, d\\bar{w}$$\n\nTerimleri tek tek oku:\n\n$f(x,t)$ — ileri giderken seni sürükleyen akıntı, geri giderken de aynı akıntı işin içinde.\n\n$-g(t)^2 \\nabla_x \\log p_t(x)$ — yeni olan terim. Score, density'nin arttığı yönü gösteriyordu; bu terim seni o yöne itiyor. Sezgisi doğrudan: ileri giderken noise seni veriden uzaklaştırdı, geri dönerken birinin sana \"veri şu tarafta\" demesi gerekiyor. Score tam olarak bu bilgi.\n\n$g(t)\\, d\\bar{w}$ — geri giderken de rastgelelik var. Aynı $x_T$'den başlayıp farklı görüntüler üretebilmenin sebebi bu.\n\nKatsayının $g(t)^2$ olması da tesadüf değil: noise ne kadar şiddetliyse, onu geri almak için gereken itme o kadar büyük.\n\nPratik sonuç: eğer her $t$ ve her $x$ için score'u bilirsen, saf noise'tan başlayıp bu denklemi çözerek veri üretebilirsin. Network'ün öğrendiği tek şey de zaten bu."
+        },
+        {
+          "type": "text",
+          "heading": "11. Probability flow ODE: aynı distribution, rastgelelik yok",
+          "text": "Şimdi asıl ilginç kısım. Aynı marginal'leri veren, içinde hiç rastgelelik olmayan bir denklem daha var:\n\n$$\\frac{dx}{dt} = f(x,t) - \\tfrac{1}{2} g(t)^2 \\nabla_x \\log p_t(x)$$\n\nBuradaki iddia şu: bu ODE'yi çözerek taşıdığın noktaların her $t$'deki distribution'ı, SDE'ninkiyle birebir aynı. Tek tek yollar farklı, ama distribution aynı.\n\nNasıl olabiliyor? Bir distribution'ı hareket ettirmenin iki yolu var. Ya her parçacığı rastgele titretirsin ve kalabalık yayılır, ya da her parçacığı hesaplanmış bir hızla iterek aynı yayılmayı deterministik olarak üretirsin. Sonuçta kalabalığın şekli aynı olur; kimin nereye gittiği farklı olur.\n\n$\\tfrac{1}{2}$ çarpanı da buradan geliyor: SDE'de yayılmanın bir kısmını rastgelelik yapıyordu. Rastgeleliği tamamen kaldırınca, o kaybolan yayılmayı hız alanının tek başına üretmesi gerekiyor ve denge tam olarak yarım katsayıda kuruluyor.\n\nBunun üç sonucu var:\n\nDeterministik üretim mümkün. Başlangıç noktasını seçtiğin anda çıktı belirleniyor. DDIM'in $\\eta = 0$ sampler'ı tam olarak bu ODE'nin bir discretization'ı.\n\nAdım atlamak meşrulaşıyor. Elinde bir ODE varsa solver seçmek serbesttir; adımı büyütmek hatayı artırır ama süreci bozmaz. Stokastik zincirde bu mümkün değildi.\n\nFlow matching'e köprü buradan kuruluyor. Probability flow ODE'nin sağ tarafı bir velocity field. Flow matching ise o alanı score üzerinden dolambaçlı yoldan çıkarmak yerine doğrudan öğreniyor, üstelik yolu düz seçerek. Aynı hedefin daha kısa yoldan kurulmuş hali."
+        },
+        {
+          "type": "table",
+          "heading": "12. Reverse SDE ile PF-ODE — hangisi ne zaman",
+          "rows": [
+            [
+              "",
+              "Reverse SDE",
+              "Probability flow ODE"
+            ],
+            [
+              "Denklem",
+              "$\\bigl[f - g^2 \\nabla_x \\log p_t\\bigr] dt + g\\, d\\bar{w}$",
+              "$\\bigl[f - \\tfrac{1}{2} g^2 \\nabla_x \\log p_t\\bigr] dt$"
+            ],
+            [
+              "Süreç",
+              "stochastic",
+              "deterministic"
+            ],
+            [
+              "Çeşitlilik",
+              "yüksek",
+              "düşük"
+            ],
+            [
+              "Örnek kalitesi",
+              "yüksek",
+              "düşük"
+            ],
+            [
+              "Hız",
+              "yavaş",
+              "hızlı"
+            ]
+          ]
+        },
+        {
+          "type": "text",
+          "heading": "Tablodaki üç satırın sebebi",
+          "text": "Çeşitlilik. Reverse SDE her adımda taze noise çekiyor, yani aynı $x_T$'den başlasan bile her çalıştırmada farklı bir görüntü çıkıyor. ODE'de rastgelelik yalnızca başlangıçta; $x_T$ sabitlenirse çıktı da sabit. Çeşitlilik tamamen başlangıç noktasının dağılımından geliyor.\n\nKalite. Buradaki fark sezgisel olarak şu: SDE'nin eklediği noise bir tür hata düzeltme işlevi görüyor. Yol sırasında veriden uzak bir yere savrulursan, sonraki adımlarda score terimi seni geri çekiyor ve eklenen rastgelelik farklı bölgeleri yoklamanı sağlıyor. ODE'de böyle bir düzeltme yok: tek bir yörüngeyi takip ediyorsun ve her adımda yaptığın discretization hatası üstüne biniyor, geri dönüşü olmuyor. Bol adım bütçen varsa SDE genelde daha iyi örnek veriyor.\n\nHız. ODE'nin avantajı tam da determinizminden geliyor. Elinde sıradan bir diferansiyel denklem varsa yüksek mertebeli solver'lar kullanabilir, adımı büyütebilirsin; 20-50 adımda bitirmek mümkün. SDE'de her adım yeni rastgelelik eklediği için adım büyütmek doğrudan kaliteyi bozuyor, o yüzden yüzlerce adım gerekiyor.\n\nPratikteki bölünme de buradan: çok adım bütçen varsa ve çeşitlilik istiyorsan SDE, az adımda hızlı üretim istiyorsan ODE. DDIM'in $\\eta$ düğmesi zaten bu iki ucun arasını geziyor — $\\eta = 1$ SDE tarafı, $\\eta = 0$ ODE tarafı."
+        },
+        {
+          "type": "text",
+          "heading": "13. Aynı network'ün dört kılığı: $x_0$, $\\varepsilon$, score, velocity",
+          "text": "Şimdiye kadar network'ün çıktısını üç farklı isimle gördük ve hepsi birbirine cebirle çevriliyordu. Dördüncüsü de var.\n\n$$\\hat{x}_0 = \\frac{x_t - \\sqrt{1-\\bar{\\alpha}_t}\\, \\varepsilon_\\theta}{\\sqrt{\\bar{\\alpha}_t}} \\qquad s_\\theta = -\\frac{\\varepsilon_\\theta}{\\sqrt{1-\\bar{\\alpha}_t}} \\qquad v_\\theta = \\sqrt{\\bar{\\alpha}_t}\\, \\varepsilon_\\theta - \\sqrt{1-\\bar{\\alpha}_t}\\, \\hat{x}_0$$\n\nSonuncusu velocity, yani v-prediction (Salimans, Ho 2022). Adı \"hız\" çünkü $x_t$'nin $t$'ye göre değişim yönünü veriyor: $x_0$ ile $\\varepsilon$ arasındaki yolda o anda hangi yöne gidildiğini söylüyor.\n\nNeden ayrı bir parametrizasyon gerekti: $\\varepsilon$-prediction küçük $t$'de kötü davranıyor. Orada $x_t$ zaten neredeyse temiz, eklenen noise minik; network'ün onu tahmin etmesi hem zor hem de o tahmindeki hata $\\hat{x}_0$'a bölme yoluyla büyüyor. $x_0$-prediction ise büyük $t$'de aynı sorunu yaşıyor. Velocity ikisinin arasında duran, her $t$'de dengeli davranan bir hedef. Distillation ve az adımlı sampling çalışmalarında tercih edilmesinin sebebi bu.\n\nFlow matching bağlantısı da tam burada: orada network doğrudan bir velocity field öğreniyordu. Probability flow ODE'nin sağ tarafı da bir velocity field. Yani iki yaklaşım aynı nesneyi öğreniyor; diffusion ona score üzerinden dolaşarak varıyor, flow matching düz çizgi kurarak doğrudan."
+        },
+        {
+          "type": "text",
+          "heading": "14. DPM-Solver: ODE'yi bilerek çözmek",
+          "text": "PF-ODE'yi elde ettikten sonra akla gelen ilk şey, onu sıradan bir ODE gibi Euler ile çözmek. DDIM'in yaptığı da bu. Ama bu, denklemin yapısını görmezden geliyor.\n\nDenklem yarı yarıya lineer: bir kısmı $x$'e göre lineer ve kapalı formda çözülebiliyor, geri kalanı ise network çağrısı gerektiren doğrusal olmayan kısım. Euler ikisini birden yaklaşık çözüyor, yani analitik olarak bilinen kısımda bile hata yapıyor.\n\nDPM-Solver (Lu ve ark., NeurIPS 2022) lineer kısmı tam olarak çözüp yalnızca network'lü kısma sayısal yaklaşım uyguluyor. Bunun için değişken değiştiriyor: $\\lambda_t = \\log(\\sqrt{\\bar{\\alpha}_t}/\\sqrt{1-\\bar{\\alpha}_t})$, yani signal-to-noise oranının logaritması. Bu değişkende denklem çok daha düzgün davranıyor ve yüksek mertebeli adımlar kurulabiliyor.\n\nSonuç pratikte büyük: DDIM'in 50 adımda ulaştığı kaliteye 10-20 network çağrısıyla ulaşılıyor. Stable Diffusion arayüzlerinde gördüğün DPM++ seçenekleri bunun geliştirilmiş sürümleri.\n\nBuradaki genel ders, kartın başından beri gelen çizginin devamı: aynı eğitilmiş network duruyor, değişen tek şey ondan nasıl örnek aldığın. Önce zinciri bıraktık (DDIM), sonra süreci ODE olarak gördük, şimdi de o ODE'yi daha akıllı çözüyoruz."
+        },
+        {
+          "type": "insight",
+          "heading": "Geriye ne kalsın",
+          "text": "Score, density'nin logaritmasının $x$'e göre gradient'i; normalizasyon sabitini öldürdüğü için hesaplanabilir. Gerçek score bilinmiyor ama kendi eklediğin noise'un score'u biliniyor, ve o hedefle eğitmek doğru cevabı veriyor. Bu eğitim DDPM'in $\\varepsilon$-prediction'ı ile aynı şey; ikisi tek bir ölçek çarpanıyla birbirine çevriliyor. Continuous time'a geçince süreç bir SDE oluyor, onun deterministik karşılığı olan probability flow ODE ise DDIM ile flow matching'in ortak zemini."
+        },
+        {
+          "type": "ref",
+          "heading": "İlgili kartlar",
+          "items": [
+            {
+              "id": "cs13-generalized-diffusion-vp-ve-score-functions-and-sdes",
+              "label": "Genelleştirilmiş diffusion — VP, VE, score, SDE"
+            },
+            {
+              "id": "ida11-ddim-ayni-ag-neden-atlayabiliyoruz-ve-eta-ne-yapiyor",
+              "label": "DDIM — neden atlayabiliyoruz, η ne yapıyor"
+            },
+            {
+              "id": "ida11-ddpm-matematiksel-ozet-forward-reverse-prediction-ve-l-simpl",
+              "label": "DDPM — matematiksel özet"
+            }
+          ]
+        },
+        {
+          "type": "note",
+          "heading": "Nereye bakılır",
+          "text": "Kaynaklar: Hyvärinen 2005 (score matching) · Vincent 2011 (denoising score matching) · Song, Ermon — Generative Modeling by Estimating Gradients of the Data Distribution (NeurIPS 2019) · Song ve ark. — Score-Based Generative Modeling through SDEs (ICLR 2021) · Lu ve ark. — DPM-Solver (NeurIPS 2022).\n\nDers: CME 296, Lecture 2. Devamı için Flow Matching ve Rectified Flow anlatımı; DDPM tarafının tamamı için DDPM anlatımı."
+        }
+      ]
+    },
     "flow": {
       "title": "Flow Matching ve Rectified Flow — Baştan Sona Konu Anlatımı",
       "cat": "Konu Anlatımı",
       "context": "Diffusion'ın devamı · CS231n 13 — tek oturumda okunmak için",
       "chapters": [
+        "ida11",
         "cs13",
         "mlo21"
       ],
@@ -28208,16 +28020,93 @@
         {
           "type": "text",
           "heading": "3. Flow: bir ODE",
-          "text": "Tüyün hareketi bir diferansiyel denklem: $\\frac{dx}{dt} = v(x, t)$. $x$ tüyün konumu (bir görüntü), $v$ o konumda ve o anda velocity. Denklemi $t=1$'den $t=0$'a çözmek, noise'u görüntüye taşımak demek.\n\nBu fikir yeni değil. Neural ODE (Chen ve ark., NeurIPS 2018) ve continuous normalizing flows tam olarak bunu yapıyordu. Sorun eğitimdeydi: bir $v_\\theta$'nın iyi olup olmadığını anlamak için ODE'yi baştan sona simüle edip likelihood hesaplaman gerekiyordu. Her eğitim adımında yüzlerce ağ çağrısı — büyük görüntülerde pratik değil.\n\nFlow matching'in katkısı bu tek engeli kaldırmak: ODE'yi eğitim sırasında hiç çözmeden, düz bir regression ile $v_\\theta$'yı eğitmek. Adındaki \"simulation-free\" bu demek."
+          "text": "Tüyün hareketi bir diferansiyel denklem: $\\frac{dx}{dt} = v(x, t)$. $x$ tüyün konumu (bir görüntü), $v$ o konumda ve o anda velocity. Denklemi $t=1$'den $t=0$'a çözmek, noise'u görüntüye taşımak demek.\n\nBu kurulumun üç parçası var ve üçü de ayrı birer terim: parçacığın izlediği yol, bütün yolların haritası, ve bu yolların taşıdığı distribution. Sıradaki bölüm bu terimleri ayırıyor."
         },
         {
           "type": "text",
-          "heading": "4. Sorun: doğru haritayı kimse bilmiyor",
+          "heading": "4. Dört tanım: trajectory, flow, probability path, velocity field",
+          "text": "Bu konunun dili dört terimden oluşuyor ve ikisi kolayca karışıyor.\n\nTrajectory, tek bir parçacığın izlediği yol: $t \\mapsto x_t$. Bir başlangıç noktası seçtiğinde ortaya çıkan tek bir eğri.\n\nFlow, bütün başlangıç noktaları için bu eğrilerin toplamı: $\\psi_t(x_0)$. Yani \"nereden başlarsan başla, $t$ anında neredesin\" kuralı. Trajectory tek bir kayık, flow bütün kayıkların haritası.\n\nProbability path, distribution'ın zaman içindeki yolu: $p_t$. Bir uçta noise, diğer uçta veri; aradakiler geçiş distribution'ları.\n\nVelocity field, $u_t(x)$: her konuma ve her ana bir hız atayan alan. Trajectory'leri üreten şey bu, probability path da onun sonucu.\n\nKonvansiyon uyarısı: hangi ucun noise olduğu kaynağa göre değişiyor. Lipman'ın flow matching paperında ve CME 296'da $t=0$ noise, $t=1$ veri; CS231n ve rectified flow paperında tersi. İki kaynakta işaretlerin ters görünmesinin sebebi çoğu zaman gerçek bir fark değil, bu konvansiyon farkı."
+        },
+        {
+          "type": "text",
+          "heading": "5. Velocity ile score farkı",
+          "text": "İkisi de uzayın her noktasına bir vektör atıyor, ama farklı soruları cevaplıyorlar.\n\nScore, $\\nabla_x \\log p_t(x)$: bu noktadan hangi yöne gidilirse density artar. Tek bir anın fotoğrafına bakıyor, zamanla ilgisi yok; yalnızca o anki distribution'ın şeklini tarif ediyor.\n\nVelocity, $u_t(x)$: bu noktadaki parçacık şu anda hangi yöne, ne hızla hareket ediyor. Zaman içinde bir taşıma tarif ediyor.\n\nBağlantı diffusion'da kuruluyor: probability flow ODE'nin sağ tarafı, score'dan hesaplanmış bir velocity. Yani score bir velocity üretebiliyor ama kendisi velocity değil. Flow matching bu ara adımı atlayıp doğrudan velocity öğreniyor."
+        },
+        {
+          "type": "text",
+          "heading": "6. Tarihçe: normalizing flow'dan flow matching'e",
+          "text": "Bu fikir üç aşamada olgunlaştı, ve her aşama bir öncekinin darboğazını kaldırdı.\n\nNormalizing flows (2015 civarı). Basit bir distribution alıp tersinir dönüşümlerle karmaşık hale getiriyorsun. Likelihood hesaplanabiliyor ama bedeli ağır: her katmanın Jacobian determinantını hesaplaman gerekiyor, bu da mimariyi ciddi biçimde kısıtlıyor (tersinir olmak zorunda, determinant ucuz olmalı).\n\nContinuous normalizing flows (Neural ODE, 2018). Ayrık katmanlar yerine sürekli bir ODE. Jacobian determinantı yerine divergence geliyor ve likelihood şöyle akıyor:\n\n$$\\frac{d \\log p_t(x)}{dt} = -\\operatorname{div} u_t(x)$$\n\nBu formül continuity equation'ın parçacık boyunca yazılmış hali. Mimari kısıtı kalkıyor, ama yeni bir sorun var: eğitim için ODE'yi baştan sona simüle etmen gerekiyor, her adımda network çağrısı. Büyük görüntülerde pratik değil.\n\nFlow matching (2022). Likelihood'u hiç hesaplamıyorsun. Bunun yerine hedef velocity'yi doğrudan regression ile öğreniyorsun, ve hedefi tek bir veri-noise çiftine koşullayarak elde ediyorsun. ODE simülasyonu eğitimden tamamen çıkıyor. \"Simulation-free\" denen şey bu."
+        },
+        {
+          "type": "text",
+          "heading": "7. Divergence: bir noktadan net ne kaçıyor",
+          "text": "Uzayı su dolu bir boru gibi düşün, tek boyutta. $f(x)$ o noktadaki suyun hızı; işareti yönü veriyor, $f>0$ sağa, $f<0$ sola.\n\nŞimdi borunun $x$ ile $x+\\Delta$ arasındaki minik bir parçasına bak. Bu parçanın \"yüzeyi\" iki uçtan ibaret: soldan su giriyor, sağdan çıkıyor.\n\n$$\\text{net çıkış} = f(x+\\Delta) - f(x)$$\n\nParçanın uzunluğuna bölüp $\\Delta \\to 0$ limitini alınca tam olarak türev kalıyor:\n\n$$\\operatorname{div} f = \\frac{\\partial f}{\\partial x}$$\n\nSayıyla: $f(x) = x$ ve parça $[1,2]$ olsun. Sol uçtan 1 birim/saniye giriyor, sağ uçtan 2 birim/saniye çıkıyor, net $+1$. Parça boşalıyor.\n\nYorum: divergence pozitifse o nokta kaynak gibi davranıyor, orada density azalıyor. Negatifse kuyu, orada birikme var. Sıfırsa giren çıkana eşit, density sabit kalıyor.\n\nYüksek boyutta tanım aynı, sadece bütün yönlerdeki katkılar toplanıyor:\n\n$$\\operatorname{div} u = \\sum_{i=1}^{d} \\frac{\\partial u_i}{\\partial x_i}$$"
+        },
+        {
+          "type": "svg",
+          "heading": "1D resminin okunuşu",
+          "svg": "<svg width=\"560\" height=\"200\" viewBox=\"0 0 560 200\" role=\"img\" aria-label=\"1D divergence\"><defs><marker id=\"ah\" viewBox=\"0 0 10 10\" refX=\"9\" refY=\"5\" markerWidth=\"5\" markerHeight=\"5\" orient=\"auto\"><path d=\"M0,0 L10,5 L0,10 z\" fill=\"currentColor\"/></marker></defs><text x=\"15\" y=\"20\">divergence &gt; 0</text><line class=\"axis\" x1=\"15\" y1=\"105\" x2=\"260\" y2=\"105\" stroke-width=\"1\"/><ellipse class=\"q-line\" cx=\"145\" cy=\"105\" rx=\"6\" ry=\"26\" stroke-width=\"1.4\"/><line class=\"p-curve\" x1=\"105\" y1=\"105\" x2=\"131\" y2=\"105\" stroke-width=\"2.2\" marker-end=\"url(#ah)\"/><line class=\"p-curve\" x1=\"159\" y1=\"105\" x2=\"211\" y2=\"105\" stroke-width=\"2.2\" marker-end=\"url(#ah)\"/><text x=\"118\" y=\"69\" text-anchor=\"middle\">giren f=1</text><text x=\"185\" y=\"69\" text-anchor=\"middle\">çıkan f=2</text><text x=\"15\" y=\"161\">çıkan &gt; giren → aralık boşalıyor</text><text x=\"300\" y=\"20\">divergence &lt; 0</text><line class=\"axis\" x1=\"300\" y1=\"105\" x2=\"545\" y2=\"105\" stroke-width=\"1\"/><ellipse class=\"q-line\" cx=\"430\" cy=\"105\" rx=\"6\" ry=\"26\" stroke-width=\"1.4\"/><line class=\"p-curve\" x1=\"364\" y1=\"105\" x2=\"416\" y2=\"105\" stroke-width=\"2.2\" marker-end=\"url(#ah)\"/><line class=\"p-curve\" x1=\"444\" y1=\"105\" x2=\"470\" y2=\"105\" stroke-width=\"2.2\" marker-end=\"url(#ah)\"/><text x=\"390\" y=\"69\" text-anchor=\"middle\">giren f=2</text><text x=\"457\" y=\"69\" text-anchor=\"middle\">çıkan f=1</text><text x=\"300\" y=\"161\">giren &gt; çıkan → aralıkta birikiyor</text></svg>",
+          "caption": "Tek boyutta minik bir aralık ve iki ucundaki akış hızı. Solda çıkan girenden büyük, aralık boşalıyor; sağda tersi, aralıkta birikme var."
+        },
+        {
+          "type": "text",
+          "heading": "8. Continuity equation: kütle korunumu",
+          "text": "Şimdi taşınan şeyin miktarı korunuyorsa (parçacık ne yaratılıyor ne yok ediliyor), density'nin değişimi yalnızca akıştan gelebilir:\n\n$$\\frac{\\partial p_t(x)}{\\partial t} + \\operatorname{div}\\bigl( p_t(x)\\, u_t(x) \\bigr) = 0$$\n\nTerimleri oku. $p_t(x)\\, u_t(x)$ akı: o noktada ne kadar density var ve ne hızla taşınıyor. Divergence'ı o noktadan net kaçışı veriyor. Denklem de şunu söylüyor:\n\n$$\\text{density'nin artış hızı} = -(\\text{net kaçış})$$\n\nYani bir noktada density ancak oraya dışarıdan akış geldiği için artabilir. Bu, fizikteki kütle korunumunun ta kendisi; olasılıkta da toplam kütle her zaman 1 olduğu için aynı denklem geçerli."
+        },
+        {
+          "type": "text",
+          "heading": "Divergence neyin divergence'ı",
+          "text": "Continuity equation'da divergence'ın uygulandığı şey velocity değil, akı: $p_t(x)\\, u_t(x)$.\n\nFark önemli. Velocity tek başına ne kadar hızlı gidildiğini söylüyor; akı ise ne kadar maddenin ne kadar hızlı taşındığını. Hızın büyük ama density'nin sıfır olduğu bir bölgede taşınan bir şey yok, dolayısıyla o bölgenin density dengesine katkısı da yok.\n\nDenklemin $\\operatorname{div}(p_t u_t)$ içermesinin, $\\operatorname{div}(u_t)$ içermemesinin sebebi bu."
+        },
+        {
+          "type": "table",
+          "heading": "Aynı alana iki bakış",
+          "rows": [
+            [
+              "",
+              "Tek parçacık",
+              "Distribution"
+            ],
+            [
+              "Soru",
+              "bu nokta nereye gidiyor",
+              "kalabalığın şekli nasıl değişiyor"
+            ],
+            [
+              "Denklem",
+              "$\\frac{dx}{dt} = u_t(x)$",
+              "$\\partial_t p_t + \\operatorname{div}(p_t u_t) = 0$"
+            ],
+            [
+              "Verilen",
+              "başlangıç noktası",
+              "başlangıç distribution'ı"
+            ],
+            [
+              "Çıktı",
+              "trajectory",
+              "probability path"
+            ],
+            [
+              "Nerede kullanılır",
+              "sampling, ODE çözümü",
+              "teorik şart: velocity doğru mu"
+            ]
+          ]
+        },
+        {
+          "type": "insight",
+          "heading": "9. Flow matching'in şartı tam olarak bu",
+          "text": "Flow matching'in hedefi şuydu: $t=0$'da noise, $t=1$'de veri olacak şekilde bir yol kurmak ve o yolu üreten velocity field'ı öğrenmek.\n\n\"Yolu üretmek\" cümlesinin matematiksel karşılığı continuity equation. Bir $u_t$ ile bir $p_t$ ikilisi ancak bu denklemi sağlıyorsa birbirine uygun; yani $u_t$'yi takip eden parçacıkların dağılımı gerçekten $p_t$ oluyor.\n\nBuradan iki sonuç çıkıyor:\n\nAynı $p_t$ yolunu üreten birden fazla $u_t$ olabilir. Denklem $u$'yu tek bir çözüme zorlamıyor. Rectified flow'un düz yolu, diffusion'ın probability flow ODE'si — ikisi de meşru seçimler.\n\nTersi de doğru: bir $u_t$ verildiğinde ürettiği $p_t$ belirli. Bu yüzden network'e velocity öğretmek, dolaylı olarak bir distribution yolu öğretmek demek."
+        },
+        {
+          "type": "text",
+          "heading": "10. Sorun: doğru haritayı kimse bilmiyor",
           "text": "Regression yapmak için hedef lazım: her $(x, t)$ için doğru velocity. Ama bu hedef bir bütün olarak distribution'a bağlı. $t=0.5$'teki bir noktadan hangi yöne gidileceği, o noktaya hangi veri örneklerinden ve hangi noise örneklerinden gelinebileceğine bağlı — yani bütün veri setine. Kapalı formda yazamıyorsun.\n\nBu, DDPM'deki durumun aynısı. Orada da gerçek reverse geçiş $q(x_{t-1} \\mid x_t)$ bilinmiyordu, çünkü bütün veri distribution'una bağlıydı. Çözüm de aynı çıkacak: tek bir örneğe koşullayınca her şey hesaplanabilir hale geliyor."
         },
         {
           "type": "text",
-          "heading": "5. Hile: tek bir çift için cevap bariz",
+          "heading": "11. Hile: tek bir çift için cevap bariz",
           "text": "Tek bir veri örneği $x_0$ ve tek bir noise örneği $z$ al. İkisi arasına düz bir çizgi çek: $x_t = (1-t)\\,x_0 + t\\,z$. Bu çizgi üzerindeki velocity sabit: $z - x_0$. Hesaplanacak hiçbir şey yok.\n\nSayılarla, tek boyutta: $x_0 = 2$, $z = -1$. O zaman $x_t = 2 - 3t$. $t=0.5$'te $x_t = 0.5$, velocity her yerde $-3$. $t=1$'deki $-1$'den başlayıp tek bir Euler adımı atarsan: $x = -1 - 1 \\cdot (-3) = 2$. Tam olarak veriye varıyorsun.\n\nEğitim bu kadar: rastgele bir veri örneği, rastgele bir noise, rastgele bir $t$ çek; aradaki noktayı kur; ağdan o noktadaki velocity'yi tahmin etmesini iste; hedef $z - x_0$."
         },
         {
@@ -28227,28 +28116,33 @@
         },
         {
           "type": "text",
-          "heading": "6. Neden tek çiftin cevabıyla eğitmek doğru haritayı veriyor",
-          "text": "Burada bir şey tuhaf görünmeli. Aynı $x_t$ noktasına birçok farklı çiftten gelinebilir, ve her biri farklı bir hedef söylüyor. Ağ aynı girdi için birbiriyle çelişen hedeflerle eğitiliyor.\n\nCevap MSE'nin kendisinde. MSE'yi minimize eden tahmin, hedeflerin ortalamasıdır — MLE anlatımındaki \"Gaussian noise varsa MSE, MSE'nin çözümü ortalama\" gerçeğinin aynısı. Dolayısıyla ağ her noktada o noktadan geçen bütün çiftlerin velocity'lerinin ortalamasını öğreniyor: $v^*(x, t) = \\mathbb{E}[\\, z - x_0 \\mid x_t = x \\,]$.\n\nFlow matching paperlarının asıl teoremi şu: bu ortalama velocity field, noise distribution'unu tam olarak veri distribution'una taşıyor. Tek tek çiftlerin düz çizgileri gerçek yollar değil, ama ortalamaları doğru haritayı veriyor.\n\nOyuncak örnek: veri yalnızca iki noktadan oluşsun, $-1$ ve $+1$. $t=0.5$'te $x=0$ noktasına hem ($x_0=+1$, $z=-1$, velocity $-2$) çiftinden hem de ($x_0=-1$, $z=+1$, velocity $+2$) çiftinden eşit olasılıkla geliniyor. Ağ ortalamayı, yani $0$'ı öğreniyor. O noktadaki tüy kıpırdamıyor.\n\nDDPM'deki ε-prediction da aynı hileyi kullanıyordu: tek örnekteki gerçek noise gürültülü bir hedef, ama MSE'nin minimize ettiği şey conditional expectation. İki yöntemin eğitimi bu yüzden bu kadar benziyor."
+          "heading": "12. Neden tek çiftin cevabıyla eğitmek doğru haritayı veriyor",
+          "text": "Burada bir şey tuhaf görünmeli. Aynı $x_t$ noktasına birçok farklı çiftten gelinebilir, ve her biri farklı bir hedef söylüyor. Network aynı girdi için birbiriyle çelişen hedeflerle eğitiliyor.\n\nCevap MSE'nin kendisinde. MSE'yi minimize eden tahmin, hedeflerin ortalamasıdır — MLE anlatımındaki \"Gaussian noise varsa MSE, MSE'nin çözümü ortalama\" gerçeğinin aynısı. Dolayısıyla network her noktada o noktadan geçen bütün çiftlerin velocity'lerinin ortalamasını öğreniyor: $v^*(x, t) = \\mathbb{E}[\\, z - x_0 \\mid x_t = x \\,]$.\n\nFlow matching paperlarının asıl teoremi şu: bu ortalama velocity field, noise distribution'unu tam olarak veri distribution'una taşıyor. Tek tek çiftlerin düz çizgileri gerçek yollar değil, ama ortalamaları doğru haritayı veriyor.\n\nOyuncak örnek: veri yalnızca iki noktadan oluşsun, $-1$ ve $+1$. $t=0.5$'te $x=0$ noktasına hem ($x_0=+1$, $z=-1$, velocity $-2$) çiftinden hem de ($x_0=-1$, $z=+1$, velocity $+2$) çiftinden eşit olasılıkla geliniyor. Network ortalamayı, yani $0$'ı öğreniyor. O noktadaki tüy kıpırdamıyor.\n\nDDPM'deki ε-prediction da aynı hileyi kullanıyordu: tek örnekteki gerçek noise noiselü bir hedef, ama MSE'nin minimize ettiği şey conditional expectation. İki yöntemin eğitimi bu yüzden bu kadar benziyor."
+        },
+        {
+          "type": "text",
+          "heading": "13. Conditional'dan marginal'e: flow matching'in asıl hamlesi",
+          "text": "Continuity equation bir şart veriyor ama hedef velocity'yi elimize vermiyor. Marginal velocity field bütün veri distribution'ına bağlı olduğu için kapalı formda yazılamıyor.\n\nFlow matching'in çözümü problemi tek bir veri noktasına koşullamak. Tek bir $z$ sabitlendiğinde hem path hem velocity kapalı formda yazılabiliyor:\n\n$$p_t(x \\mid z) = \\mathcal{N}\\bigl(x;\\ \\mu_t(z),\\ \\sigma_t^2 I\\bigr)$$\n\nDüz çizgili tercihte bu path'i üreten velocity sabit bir yöne işaret ediyor, yani hesaplanacak bir şey kalmıyor.\n\nMarginal path, koşullu path'lerin veri üzerinden ortalaması:\n\n$$p_t(x) = \\int p_t(x \\mid z)\\, q(z)\\, dz$$\n\nMarginal velocity ise koşullu velocity'lerin ağırlıklı ortalaması; ağırlık, o $x$ noktasına hangi $z$'nin ne kadar katkı verdiği:\n\n$$u_t(x) = \\int u_t(x \\mid z)\\, \\frac{p_t(x \\mid z)\\, q(z)}{p_t(x)}\\, dz$$\n\nBu integral de hesaplanamıyor. Ama flow matching paperının teoremi şunu söylüyor: koşullu hedefle kurulan regression loss'un gradient'i, marginal hedefle kurulan loss'un gradient'iyle aynı. Yani marginal velocity hiç hesaplanmadan, koşullu hedeflerle eğitim doğru çözümü veriyor.\n\nMekanizma MSE'nin doğasından geliyor: aynı girdiye karşılık birbirinden farklı hedefler veriliyorsa, MSE'yi minimize eden tahmin o hedeflerin koşullu ortalamasıdır. O ortalama da tam olarak yukarıdaki integral."
         },
         {
           "type": "svg",
-          "heading": "7. Çiftler düz, öğrenilen yollar değil",
+          "heading": "14. Çiftler düz, öğrenilen yollar değil",
           "svg": "<svg width=\"560\" height=\"230\" viewBox=\"0 0 560 230\" role=\"img\" aria-label=\"rastgele eslesme ve ogrenilen flow\"><text x=\"20\" y=\"16\">eğitim çiftleri: düz ama kesişiyor</text><line class=\"axis\" x1=\"20.0\" y1=\"34\" x2=\"20.0\" y2=\"194\" stroke-width=\"1\"/><line class=\"axis\" x1=\"250.0\" y1=\"34\" x2=\"250.0\" y2=\"194\" stroke-width=\"1\"/><text x=\"16\" y=\"212\">veri, t=0</text><text x=\"198\" y=\"212\">noise, t=1</text><text x=\"310\" y=\"16\">öğrenilen flow: kesişmiyor, bükülüyor</text><line class=\"axis\" x1=\"310.0\" y1=\"34\" x2=\"310.0\" y2=\"194\" stroke-width=\"1\"/><line class=\"axis\" x1=\"540.0\" y1=\"34\" x2=\"540.0\" y2=\"194\" stroke-width=\"1\"/><text x=\"306\" y=\"212\">veri, t=0</text><text x=\"488\" y=\"212\">noise, t=1</text><line class=\"p-curve\" x1=\"20.0\" y1=\"74.0\" x2=\"250.0\" y2=\"178.0\" stroke-width=\"1.3\"/><line class=\"p-curve\" x1=\"20.0\" y1=\"154.0\" x2=\"250.0\" y2=\"156.0\" stroke-width=\"1.3\"/><line class=\"p-curve\" x1=\"20.0\" y1=\"154.0\" x2=\"250.0\" y2=\"138.0\" stroke-width=\"1.3\"/><line class=\"p-curve\" x1=\"20.0\" y1=\"74.0\" x2=\"250.0\" y2=\"122.0\" stroke-width=\"1.3\"/><line class=\"p-curve\" x1=\"20.0\" y1=\"154.0\" x2=\"250.0\" y2=\"106.0\" stroke-width=\"1.3\"/><line class=\"p-curve\" x1=\"20.0\" y1=\"74.0\" x2=\"250.0\" y2=\"90.0\" stroke-width=\"1.3\"/><line class=\"p-curve\" x1=\"20.0\" y1=\"74.0\" x2=\"250.0\" y2=\"72.0\" stroke-width=\"1.3\"/><line class=\"p-curve\" x1=\"20.0\" y1=\"154.0\" x2=\"250.0\" y2=\"50.0\" stroke-width=\"1.3\"/><polyline class=\"q-line\" stroke-width=\"1.6\" points=\"540.0,178.0 535.4,176.7 530.8,175.5 526.2,174.3 521.6,173.1 517.0,172.0 512.4,170.8 507.8,169.8 503.2,168.7 498.6,167.7 494.0,166.8 489.5,165.9 484.9,165.0 480.3,164.2 475.7,163.5 471.1,162.8 466.5,162.1 461.9,161.5 457.3,161.0 452.7,160.5 448.1,160.1 443.5,159.7 438.9,159.4 434.3,159.1 429.7,158.9 425.1,158.6 420.5,158.4 415.9,158.2 411.3,158.0 406.7,157.8 402.1,157.7 397.5,157.5 392.9,157.3 388.4,157.1 383.8,156.9 379.2,156.7 374.6,156.6 370.0,156.4 365.4,156.2 360.8,156.0 356.2,155.8 351.6,155.7 347.0,155.5 342.4,155.3 337.8,155.1 333.2,154.9 328.6,154.7 324.0,154.6 319.4,154.4 314.8,154.2 310.2,154.0 310.0,154.0\"/><polyline class=\"q-line\" stroke-width=\"1.6\" points=\"540.0,156.0 535.4,155.2 530.8,154.4 526.2,153.6 521.6,152.8 517.0,152.0 512.4,151.3 507.8,150.6 503.2,149.9 498.6,149.3 494.0,148.7 489.5,148.1 484.9,147.5 480.3,147.0 475.7,146.5 471.1,146.1 466.5,145.8 461.9,145.4 457.3,145.2 452.7,145.0 448.1,144.8 443.5,144.8 438.9,144.8 434.3,144.8 429.7,145.0 425.1,145.1 420.5,145.4 415.9,145.7 411.3,146.0 406.7,146.3 402.1,146.7 397.5,147.0 392.9,147.4 388.4,147.8 383.8,148.1 379.2,148.5 374.6,148.9 370.0,149.2 365.4,149.6 360.8,150.0 356.2,150.3 351.6,150.7 347.0,151.1 342.4,151.4 337.8,151.8 333.2,152.2 328.6,152.5 324.0,152.9 319.4,153.2 314.8,153.6 310.2,154.0 310.0,154.0\"/><polyline class=\"q-line\" stroke-width=\"1.6\" points=\"540.0,138.0 535.4,137.5 530.8,137.1 526.2,136.6 521.6,136.2 517.0,135.7 512.4,135.3 507.8,134.9 503.2,134.5 498.6,134.2 494.0,133.8 489.5,133.5 484.9,133.2 480.3,132.9 475.7,132.6 471.1,132.4 466.5,132.2 461.9,132.0 457.3,131.9 452.7,131.9 448.1,131.8 443.5,131.9 438.9,132.0 434.3,132.2 429.7,132.5 425.1,132.9 420.5,133.3 415.9,133.9 411.3,134.6 406.7,135.3 402.1,136.1 397.5,136.9 392.9,137.8 388.4,138.7 383.8,139.6 379.2,140.5 374.6,141.4 370.0,142.3 365.4,143.2 360.8,144.1 356.2,145.0 351.6,145.9 347.0,146.8 342.4,147.7 337.8,148.6 333.2,149.5 328.6,150.4 324.0,151.3 319.4,152.2 314.8,153.1 310.2,154.0 310.0,154.0\"/><polyline class=\"q-line\" stroke-width=\"1.6\" points=\"540.0,122.0 535.4,121.8 530.8,121.7 526.2,121.5 521.6,121.4 517.0,121.2 512.4,121.1 507.8,121.0 503.2,120.8 498.6,120.7 494.0,120.6 489.5,120.5 484.9,120.4 480.3,120.3 475.7,120.2 471.1,120.1 466.5,120.1 461.9,120.0 457.3,120.0 452.7,120.0 448.1,120.0 443.5,120.0 438.9,120.1 434.3,120.2 429.7,120.3 425.1,120.5 420.5,120.8 415.9,121.2 411.3,121.7 406.7,122.3 402.1,123.2 397.5,124.2 392.9,125.4 388.4,126.8 383.8,128.4 379.2,129.9 374.6,131.5 370.0,133.1 365.4,134.7 360.8,136.3 356.2,137.9 351.6,139.5 347.0,141.1 342.4,142.7 337.8,144.3 333.2,145.9 328.6,147.5 324.0,149.1 319.4,150.7 314.8,152.3 310.2,153.9 310.0,153.9\"/><polyline class=\"q-line\" stroke-width=\"1.6\" points=\"540.0,106.0 535.4,106.2 530.8,106.3 526.2,106.5 521.6,106.6 517.0,106.8 512.4,106.9 507.8,107.0 503.2,107.2 498.6,107.3 494.0,107.4 489.5,107.5 484.9,107.6 480.3,107.7 475.7,107.8 471.1,107.9 466.5,107.9 461.9,108.0 457.3,108.0 452.7,108.0 448.1,108.0 443.5,108.0 438.9,107.9 434.3,107.8 429.7,107.7 425.1,107.5 420.5,107.2 415.9,106.8 411.3,106.3 406.7,105.7 402.1,104.8 397.5,103.8 392.9,102.6 388.4,101.2 383.8,99.6 379.2,98.1 374.6,96.5 370.0,94.9 365.4,93.3 360.8,91.7 356.2,90.1 351.6,88.5 347.0,86.9 342.4,85.3 337.8,83.7 333.2,82.1 328.6,80.5 324.0,78.9 319.4,77.3 314.8,75.7 310.2,74.1 310.0,74.1\"/><polyline class=\"q-line\" stroke-width=\"1.6\" points=\"540.0,90.0 535.4,90.5 530.8,90.9 526.2,91.4 521.6,91.8 517.0,92.3 512.4,92.7 507.8,93.1 503.2,93.5 498.6,93.8 494.0,94.2 489.5,94.5 484.9,94.8 480.3,95.1 475.7,95.4 471.1,95.6 466.5,95.8 461.9,96.0 457.3,96.1 452.7,96.1 448.1,96.2 443.5,96.1 438.9,96.0 434.3,95.8 429.7,95.5 425.1,95.1 420.5,94.7 415.9,94.1 411.3,93.4 406.7,92.7 402.1,91.9 397.5,91.1 392.9,90.2 388.4,89.3 383.8,88.4 379.2,87.5 374.6,86.6 370.0,85.7 365.4,84.8 360.8,83.9 356.2,83.0 351.6,82.1 347.0,81.2 342.4,80.3 337.8,79.4 333.2,78.5 328.6,77.6 324.0,76.7 319.4,75.8 314.8,74.9 310.2,74.0 310.0,74.0\"/><polyline class=\"q-line\" stroke-width=\"1.6\" points=\"540.0,72.0 535.4,72.8 530.8,73.6 526.2,74.4 521.6,75.2 517.0,76.0 512.4,76.7 507.8,77.4 503.2,78.1 498.6,78.7 494.0,79.3 489.5,79.9 484.9,80.5 480.3,81.0 475.7,81.5 471.1,81.9 466.5,82.2 461.9,82.6 457.3,82.8 452.7,83.0 448.1,83.2 443.5,83.2 438.9,83.2 434.3,83.2 429.7,83.0 425.1,82.9 420.5,82.6 415.9,82.3 411.3,82.0 406.7,81.7 402.1,81.3 397.5,81.0 392.9,80.6 388.4,80.2 383.8,79.9 379.2,79.5 374.6,79.1 370.0,78.8 365.4,78.4 360.8,78.0 356.2,77.7 351.6,77.3 347.0,76.9 342.4,76.6 337.8,76.2 333.2,75.8 328.6,75.5 324.0,75.1 319.4,74.8 314.8,74.4 310.2,74.0 310.0,74.0\"/><polyline class=\"q-line\" stroke-width=\"1.6\" points=\"540.0,50.0 535.4,51.3 530.8,52.5 526.2,53.7 521.6,54.9 517.0,56.0 512.4,57.2 507.8,58.2 503.2,59.3 498.6,60.3 494.0,61.2 489.5,62.1 484.9,63.0 480.3,63.8 475.7,64.5 471.1,65.2 466.5,65.9 461.9,66.5 457.3,67.0 452.7,67.5 448.1,67.9 443.5,68.3 438.9,68.6 434.3,68.9 429.7,69.1 425.1,69.4 420.5,69.6 415.9,69.8 411.3,70.0 406.7,70.2 402.1,70.3 397.5,70.5 392.9,70.7 388.4,70.9 383.8,71.1 379.2,71.3 374.6,71.4 370.0,71.6 365.4,71.8 360.8,72.0 356.2,72.2 351.6,72.3 347.0,72.5 342.4,72.7 337.8,72.9 333.2,73.1 328.6,73.3 324.0,73.4 319.4,73.6 314.8,73.8 310.2,74.0 310.0,74.0\"/><circle class=\"dot\" cx=\"20.0\" cy=\"154.0\" r=\"3.5\"/><circle class=\"dot\" cx=\"20.0\" cy=\"74.0\" r=\"3.5\"/><circle class=\"dot\" cx=\"250.0\" cy=\"178.0\" r=\"2.5\"/><circle class=\"dot\" cx=\"250.0\" cy=\"156.0\" r=\"2.5\"/><circle class=\"dot\" cx=\"250.0\" cy=\"138.0\" r=\"2.5\"/><circle class=\"dot\" cx=\"250.0\" cy=\"122.0\" r=\"2.5\"/><circle class=\"dot\" cx=\"250.0\" cy=\"106.0\" r=\"2.5\"/><circle class=\"dot\" cx=\"250.0\" cy=\"90.0\" r=\"2.5\"/><circle class=\"dot\" cx=\"250.0\" cy=\"72.0\" r=\"2.5\"/><circle class=\"dot\" cx=\"250.0\" cy=\"50.0\" r=\"2.5\"/><circle class=\"dot\" cx=\"310.0\" cy=\"154.0\" r=\"3.5\"/><circle class=\"dot\" cx=\"310.0\" cy=\"74.0\" r=\"3.5\"/><circle class=\"dot\" cx=\"540.0\" cy=\"178.0\" r=\"2.5\"/><circle class=\"dot\" cx=\"540.0\" cy=\"156.0\" r=\"2.5\"/><circle class=\"dot\" cx=\"540.0\" cy=\"138.0\" r=\"2.5\"/><circle class=\"dot\" cx=\"540.0\" cy=\"122.0\" r=\"2.5\"/><circle class=\"dot\" cx=\"540.0\" cy=\"106.0\" r=\"2.5\"/><circle class=\"dot\" cx=\"540.0\" cy=\"90.0\" r=\"2.5\"/><circle class=\"dot\" cx=\"540.0\" cy=\"72.0\" r=\"2.5\"/><circle class=\"dot\" cx=\"540.0\" cy=\"50.0\" r=\"2.5\"/></svg>",
           "caption": "Tek boyutlu oyuncak: veri iki noktadan (−1, +1) oluşuyor. Solda eğitimde rastgele eşleşen çiftler — her biri düz ama birbirini kesiyor. Sağda aynı veriyle öğrenilen gerçek ortalama velocity field'ın ODE yolları (sayısal olarak çözüldü): kesişmiyor, bu yüzden bükülüyor."
         },
         {
           "type": "text",
           "heading": "Yollar neden bükülüyor",
-          "text": "Bir ODE'nin yolları kesişemez: aynı noktada, aynı anda iki farklı velocity olamaz. Ama eğitimde çiftler rastgele eşleştiği için düz çizgileri sürekli kesişiyor. Kesişme noktalarında ağ ortalama alıyor ve öğrenilen yollar birbirinden kaçmak için bükülüyor.\n\nBunun pratik sonucu önemli. Tek bir çift için tek Euler adımı yetiyordu, çünkü yol düzdü. Öğrenilen yollar bükük olduğu için tek adım yetmiyor; düz çizgi varsayan her Euler adımı bükülme kadar hata yapıyor. Bu yüzden rectified flow ile eğitilmiş bir model de pratikte 20-50 adım istiyor. DDPM'in 1000'inden çok az, ama bir değil."
+          "text": "Bir ODE'nin yolları kesişemez: aynı noktada, aynı anda iki farklı velocity olamaz. Ama eğitimde çiftler rastgele eşleştiği için düz çizgileri sürekli kesişiyor. Kesişme noktalarında network ortalama alıyor ve öğrenilen yollar birbirinden kaçmak için bükülüyor.\n\nBunun pratik sonucu önemli. Tek bir çift için tek Euler adımı yetiyordu, çünkü yol düzdü. Öğrenilen yollar bükük olduğu için tek adım yetmiyor; düz çizgi varsayan her Euler adımı bükülme kadar hata yapıyor. Bu yüzden rectified flow ile eğitilmiş bir model de pratikte 20-50 adım istiyor. DDPM'in 1000'inden çok az, ama bir değil."
         },
         {
           "type": "text",
-          "heading": "8. Reflow: yolları gerçekten düzleştirmek",
+          "heading": "15. Reflow: yolları gerçekten düzleştirmek",
           "text": "Rectified flow paperının (Liu, Gong, Liu — ICLR 2023) flow matching'den ayrılan asıl katkısı burada. Sorun rastgele eşleştirmeydi. O halde eşleştirmeyi değiştir.\n\nEğitilmiş modeli al. Bir sürü noise örneği çek, her birini ODE ile çözüp modelin ürettiği görüntüye taşı. Artık elinde rastgele değil, modelin kendi yollarıyla eşleşmiş $(z, \\hat{x}_0)$ çiftleri var. Bu yollar kesişmiyordu — ODE yolları kesişemez. Yeni modeli bu çiftlerle aynı loss'la yeniden eğit. Çiftler kesişmediği için ortalama alınacak bir çatışma da neredeyse yok, ve yeni yollar çok daha düz çıkıyor.\n\nBu işleme reflow deniyor, \"rectify\" de düzeltmek demek. Paper ayrıca bu işlemin transport maliyetini artırmadığını gösteriyor: her reflow, noise ile veri arasındaki eşleştirmeyi daha kısa yollu hale getiriyor ya da en azından kötüleştirmiyor. Bir iki reflow sonrasında yollar o kadar düz oluyor ki tek adımlık üretime distillation ile inmek kolaylaşıyor. InstaFlow (ICLR 2024) tek adımlık text-to-image'i bu yolla yaptı.\n\nÖnemli ayrım: SD3 ve FLUX'un kullandığı \"rectified flow\", reflow yapılmamış ilk aşama. Yani pratikte büyük modellerde \"rectified flow\" denildiğinde kastedilen çoğunlukla sadece düz çizgili interpolation ve velocity loss'u."
         },
         {
           "type": "table",
-          "heading": "9. Rectified flow, flow matching, stochastic interpolants — aynı şey mi",
+          "heading": "16. Rectified flow, flow matching, stochastic interpolants — aynı şey mi",
           "rows": [
             [
               "",
@@ -28307,12 +28201,59 @@
         },
         {
           "type": "text",
-          "heading": "10. DDPM ile ilişkisi: aynı aile, farklı yol",
-          "text": "CS231n'in genelleştirilmiş diffusion kartındaki çerçeve burada her şeyi birleştiriyor: $x_t = a(t)\\,x_0 + b(t)\\,z$. Rectified flow $a(t) = 1-t$, $b(t) = t$ seçiyor, yani katsayıların toplamı 1: düz çizgi. DDPM'in variance-preserving hali $a^2 + b^2 = 1$ seçiyor: katsayılar bir çeyrek çember üstünde, dolayısıyla tek bir çiftin yolu bile eğri.\n\nİkinci fark tahmin hedefi. DDPM noise'u ($\\epsilon$), rectified flow velocity'yi ($z - x_0$) tahmin ediyor. Ama bunlar birbirine cebirle çevrilebiliyor: $x_t$ ve velocity tahmini $\\hat{v}$ elindeyse $\\hat{x}_0 = x_t - t\\,\\hat{v}$ ve $\\hat{z} = x_t + (1-t)\\,\\hat{v}$. DDIM kartındaki \"$\\hat{x}_0$ yeni bir ağ değil, cebirle çıkıyor\" gözleminin aynısı.\n\nÜçüncü bağ ODE'nin kendisi. Song ve ark. (ICLR 2021) her diffusion modelinin, aynı marginal distribution'ları veren deterministik bir karşılığı olduğunu gösterdi (probability flow ODE). DDIM bu ODE'nin bir Euler çözümü gibi okunabiliyor. Yani DDIM ile sample alan bir DDPM de aslında bir flow takip ediyor; fark, yolun eğri seçilmiş olması.\n\nSonuç: flow matching diffusion'ı çöpe atmıyor. Aynı aileden, yolu düz seçen ve türetmeyi ELBO yerine regression'dan kuran bir üye."
+          "heading": "17. DDPM ile ilişkisi: aynı aile, farklı yol",
+          "text": "CS231n'in genelleştirilmiş diffusion kartındaki çerçeve burada her şeyi birleştiriyor: $x_t = a(t)\\,x_0 + b(t)\\,z$. Rectified flow $a(t) = 1-t$, $b(t) = t$ seçiyor, yani katsayıların toplamı 1: düz çizgi. DDPM'in variance-preserving hali $a^2 + b^2 = 1$ seçiyor: katsayılar bir çeyrek çember üstünde, dolayısıyla tek bir çiftin yolu bile eğri.\n\nİkinci fark tahmin hedefi. DDPM noise'u ($\\epsilon$), rectified flow velocity'yi ($z - x_0$) tahmin ediyor. Ama bunlar birbirine cebirle çevrilebiliyor: $x_t$ ve velocity tahmini $\\hat{v}$ elindeyse $\\hat{x}_0 = x_t - t\\,\\hat{v}$ ve $\\hat{z} = x_t + (1-t)\\,\\hat{v}$. DDIM kartındaki \"$\\hat{x}_0$ yeni bir network değil, cebirle çıkıyor\" gözleminin aynısı.\n\nÜçüncü bağ ODE'nin kendisi. Song ve ark. (ICLR 2021) her diffusion modelinin, aynı marginal distribution'ları veren deterministik bir karşılığı olduğunu gösterdi (probability flow ODE). DDIM bu ODE'nin bir Euler çözümü gibi okunabiliyor. Yani DDIM ile sample alan bir DDPM de aslında bir flow takip ediyor; fark, yolun eğri seçilmiş olması.\n\nSonuç: flow matching diffusion'ı çöpe atmıyor. Aynı aileden, yolu düz seçen ve türetmeyi ELBO yerine regression'dan kuran bir üye."
+        },
+        {
+          "type": "table",
+          "heading": "Üç paradigmanın birleşik görünümü",
+          "rows": [
+            [
+              "",
+              "Discrete-time diffusion",
+              "Score-based diffusion",
+              "Flow matching"
+            ],
+            [
+              "Forward",
+              "Markov zinciri, adım adım noise",
+              "SDE, continuous time",
+              "düz interpolasyon $x_t=(1-t)x_0+tz$"
+            ],
+            [
+              "Öğrenilen",
+              "$\\varepsilon_\\theta$",
+              "$s_\\theta = \\nabla_x \\log p_t$",
+              "$u_\\theta$, velocity"
+            ],
+            [
+              "Üretim",
+              "ancestral sampling",
+              "reverse-time SDE",
+              "ODE çözümü"
+            ],
+            [
+              "Deterministik hali",
+              "DDIM",
+              "probability flow ODE",
+              "zaten deterministik"
+            ],
+            [
+              "Türetme",
+              "ELBO",
+              "denoising score matching",
+              "conditional regression"
+            ]
+          ]
         },
         {
           "type": "text",
-          "heading": "11. Neden düz yol az adım demek",
+          "heading": "Üç paradigma neden aynı yere çıkıyor",
+          "text": "Tabloya satır satır bakınca aynı iskeletin üç farklı giydirilmiş hali görünüyor: bir forward süreç veriyi tanınmaz hale getiriyor, network o sürecin bir özelliğini tahmin etmeyi öğreniyor, üretim de o tahminle geriye yürüyor.\n\nFarklar üç yerde toplanıyor. Birincisi yolun şekli: diffusion eğri, flow matching düz. İkincisi network'ün hedefi: noise, score ya da velocity, ki bunlar sabit katsayılarla birbirine çevriliyor. Üçüncüsü üretimin stokastik mi deterministik mi olduğu, ki o da bir sampler tercihi.\n\nStochastic interpolants çerçevesi (Albergo, Vanden-Eijnden) üçünü tek bir tanımın özel halleri olarak yazıyor. Pratik sonucu şu: bir paper okurken sorulacak soru \"yeni bir generative model mi\" değil, \"yol mu, hedef mi, sampler mı değişmiş\" olmalı."
+        },
+        {
+          "type": "text",
+          "heading": "18. Neden düz yol az adım demek",
           "text": "Euler adımı \"bu adım boyunca velocity sabit kalacak\" varsayımı. Yol düz ve velocity gerçekten sabitse bu varsayım tam doğru: tek adım yetiyor (5. bölümdeki örnek). Yol büküldükçe, adım boyunca velocity değişiyor ve her adım bükülme miktarı kadar hata yapıyor.\n\nAynı marginal distribution'ları veren yolların içinde düz olanlar Euler için en rahatı. DDPM'in eğri yolunda aynı kaliteye ulaşmak için daha fazla adım gerekiyor; rectified flow'da daha az. Reflow yolları daha da düzleştirip bu sayıyı daha da düşürüyor."
         },
         {
@@ -28359,13 +28300,13 @@
         },
         {
           "type": "text",
-          "heading": "12. Zaman nasıl örneklenmeli",
+          "heading": "19. Zaman nasıl örneklenmeli",
           "text": "Loss'ta $t$ düzgün dağılımdan çekiliyor. Ama her $t$ aynı derecede öğretici değil. $t$ 0'a yakınken $x_t$ neredeyse temiz görüntü, en iyi tahmin kabaca \"$-x_0$ yönüne git\"; $t$ 1'e yakınken $x_t$ neredeyse saf noise, en iyi tahmin kabaca \"veri ortalamasına doğru git\". İki uçta da doğru cevap basit. Zor ve bilgi taşıyan kısım ortada.\n\nSD3 paperı (Esser ve ark., ICML 2024) birkaç alternatifi karşılaştırıp logit-normal dağılımın en iyi çalıştığını buldu: $t = \\text{sigmoid}(n)$, $n \\sim \\mathcal{N}(0,1)$. Bu $t$'yi ortaya yığıyor, uçlardan daha az örnek çekiyor. CS231n'in CFG kodundaki torch.randn(()).sigmoid() satırı tam olarak bu."
         },
         {
           "type": "text",
-          "heading": "13. Bugünkü tarif: latent + DiT + rectified flow",
-          "text": "SD3'ün başlığı \"Scaling Rectified Flow Transformers\" ve bugünkü büyük görüntü modellerinin tarifi üç parçadan oluşuyor:\n\nLatent diffusion — görüntü önce bir VAE ile küçük bir latent'e sıkıştırılıyor ve flow orada öğreniliyor. Rectified flow'un loss'u değişmiyor; $x_0$ artık görüntü değil, onun latent'i.\n\nDiT — velocity'yi tahmin eden ağ U-Net değil transformer. Flow'un matematiği ağdan bağımsız; DiT kartındaki \"diffusion ile onu hesaplayan ağ ayrılabilir\" gözlemi flow için de aynen geçerli.\n\nRectified flow — düz yol, velocity loss, logit-normal zaman örneklemesi, 30-50 adımlık Euler ya da daha iyi bir ODE çözücü.\n\nFLUX da aynı tarifin üstünde. Yani bugün \"diffusion modeli\" denen büyük modellerin önemli bir kısmı teknik olarak flow matching modeli."
+          "heading": "20. Bugünkü tarif: latent + DiT + rectified flow",
+          "text": "SD3'ün başlığı \"Scaling Rectified Flow Transformers\" ve bugünkü büyük görüntü modellerinin tarifi üç parçadan oluşuyor:\n\nLatent diffusion — görüntü önce bir VAE ile küçük bir latent'e sıkıştırılıyor ve flow orada öğreniliyor. Rectified flow'un loss'u değişmiyor; $x_0$ artık görüntü değil, onun latent'i.\n\nDiT — velocity'yi tahmin eden network U-Net değil transformer. Flow'un matematiği ağdan bağımsız; DiT kartındaki \"diffusion ile onu hesaplayan network ayrılabilir\" gözlemi flow için de aynen geçerli.\n\nRectified flow — düz yol, velocity loss, logit-normal zaman örneklemesi, 30-50 adımlık Euler ya da daha iyi bir ODE çözücü.\n\nFLUX da aynı tarifin üstünde. Yani bugün \"diffusion modeli\" denen büyük modellerin önemli bir kısmı teknik olarak flow matching modeli."
         },
         {
           "type": "ref",
@@ -28391,13 +28332,13 @@
         },
         {
           "type": "text",
-          "heading": "14. Noise zorunlu değil: iki distribution arasında flow",
+          "heading": "21. Noise zorunlu değil: iki distribution arasında flow",
           "text": "Liu paperının adı \"learning to generate and transfer data\". İkinci kelime önemli. Loss'ta $z$'nin Gaussian olmasını gerektiren hiçbir şey yok. $z$ yerine başka bir distribution'dan örnek koyarsan, iki distribution arasında bir flow öğreniyorsun.\n\nMRI synthesis'te bunun anlamı doğrudan: $x_0$ hedef kontrast (T2), $z$ aynı hastanın kaynak kontrastı (T1). Eşleşmiş veride çiftleri veri zaten veriyor, rastgele eşleştirmeye gerek yok. Eğitim aynı loss; üretimde saf noise yerine kaynak görüntüden başlayıp ODE'yi çözüyorsun.\n\nBu, labın diffusion bridge çizgisine (I²SB, BBDM, SelfRDB) çok yakın. Bridge'ler de iki görüntü arasında bir yol kuruyor, ama yolun ortasına noise ekliyor. Düz transfer flow'u bunun noise'suz, deterministik ucu gibi düşünülebilir; bedeli, aynı kaynaktan hep aynı çıktının gelmesi (çeşitlilik ve belirsizlik yok).\n\nEşleşmemiş veride (translation) çiftler yok; eşleştirmeyi kendin kurman gerekiyor — reflow ya da optimal transport'a dayalı eşleştirmeler burada devreye giriyor.\n\nReconstruction'da ise öğrenilmiş flow bir prior olarak kullanılabilir: her Euler adımından sonra ölçülen k-space'e data consistency uygulanıyor, diffusion prior'la reconstruction'da yapılanın aynısı. Bu yönlerin medikalde ne kadar işlendiğine güncel literatürden bakmak gerekiyor."
         },
         {
           "type": "insight",
           "heading": "Geriye ne kalsın",
-          "text": "Noise ile veri arasına düz çizgi çek, ağa o çizginin yönünü öğret, üretimde yönü geriye takip et. Tek bir çiftin cevabı bariz; ağ bütün çiftlerin ortalamasını öğreniyor ve bu ortalama doğru haritayı veriyor. Çiftler kesiştiği için öğrenilen yollar bükülüyor; reflow onları düzleştiriyor. DDPM ile aynı ailedir; farkı yolu düz seçmesi ve türetmeyi ELBO yerine regression'dan kurması. Noise yerine başka bir görüntü koyarsan aynı loss translation yapıyor."
+          "text": "Noise ile veri arasına düz çizgi çek, network'e o çizginin yönünü öğret, üretimde yönü geriye takip et. Tek bir çiftin cevabı bariz; network bütün çiftlerin ortalamasını öğreniyor ve bu ortalama doğru haritayı veriyor. Çiftler kesiştiği için öğrenilen yollar bükülüyor; reflow onları düzleştiriyor. DDPM ile aynı ailedir; farkı yolu düz seçmesi ve türetmeyi ELBO yerine regression'dan kurması. Noise yerine başka bir görüntü koyarsan aynı loss translation yapıyor."
         },
         {
           "type": "note",
