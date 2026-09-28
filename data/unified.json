@@ -1480,6 +1480,107 @@
         "backpropagation",
         "chain rule"
       ]
+    },
+    {
+      "title": "Cross-Entropy — Denklem, Sezgi, Ne Zaman Kullanılır",
+      "cat": "Theory",
+      "mlo_only": true,
+      "context": "Sınıflandırmanın varsayılan loss'u",
+      "summary": "Doğru cevaba verilen olasılığın negatif logaritması. Maximum likelihood ve KL divergence ile bağı, softmax ile birleşince gradient'in neden tahmin eksi gerçeğe indiği, hangi varyantın ne zaman kullanıldığı, ve dengesiz veri ile etiket gürültüsündeki sınırları.",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "Tek cümle",
+          "text": "Cross-entropy, modelin doğru cevaba verdiği olasılığın logaritmasının eksisi. Model doğru cevaba ne kadar az olasılık verdiyse ceza o kadar büyük.\n\nSınıflandırmanın varsayılan loss'u olmasının sebebi üç şeyin aynı noktada buluşması: maximum likelihood'dan türemesi, gradient'inin çok temiz çıkması, ve olasılık çıktısını doğrudan cezalandırması."
+        },
+        {
+          "type": "formula",
+          "heading": "Denklem",
+          "text": "İki sınıf (binary cross-entropy), $y \\in \\{0,1\\}$ ve model çıktısı $\\hat{y} \\in (0,1)$:\n$$L = -\\bigl[\\, y \\log \\hat{y} + (1-y) \\log (1-\\hat{y}) \\,\\bigr]$$\n\nÇok sınıf, $K$ sınıf ve one-hot etiket:\n$$L = -\\sum_{k=1}^{K} y_k \\log \\hat{y}_k = -\\log \\hat{y}_{c}$$\n\nSondaki sadeleşme şundan: one-hot etikette tek bir terim hayatta kalıyor, o da doğru sınıf $c$'nin olasılığı. Yani çok sınıflı cross-entropy pratikte \"doğru sınıfa verdiğin olasılığın log'u\"ndan ibaret."
+        },
+        {
+          "type": "text",
+          "heading": "Sezgi: sürpriz miktarı",
+          "text": "Logaritma burada bir şaşkınlık ölçüsü. Model doğru cevaba 1 olasılık verdiyse hiç şaşırmadın, ceza sıfır. Olasılık düştükçe şaşkınlık ve ceza hızla büyüyor.\n\nSayılarla, doğru sınıfa verilen olasılığa göre:\n\n$$\\hat{y}_c = 0.9 \\Rightarrow L = 0.105 \\qquad 0.5 \\Rightarrow 0.693 \\qquad 0.1 \\Rightarrow 2.303 \\qquad 0.01 \\Rightarrow 4.605$$\n\nDikkat edilecek şey ölçeğin doğrusal olmaması. 0.9'dan 0.5'e düşmek cezayı altı katına çıkarıyor, 0.5'ten 0.1'e düşmek üç katına daha. Emin olup yanılmak çok pahalı; kararsız kalmak ucuz. Modelin aşırı özgüvenli yanlışlardan kaçınmayı öğrenmesi bu asimetriden geliyor."
+        },
+        {
+          "type": "text",
+          "heading": "Nereden geliyor",
+          "text": "İki ayrı yoldan aynı ifadeye çıkılıyor.\n\nMaximum likelihood. Etiketi kategorik bir distribution'dan geldiğini varsayıp veri setinin likelihood'unu yazarsan, log alıp eksiyle çarptığında elde ettiğin şey tam olarak cross-entropy. Yani cross-entropy'yi minimize etmek, etiketlerin likelihood'unu maksimize etmekle aynı şey.\n\nBilgi kuramı. Gerçek distribution $p$ ile tahmin edilen $q$ arasındaki cross-entropy $H(p,q) = H(p) + D_{\\mathrm{KL}}(p \\parallel q)$. Etiket sabit olduğu için $H(p)$ de sabit; geriye optimize edilen tek şey olarak KL divergence kalıyor. Yani cross-entropy'yi minimize etmek, tahmin edilen distribution'ı gerçeğine yaklaştırmak demek."
+        },
+        {
+          "type": "insight",
+          "heading": "Neden MSE değil: gradient",
+          "text": "Sınıflandırmada MSE de kullanılabilir ama eğitim yavaşlıyor. Sebep gradient'te.\n\nSigmoid ya da softmax çıktısına MSE uygularsan, zincir kuralı gradient'e aktivasyonun türevini de katıyor. O türev çıktı 0 ya da 1'e yaklaştığında sıfıra gidiyor. Sonuç: model emin bir şekilde yanlış cevap verdiğinde gradient neredeyse sıfır oluyor, yani en çok düzeltilmesi gereken durumda öğrenme duruyor.\n\nCross-entropy'de logaritma tam olarak bu terimi sadeleştiriyor. Softmax ile birlikte kullanıldığında logit'lere göre gradient şu kadar basit:\n\n$$\\frac{\\partial L}{\\partial z} = \\hat{y} - y$$\n\nYani \"tahmin eksi gerçek\". Hata ne kadar büyükse gradient o kadar büyük, doygunluk sorunu yok. Softmax ile cross-entropy'nin her yerde birlikte anılmasının sebebi bu sadeleşme."
+        },
+        {
+          "type": "table",
+          "heading": "Hangi varyant ne zaman",
+          "rows": [
+            [
+              "Durum",
+              "Kullanılan",
+              "Not"
+            ],
+            [
+              "Tek etiketli çok sınıf",
+              "softmax + cross-entropy",
+              "sınıflar birbirini dışlıyor"
+            ],
+            [
+              "Çok etiketli",
+              "sigmoid + binary cross-entropy",
+              "her sınıf için bağımsız karar"
+            ],
+            [
+              "İki sınıf",
+              "binary cross-entropy",
+              "softmax'ın özel hali"
+            ],
+            [
+              "Dengesiz sınıflar",
+              "weighted cross-entropy",
+              "az örnekli sınıfa büyük ağırlık"
+            ],
+            [
+              "Aşırı dengesizlik (detection)",
+              "focal loss",
+              "kolay örneklerin katkısını söndürüyor"
+            ],
+            [
+              "Aşırı özgüven sorunu",
+              "label smoothing",
+              "hedefi 1 yerine 0.9 gibi alıyor"
+            ],
+            [
+              "Piksel bazlı segmentation",
+              "pixel-wise cross-entropy",
+              "genelde Dice loss ile birlikte"
+            ]
+          ]
+        },
+        {
+          "type": "text",
+          "heading": "Avantajları ve sınırları",
+          "text": "Avantajları. Olasılık çıktısını doğrudan cezalandırıyor, gradient'i temiz, maximum likelihood ile teorik temeli var, ve hemen her framework'te sayısal olarak kararlı biçimde hazır geliyor.\n\nSınırları da var.\n\nÖlçtüğü şey olasılık, sıralama ya da eşik değil. Doğruluk oranı ya da F1 gibi metrikleri doğrudan optimize etmiyor; loss düşerken hedeflediğin metrik bir yerde iyileşmeyi bırakabiliyor.\n\nDengesiz veride yanıltıcı. Örneklerin yüzde doksanı tek sınıftaysa, her şeye o sınıfı demek düşük loss veriyor. Ağırlıklandırma ya da focal loss bu yüzden var.\n\nEtiket gürültüsüne kırılgan. Yanlış etiketlenmiş bir örnek, model doğru cevabı verdiğinde çok büyük ceza üretiyor ve eğitim o tek örnek uğruna bozulabiliyor.\n\nKalibrasyon garantisi yok. Çıktılar olasılık gibi görünüyor ama modern derin network'ler genelde aşırı özgüvenli; gerçek güven isteniyorsa ayrıca kalibrasyon gerekiyor."
+        },
+        {
+          "type": "note",
+          "heading": "Pratikte üç tuzak",
+          "text": "Logit mi olasılık mı. PyTorch'ta CrossEntropyLoss ham logit bekliyor ve softmax'ı kendi içinde uyguluyor; çıktıya ayrıca softmax uygularsan iki kez uygulamış oluyorsun. Aynı şekilde BCEWithLogitsLoss logit bekliyor, BCELoss ise olasılık.\n\n$\\log 0$ problemi. Olasılık tam sıfıra giderse loss sonsuza gidiyor. Kütüphaneler bunu logit üzerinden hesaplayarak çözüyor; elle yazarken küçük bir epsilon eklemek gerekiyor.\n\nOrtalama mı toplam mı. Batch üzerinde ortalama almak standart; toplam alırsan efektif learning rate batch boyutuyla değişiyor."
+        },
+        {
+          "type": "insight",
+          "heading": "Geriye ne kalsın",
+          "text": "Cross-entropy, doğru cevaba verilen olasılığın negatif logaritması. Maximum likelihood'dan türüyor ve KL divergence'ı minimize etmekle aynı kapıya çıkıyor. MSE yerine tercih edilmesinin sebebi teorik zarafet değil, softmax ile birleştiğinde gradient'in tahmin eksi gerçek biçimine inmesi ve doygunluk yaşamaması. Sınırı ise ölçtüğü şeyin olasılık olması: dengesiz veride ve etiket gürültüsünde ayrıca önlem gerekiyor."
+        }
+      ],
+      "id": "ch07-cross-entropy-denklem-sezgi-ne-zaman-kullanilir",
+      "keywords": [
+        "BCE",
+        "NLL",
+        "log loss"
+      ]
     }
   ],
   "ch08": [
@@ -28436,6 +28537,7 @@
         "vs04-mle-mse-turetimi",
         "vs04-mle-bce-turetimi",
         "vs04-cross-entropy-mle-baglantisi",
+        "ch07-cross-entropy-denklem-sezgi-ne-zaman-kullanilir",
         "vs04-kl-divergence"
       ]
     },
@@ -28559,6 +28661,7 @@
         "ch07-backpropagation",
         "ch07-loss-functions-for-neural-networks",
         "ch07-0-dan-anlat-activation-gradient-backprop-training-loop",
+        "ch07-cross-entropy-denklem-sezgi-ne-zaman-kullanilir",
         "cs03-neural-networks-beyond-linear",
         "cs03-activation-functions",
         "cs03-backpropagation",
@@ -28778,8 +28881,6 @@
         "ida11-ddpm-matematiksel-ozet-forward-reverse-prediction-ve-l-simpl",
         "ida11-ddpm-unet-dahil-bastan-sona",
         "ida11-ddpm-training-inference-tam-parametreler-ve-dimensionlar",
-        "ida11-score-matching-neden-gradient-i-ogreniyoruz-ve-ddpm-le-nasil",
-        "ida11-continuity-equation-velocity-field-bir-distribution-i-nasil",
         "ida11-guidance-classifier-dan-classifier-free-ye",
         "cs13-diffusion-models-intuition-and-rectified-flow",
         "cs13-conditional-generation-and-classifier-free-guidance-cfg",
