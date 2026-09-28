@@ -26476,7 +26476,7 @@
   },
   "guides": {
     "backprop": {
-      "title": "Backpropagation — Baştan Sona Konu Anlatımı",
+      "title": "Backpropagation — A Complete Walkthrough",
       "cat": "Konu Anlatımı",
       "context": "Backprop · ML ch07 · Lab 3 · CS231n 3 · ML-OVERALL 12",
       "chapters": [
@@ -26485,82 +26485,82 @@
         "cs03",
         "mlo12"
       ],
-      "summary": "Tek bir loss sayısından milyonlarca gradient'in nasıl çıktığı: neden sonlu fark işe yaramıyor, hesaplama grafiği ve zincir kuralı, upstream çarpı local kuralı, bir doğrusal layer'ın backward'ı boyutlarıyla, ve gradient'lerin neden sönüp patladığı.",
+      "summary": "How millions of gradients come out of a single loss number: why finite differences do not work, the computational graph and the chain rule, the upstream-times-local rule, the backward pass of a linear layer with its dimensions, and why gradients vanish and explode.",
       "sections": [
         {
           "type": "text",
-          "heading": "Bu metin ne için",
-          "text": "Backprop, zincir kuralından ibaret ve tam da bu yüzden yanlış anlaşılıyor: formülü bilmek onu anlamak değil.\n\nAsıl soru şu — loss tek bir sayı. Bir tek sayıdan milyonlarca weight'in her biri için ayrı bir yön bilgisi nasıl çıkıyor?\n\nBu metin o soruyu takip ediyor, ve sonunda bir layer'ın backward'ını boyutlarıyla yazabiliyor olman lazım."
+          "heading": "What this text is for",
+          "text": "Backprop is nothing but the chain rule, and that is exactly why it gets misunderstood: knowing the formula is not the same as understanding it.\n\nThe real question is this — the loss is a single number. How does one single number produce a separate piece of directional information for each of millions of weights?\n\nThis text follows that question, and by the end you should be able to write out the backward pass of a layer with its dimensions."
         },
         {
           "type": "text",
-          "heading": "1. Problem",
-          "text": "Ağın milyonlarca weight'i var. Her biri için şunu bilmek istiyorsun: bu weight'i azıcık artırsam loss ne kadar değişirdi?\n\nBu sayının adı o weight'in gradient'i. Elinde bütün gradient'ler olsa, her weight'i loss'u düşüren yönde küçük bir adım kaydırırsın. Öğrenme tam olarak bu.\n\nSoru, o sayıları nasıl elde edeceğin."
+          "heading": "1. The problem",
+          "text": "The network has millions of weights. For each one you want to know: if I nudged this weight slightly, how much would the loss change?\n\nThat number is the gradient of that weight. If you had all the gradients, you would shift every weight a small step in the direction that decreases the loss. That is exactly what learning is.\n\nThe question is how you obtain those numbers."
         },
         {
           "type": "text",
-          "heading": "2. Neden akla ilk gelen yöntem işe yaramıyor",
-          "text": "En doğrudan yol: bir weight'i azıcık değiştir, ağı baştan çalıştır, loss'un ne kadar değiştiğine bak. Sonra eski haline getir, sıradakine geç.\n\nMatematiksel olarak doğru, pratikte imkansız. Yüz milyon parametreli bir ağda tek bir gradient adımı için yüz milyon ileri geçiş gerekir.\n\nBackprop ise bütün gradient'leri tek bir ileri artı tek bir geri geçişte hesaplıyor. Geri geçişin maliyeti ileri geçişin iki-üç katı, ve bu oran parametre sayısından bağımsız.\n\nDerin öğrenmeyi mümkün kılan şey bu ölçekleme farkı. Numaranın özü ise ara sonuçları yeniden kullanmak."
+          "heading": "2. Why the first method that comes to mind does not work",
+          "text": "The most direct route: change one weight slightly, run the network from scratch, and look at how much the loss changed. Then restore it and move on to the next one.\n\nMathematically correct, practically impossible. In a network with a hundred million parameters, a single gradient step would require a hundred million forward passes.\n\nBackprop instead computes all gradients in one forward plus one backward pass. The backward pass costs two to three times the forward pass, and that ratio is independent of the number of parameters.\n\nThis difference in scaling is what makes deep learning possible. The essence of the trick is reusing intermediate results."
         },
         {
           "type": "text",
-          "heading": "3. Hesaplama grafiği",
-          "text": "Ağı layer'lar yığını olarak değil, işlemler grafiği olarak düşün. Düğümler işlemler — çarp, topla, maksimum al, sigmoid uygula. Kenarlar veri akışı.\n\nİleri geçiş grafiği baştan sona yürüyüp loss'u hesaplıyor, ve yol boyunca ara değerleri saklıyor.\n\nGeri geçiş aynı grafiği tersten yürüyor.\n\nBu bakışın gücü şurada: her düğümün yalnızca kendi yerel türevini bilmesi yeterli. Grafiğin tamamını kimse bilmek zorunda değil. Modülerlik buradan geliyor — bu yüzden PyTorch'ta kendi layer'ını yazabiliyorsun."
+          "heading": "3. The computational graph",
+          "text": "Do not think of the network as a stack of layers, think of it as a graph of operations. The nodes are operations — multiply, add, take a maximum, apply a sigmoid. The edges are data flow.\n\nThe forward pass walks the graph from start to end and computes the loss, storing intermediate values along the way.\n\nThe backward pass walks the same graph in reverse.\n\nThe power of this view is here: each node only needs to know its own local derivative. Nobody has to know the whole graph. This is where modularity comes from — it is why you can write your own layer in PyTorch."
         },
         {
           "type": "text",
-          "heading": "4. Tek kural: upstream çarpı local",
-          "text": "Bir düğüme geri geçişte yukarıdan bir gradient geliyor: \"senin çıktın azıcık değişseydi loss şu kadar değişirdi.\"\n\nDüğüm kendi yerel türevini biliyor: \"benim çıktım, girdim değişince şu kadar değişir.\"\n\nİkisini çarpıyorsun, aşağıya iletiyorsun. Zincir kuralının tamamı bu.\n\nSık kullanılan düğümlerin davranışı ezberlenecek kadar basit. Toplama düğümü gelen gradient'i iki girdisine olduğu gibi dağıtıyor. Çarpma düğümü gradient'i diğer girdiyle takas ediyor. Maksimum düğümü gradient'in tamamını kazanan girdiye gönderiyor, diğerine sıfır. ReLU pozitif bölgede geçiriyor, negatifte kesiyor."
+          "heading": "4. One rule: upstream times local",
+          "text": "During the backward pass a gradient arrives at a node from above: \"if your output had changed slightly, the loss would have changed this much.\"\n\nThe node knows its own local derivative: \"my output changes this much when my input changes.\"\n\nYou multiply the two and pass the result downward. That is the entire chain rule.\n\nThe behaviour of the commonly used nodes is simple enough to memorise. An addition node distributes the incoming gradient to both of its inputs unchanged. A multiplication node swaps the gradient with the other input. A maximum node sends the whole gradient to the winning input and zero to the other. ReLU passes the gradient through in the positive region and cuts it in the negative one."
         },
         {
           "type": "text",
-          "heading": "5. Tek sayıdan milyonlarca gradient'e",
-          "text": "Loss tek bir sayı, mesela 2.3. Ama loss'un çıktı vektörüne göre türevi bir vektör.\n\nÜç sınıflı bir problemde ağ şunu demiş olsun: kedi 0.72, köpek 0.20, kuş 0.08. Gerçek label kedi. Loss'un çıktıya göre türevi kabaca şunu söylüyor: kedi tahminini artırırsan loss azalır, diğer ikisini azaltırsan loss azalır.\n\nBilgi ilk kez burada açılıyor: tek sayı, sınıf sayısı kadar bileşenli bir vektöre dönüştü.\n\nSonra backprop bu vektörü alıp layer layer geriye yürüyor. Her layer'da gradient, o layer'ın girdi boyutuna göre yeniden şekilleniyor ve genişliyor. Son layer'da üç bileşendi, bir önceki layer'da yüzlerce, daha öncekinde binlerce.\n\nHer layer yalnızca iki şeye bakıyor: yukarıdan gelen gradient ve ileri geçişte sakladığı kendi girdisi."
+          "heading": "5. From one number to millions of gradients",
+          "text": "The loss is a single number, say 2.3. But the derivative of the loss with respect to the output vector is a vector.\n\nSuppose in a three-class problem the network said: cat 0.72, dog 0.20, bird 0.08, and the true label is cat. The derivative of the loss with respect to the output roughly says: if you increase the cat prediction the loss decreases, and if you decrease the other two the loss decreases.\n\nThis is where the information first unfolds: a single number turned into a vector with as many components as there are classes.\n\nBackprop then takes that vector and walks backwards layer by layer. At every layer the gradient is reshaped to the input dimension of that layer and widens. At the last layer it had three components, at the previous one hundreds, at the one before that thousands.\n\nEvery layer only looks at two things: the gradient coming from above and its own input, which it stored during the forward pass."
         },
         {
           "type": "code",
-          "heading": "Bir doğrusal layer'ın backward'ı",
-          "text": "# ileri:  x_out = x_in @ w.T + b\n\ndef backward(self, d_out):\n    d_in    = d_out @ self.w                      # (batch, n_in)\n    self.dw = d_out.T @ self.x_in                 # (n_out, n_in)\n    self.db = d_out.sum(axis=0, keepdims=True)    # (1, n_out)\n    return d_in\n\n# boyutlar\n# d_out : (batch, n_out)   yukaridan gelen\n# d_in  : (batch, n_in)    asagiya giden\n# dw    : w ile ayni sekil\n# db    : b ile ayni sekil"
+          "heading": "The backward pass of a linear layer",
+          "text": "# forward:  x_out = x_in @ w.T + b\n\ndef backward(self, d_out):\n    d_in    = d_out @ self.w                      # (batch, n_in)\n    self.dw = d_out.T @ self.x_in                 # (n_out, n_in)\n    self.db = d_out.sum(axis=0, keepdims=True)    # (1, n_out)\n    return d_in\n\n# shapes\n# d_out : (batch, n_out)   coming from above\n# d_in  : (batch, n_in)    going downward\n# dw    : same shape as w\n# db    : same shape as b"
         },
         {
           "type": "text",
-          "heading": "6. O üç satırın neden böyle olduğu",
-          "text": "Transpozlar ezberlenmez, boyutlardan çıkar. İleri geçişte girdi (yığın, giriş) boyutunda, weight (çıkış, giriş) boyutunda ve çarpımın sonucu (yığın, çıkış). Geri geçişte elindeki (yığın, çıkış), üretmen gereken (yığın, giriş). Aradaki tek uyumlu çarpım, gelen gradient ile weight'in kendisi. Transpoz, boyutların oturması için doğal olarak çıkıyor.\n\nWeight'in gradient'i, gelen gradient ile ileri geçişte saklanan girdinin çarpımı — yığındaki her örneğin katkısı toplanarak. Matris çarpımı zaten o toplamayı yapıyor.\n\nBias'ın gradient'i ise yığın boyunca toplam, ve sebebi öğretici: ileri geçişte bias yayımlanarak her satıra kopyalanmıştı. Yani loss'a her satırdan ayrı bir yoldan katkı verdi. Zincir kuralı, bir değer birden çok yoldan kullanıldığında katkıların toplanmasını söylüyor.\n\nEzberlenecek kural şu: ileri geçişte yayım varsa, geri geçişte toplama vardır."
+          "heading": "6. Why those three lines look the way they do",
+          "text": "The transposes are not memorised, they fall out of the shapes. In the forward pass the input has shape (batch, n_in), the weight has shape (n_out, n_in), and the product has shape (batch, n_out). In the backward pass what you hold is (batch, n_out) and what you must produce is (batch, n_in). The only compatible product between them is the incoming gradient times the weight itself. The transpose appears naturally so that the dimensions line up.\n\nThe gradient of the weight is the product of the incoming gradient with the input stored during the forward pass, summed over the contribution of every example in the batch. The matrix product already performs that summation.\n\nThe gradient of the bias is a sum along the batch, and the reason is instructive: in the forward pass the bias was broadcast, that is, copied into every row. So it contributed to the loss through a separate path from each row. The chain rule says that when a value is used along several paths, the contributions are summed.\n\nThe rule worth memorising: if there is broadcasting in the forward pass, there is summation in the backward pass."
         },
         {
           "type": "text",
-          "heading": "7. Layer özyinelemesi",
-          "text": "Aynı şeyi layer diliyle de yazabilirsin. Her layer için bir hata sinyali tanımla: loss'un o layer'ın doğrusal çıktısına göre türevi.\n\nSon layer'da bu sinyal doğrudan loss'tan geliyor. Geriye doğru her layer'da iki şeyle çarpılıyor: bir sonraki layer'ın weight matrisinin transpozu, ve kendi aktivasyon fonksiyonunun türevi.\n\nWeight gradient'leri de bu sinyal ile layer'ın girdisinin çarpımından çıkıyor.\n\nBu formül, bir sonraki bölümün tamamını açıklıyor — çünkü gradient'in her layer'da neyle çarpıldığını açıkça gösteriyor."
+          "heading": "7. The layer recursion",
+          "text": "You can write the same thing in the language of layers. Define an error signal for each layer: the derivative of the loss with respect to the linear output of that layer.\n\nAt the last layer this signal comes directly from the loss. Going backwards, at each layer it is multiplied by two things: the transpose of the weight matrix of the next layer, and the derivative of its own activation function.\n\nThe weight gradients also come out of the product of this signal with the input of the layer.\n\nThis formula explains the whole of the next section — because it shows explicitly what the gradient is multiplied by at every layer."
         },
         {
           "type": "text",
-          "heading": "8. Aktivasyon fonksiyonu neden var",
-          "text": "Bir ara verip temel bir noktayı yerine oturtalım.\n\nHer layer doğrusal bir dönüşüm yapıyor. Ama iki doğrusal dönüşümün bileşkesi yine doğrusaldır. Yani aktivasyon olmadan on layer koysan da model matematiksel olarak tek layer'a eşdeğer olur — derinliğin hiçbir anlamı kalmaz.\n\nAktivasyon, layer'ların arasına doğrusal olmayan bir adım sokarak üst üste yığmayı anlamlı kılıyor.\n\nAma hangi aktivasyonu seçtiğin, yukarıdaki özyineleme yüzünden doğrudan eğitilebilirliği belirliyor."
+          "heading": "8. Why the activation function exists",
+          "text": "Let us pause and put a basic point in place.\n\nEvery layer performs a linear transformation. But the composition of two linear transformations is again linear. So without activations, even ten stacked layers would be mathematically equivalent to a single layer — depth would mean nothing at all.\n\nThe activation inserts a non-linear step between layers and makes stacking meaningful.\n\nBut which activation you choose directly determines trainability, because of the recursion above."
         },
         {
           "type": "text",
-          "heading": "9. Sönen ve patlayan gradient'ler",
-          "text": "Gradient her layer'da aktivasyonun türeviyle çarpılıyor.\n\nSigmoid'in türevi en fazla 0.25. On layer'lı bir ağda gradient, en iyi ihtimalle 0.25'in onuncu kuvvetiyle çarpılıyor — yani milyonda bir mertebesine iniyor. İlk layer'lara ulaşan sinyal pratikte sıfır, o layer'lar öğrenemiyor. Sönen gradient bu.\n\nReLU'da pozitif bölgede türev tam olarak bir. Gradient aktivasyondan hiç zayıflamadan geçiyor, ilk layer'lara kendi büyüklüğünde ulaşıyor.\n\n\"Ama nöronların yarısı sıfır üretmiyor mu\" sorusunun cevabı: evet, ve bu aslında istenen bir şey. Farklı nöronlar farklı örüntülere uzmanlaşıyor; yatay kenar arayan bir nöronun her girdide ateşlenmesi gerekmiyor.\n\nDiğer yönde, weight'lerin normu büyükse aynı çarpım zinciri gradient'i patlatıyor. Karşı önlemler: gradient kırpma, dikkatli ilklendirme, normalizasyon layer'ları, ve residual connection'lar — sonuncusu gradient'e layer'ları atlayan kestirme bir yol açtığı için özellikle etkili."
+          "heading": "9. Vanishing and exploding gradients",
+          "text": "At every layer the gradient is multiplied by the derivative of the activation.\n\nThe derivative of the sigmoid is at most 0.25. In a ten-layer network the gradient is multiplied, in the best case, by 0.25 to the tenth power — that is, down to the order of one in a million. The signal reaching the first layers is practically zero and those layers cannot learn. This is the vanishing gradient.\n\nWith ReLU the derivative is exactly one in the positive region. The gradient passes through the activation without any attenuation and reaches the first layers at its own magnitude.\n\nThe answer to \"but do not half of the neurons output zero\" is: yes, and this is actually desirable. Different neurons specialise in different patterns; a neuron that looks for horizontal edges does not need to fire on every input.\n\nIn the other direction, if the norm of the weights is large, the same chain of products makes the gradient explode. The countermeasures: gradient clipping, careful initialisation, normalisation layers, and residual connections — the last one is particularly effective because it opens a shortcut for the gradient that skips over layers."
         },
         {
           "type": "text",
-          "heading": "10. Öğrenme tam olarak nerede oluyor",
-          "text": "Sıra şu: ileri geçiş tahmin üretir ve ara değerleri saklar. Loss tek bir sayı verir. Backprop o sayıyı her weight için bir gradient'e açar. Güncelleme adımı weight'leri gradient'in ters yönünde kaydırır.\n\nÖğrenme yalnızca son adımda oluyor. Backprop hiçbir şey öğrenmiyor — sadece yön bilgisi üretiyor.\n\nTek bir adım anlamsız görünür, weight'ler minicik kayar. Ama binlerce adım sonra her weight doğru yönde birikmiş olur.\n\nBir de bedeli var: ileri geçişte saklanan ara değerler bellekte duruyor. Derin ağlarda training sırasındaki bellek tüketiminin büyük kısmı weight'lerden değil, geri geçişte lazım olacak bu ara değerlerden geliyor."
+          "heading": "10. Where learning actually happens",
+          "text": "The order is this: the forward pass produces a prediction and stores intermediate values. The loss gives a single number. Backprop unfolds that number into a gradient for every weight. The update step shifts the weights in the direction opposite to the gradient.\n\nLearning only happens in the last step. Backprop does not learn anything — it only produces directional information.\n\nA single step looks meaningless, the weights barely move. But after thousands of steps every weight has accumulated in the right direction.\n\nThere is also a cost: the intermediate values stored in the forward pass sit in memory. In deep networks most of the memory consumed during training comes not from the weights but from these intermediate values that will be needed in the backward pass."
         },
         {
           "type": "insight",
-          "heading": "Geriye ne kalsın",
-          "text": "Gradient'leri tek tek ölçmek imkansız; backprop hepsini tek ileri artı tek geri geçişte üretir ve maliyeti parametre sayısından bağımsızdır. Ağı işlemler grafiği olarak gör; her düğüm yalnızca kendi yerel türevini bilir, kural upstream çarpı local. Loss tek sayıdır ama çıktıya göre türevi vektördür, ve geriye doğru her layer'da genişler. Transpozlar ezber değil, boyut uyumundan çıkar. İleri geçişte yayım varsa geri geçişte toplama vardır. Gradient her layer'da weight ve aktivasyon türeviyle çarpıldığı için sigmoid derinlikte söner, ReLU sönmez. Öğrenme backprop'ta değil, güncelleme adımında olur."
+          "heading": "What should stay with you",
+          "text": "Measuring gradients one by one is impossible; backprop produces all of them in one forward plus one backward pass, and its cost is independent of the number of parameters. See the network as a graph of operations; each node only knows its own local derivative, and the rule is upstream times local. The loss is a single number but its derivative with respect to the output is a vector, and it widens at every layer going backwards. The transposes are not memorisation, they follow from shape compatibility. If there is broadcasting in the forward pass, there is summation in the backward pass. Because the gradient is multiplied by the weight and the activation derivative at every layer, the sigmoid vanishes with depth while ReLU does not. Learning does not happen in backprop, it happens in the update step."
         },
         {
           "type": "note",
-          "heading": "Nereye bakılır",
-          "text": "Hesaplama grafiği, delta kuralı ve verimlilik analizi ch07'de; aktivasyondan gradient'e, backprop'tan training döngüsüne uzanan anlatım yine ch07'de; layer layer uygulama, boyutlar ve zincir kuralı sezgisi lab03'te; düğüm bazlı gradient kuralları cs03'te. Optimizasyon adımının kendisi (SGD, momentum, Adam) ch08'de."
+          "heading": "Where to look",
+          "text": "The computational graph, the delta rule and the efficiency analysis are in ch07; the account that goes from activation to gradient and from backprop to the training loop is also in ch07; the layer by layer implementation, the dimensions and the chain rule intuition are in lab03; the node-level gradient rules are in cs03. The optimisation step itself (SGD, momentum, Adam) is in ch08."
         }
       ]
     },
     "optim": {
-      "title": "Optimizasyon — Baştan Sona Konu Anlatımı",
+      "title": "Optimization — A Complete Walkthrough",
       "cat": "Konu Anlatımı",
       "context": "SGD · Momentum · Adam · AdamW · ML ch08 · CS231n 2 ve 5 · ML-OVERALL 5 ve 13",
       "chapters": [
@@ -26570,27 +26570,27 @@
         "mlo05",
         "mlo13"
       ],
-      "summary": "Batch, SGD ve mini-batch farkından başlayıp, düz gradient descent'in iki yapısal sorununa, momentum ve adaptive rate'in bunları nasıl ayrı ayrı çözdüğüne, Adam'ın formülüne ve bias düzeltmesine, AdamW'nin neyi onardığına, learning rate programına ve normalizasyonun buradaki rolüne kadar tek akış.",
+      "summary": "One continuous thread from the difference between batch, SGD and mini-batch, to the two structural problems of plain gradient descent, how momentum and the adaptive rate solve them separately, Adam's formula and its bias correction, what AdamW repairs, the learning rate schedule, and the role of normalization in all of this.",
       "sections": [
         {
           "type": "text",
-          "heading": "Bu metin ne için",
-          "text": "Optimizer seçimi genelde ezberle yapılıyor: \"Adam kullan, lr 3e-4\". Bu çoğu zaman işe yarıyor ama ne olduğunu anlatmıyor.\n\nBu metin her optimizer'ı çözdüğü sorunla eşleştiriyor. Zincir kısa: iki sorun var, momentum birini çözüyor, adaptive rate diğerini, Adam ikisini birleştiriyor, AdamW birleştirmenin bozduğu şeyi onarıyor."
+          "heading": "What this text is for",
+          "text": "Choosing an optimizer is usually done from memory: \"use Adam, lr 3e-4\". That often works, but it does not explain anything.\n\nThis text pairs every optimizer with the problem it solves. The chain is short: there are two problems, momentum solves one, the adaptive rate solves the other, Adam combines the two, and AdamW repairs what the combination broke."
         },
         {
           "type": "text",
-          "heading": "1. Önce: gradient kaç örnekten hesaplanıyor",
-          "text": "Bin veri noktan var diyelim.\n\nTam batch. Bininin hepsini ağdan geçiriyorsun, hatalarını topluyorsun, tek bir gradient hesaplayıp tek bir adım atıyorsun. Gradient mümkün olan en doğru yön, ama bin örnek için tek adım — çok yavaş.\n\nSaf SGD. Her örnekten sonra güncelliyorsun. Bin örnek için bin adım. Hızlı ama her adım tek bir örneğe dayandığı için noisy; o örnek temsili olmayabilir.\n\nMini-batch. Otuz iki örneği geçirip ortalamasını alıyor, sonra güncelliyorsun. Bin örnek için otuz küsur adım. Otuz iki örneğin ortalaması tek örnekten çok daha güvenilir, ama bin örneği beklemek zorunda da değilsin. Pratikte kullanılan bu.\n\nNoise'un tamamen zararlı olmadığını not et: kötü bir yerel minimumdan çıkmaya yardım edebiliyor. Yani mini-batch bir uzlaşma değil, çoğu zaman doğrudan tercih."
+          "heading": "1. First: how many examples is the gradient computed from",
+          "text": "Say you have a thousand data points.\n\nFull batch. You push all thousand through the network, accumulate their errors, compute a single gradient and take a single step. The gradient is the most accurate direction possible, but one step for a thousand examples — very slow.\n\nPure SGD. You update after every example. A thousand steps for a thousand examples. Fast, but every step rests on a single example and is therefore noisy; that example may not be representative.\n\nMini-batch. You push thirty-two examples through, average them, then update. Around thirty steps for a thousand examples. The average of thirty-two examples is far more reliable than a single one, yet you do not have to wait for all thousand. This is what is used in practice.\n\nNote that the noise is not purely harmful: it can help escape a bad local minimum. So mini-batch is not a compromise, it is often a direct preference."
         },
         {
           "type": "text",
-          "heading": "2. Düz gradient descent'in iki sorunu",
-          "text": "Bu iki sorunu ayrı tutmak, geri kalan her şeyi anlaşılır kılıyor.\n\nSorun bir: zigzag. Loss yüzeyi düzgün bir kase değil. Bazı yönlerde çok dik, bazılarında neredeyse düz. Dik yönde gradient sürekli işaret değiştirip sağa sola sallanıyor, düz yönde ise çok yavaş ilerliyor. Hedefe doğru düz gidemiyorsun.\n\nSorun iki: tek learning rate herkese uymuyor. Bazı weight'ler sürekli büyük gradient alıyor — sık aktive olan nöronlar, yaygın kelimeler. Bazıları nadiren ve küçük gradient alıyor — nadir kelimeler, az tetiklenen filtreler. İkisine aynı adım boyunu uygulamak, birini fırlatırken diğerini yerinde saydırıyor.\n\nMomentum birinciyi çözüyor. Adaptive rate ikinciyi. İkisi bağımsız."
+          "heading": "2. The two problems of plain gradient descent",
+          "text": "Keeping these two problems apart makes everything else understandable.\n\nProblem one: zigzagging. The loss surface is not a neat bowl. It is very steep in some directions and almost flat in others. In the steep direction the gradient keeps changing sign and swings left and right, while in the flat direction it advances very slowly. You cannot travel straight towards the target.\n\nProblem two: a single learning rate does not fit everyone. Some weights constantly receive large gradients — frequently activated neurons, common words. Others receive gradients rarely and in small amounts — rare words, seldom triggered filters. Applying the same step size to both throws one of them around while the other barely moves.\n\nMomentum solves the first. The adaptive rate solves the second. The two are independent."
         },
         {
           "type": "text",
           "heading": "3. Momentum",
-          "text": "Fikir, anlık gradient yerine gradient'in üstel hareketli ortalamasıyla adım atmak. Tipik katsayı 0.9 — yani yeni gradient'in ağırlığı onda bir, geçmişin dokuzda dokuz.\n\nNeden zigzag'ı söndürdüğü doğrudan görünüyor: sallanan yönde gradient sürekli artı eksi değişiyor, ortalamada birbirini götürüyor, o yöndeki adım küçülüyor. Tutarlı yönde ise gradient hep aynı tarafı gösteriyor, ortalamada birikiyor, o yönde hızlanıyorsun.\n\nFiziksel karşılığı, yamaçtan yuvarlanan bir top: her an eğime göre yön değiştirmiyor, hızını taşıyor.\n\nDikkat: momentum ikinci soruna dokunmuyor. Bütün weight'ler hâlâ aynı learning rate ile güncelleniyor."
+          "text": "The idea is to step with an exponential moving average of the gradient instead of the instantaneous gradient. A typical coefficient is 0.9 — that is, the weight of the new gradient is one tenth and that of the past nine tenths.\n\nWhy this damps the zigzag is directly visible: in the swinging direction the gradient keeps alternating between plus and minus, so the terms cancel in the average and the step in that direction shrinks. In the consistent direction the gradient always points the same way, accumulates in the average, and you accelerate along it.\n\nThe physical counterpart is a ball rolling down a slope: it does not change direction with every local tilt, it carries its momentum.\n\nNote: momentum does not touch the second problem. All weights are still updated with the same learning rate."
         },
         {
           "type": "formula",
@@ -26599,58 +26599,58 @@
         },
         {
           "type": "text",
-          "heading": "4. Adaptive rate ve Adam",
-          "text": "İkinci soruna çözüm, her weight'in kendi geçmişine bakmak. Gradient'in karesinin hareketli ortalaması tutuluyor; bu, o weight'in ne kadar büyük gradient aldığının ölçüsü.\n\nAdım boyu bu ölçünün kareköküne bölünüyor. Sürekli büyük gradient alan weight'in adımı küçülüyor, nadiren güncellenen weight'in adımı büyüyor. Yani tek bir global learning rate, weight başına efektif bir learning rate'e dönüşüyor.\n\nAdam ikisini birleştiriyor: birinci moment momentum'u, ikinci moment adaptive rate'i taşıyor."
+          "heading": "4. The adaptive rate and Adam",
+          "text": "The solution to the second problem is to look at each weight's own history. A moving average of the square of the gradient is kept; this is a measure of how large the gradients that weight has been receiving are.\n\nThe step size is divided by the square root of that measure. The step of a weight that constantly receives large gradients shrinks, and the step of a weight that is rarely updated grows. So a single global learning rate turns into an effective per-weight learning rate.\n\nAdam combines the two: the first moment carries momentum, the second moment carries the adaptive rate."
         },
         {
           "type": "formula",
           "heading": "Adam",
-          "text": "$$m \\leftarrow \\beta_1 m + (1-\\beta_1) g, \\qquad v \\leftarrow \\beta_2 v + (1-\\beta_2) g^2$$\n$$\\hat{m} = \\frac{m}{1-\\beta_1^t}, \\qquad \\hat{v} = \\frac{v}{1-\\beta_2^t}$$\n$$x \\leftarrow x - \\alpha\\,\\frac{\\hat{m}}{\\sqrt{\\hat{v}} + \\varepsilon}$$\n\nTipik değerler: $\\beta_1 = 0.9$, $\\beta_2 = 0.999$, $\\varepsilon = 10^{-8}$."
+          "text": "$$m \\leftarrow \\beta_1 m + (1-\\beta_1) g, \\qquad v \\leftarrow \\beta_2 v + (1-\\beta_2) g^2$$\n$$\\hat{m} = \\frac{m}{1-\\beta_1^t}, \\qquad \\hat{v} = \\frac{v}{1-\\beta_2^t}$$\n$$x \\leftarrow x - \\alpha\\,\\frac{\\hat{m}}{\\sqrt{\\hat{v}} + \\varepsilon}$$\n\nTypical values: $\\beta_1 = 0.9$, $\\beta_2 = 0.999$, $\\varepsilon = 10^{-8}$."
         },
         {
           "type": "text",
-          "heading": "5. Bias düzeltmesi neden var",
-          "text": "Küçük ama unutulan bir ayrıntı, ve mantığı temiz.\n\nHer iki hareketli ortalama da sıfırdan başlıyor. İlk adımlarda gerçek gradient büyük olsa bile ortalama sıfıra yakın çıkıyor, çünkü geçmiş yok ve sıfırlar ortalamayı aşağı çekiyor. Bu, training'in başında yapay olarak küçük adımlar demek.\n\nBölen olarak konan terim tam olarak bu sapmayı düzeltiyor. Adım sayısı arttıkça düzeltme çarpanı bire yaklaşıyor ve etkisi kayboluyor — yani yalnızca başlangıçta çalışan bir yama.\n\nPaydadaki küçük sabit ise sadece sıfıra bölmeyi engelliyor."
+          "heading": "5. Why bias correction exists",
+          "text": "A small but forgotten detail, and its logic is clean.\n\nBoth moving averages start from zero. In the first steps the average comes out close to zero even if the true gradient is large, because there is no history and the zeros drag the average down. That means artificially small steps at the beginning of training.\n\nThe term placed in the denominator corrects exactly this bias. As the step count grows the correction factor approaches one and its effect disappears — so it is a patch that only operates at the start.\n\nThe small constant in the denominator merely prevents division by zero."
         },
         {
           "type": "text",
-          "heading": "6. Peki neden hâlâ SGD+momentum kullanılıyor",
-          "text": "Adam daha hızlı yakınsıyor, bu tartışmasız. Ama vision tarafında birçok güçlü sonuç hâlâ SGD ve momentum ile alınıyor, ve sebebi ilginç.\n\nAdam'da her weight kendi geçmişine göre ölçekleniyor; bu, bazı weight'lerin adımını yapay olarak bastırmak anlamına da geliyor. Daha hızlı düşen bir training loss, her zaman daha iyi genelleyen bir çözüm demek değil.\n\nSGD+momentum'da böyle bir ölçekleme yok — her weight kendi gradient'i kadar güncelleniyor. Daha yavaş, ama ulaştığı minimum sıklıkla daha iyi genelliyor.\n\nPratik özet: Transformer ve dil modellerinde AdamW neredeyse standart; convolutional vision modellerinde SGD+momentum hâlâ rekabetçi."
+          "heading": "6. So why is SGD with momentum still used",
+          "text": "Adam converges faster, that is beyond dispute. But on the vision side many strong results are still obtained with SGD and momentum, and the reason is interesting.\n\nIn Adam every weight is scaled according to its own history; this also means artificially suppressing the step of some weights. A training loss that falls faster does not always mean a solution that generalises better.\n\nIn SGD with momentum there is no such scaling — every weight is updated in proportion to its own gradient. Slower, but the minimum it reaches often generalises better.\n\nPractical summary: in Transformers and language models AdamW is nearly standard; in convolutional vision models SGD with momentum is still competitive."
         },
         {
           "type": "text",
-          "heading": "7. AdamW: weight decay'in bozulması",
-          "text": "Weight decay, weight'lerin büyümesini cezalandırıyor. Klasik uygulaması cezayı loss'a eklemek: bu da gradient'e weight ile orantılı bir terim ekliyor.\n\nSorun, o terimin Adam'ın içine girmesi. Ceza gradient'e karıştığı için ikinci momente de karışıyor, yani adaptive ölçekleme cezayı da ölçekliyor. Sonuç bozuk: büyük gradient alan weight'lerin decay'i zayıflıyor, az güncellenenlerinki güçleniyor. Oysa istediğin şey her weight'e eşit uygulanan bir çekim.\n\nAdamW'nin düzeltmesi basit: decay'i gradient'ten tamamen ayır, doğrudan weight'e uygula. Adaptive ölçekleme yalnızca görev gradient'ine bakıyor, decay herkese aynı şekilde işliyor.\n\nBu, Transformer training'inde AdamW'nin standart hale gelmesinin doğrudan sebebi."
+          "heading": "7. AdamW: how weight decay got broken",
+          "text": "Weight decay penalises weights from growing. Its classical implementation adds the penalty to the loss, which adds a term proportional to the weight into the gradient.\n\nThe problem is that this term gets inside Adam. Since the penalty is mixed into the gradient it also enters the second moment, so the adaptive scaling scales the penalty as well. The result is distorted: the decay of weights that receive large gradients weakens, while that of rarely updated weights strengthens. What you actually want is a pull applied equally to every weight.\n\nAdamW's fix is simple: separate the decay from the gradient entirely and apply it directly to the weight. The adaptive scaling then looks only at the task gradient, and the decay acts the same way on everyone.\n\nThis is the direct reason AdamW became standard in Transformer training."
         },
         {
           "type": "code",
-          "heading": "Zincir",
-          "text": "Duz GD        sabit adim, ham gradient      -> zigzag + tek hiz\nSGD+Momentum  gradient ortalamasi (m)       -> zigzag soner\nAdam          m + gradient kare ort. (v)    -> zigzag soner + weight basina hiz\nAdamW         Adam, decay gradientten ayri  -> decay her weight'e esit\n\nGradient salliniyor        -> momentum ekle\nHer weight farkli hiz ister-> adaptive rate ekle\nWeight decay bozuldu       -> gradientten ayir"
+          "heading": "The chain",
+          "text": "Plain GD       fixed step, raw gradient        -> zigzag + single speed\nSGD+Momentum   average of gradients (m)        -> zigzag damped\nAdam           m + avg of squared grads (v)    -> zigzag damped + per-weight speed\nAdamW          Adam, decay outside gradient    -> decay equal for every weight\n\nGradient is swinging          -> add momentum\nEach weight wants own speed   -> add adaptive rate\nWeight decay got broken       -> take it out of the gradient"
         },
         {
           "type": "text",
-          "heading": "8. Learning rate: asıl hiperparametre",
-          "text": "Optimizer seçiminden daha çok fark yaratan şey learning rate.\n\nÇok büyükse loss patlıyor ya da bir yerde takılıp salınıyor. Çok küçükse training ilerlemiyor ve kötü bir bölgede kalıyor.\n\nİki standart pratik var. Birincisi ısınma: ilk birkaç yüz adımda learning rate'i sıfırdan hedef değere çıkarmak. Sebebi Adam'ın başlangıçtaki moment tahminlerinin güvenilmez olması; ısınma o dönemde büyük adım atılmasını engelliyor. Transformer training'inde neredeyse zorunlu.\n\nİkincisi azaltma: training ilerledikçe learning rate'i düşürmek — kosinüs eğrisiyle ya da basamaklı. Mantığı basit: başta kaba arama, sonra fine-tuning.\n\nPratik teşhis: loss patlıyorsa learning rate yüksek; loss düşüyor ama çok yavaşsa düşük; training loss düşerken validation yükseliyorsa sorun optimizer'da değil, genelleme tarafında."
+          "heading": "8. The learning rate: the real hyperparameter",
+          "text": "What makes more difference than the choice of optimizer is the learning rate.\n\nIf it is too large the loss explodes or gets stuck oscillating somewhere. If it is too small training does not progress and stays in a bad region.\n\nThere are two standard practices. The first is warmup: raising the learning rate from zero to the target value over the first few hundred steps. The reason is that Adam's moment estimates are unreliable at the start; warmup prevents large steps during that period. In Transformer training it is nearly mandatory.\n\nThe second is decay: lowering the learning rate as training proceeds — with a cosine curve or in steps. The logic is simple: coarse search at the beginning, fine-tuning later.\n\nPractical diagnosis: if the loss explodes the learning rate is too high; if the loss falls but very slowly it is too low; if the training loss falls while validation rises the problem is not in the optimizer but on the generalisation side."
         },
         {
           "type": "text",
-          "heading": "9. Normalizasyonun buradaki rolü",
-          "text": "Batch normalization genelde ayrı bir konu gibi anlatılıyor ama optimizasyon problemine doğrudan müdahale ediyor.\n\nYaptığı şey, her layer'ın girdisini mini-batch içinde sıfır ortalama birim varyansa çekmek, sonra öğrenilen bir ölçek ve kaydırma ile modele istediği distribution'u geri kurma imkanı bırakmak.\n\nKazancı üç kalemde toplanıyor: çok daha büyük learning rate kullanılabiliyor, training weight ilklendirmesine karşı duyarsızlaşıyor, ve mini-batch istatistiklerinden gelen noise hafif bir regularization etki yapıyor.\n\nBir tuzağı var ve pratikte sık ısırıyor: training sırasında mini-batch istatistikleri kullanılıyor, test sırasında ise training'de biriktirilen hareketli ortalamalar. Modeli değerlendirme moduna almayı unutmak, tek görüntüyle anlamsız istatistik hesaplamaya yol açıyor.\n\nBatch boyutu küçükse istatistikler güvenilmez hale geliyor; orada layer normalization tercih ediliyor — Transformer'ların batch norm yerine onu kullanmasının sebebi de bu."
+          "heading": "9. The role of normalization here",
+          "text": "Batch normalization is usually taught as a separate topic, but it intervenes directly in the optimisation problem.\n\nWhat it does is pull the input of every layer to zero mean and unit variance within the mini-batch, and then leave the model the option of restoring the distribution it wants through a learned scale and shift.\n\nIts gains fall under three headings: a much larger learning rate becomes usable, training becomes insensitive to weight initialisation, and the noise coming from mini-batch statistics acts as a mild regularization.\n\nIt has one trap that bites often in practice: during training the mini-batch statistics are used, while at test time the moving averages accumulated during training are used. Forgetting to put the model into evaluation mode leads to computing meaningless statistics from a single image.\n\nIf the batch size is small the statistics become unreliable; there layer normalization is preferred — and that is also why Transformers use it instead of batch norm."
         },
         {
           "type": "insight",
-          "heading": "Geriye ne kalsın",
-          "text": "Mini-batch, tam batch'in doğruluğu ile saf SGD'nin hızı arasındaki pratik nokta, ve noise'u bazen faydalı. Düz gradient descent'in iki ayrı sorunu var: zigzag ve tek learning rate'in herkese uymaması. Momentum birincisini, adaptive rate ikincisini çözüyor; Adam ikisi. Bias düzeltmesi yalnızca ilk adımlar için bir yama. AdamW, decay'i gradient'ten ayırarak Adam'ın bozduğu düzenlemeyi onarıyor. Learning rate hâlâ en belirleyici hiperparametre; ısınma ve azaltma standart. Normalizasyon bir optimizasyon aracı, ve değerlendirme modunu unutmak klasik hata."
+          "heading": "What should stay with you",
+          "text": "Mini-batch is the practical point between the accuracy of the full batch and the speed of pure SGD, and its noise is sometimes useful. Plain gradient descent has two separate problems: zigzagging, and a single learning rate not fitting everyone. Momentum solves the first, the adaptive rate the second; Adam does both. Bias correction is a patch for the first steps only. AdamW repairs the regularization Adam broke by separating the decay from the gradient. The learning rate is still the most decisive hyperparameter; warmup and decay are standard. Normalization is an optimisation tool, and forgetting evaluation mode is the classic mistake."
         },
         {
           "type": "note",
-          "heading": "Nereye bakılır",
-          "text": "Batch/SGD/mini-batch karşılaştırması somut sayılarla, Adam ve AdamW'nin tam açıklaması, batch normalization ve ilklendirme ch08'de; düzenleme (L1, L2, elastic net) cs02'de; dropout, ilklendirme ve normalizasyon layer'ları cs05'te. Gradient'in nereden geldiği için backprop anlatımına, weight decay'in neden bir prior olduğu için MLE anlatımına bak."
+          "heading": "Where to look",
+          "text": "The batch/SGD/mini-batch comparison with concrete numbers, the full explanation of Adam and AdamW, batch normalization and initialisation are in ch08; regularization (L1, L2, elastic net) is in cs02; dropout, initialisation and normalization layers are in cs05. For where the gradient comes from see the backpropagation guide, and for why weight decay is a prior see the MLE guide."
         }
       ]
     },
     "cnn": {
-      "title": "CNN — Baştan Sona Konu Anlatımı",
+      "title": "CNN — A Complete Walkthrough",
       "cat": "Konu Anlatımı",
       "context": "Convolutional Networks · ML ch09 · CS231n 4-5 · Lab 4 · ML-OVERALL 14",
       "chapters": [
@@ -26660,62 +26660,62 @@
         "lab04",
         "mlo14"
       ],
-      "summary": "Fully connected bir ağın görüntüde neden çöktüğünden başlayıp, convolution'ın hangi üç varsayımı mimariye gömdüğüne, receptive field'ın derinlikle nasıl büyüdüğüne, pooling ve stride tercihine, LeNet'ten ViT'e mimari çizgisine ve pratikte training'i ayakta tutan bileşenlere kadar tek akış.",
+      "summary": "One continuous thread from why a fully connected network collapses on images, to which three assumptions convolution embeds into the architecture, how the receptive field grows with depth, the choice between pooling and stride, the architectural line from LeNet to ViT, and the components that keep training alive in practice.",
       "sections": [
         {
           "type": "text",
-          "heading": "Bu metin ne için",
-          "text": "CNN'i \"filtre gezdiriyoruz\" diye anlatmak kolay, ama o cümle hiçbir şeyi açıklamıyor. Asıl soru şu: neden filtre gezdiriyoruz, ve bunu yapmayan bir ağ tam olarak neyi kaybediyor?\n\nBu metin oradan başlıyor ve mimarinin her parçasını bir varsayıma bağlıyor."
+          "heading": "What this text is for",
+          "text": "It is easy to describe a CNN as \"we slide a filter around\", but that sentence explains nothing. The real question is: why do we slide a filter, and what exactly does a network that does not do this lose?\n\nThis text starts there and ties every part of the architecture to an assumption."
         },
         {
           "type": "text",
-          "heading": "1. Fully connected ağ görüntüde neden çöküyor",
-          "text": "İki ayrı sebep var ve ikincisi daha derin.\n\nBirincisi sayı. 224x224x3'lük bir görüntü 150 binin üzerinde girdi demek. Buna bağlanan bin nöronluk tek bir fully connected layer 150 milyon weight taşıyor — tek layer için. Elindeki veriyle bunu eğitmek ezberden başka bir şey üretmiyor.\n\nİkincisi ve asıl olanı: fully connected layer'ın spatial yapı diye bir kavramı yok. Görüntüyü düz bir vektöre açtığın an, hangi pikselin hangisinin yanında olduğu bilgisi siliniyor. Model için 37. piksel ile 38. piksel, 37. piksel ile 900. piksel kadar ilgisiz.\n\nSonucu şu: kediyi sol üst köşede görmeyi öğrenen ağ, aynı kediyi sağ altta göremiyor. Her konum için baştan öğrenmesi gerekiyor.\n\nDerin öğrenmeden önceki çözüm, bu yapıyı elle kodlamaktı: renk histogramları, yönlü gradient histogramları, görsel kelime torbaları. İnsan tasarımı feature'ların üstüne basit bir classifier konuyordu. Zor iş modelde değil, feature mühendisliğindeydi."
+          "heading": "1. Why a fully connected network collapses on images",
+          "text": "There are two separate reasons, and the second one is deeper.\n\nThe first is counting. A 224x224x3 image means over 150 thousand inputs. A single fully connected layer of a thousand neurons attached to it carries 150 million weights — for one layer. Training that with the data you have produces nothing but memorisation.\n\nThe second, and the essential one: a fully connected layer has no notion of spatial structure. The moment you flatten the image into a plain vector, the information about which pixel sits next to which is erased. For the model, pixel 37 and pixel 38 are as unrelated as pixel 37 and pixel 900.\n\nThe consequence: a network that learns to see a cat in the top left corner cannot see the same cat in the bottom right. It has to learn it from scratch for every location.\n\nBefore deep learning the solution was to hand-code this structure: colour histograms, histograms of oriented gradients, bags of visual words. A simple classifier was placed on top of human-designed features. The hard work was not in the model but in feature engineering."
         },
         {
           "type": "text",
-          "heading": "2. Görüntülerin üç özelliği",
-          "text": "CNN, doğal görüntülerin üç gözlemlenebilir özelliğini mimariye gömüyor.\n\nYerellik. Yakın pikseller birbiriyle güçlü ilişkili, uzak pikseller neredeyse bağımsız. Bir kenarı görmek için bütün görüntüye bakman gerekmiyor, küçük bir komşuluk yetiyor.\n\nTranslation equivariance. Kedi, sol üstte de sağ altta da kedidir. Bir yerde kenar bulan filtre, başka yerde de kenar bulur.\n\nHiyerarşi. Kenarlar birleşip köşeleri, köşeler birleşip parçaları, parçalar birleşip nesneleri veriyor. Bu, biyolojiden gelen bir gözlem — görsel korteksteki hücrelerin de böyle layer'lı çalıştığı 1959'da gösterilmişti.\n\nÜçünün mimarideki karşılığı doğrudan: yerellik için küçük filtreler, translation equivariance için aynı filtrenin her yerde kullanılması, hiyerarşi için layer'ları üst üste yığmak."
+          "heading": "2. Three properties of images",
+          "text": "A CNN embeds three observable properties of natural images into the architecture.\n\nLocality. Nearby pixels are strongly related to each other, distant pixels are almost independent. To see an edge you do not need to look at the whole image, a small neighbourhood suffices.\n\nTranslation equivariance. A cat is a cat in the top left as well as in the bottom right. A filter that finds an edge in one place finds an edge elsewhere too.\n\nHierarchy. Edges combine into corners, corners into parts, parts into objects. This is an observation that comes from biology — that cells in the visual cortex also work in such layers was shown in 1959.\n\nTheir counterparts in the architecture are direct: small filters for locality, using the same filter everywhere for translation equivariance, and stacking layers for hierarchy."
         },
         {
           "type": "text",
-          "heading": "3. Convolution tam olarak ne yapıyor",
-          "text": "Küçük bir filtre — tipik olarak 3x3 — görüntünün üzerinde kaydırılıyor ve her konumda bir iç çarpım alınıyor. Çıkan sayı şunu söylüyor: bu filtrenin aradığı örüntü, burada ne kadar var?\n\nSonuç bir feature map: filtrenin yanıtının spatial distribution'u. Tek bir sayı değil, bir harita — konum bilgisi korunuyor.\n\nKritik nokta weight paylaşımı. 3x3'lük bir filtrenin parametre sayısı, girdi görüntüsünün boyutundan bağımsız: dokuz sayı çarpı girdi kanal sayısı. Aynı dokuz sayı bütün konumlarda kullanılıyor.\n\nBunun iki sonucu var. Parametre sayısı çöküyor, ve translation equivariance öğrenilmesi gereken bir şey olmaktan çıkıp mimarinin garantisi haline geliyor. Fully connected ağ bunu veriden öğrenmeye çalışıyordu; CNN hiç öğrenmiyor, çünkü yapısı gereği zaten öyle.\n\nBir CNN layer'ı tek filtre değil, çok sayıda filtre taşıyor. Her biri farklı bir örüntüye uzmanlaşıyor; çıktı, kanal sayısı kadar feature map."
+          "heading": "3. What convolution actually does",
+          "text": "A small filter — typically 3x3 — is slid over the image and an inner product is taken at every position. The resulting number says: how much of the pattern this filter is looking for is present here?\n\nThe result is a feature map: the spatial distribution of the filter's response. Not a single number but a map — the position information is preserved.\n\nThe critical point is weight sharing. The number of parameters of a 3x3 filter is independent of the size of the input image: nine numbers times the number of input channels. The same nine numbers are used at every position.\n\nThis has two consequences. The parameter count collapses, and translation equivariance stops being something that must be learned and becomes a guarantee of the architecture. A fully connected network was trying to learn it from data; a CNN never learns it, because by construction it is already so.\n\nA CNN layer carries not one filter but many. Each specialises in a different pattern; the output is as many feature maps as there are channels."
         },
         {
           "type": "formula",
-          "heading": "Boyut hesabı",
-          "text": "$$o[i,j] = \\sum_m \\sum_n f[m,n] \\cdot I[i+m,\\ j+n]$$\n\nÇıktı boyutu (her spatial eksen için):\n$$H_{out} = \\left\\lfloor \\frac{H_{in} + 2p - k}{s} \\right\\rfloor + 1$$\n\n$k$ filtre boyutu, $s$ stride, $p$ padding. Boyutu korumak için 3x3 filtrede $p=1$, $s=1$."
+          "heading": "Shape arithmetic",
+          "text": "$$o[i,j] = \\sum_m \\sum_n f[m,n] \\cdot I[i+m,\\ j+n]$$\n\nOutput size (for each spatial axis):\n$$H_{out} = \\left\\lfloor \\frac{H_{in} + 2p - k}{s} \\right\\rfloor + 1$$\n\n$k$ is the filter size, $s$ the stride, $p$ the padding. To preserve the size with a 3x3 filter, $p=1$, $s=1$."
         },
         {
           "type": "text",
-          "heading": "4. Receptive field: derinlik neyi satın alıyor",
-          "text": "Tek bir 3x3 filtre girdinin sadece 3x3'lük bir parçasını görüyor. Bu çok dar.\n\nAma iki tane 3x3 layer üst üste koyduğunda, ikinci layer'ın baktığı her nokta birinci layer'ın 3x3'lük bir komşuluğunu özetliyor ve o noktaların her biri girdinin 3x3'ünü görmüştü. Sonuçta ikinci layer girdinin 5x5'ini görüyor. Üçüncüde 7x7.\n\nYani derinlik, görme alanını büyütmenin ucuz yolu. İki tane 3x3 layer, tek bir 5x5 layer ile aynı alanı kapsıyor — ama daha az parametreyle ve arada bir nonlineerlik daha var. VGG'nin \"sadece 3x3 kullan, bunun yerine derinleş\" tercihi tam olarak bu hesaba dayanıyor.\n\nStride ve pooling bu büyümeyi hızlandırıyor: spatial çözünürlüğü yarıya indirdiğinde, aynı filtre girdinin iki katı alanını kapsar hale geliyor. Tipik CNN'in \"çözünürlük düşerken kanal sayısı artar\" profili buradan çıkıyor — spatial ayrıntı azalırken semantik bilgi artıyor."
+          "heading": "4. Receptive field: what depth buys",
+          "text": "A single 3x3 filter only sees a 3x3 patch of the input. That is very narrow.\n\nBut when you stack two 3x3 layers, every point the second layer looks at summarises a 3x3 neighbourhood of the first layer, and each of those points had seen a 3x3 of the input. In effect the second layer sees 5x5 of the input. The third sees 7x7.\n\nSo depth is the cheap way of growing the field of view. Two 3x3 layers cover the same area as a single 5x5 layer — but with fewer parameters and with one more non-linearity in between. VGG's choice of \"use only 3x3 and go deeper instead\" rests exactly on this arithmetic.\n\nStride and pooling accelerate this growth: when you halve the spatial resolution, the same filter comes to cover twice the area of the input. The typical CNN profile of \"resolution falls while the channel count rises\" comes from here — spatial detail decreases while semantic information increases."
         },
         {
           "type": "text",
-          "heading": "5. Pooling: ne kazandırıyor, ne kaybettiriyor",
-          "text": "Pooling, komşu değerleri tek bir değere indiriyor — genellikle maksimumunu alarak.\n\nKazandırdığı şey küçük ötelemelere karşı duyarsızlık: kenar bir piksel sağa kaysa da maksimum aynı kalıyor. Ayrıca hesabı ucuzlatıyor ve receptive field'ı büyütüyor.\n\nKaybettirdiği şey tam konum bilgisi. Sınıflandırmada bu sorun değil, hatta istenen şey. Ama segmentasyonda her pikselin label'ını üretmen gerekiyor; orada pooling ile atılan konum bilgisini geri getirmek ayrı bir iş — segmentasyon anlatımının tamamı bu sorunun etrafında dönüyor.\n\nModern mimarilerin bir kısmı pooling'i tamamen bırakıp stride'lı convolution kullanıyor: aynı küçültmeyi öğrenilebilir bir işlemle yapmak."
+          "heading": "5. Pooling: what it gains, what it loses",
+          "text": "Pooling reduces neighbouring values to a single value — usually by taking their maximum.\n\nWhat it gains is insensitivity to small translations: even if an edge shifts one pixel to the right, the maximum stays the same. It also makes the computation cheaper and grows the receptive field.\n\nWhat it loses is exact position information. In classification this is not a problem, it is even desirable. But in segmentation you have to produce a label for every pixel; there, bringing back the position information thrown away by pooling is a job of its own — the whole segmentation guide revolves around that problem.\n\nSome modern architectures drop pooling entirely and use strided convolution instead: performing the same downsampling with a learnable operation."
         },
         {
           "type": "text",
-          "heading": "6. Mimari çizgisi",
-          "text": "1998, LeNet: ilk çalışan CNN, rakam tanıma. Fikir doğruydu ama ne yeterli veri ne yeterli hesap gücü vardı.\n\n2012, AlexNet: ImageNet'te en iyi CNN dışı yöntemin hatasını yaklaşık on puan geriye attı. Getirdikleri mimariden çok pratikti — ReLU, dropout, veri çoğaltma, ve iki GPU üzerinde training. Aradaki fark o kadar büyüktü ki tartışmayı bitirdi.\n\n2014, VGG: sadece 3x3 filtre, ama on altı-on dokuz layer. Derinliğin kendisinin işe yaradığını gösterdi.\n\n2014, GoogLeNet: farklı filtre boyutlarını paralel çalıştıran modüller, çok daha az parametreyle.\n\n2015, ResNet: residual connection'lar. Asıl kırılma bu — layer'ı atlayan kestirme yollar sayesinde yüzlerce layer eğitilebilir hale geldi. Sebebi doğrudan backprop'ta: gradient o kestirme yoldan zayıflamadan geriye akıyor.\n\n2021, ViT: görüntüyü 16x16 yamalara böl, her yamayı bir token gibi ele al, standart Transformer'a ver. Yerellik ve weight paylaşımı varsayımlarını mimariden çıkarıp veriden öğrenmeyi seçiyor — bu yüzden çok veri istiyor, ve yeterli veri varken CNN'i yakalayıp geçiyor."
+          "heading": "6. The architectural line",
+          "text": "1998, LeNet: the first working CNN, digit recognition. The idea was right but there was neither enough data nor enough compute.\n\n2012, AlexNet: pushed the error of the best non-CNN method on ImageNet back by about ten points. What it brought was practical rather than architectural — ReLU, dropout, data augmentation, and training on two GPUs. The gap was so large that it ended the debate.\n\n2014, VGG: only 3x3 filters, but sixteen to nineteen layers. It showed that depth itself works.\n\n2014, GoogLeNet: modules running different filter sizes in parallel, with far fewer parameters.\n\n2015, ResNet: residual connections. This is the real break — thanks to shortcuts that skip over a layer, hundreds of layers became trainable. The reason lies directly in backprop: the gradient flows backwards through that shortcut without attenuation.\n\n2021, ViT: split the image into 16x16 patches, treat every patch as a token, feed it to a standard Transformer. It removes the locality and weight sharing assumptions from the architecture and chooses to learn them from data — which is why it demands a lot of data, and why with enough data it catches up with and overtakes the CNN."
         },
         {
           "type": "text",
-          "heading": "7. Pratikte training'i ayakta tutan bileşenler",
-          "text": "Convolution tek başına yetmiyor; bir CNN'in çalışır hale gelmesi birkaç standart parçaya bağlı.\n\nNormalizasyon layer'ları aktivasyonları sabit bir bantta tutuyor, böylece daha büyük learning rate kullanılabiliyor ve training weight ilklendirmesine daha az duyarlı hale geliyor.\n\nDropout, training sırasında nöronların rastgele bir kısmını kapatarak ağın tek bir yola bağımlı kalmasını engelliyor. Convolutional kısımda daha az, fully connected kısımda daha çok kullanılıyor.\n\nWeight ilklendirmesi, sinyalin derinlikte ne sönmesine ne patlamasına izin verecek ölçekte seçiliyor — layer genişliğine bağlı bir varyans kuralı.\n\nVeri çoğaltma neredeyse bedava bir kazanç: rastgele kırpma, yatay çevirme, renk oynatma. Modelin zaten bildiği değişmezlikleri veriye enjekte ediyor.\n\nTransfer öğrenme ise pratikte en çok kullanılan şey: büyük bir veri kümesinde eğitilmiş ağın erken layer'ları genel kenar ve doku detektörleri olduğu için yeniden kullanılabiliyor; yalnızca son kısmı yeni göreve göre eğitiliyor. Küçük veri kümesinde sıfırdan eğitmenin neredeyse hiçbir zaman doğru olmamasının sebebi bu."
+          "heading": "7. The components that keep training alive in practice",
+          "text": "Convolution alone is not enough; getting a CNN to actually work depends on several standard pieces.\n\nNormalization layers keep the activations within a fixed band, so a larger learning rate becomes usable and training becomes less sensitive to weight initialisation.\n\nDropout switches off a random subset of neurons during training and prevents the network from depending on a single path. It is used less in the convolutional part and more in the fully connected part.\n\nWeight initialisation is chosen at a scale that lets the signal neither vanish nor explode with depth — a variance rule that depends on the layer width.\n\nData augmentation is an almost free gain: random cropping, horizontal flipping, colour jittering. It injects into the data the invariances the model already knows about.\n\nTransfer learning is what is used most in practice: because the early layers of a network trained on a large dataset are generic edge and texture detectors, they can be reused; only the last part is trained for the new task. This is why training from scratch on a small dataset is almost never the right thing to do."
         },
         {
           "type": "insight",
-          "heading": "Geriye ne kalsın",
-          "text": "Fully connected ağ görüntüde hem parametre sayısı yüzünden hem de spatial yapıyı sildiği için çöküyor. CNN üç varsayımı mimariye gömüyor: yerellik (küçük filtre), translation equivariance (weight paylaşımı), hiyerarşi (derinlik). Weight paylaşımı sayesinde parametre sayısı görüntü boyutundan bağımsız. Receptive field derinlikle büyüyor, bu yüzden iki 3x3 bir 5x5'ten iyi. Pooling öteleme duyarsızlığı kazandırır, konum bilgisi kaybettirir — segmentasyonun bütün derdi o kaybı geri almak. ResNet'in residual connection'ları derinliği mümkün kıldı; ViT ise varsayımları çıkarıp yerine veri koydu."
+          "heading": "What should stay with you",
+          "text": "A fully connected network collapses on images both because of the parameter count and because it erases spatial structure. A CNN embeds three assumptions into the architecture: locality (small filters), translation equivariance (weight sharing), and hierarchy (depth). Thanks to weight sharing the parameter count is independent of image size. The receptive field grows with depth, which is why two 3x3 layers beat one 5x5. Pooling gains translation insensitivity and loses position information — the entire concern of segmentation is to win that loss back. ResNet's residual connections made depth possible; ViT removed the assumptions and put data in their place."
         },
         {
           "type": "note",
-          "heading": "Nereye bakılır",
-          "text": "Motivasyon, convolution ve pooling mekaniği ch09'da; el yapımı feature'larden CNN'e geçiş ve mimari tarihi cs04'te; normalizasyon, dropout, ilklendirme, veri çoğaltma ve transfer öğrenme cs05'te; PyTorch uygulaması ve boyut akışı lab04'te. Devamı: segmentasyon anlatımı (konum bilgisini geri almak) ve attention anlatımı (ViT'in dayandığı mekanizma)."
+          "heading": "Where to look",
+          "text": "The motivation and the mechanics of convolution and pooling are in ch09; the transition from hand-crafted features to CNNs and the architectural history are in cs04; normalization, dropout, initialisation, data augmentation and transfer learning are in cs05; the PyTorch implementation and the shape flow are in lab04. What follows: the segmentation guide (winning back position information) and the attention guide (the mechanism ViT rests on)."
         }
       ]
     },
