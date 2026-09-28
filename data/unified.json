@@ -27277,6 +27277,7 @@
       "context": "Autoencoder · VAE · VQ · CS231n 12 · ML-OVERALL 19 — tek oturumda okunmak için",
       "chapters": [
         "cs12",
+        "cs13",
         "mlo19"
       ],
       "summary": "Sıradan autoencoder'ın ne yaptığı ve neden generative model olmadığından başlayıp, VAE'nin her parçasının hangi zorunluluktan doğduğuna, ELBO'nun iki teriminin neden zıt yönde çektiğine, reparameterization trick'e, VAE'nin neden bulanık ürettiğine ve son olarak VQ'ya — latent'i düzenlemenin üçüncü yoluna — kadar tek akış.",
@@ -27293,8 +27294,18 @@
         },
         {
           "type": "text",
+          "heading": "Pixel space neden yetmiyor",
+          "text": "Üretimi doğrudan piksellerin üzerinde yapmak en doğal seçenek gibi görünüyor, ama üç yerde tıkanıyor.\n\nBoyut. $256 \\times 256$ renkli bir görüntü 196.608 sayı demek. Modelin kapasitesinin büyük kısmı bu kadar boyutu idare etmeye gidiyor ve maliyet çözünürlükle karesel büyüyor.\n\nKapasitenin nereye harcandığı. Piksel düzeyindeki ayrıntılar, yani tek tek doku ve noise desenleri, görüntünün anlamına neredeyse hiç katkı vermiyor. Pikselde çalışan bir model kapasitesinin çoğunu insanın fark bile etmediği ayrıntılara ayırıyor.\n\nMesafenin anlamsızlığı. Bir görüntüyü bir piksel sağa kaydır: insana göre aynı görüntü, piksel uzayında ise çok uzak iki nokta. Yani piksel uzayındaki yakınlık, algısal yakınlıkla örtüşmüyor.\n\nİstenen şey şu: daha küçük boyutlu ve içinde mesafenin anlam taşıdığı bir uzay. Bu metnin geri kalanı o uzayı kurma denemelerinin sırası."
+        },
+        {
+          "type": "text",
+          "heading": "Üç ayrı benzerlik",
+          "text": "Bu tartışmada üç benzerlik kavramı birbirine karışıyor, ayırmakta fayda var.\n\nYapısal benzerlik: piksel değerleri ne kadar örtüşüyor. Kaydırma, döndürme ya da küçük bir renk kayması bunu hemen bozuyor.\n\nAlgısal benzerlik: insan gözüne ne kadar benzer görünüyor. Hafif bulanıklık algısal olarak küçük bir fark, yapısal olarak büyük.\n\nAnlamsal benzerlik: aynı şeyi mi gösteriyorlar. Farklı açıdan çekilmiş iki köpek fotoğrafı anlamsal olarak yakın, yapısal olarak tamamen farklı.\n\nİyi bir latent uzayın hedefi anlamsal ve algısal yakınlığı korumak; yapısal yakınlığı korumak zorunda değil."
+        },
+        {
+          "type": "text",
           "heading": "2. Autoencoder nedir, ne işe yarar",
-          "text": "Autoencoder iki parçadan oluşuyor. Encoder görüntüyü dar bir latent koda indiriyor, decoder o koddan görüntüyü geri kuruyor. Loss da basit: çıkan görüntü ile girene ne kadar benziyor. Label gerekmiyor — denetim sinyali girdinin kendisi, o yüzden denetimsiz.\n\nDarlık burada zorlayıcı unsur. Latent geniş olsaydı model hiçbir şey öğrenmez, girdiyi olduğu gibi kopyalardı. Dar olduğu için neyi atıp neyi tutacağına karar vermek zorunda kalıyor — ve tutmayı seçtiği şey veri kümesindeki gerçek yapı oluyor.\n\nÜretim dışında gerçekten işe yaradığı yerler var:\n\nLabel'sız feature öğrenme. Training bitince decoder'ı atıp encoder'ı saklıyorsun; üstüne küçük bir classifier takıp çok daha az label'la eğitebiliyorsun. Modern kendinden denetimli yöntemlerin atası bu.\n\nNoise temizleme. Girdiye kasten noise ekleyip temiz halini hedef olarak verirsen, ağ temizlemeyi öğreniyor.\n\nAnomali tespiti. Normal veriyle eğitilmiş bir autoencoder, normal örnekleri iyi kurar. Aykırı bir örnek geldiğinde reconstruction hatası yükselir — o hatanın kendisi anomali skoru olur.\n\nBoyut indirgeme. Doğrusal bir autoencoder, kabaca PCA'nın yaptığı işi yapıyor; nonlineerlik eklenince PCA'nın göremediği eğri yapıları da yakalayabiliyor."
+          "text": "Autoencoder iki parçadan oluşuyor. Encoder görüntüyü dar bir latent koda indiriyor, decoder o koddan görüntüyü geri kuruyor. Loss da basit: çıkan görüntü ile girene ne kadar benziyor. Label gerekmiyor — denetim sinyali girdinin kendisi, o yüzden denetimsiz.\n\nDarlık burada zorlayıcı unsur. Latent geniş olsaydı model hiçbir şey öğrenmez, girdiyi olduğu gibi kopyalardı. Dar olduğu için neyi atıp neyi tutacağına karar vermek zorunda kalıyor — ve tutmayı seçtiği şey veri kümesindeki gerçek yapı oluyor.\n\nÜretim dışında gerçekten işe yaradığı yerler var:\n\nLabel'sız feature öğrenme. Training bitince decoder'ı atıp encoder'ı saklıyorsun; üstüne küçük bir classifier takıp çok daha az label'la eğitebiliyorsun. Modern kendinden denetimli yöntemlerin atası bu.\n\nNoise temizleme. Girdiye kasten noise ekleyip temiz halini hedef olarak verirsen, network temizlemeyi öğreniyor.\n\nAnomali tespiti. Normal veriyle eğitilmiş bir autoencoder, normal örnekleri iyi kurar. Aykırı bir örnek geldiğinde reconstruction hatası yükselir — o hatanın kendisi anomali skoru olur.\n\nBoyut indirgeme. Doğrusal bir autoencoder, kabaca PCA'nın yaptığı işi yapıyor; nonlineerlik eklenince PCA'nın göremediği eğri yapıları da yakalayabiliyor."
         },
         {
           "type": "text",
@@ -27319,17 +27330,17 @@
         {
           "type": "text",
           "heading": "6. İntegral neden hesaplanamıyor",
-          "text": "Bu integral kapalı formda yok, ve sayısal olarak da alınamıyor.\n\nSezgisi şu: decoder bir sinir ağı, ve ona hangi z'yi verirsen bir şey üretiyor. Hangi z'lerin bu görüntüyü üretmeye aday olduğunu önceden bilmiyorsun — z sürekli ve yüksek boyutlu, sınır yok. Hepsini toplaman gerekiyor ama toplanacak kümenin kendisi belirsiz.\n\nBayes kuralıyla dolaşmayı dene: marjinal, pay bölü payda biçiminde yazılabiliyor. Pay hesaplanabilir — decoder ve prior elinde. Ama paydada gerçek posterior var, yani \"bu görüntüyü hangi z üretmiş olabilir\" distribution'u, ve onu hesaplamak için yine aynı integrale ihtiyacın var.\n\nYol kapalı. İşte VAE'nin karakteristik hamlesi tam burada geliyor."
+          "text": "Bu integral kapalı formda yok, ve sayısal olarak da alınamıyor.\n\nSezgisi şu: decoder bir sinir network'ü, ve ona hangi z'yi verirsen bir şey üretiyor. Hangi z'lerin bu görüntüyü üretmeye aday olduğunu önceden bilmiyorsun — z sürekli ve yüksek boyutlu, sınır yok. Hepsini toplaman gerekiyor ama toplanacak kümenin kendisi belirsiz.\n\nBayes kuralıyla dolaşmayı dene: marjinal, pay bölü payda biçiminde yazılabiliyor. Pay hesaplanabilir — decoder ve prior elinde. Ama paydada gerçek posterior var, yani \"bu görüntüyü hangi z üretmiş olabilir\" distribution'u, ve onu hesaplamak için yine aynı integrale ihtiyacın var.\n\nYol kapalı. İşte VAE'nin karakteristik hamlesi tam burada geliyor."
         },
         {
           "type": "text",
           "heading": "7. Encoder denklemden türetilmedi, dışarıdan eklendi",
-          "text": "Bu ayrımı kaçırmak çok kolay ve kaçırınca VAE hiç oturmuyor.\n\nGerçek posterior, denklemin içinde olması gereken matematiksel parça. Denklemi açınca karşına çıkıyor, ve hesaplanamıyor.\n\nEncoder ise bir karar: madem denklemden türetemiyorum, dışarıdan ayrı bir ağ koyayım, o yaklaşsın. Türetilmiş bir şey değil, eklenmiş bir şey. Yaptığı iş tek bir ileri geçiş — x giriyor, z'nin distribution'unun parametreleri çıkıyor. İntegral yok.\n\nBu, VAE'deki iki ağın rollerinin neden asimetrik olduğunu da açıklıyor. Decoder modelin kendisi; encoder training'i mümkün kılmak için kurulmuş bir yardımcı."
+          "text": "Bu ayrımı kaçırmak çok kolay ve kaçırınca VAE hiç oturmuyor.\n\nGerçek posterior, denklemin içinde olması gereken matematiksel parça. Denklemi açınca karşına çıkıyor, ve hesaplanamıyor.\n\nEncoder ise bir karar: madem denklemden türetemiyorum, dışarıdan ayrı bir network koyayım, o yaklaşsın. Türetilmiş bir şey değil, eklenmiş bir şey. Yaptığı iş tek bir ileri geçiş — x giriyor, z'nin distribution'unun parametreleri çıkıyor. İntegral yok.\n\nBu, VAE'deki iki network'ün rollerinin neden asimetrik olduğunu da açıklıyor. Decoder modelin kendisi; encoder training'i mümkün kılmak için kurulmuş bir yardımcı."
         },
         {
           "type": "text",
-          "heading": "8. Ağlar olasılık üretemez, parametre üretir",
-          "text": "Bir sinir ağına \"bana bir distribution ver\" diyemezsin. Verebileceği şey sayılar.\n\nO yüzden her iki ağ da distribution'ların parametrelerini üretiyor. Encoder, z için bir ortalama ve bir standart sapma çıkarıyor — yani \"bu görüntünün z'si şurada, şu kadar belirsizlikle\". Decoder, x için bir ortalama çıkarıyor.\n\nBu küçük detay ileride iki şeyi birden açıklayacak: reconstruction teriminin neden kareler toplamına indiğini, ve reparameterization trick'e neden ihtiyaç duyulduğunu."
+          "heading": "8. Network'ler olasılık üretemez, parametre üretir",
+          "text": "Bir sinir ağına \"bana bir distribution ver\" diyemezsin. Verebileceği şey sayılar.\n\nO yüzden her iki network da distribution'ların parametrelerini üretiyor. Encoder, z için bir ortalama ve bir standart sapma çıkarıyor — yani \"bu görüntünün z'si şurada, şu kadar belirsizlikle\". Decoder, x için bir ortalama çıkarıyor.\n\nBu küçük detay ileride iki şeyi birden açıklayacak: reconstruction teriminin neden kareler toplamına indiğini, ve reparameterization trick'e neden ihtiyaç duyulduğunu."
         },
         {
           "type": "text",
@@ -27375,6 +27386,16 @@
           "type": "text",
           "heading": "15. Neden bulanık üretiyor",
           "text": "VAE'nin bilinen kusuru bulanıklık, ve sebebi mimari değil loss fonksiyonu.\n\nDecoder Gaussian varsayıldığı için loss karesel. Karesel hata, belirsizlik karşısında ortalamayı seçer. Model bir kenarın tam olarak nerede olduğundan emin değilse iki olasılığın ortasını basar — ve iki keskin kenarın ortalaması bulanık bir kenardır.\n\nGAN bu sorunu loss fonksiyonunu değiştirerek çözüyor: bir discriminator, ortalama görüntüleri sahte diye yakalıyor, dolayısıyla ortalama almak artık ödüllendirilmiyor. Diffusion ise sorunu başka yoldan çözüyor — tek adımda tüm belirsizliği çözmek zorunda kalmıyor, belirsizliği bin küçük adıma yayıyor.\n\nModern latent diffusion mimarileri ikisini birden kullanıyor: sıkıştırma için VAE, keskin çözücü için GAN discriminator'ü, üretim için diffusion."
+        },
+        {
+          "type": "text",
+          "heading": "Bulanıklığı yenmek: perceptual loss",
+          "text": "VAE'nin reconstruction terimi MSE'ye iniyordu, ve MSE algısal değil yapısal bir ölçü. Belirsizlik olduğunda ortalama alıyor, ortalama da bulanıklık üretiyor.\n\nPerceptual loss bu ölçüyü değiştiriyor. Orijinal ve yeniden kurulan görüntüyü önceden eğitilmiş bir görüntü network'ünden geçiriyorsun, ve pikselleri değil ara katman aktivasyonlarını karşılaştırıyorsun:\n\n$$L_{\\text{perc}} = \\sum_{l} \\bigl\\| \\phi_l(x) - \\phi_l(\\hat{x}) \\bigr\\|^2$$\n\nBurada $\\phi_l$ o network'ün $l$ katmanındaki çıktısı. Bu aktivasyonlar kenar, doku ve parça gibi yapıları temsil ettiği için karşılaştırma algısal yakınlığa çok daha yakın oluyor. LPIPS bu fikrin standart hale gelmiş ölçüsü.\n\nSonuç: bir piksellik kaymalar cezalandırılmıyor ama doku kaybı cezalandırılıyor. Yani tam olarak bulanıklığın cezalandırılması gereken yer."
+        },
+        {
+          "type": "text",
+          "heading": "Gerçekçilik: adversarial loss",
+          "text": "Perceptual loss bulanıklığı azaltıyor ama tek başına yetmiyor: çıktı hâlâ fazla düzgün kalıyor, gerçek fotoğrafların yüksek frekanslı ayrıntısı eksik oluyor.\n\nBuraya bir discriminator ekleniyor. Görevi decoder'ın ürettiği görüntü ile gerçek görüntüyü ayırt etmek; decoder da onu kandırmaya çalışıyor. Ayrı bir GAN değil, mevcut loss'a eklenen bir terim.\n\nBöylece dört terim birlikte çalışıyor:\n\n$$L = L_{\\text{rec}} + \\lambda_{\\text{perc}} L_{\\text{perc}} + \\lambda_{\\text{adv}} L_{\\text{adv}} + \\beta \\cdot \\mathrm{KL}$$\n\nHer birinin işi farklı. Reconstruction içeriği yerinde tutuyor, perceptual algısal kaliteyi getiriyor, adversarial gerçekçi doku üretiyor, KL ise latent uzayı düzenli tutuyor. KL'nin ağırlığı bilinçli olarak çok küçük seçiliyor; amaç buradan örnek çekmek değil, yalnızca latent uzayın dağılmasını engellemek.\n\nLatent diffusion'da kullanılan VAE tam olarak bu: klasik VAE değil, algısal ve adversarial terimlerle rafine edilmiş hali."
         },
         {
           "type": "text",
@@ -27434,6 +27455,17 @@
               "latent diffusion, token tabanlı üretim"
             ]
           ]
+        },
+        {
+          "type": "text",
+          "heading": "Diffusion'ın bu uzayda çalışması",
+          "text": "Sıra ikinci aşamada: üretim latent uzayda yapılıyor.\n\nEğitimde encoder görüntüleri latent'e çeviriyor ve diffusion bu latent'ler üzerinde eğitiliyor. Encoder bu aşamada donuk, yani weight'leri güncellenmiyor; görevi yalnızca veri hazırlamak.\n\nÜretimde encoder hiç kullanılmıyor. Rastgele bir latent'ten başlıyorsun, diffusion onu temiz bir latent'e çeviriyor, decoder da görüntüye açıyor.\n\nKazanç doğrudan boyuttan geliyor: $256 \\times 256 \\times 3$ yerine $32 \\times 32 \\times 4$ üzerinde çalışmak yaklaşık 48 kat daha az boyut demek. Stable Diffusion ve FLUX gibi modellerin mimarisi bu iki aşamalı kurulum.\n\nBedeli de var: decoder'ın geri açamadığı hiçbir ayrıntı üretilemiyor. Latent uzay ne kadar agresif sıkıştırılırsa kalite tavanı o kadar aşağı iniyor. Sıkıştırma oranı bu yüzden bir tasarım kararı."
+        },
+        {
+          "type": "svg",
+          "heading": "İki aşamalı kurulum",
+          "svg": "<svg width=\"620\" height=\"180\" viewBox=\"0 0 620 180\" role=\"img\" aria-label=\"latent diffusion boru hatti\"><defs><marker id=\"ah3\" viewBox=\"0 0 10 10\" refX=\"9\" refY=\"5\" markerWidth=\"5\" markerHeight=\"5\" orient=\"auto\"><path d=\"M0,0 L10,5 L0,10 z\" class=\"ahf\"/></marker></defs><rect class=\"q-line\" x=\"14\" y=\"54\" width=\"78\" height=\"34\" rx=\"3\" stroke-width=\"1.4\" fill=\"none\"/><text x=\"53.0\" y=\"72.0\" text-anchor=\"middle\">görüntü</text><text x=\"53.0\" y=\"104\" text-anchor=\"middle\">256×256×3</text><line class=\"p-curve\" x1=\"96\" y1=\"71.0\" x2=\"124\" y2=\"71.0\" stroke-width=\"1.6\" marker-end=\"url(#ah3)\"/><rect class=\"q-line\" x=\"126\" y=\"54\" width=\"66\" height=\"34\" rx=\"3\" stroke-width=\"1.4\" fill=\"none\"/><text x=\"159.0\" y=\"72.0\" text-anchor=\"middle\">encoder</text><text x=\"159.0\" y=\"104\" text-anchor=\"middle\">eğitimde</text><line class=\"p-curve\" x1=\"196\" y1=\"71.0\" x2=\"224\" y2=\"71.0\" stroke-width=\"1.6\" marker-end=\"url(#ah3)\"/><rect class=\"q-line\" x=\"226\" y=\"54\" width=\"78\" height=\"34\" rx=\"3\" stroke-width=\"1.4\" fill=\"none\"/><text x=\"265.0\" y=\"72.0\" text-anchor=\"middle\">latent</text><text x=\"265.0\" y=\"104\" text-anchor=\"middle\">32×32×4</text><line class=\"p-curve\" x1=\"308\" y1=\"71.0\" x2=\"336\" y2=\"71.0\" stroke-width=\"1.6\" marker-end=\"url(#ah3)\"/><rect class=\"q-line\" x=\"338\" y=\"54\" width=\"96\" height=\"34\" rx=\"3\" stroke-width=\"1.4\" fill=\"none\"/><text x=\"386.0\" y=\"72.0\" text-anchor=\"middle\">diffusion</text><text x=\"386.0\" y=\"104\" text-anchor=\"middle\">burada çalışıyor</text><line class=\"p-curve\" x1=\"438\" y1=\"71.0\" x2=\"466\" y2=\"71.0\" stroke-width=\"1.6\" marker-end=\"url(#ah3)\"/><rect class=\"q-line\" x=\"468\" y=\"54\" width=\"66\" height=\"34\" rx=\"3\" stroke-width=\"1.4\" fill=\"none\"/><text x=\"501.0\" y=\"72.0\" text-anchor=\"middle\">decoder</text><text x=\"501.0\" y=\"104\" text-anchor=\"middle\">üretimde</text><line class=\"p-curve\" x1=\"538\" y1=\"71.0\" x2=\"566\" y2=\"71.0\" stroke-width=\"1.6\" marker-end=\"url(#ah3)\"/><text x=\"596\" y=\"73\" text-anchor=\"middle\">görüntü</text><text x=\"14\" y=\"140\">boyut: 196.608 → 4.096, yaklaşık 48 kat azalma</text><text x=\"14\" y=\"158\">encoder diffusion eğitimi boyunca donuk; üretimde yalnızca decoder çalışıyor</text></svg>",
+          "caption": "Encoder yalnızca eğitimde, decoder yalnızca üretimde çalışıyor. Diffusion'ın gördüğü tek şey ortadaki latent."
         },
         {
           "type": "text",
