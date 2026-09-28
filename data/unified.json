@@ -28159,157 +28159,157 @@
       ]
     },
     "flow": {
-      "title": "Flow Matching ve Rectified Flow — Baştan Sona Konu Anlatımı",
+      "title": "Flow Matching and Rectified Flow — A Complete Walkthrough",
       "cat": "Konu Anlatımı",
-      "context": "Diffusion'ın devamı · CS231n 13 — tek oturumda okunmak için",
+      "context": "The continuation of diffusion · CS231n 13 · CME 296 Lecture 3 — to be read in one sitting",
       "chapters": [
         "ida11",
         "cs13",
         "mlo21"
       ],
-      "summary": "Noise ile veri arasına düz çizgi çekip velocity öğrenmek: flow'un ne olduğu, hedef bilinmezken neden yine de doğru haritanın öğrenildiği, yolların neden büküldüğü ve reflow'un onları nasıl düzelttiği, flow matching ile rectified flow'un farkı, DDPM ile aynı aileden oluşu, SD3/FLUX tarifi ve iki görüntü arasında transfer.",
+      "summary": "Drawing a straight line between noise and data and learning a velocity: what a flow is, why the correct map is learned even though the target is unknown, why the paths bend and how reflow straightens them, the difference between flow matching and rectified flow, its membership of the same family as DDPM, the SD3/FLUX recipe, and transfer between two images.",
       "sections": [
         {
           "type": "text",
-          "heading": "Bu metin ne için",
-          "text": "DDPM anlatımının devamı. CS231n rectified flow'u tek bir kartta, training ve sampling koduyla veriyor; kod on satır ama neden çalıştığı orada yok. Bu metin o boşluğu kapatıyor: flow nedir, hedef velocity neden bilinmiyor ve yine de nasıl öğreniliyor, rectified flow ile flow matching aynı şey mi, DDPM'le ilişkisi ne, ve bugünkü büyük modellerin (SD3, FLUX) tarifi neden bu.\n\nNotasyon CS231n'inkiyle aynı: $t=0$ veri, $t=1$ noise. Lipman'ın flow matching paperı tam tersini kullanıyor; o fark aşağıda ayrıca geçiyor, çünkü paper okurken işaretleri karıştırmanın en kolay yolu bu."
+          "heading": "What this text is for",
+          "text": "The continuation of the DDPM walkthrough. CS231n gives rectified flow in a single card with training and sampling code; the code is ten lines but why it works is not there. This text fills that gap: what a flow is, why the target velocity is unknown and yet learnable, whether rectified flow and flow matching are the same thing, what its relation to DDPM is, and why the recipe of today's large models (SD3, FLUX) is this.\n\nThe notation is the same as CS231n's: $t=0$ data, $t=1$ noise. Lipman's flow matching paper uses exactly the opposite; that difference is treated separately below, because it is the easiest way to confuse signs while reading papers."
         },
         {
           "type": "text",
-          "heading": "1. DDPM'den geriye ne rahatsız ediyordu",
-          "text": "DDPM çalışıyor ama üç yerde ağır. Birincisi türetme: forward process, variance schedule, ELBO, KL'nin MSE'ye çökmesi — sonuçtaki loss basit ama oraya gelen yol uzun. İkincisi adım sayısı: sampling 1000 adım. Üçüncüsü schedule: $\\beta_t$ elle seçilen bir tasarım kararı, ve kaliteyi ciddi etkiliyor.\n\nDDIM bir ipucu vermişti. Aynı eğitilmiş ağla, rastgelelik tamamen kaldırılınca ($\\eta=0$) sampling deterministik bir yol izliyor ve 50 adıma iniyor. Yani üretim aslında noise'dan veriye giden deterministik bir yolculuk olarak da yazılabiliyor.\n\nBuradan doğal soru çıkıyor: madem sonunda deterministik bir yol izliyoruz, o yolu baştan doğrudan öğrenemez miyiz — ELBO'suz, schedule'sız?"
+          "heading": "1. What was still uncomfortable about DDPM",
+          "text": "DDPM works but is heavy in three places. First the derivation: the forward process, the variance schedule, the ELBO, the collapse of the KL into MSE — the resulting loss is simple but the road to it is long. Second the number of steps: sampling takes 1000 steps. Third the schedule: $\\beta_t$ is a design decision chosen by hand, and it affects quality seriously.\n\nDDIM had given a hint. With the same trained network, when the randomness is removed entirely ($\\eta=0$) sampling follows a deterministic path and comes down to 50 steps. That is, generation can in fact also be written as a deterministic journey from noise to data.\n\nA natural question follows: if we end up following a deterministic path anyway, could we not learn that path directly from the start — without the ELBO, without the schedule?"
         },
         {
           "type": "text",
-          "heading": "2. Tek cümlelik fikir",
-          "text": "Her noktada \"buradan hangi yöne gitmeliyim\" diyen bir velocity field öğren; üretim, noise'dan başlayıp bu alanı takip etmek.\n\nRüzgâr haritası düşün. Haritanın her noktasında bir ok var. Bir tüyü rastgele bir yere bırakıyorsun, tüy okları takip ediyor ve bir yere varıyor. Oklar doğru çizildiyse, rastgele bırakılan tüyler vardıklarında veri distribution'unu oluşturuyor. Öğrenilen şey tüylerin kendisi değil, harita."
+          "heading": "2. The one-sentence idea",
+          "text": "Learn a velocity field that at every point says \\\"which way should I go from here\\\"; generation is starting from noise and following that field.\n\nThink of a wind map. There is an arrow at every point of the map. You drop a feather at a random place, the feather follows the arrows and arrives somewhere. If the arrows were drawn correctly, the feathers dropped at random form the data distribution when they arrive. What is learned is not the feathers but the map."
         },
         {
           "type": "text",
-          "heading": "3. Flow: bir ODE",
-          "text": "Tüyün hareketi bir diferansiyel denklem: $\\frac{dx}{dt} = v(x, t)$. $x$ tüyün konumu (bir görüntü), $v$ o konumda ve o anda velocity. Denklemi $t=1$'den $t=0$'a çözmek, noise'u görüntüye taşımak demek.\n\nBu kurulumun üç parçası var ve üçü de ayrı birer terim: parçacığın izlediği yol, bütün yolların haritası, ve bu yolların taşıdığı distribution. Sıradaki bölüm bu terimleri ayırıyor."
+          "heading": "3. A flow: an ODE",
+          "text": "The motion of the feather is a differential equation: $\\frac{dx}{dt} = v(x, t)$. $x$ is the position of the feather (an image), $v$ the velocity at that position and at that moment. Solving the equation from $t=1$ to $t=0$ means transporting noise into an image.\n\nThis setup has three parts and all three are separate terms: the path a particle follows, the map of all the paths, and the distribution those paths carry. The next section separates these terms."
         },
         {
           "type": "text",
-          "heading": "4. Dört tanım: trajectory, flow, probability path, velocity field",
-          "text": "Bu konunun dili dört terimden oluşuyor ve ikisi kolayca karışıyor.\n\nTrajectory, tek bir parçacığın izlediği yol: $t \\mapsto x_t$. Bir başlangıç noktası seçtiğinde ortaya çıkan tek bir eğri.\n\nFlow, bütün başlangıç noktaları için bu eğrilerin toplamı: $\\psi_t(x_0)$. Yani \"nereden başlarsan başla, $t$ anında neredesin\" kuralı. Trajectory tek bir kayık, flow bütün kayıkların haritası.\n\nProbability path, distribution'ın zaman içindeki yolu: $p_t$. Bir uçta noise, diğer uçta veri; aradakiler geçiş distribution'ları.\n\nVelocity field, $u_t(x)$: her konuma ve her ana bir hız atayan alan. Trajectory'leri üreten şey bu, probability path da onun sonucu.\n\nKonvansiyon uyarısı: hangi ucun noise olduğu kaynağa göre değişiyor. Lipman'ın flow matching paperında ve CME 296'da $t=0$ noise, $t=1$ veri; CS231n ve rectified flow paperında tersi. İki kaynakta işaretlerin ters görünmesinin sebebi çoğu zaman gerçek bir fark değil, bu konvansiyon farkı."
+          "heading": "4. Four definitions: trajectory, flow, probability path, velocity field",
+          "text": "The language of this topic consists of four terms and two of them are easily confused.\n\nThe trajectory is the path a single particle follows: $t \\mapsto x_t$. A single curve that appears once you choose a starting point.\n\nThe flow is the collection of these curves for all starting points: $\\psi_t(x_0)$. That is, the rule \\\"wherever you start, where are you at time $t$\\\". The trajectory is a single boat, the flow the map of all boats.\n\nThe probability path is the path of the distribution through time: $p_t$. Noise at one end, data at the other; the ones in between are transitional distributions.\n\nThe velocity field, $u_t(x)$, is the field assigning a velocity to every position and every moment. This is what produces the trajectories, and the probability path is its consequence.\n\nA convention warning: which end is noise varies by source. In Lipman's flow matching paper and in CME 296, $t=0$ is noise and $t=1$ data; in CS231n and the rectified flow paper it is the reverse. When signs appear reversed between two sources it is usually not a real difference but this difference of convention."
         },
         {
           "type": "text",
-          "heading": "5. Velocity ile score farkı",
-          "text": "İkisi de uzayın her noktasına bir vektör atıyor, ama farklı soruları cevaplıyorlar.\n\nScore, $\\nabla_x \\log p_t(x)$: bu noktadan hangi yöne gidilirse density artar. Tek bir anın fotoğrafına bakıyor, zamanla ilgisi yok; yalnızca o anki distribution'ın şeklini tarif ediyor.\n\nVelocity, $u_t(x)$: bu noktadaki parçacık şu anda hangi yöne, ne hızla hareket ediyor. Zaman içinde bir taşıma tarif ediyor.\n\nBağlantı diffusion'da kuruluyor: probability flow ODE'nin sağ tarafı, score'dan hesaplanmış bir velocity. Yani score bir velocity üretebiliyor ama kendisi velocity değil. Flow matching bu ara adımı atlayıp doğrudan velocity öğreniyor."
+          "heading": "5. The difference between velocity and score",
+          "text": "Both assign a vector to every point in space, but they answer different questions.\n\nThe score, $\\nabla_x \\log p_t(x)$: from this point, in which direction does the density increase. It looks at a photograph of a single moment and has nothing to do with time; it only describes the shape of the distribution at that moment.\n\nThe velocity, $u_t(x)$: in which direction and at what speed is the particle at this point moving right now. It describes a transport through time.\n\nThe connection is made in diffusion: the right-hand side of the probability flow ODE is a velocity computed from the score. So the score can produce a velocity but is not itself a velocity. Flow matching skips this intermediate step and learns the velocity directly."
         },
         {
           "type": "text",
-          "heading": "6. Tarihçe: normalizing flow'dan flow matching'e",
-          "text": "Bu fikir üç aşamada olgunlaştı, ve her aşama bir öncekinin darboğazını kaldırdı.\n\nNormalizing flows (2015 civarı). Basit bir distribution alıp tersinir dönüşümlerle karmaşık hale getiriyorsun. Likelihood hesaplanabiliyor ama bedeli ağır: her layer'ın Jacobian determinantını hesaplaman gerekiyor, bu da mimariyi ciddi biçimde kısıtlıyor (tersinir olmak zorunda, determinant ucuz olmalı).\n\nContinuous normalizing flows (Neural ODE, 2018). Ayrık layer'lar yerine sürekli bir ODE. Jacobian determinantı yerine divergence geliyor ve likelihood şöyle akıyor:\n\n$$\\frac{d \\log p_t(x)}{dt} = -\\operatorname{div} u_t(x)$$\n\nBu formül continuity equation'ın parçacık boyunca yazılmış hali. Mimari kısıtı kalkıyor, ama yeni bir sorun var: training için ODE'yi baştan sona simüle etmen gerekiyor, her adımda network çağrısı. Büyük görüntülerde pratik değil.\n\nFlow matching (2022). Likelihood'u hiç hesaplamıyorsun. Bunun yerine hedef velocity'yi doğrudan regression ile öğreniyorsun, ve hedefi tek bir veri-noise çiftine koşullayarak elde ediyorsun. ODE simülasyonu training'den tamamen çıkıyor. \"Simulation-free\" denen şey bu."
+          "heading": "6. A short history: from normalizing flows to flow matching",
+          "text": "This idea matured in three stages, and each stage removed the bottleneck of the previous one.\n\nNormalizing flows (around 2015). You take a simple distribution and make it complex with invertible transformations. The likelihood is computable but the price is heavy: you have to compute the Jacobian determinant of every layer, which constrains the architecture seriously (it has to be invertible and the determinant has to be cheap).\n\nContinuous normalizing flows (Neural ODE, 2018). A continuous ODE instead of discrete layers. The divergence takes the place of the Jacobian determinant and the likelihood flows like this:\n\n$$\\frac{d \\log p_t(x)}{dt} = -\\operatorname{div} u_t(x)$$\n\nThis formula is the continuity equation written along a particle. The architectural constraint disappears, but there is a new problem: for training you have to simulate the ODE from beginning to end, with a network call at every step. Not practical on large images.\n\nFlow matching (2022). You never compute the likelihood. Instead you learn the target velocity directly by regression, and obtain the target by conditioning on a single data-noise pair. ODE simulation leaves training entirely. This is what \\\"simulation-free\\\" means."
         },
         {
           "type": "text",
-          "heading": "7. Divergence: bir noktadan net ne kaçıyor",
-          "text": "Uzayı su dolu bir boru gibi düşün, tek boyutta. $f(x)$ o noktadaki suyun hızı; işareti yönü veriyor, $f>0$ sağa, $f<0$ sola.\n\nŞimdi borunun $x$ ile $x+\\Delta$ arasındaki minik bir parçasına bak. Bu parçanın \"yüzeyi\" iki uçtan ibaret: soldan su giriyor, sağdan çıkıyor.\n\n$$\\text{net çıkış} = f(x+\\Delta) - f(x)$$\n\nParçanın uzunluğuna bölüp $\\Delta \\to 0$ limitini alınca tam olarak türev kalıyor:\n\n$$\\operatorname{div} f = \\frac{\\partial f}{\\partial x}$$\n\nSayıyla: $f(x) = x$ ve parça $[1,2]$ olsun. Sol uçtan 1 birim/saniye giriyor, sağ uçtan 2 birim/saniye çıkıyor, net $+1$. Parça boşalıyor.\n\nYorum: divergence pozitifse o nokta kaynak gibi davranıyor, orada density azalıyor. Negatifse kuyu, orada birikme var. Sıfırsa giren çıkana eşit, density sabit kalıyor.\n\nYüksek boyutta tanım aynı, sadece bütün yönlerdeki katkılar toplanıyor:\n\n$$\\operatorname{div} u = \\sum_{i=1}^{d} \\frac{\\partial u_i}{\\partial x_i}$$"
+          "heading": "7. Divergence: what net amount escapes from a point",
+          "text": "Think of space as a pipe full of water, in one dimension. $f(x)$ is the speed of the water at that point; its sign gives the direction, $f>0$ to the right and $f<0$ to the left.\n\nNow look at a tiny piece of the pipe between $x$ and $x+\\Delta$. The \\\"surface\\\" of this piece consists of two ends: water enters from the left and leaves from the right.\n\n$$\\text{net outflow} = f(x+\\Delta) - f(x)$$\n\nDividing by the length of the piece and taking the limit $\\Delta \\to 0$, exactly the derivative remains:\n\n$$\\operatorname{div} f = \\frac{\\partial f}{\\partial x}$$\n\nWith numbers: let $f(x) = x$ and the piece be $[1,2]$. One unit per second enters at the left end and two units per second leave at the right end, a net $+1$. The piece is emptying.\n\nThe reading: if the divergence is positive the point behaves like a source and the density there decreases. If it is negative it is a sink and there is accumulation. If it is zero, what enters equals what leaves and the density stays constant.\n\nIn higher dimensions the definition is the same, only the contributions in all directions are summed:\n\n$$\\operatorname{div} u = \\sum_{i=1}^{d} \\frac{\\partial u_i}{\\partial x_i}$$"
         },
         {
           "type": "svg",
-          "heading": "1D resminin okunuşu",
+          "heading": "How to read the 1D picture",
           "svg": "<svg width=\"560\" height=\"200\" viewBox=\"0 0 560 200\" role=\"img\" aria-label=\"1D divergence\"><defs><marker id=\"ah\" viewBox=\"0 0 10 10\" refX=\"9\" refY=\"5\" markerWidth=\"5\" markerHeight=\"5\" orient=\"auto\"><path d=\"M0,0 L10,5 L0,10 z\" fill=\"currentColor\"/></marker></defs><text x=\"15\" y=\"20\">divergence &gt; 0</text><line class=\"axis\" x1=\"15\" y1=\"105\" x2=\"260\" y2=\"105\" stroke-width=\"1\"/><ellipse class=\"q-line\" cx=\"145\" cy=\"105\" rx=\"6\" ry=\"26\" stroke-width=\"1.4\"/><line class=\"p-curve\" x1=\"105\" y1=\"105\" x2=\"131\" y2=\"105\" stroke-width=\"2.2\" marker-end=\"url(#ah)\"/><line class=\"p-curve\" x1=\"159\" y1=\"105\" x2=\"211\" y2=\"105\" stroke-width=\"2.2\" marker-end=\"url(#ah)\"/><text x=\"118\" y=\"69\" text-anchor=\"middle\">giren f=1</text><text x=\"185\" y=\"69\" text-anchor=\"middle\">çıkan f=2</text><text x=\"15\" y=\"161\">çıkan &gt; giren → aralık boşalıyor</text><text x=\"300\" y=\"20\">divergence &lt; 0</text><line class=\"axis\" x1=\"300\" y1=\"105\" x2=\"545\" y2=\"105\" stroke-width=\"1\"/><ellipse class=\"q-line\" cx=\"430\" cy=\"105\" rx=\"6\" ry=\"26\" stroke-width=\"1.4\"/><line class=\"p-curve\" x1=\"364\" y1=\"105\" x2=\"416\" y2=\"105\" stroke-width=\"2.2\" marker-end=\"url(#ah)\"/><line class=\"p-curve\" x1=\"444\" y1=\"105\" x2=\"470\" y2=\"105\" stroke-width=\"2.2\" marker-end=\"url(#ah)\"/><text x=\"390\" y=\"69\" text-anchor=\"middle\">giren f=2</text><text x=\"457\" y=\"69\" text-anchor=\"middle\">çıkan f=1</text><text x=\"300\" y=\"161\">giren &gt; çıkan → aralıkta birikiyor</text></svg>",
-          "caption": "Tek boyutta minik bir aralık ve iki ucundaki akış hızı. Solda çıkan girenden büyük, aralık boşalıyor; sağda tersi, aralıkta birikme var."
+          "caption": "A tiny interval in one dimension and the flow speed at its two ends. On the left what leaves is larger than what enters and the interval empties; on the right the opposite, and there is accumulation in the interval."
         },
         {
           "type": "text",
-          "heading": "8. Continuity equation: kütle korunumu",
-          "text": "Şimdi taşınan şeyin miktarı korunuyorsa (parçacık ne yaratılıyor ne yok ediliyor), density'nin değişimi yalnızca akıştan gelebilir:\n\n$$\\frac{\\partial p_t(x)}{\\partial t} + \\operatorname{div}\\bigl( p_t(x)\\, u_t(x) \\bigr) = 0$$\n\nTerimleri oku. $p_t(x)\\, u_t(x)$ akı: o noktada ne kadar density var ve ne hızla taşınıyor. Divergence'ı o noktadan net kaçışı veriyor. Denklem de şunu söylüyor:\n\n$$\\text{density'nin artış hızı} = -(\\text{net kaçış})$$\n\nYani bir noktada density ancak oraya dışarıdan akış geldiği için artabilir. Bu, fizikteki kütle korunumunun ta kendisi; olasılıkta da toplam kütle her zaman 1 olduğu için aynı denklem geçerli."
+          "heading": "8. The continuity equation: conservation of mass",
+          "text": "Now, if the amount of the transported thing is conserved (no particle is created or destroyed), the change in density can only come from the flow:\n\n$$\\frac{\\partial p_t(x)}{\\partial t} + \\operatorname{div}\\bigl( p_t(x)\\, u_t(x) \\bigr) = 0$$\n\nRead the terms. $p_t(x)\\, u_t(x)$ is the flux: how much density there is at that point and at what speed it is transported. Its divergence gives the net escape from that point. And the equation says:\n\n$$\\text{rate of increase of the density} = -(\\text{net escape})$$\n\nThat is, the density at a point can only increase because flow arrived there from outside. This is conservation of mass in physics itself; in probability the same equation holds because the total mass is always 1."
         },
         {
           "type": "text",
-          "heading": "Divergence neyin divergence'ı",
-          "text": "Continuity equation'da divergence'ın uygulandığı şey velocity değil, akı: $p_t(x)\\, u_t(x)$.\n\nFark önemli. Velocity tek başına ne kadar hızlı gidildiğini söylüyor; akı ise ne kadar maddenin ne kadar hızlı taşındığını. Hızın büyük ama density'nin sıfır olduğu bir bölgede taşınan bir şey yok, dolayısıyla o bölgenin density dengesine katkısı da yok.\n\nDenklemin $\\operatorname{div}(p_t u_t)$ içermesinin, $\\operatorname{div}(u_t)$ içermemesinin sebebi bu."
+          "heading": "Divergence of what",
+          "text": "In the continuity equation the thing the divergence is applied to is not the velocity but the flux: $p_t(x)\\, u_t(x)$.\n\nThe difference matters. The velocity alone says how fast one is going; the flux says how much matter is being transported how fast. In a region where the speed is large but the density is zero there is nothing being transported, so that region makes no contribution to the density balance.\n\nThis is why the equation contains $\\operatorname{div}(p_t u_t)$ and not $\\operatorname{div}(u_t)$."
         },
         {
           "type": "table",
-          "heading": "Aynı alana iki bakış",
+          "heading": "Two views of the same field",
           "rows": [
             [
               "",
-              "Tek parçacık",
-              "Distribution"
+              "A single particle",
+              "The distribution"
             ],
             [
-              "Soru",
-              "bu nokta nereye gidiyor",
-              "kalabalığın şekli nasıl değişiyor"
+              "Question",
+              "where is this point going",
+              "how does the shape of the crowd change"
             ],
             [
-              "Denklem",
+              "Equation",
               "$\\frac{dx}{dt} = u_t(x)$",
               "$\\partial_t p_t + \\operatorname{div}(p_t u_t) = 0$"
             ],
             [
-              "Verilen",
-              "başlangıç noktası",
-              "başlangıç distribution'ı"
+              "Given",
+              "a starting point",
+              "a starting distribution"
             ],
             [
-              "Çıktı",
-              "trajectory",
-              "probability path"
+              "Output",
+              "a trajectory",
+              "a probability path"
             ],
             [
-              "Nerede kullanılır",
-              "sampling, ODE çözümü",
-              "teorik şart: velocity doğru mu"
+              "Where it is used",
+              "sampling, solving the ODE",
+              "the theoretical condition: is the velocity right"
             ]
           ]
         },
         {
           "type": "insight",
-          "heading": "9. Flow matching'in şartı tam olarak bu",
-          "text": "Flow matching'in hedefi şuydu: $t=0$'da noise, $t=1$'de veri olacak şekilde bir yol kurmak ve o yolu üreten velocity field'ı öğrenmek.\n\n\"Yolu üretmek\" cümlesinin matematiksel karşılığı continuity equation. Bir $u_t$ ile bir $p_t$ ikilisi ancak bu denklemi sağlıyorsa birbirine uygun; yani $u_t$'yi takip eden parçacıkların dağılımı gerçekten $p_t$ oluyor.\n\nBuradan iki sonuç çıkıyor:\n\nAynı $p_t$ yolunu üreten birden fazla $u_t$ olabilir. Denklem $u$'yu tek bir çözüme zorlamıyor. Rectified flow'un düz yolu, diffusion'ın probability flow ODE'si — ikisi de meşru seçimler.\n\nTersi de doğru: bir $u_t$ verildiğinde ürettiği $p_t$ belirli. Bu yüzden network'e velocity öğretmek, dolaylı olarak bir distribution yolu öğretmek demek."
+          "heading": "9. This is exactly the condition of flow matching",
+          "text": "The goal of flow matching was this: build a path that is noise at $t=0$ and data at $t=1$, and learn the velocity field that produces that path.\n\nThe mathematical counterpart of the phrase \\\"produces the path\\\" is the continuity equation. A pair $u_t$ and $p_t$ match each other only if they satisfy this equation; that is, the distribution of the particles following $u_t$ really is $p_t$.\n\nTwo consequences follow:\n\nThere can be more than one $u_t$ producing the same path $p_t$. The equation does not force $u$ to a single solution. Rectified flow's straight path and diffusion's probability flow ODE are both legitimate choices.\n\nThe converse also holds: given a $u_t$, the $p_t$ it produces is determined. This is why teaching the network a velocity means, indirectly, teaching it a path of distributions."
         },
         {
           "type": "text",
-          "heading": "10. Sorun: doğru haritayı kimse bilmiyor",
-          "text": "Regression yapmak için hedef lazım: her $(x, t)$ için doğru velocity. Ama bu hedef bir bütün olarak distribution'a bağlı. $t=0.5$'teki bir noktadan hangi yöne gidileceği, o noktaya hangi veri örneklerinden ve hangi noise örneklerinden gelinebileceğine bağlı — yani bütün veri setine. Kapalı formda yazamıyorsun.\n\nBu, DDPM'deki durumun aynısı. Orada da gerçek reverse geçiş $q(x_{t-1} \\mid x_t)$ bilinmiyordu, çünkü bütün veri distribution'una bağlıydı. Çözüm de aynı çıkacak: tek bir örneğe koşullayınca her şey hesaplanabilir hale geliyor."
+          "heading": "10. The problem: nobody knows the correct map",
+          "text": "To do regression you need a target: the correct velocity for every $(x, t)$. But this target depends on the distribution as a whole. Which way to go from a point at $t=0.5$ depends on which data examples and which noise examples could have led to that point — that is, on the entire dataset. You cannot write it in closed form.\n\nThis is the same situation as in DDPM. There too the true reverse transition $q(x_{t-1} \\mid x_t)$ was unknown, because it depended on the whole data distribution. And the solution will be the same: once you condition on a single example everything becomes computable."
         },
         {
           "type": "text",
-          "heading": "11. Hile: tek bir çift için cevap bariz",
-          "text": "Tek bir veri örneği $x_0$ ve tek bir noise örneği $z$ al. İkisi arasına düz bir çizgi çek: $x_t = (1-t)\\,x_0 + t\\,z$. Bu çizgi üzerindeki velocity sabit: $z - x_0$. Hesaplanacak hiçbir şey yok.\n\nSayılarla, tek boyutta: $x_0 = 2$, $z = -1$. O zaman $x_t = 2 - 3t$. $t=0.5$'te $x_t = 0.5$, velocity her yerde $-3$. $t=1$'deki $-1$'den başlayıp tek bir Euler adımı atarsan: $x = -1 - 1 \\cdot (-3) = 2$. Tam olarak veriye varıyorsun.\n\nEğitim bu kadar: rastgele bir veri örneği, rastgele bir noise, rastgele bir $t$ çek; aradaki noktayı kur; ağdan o noktadaki velocity'yi tahmin etmesini iste; hedef $z - x_0$."
+          "heading": "11. The trick: for a single pair the answer is obvious",
+          "text": "Take a single data example $x_0$ and a single noise example $z$. Draw a straight line between them: $x_t = (1-t)\\,x_0 + t\\,z$. The velocity along this line is constant: $z - x_0$. There is nothing to compute.\n\nWith numbers, in one dimension: $x_0 = 2$, $z = -1$. Then $x_t = 2 - 3t$. At $t=0.5$, $x_t = 0.5$, and the velocity is $-3$ everywhere. If you start from the $-1$ at $t=1$ and take a single Euler step: $x = -1 - 1 \\cdot (-3) = 2$. You arrive exactly at the data.\n\nTraining is just this: draw a random data example, a random noise, a random $t$; build the point in between; ask the network to predict the velocity at that point; the target is $z - x_0$."
         },
         {
           "type": "formula",
-          "heading": "Rectified flow / flow matching loss",
+          "heading": "The rectified flow / flow matching loss",
           "text": "$$x_t = (1-t)\\,x_0 + t\\,z, \\qquad z \\sim \\mathcal{N}(0, I), \\quad t \\sim \\mathcal{U}[0,1]$$\n$$L(\\theta) = \\mathbb{E}_{x_0,\\, z,\\, t}\\, \\| v_\\theta(x_t, t) - (z - x_0) \\|^2$$"
         },
         {
           "type": "text",
-          "heading": "12. Neden tek çiftin cevabıyla eğitmek doğru haritayı veriyor",
-          "text": "Burada bir şey tuhaf görünmeli. Aynı $x_t$ noktasına birçok farklı çiftten gelinebilir, ve her biri farklı bir hedef söylüyor. Network aynı girdi için birbiriyle çelişen hedeflerle eğitiliyor.\n\nCevap MSE'nin kendisinde. MSE'yi minimize eden tahmin, hedeflerin ortalamasıdır — MLE anlatımındaki \"Gaussian noise varsa MSE, MSE'nin çözümü ortalama\" gerçeğinin aynısı. Dolayısıyla network her noktada o noktadan geçen bütün çiftlerin velocity'lerinin ortalamasını öğreniyor: $v^*(x, t) = \\mathbb{E}[\\, z - x_0 \\mid x_t = x \\,]$.\n\nFlow matching paperlarının asıl teoremi şu: bu ortalama velocity field, noise distribution'unu tam olarak veri distribution'una taşıyor. Tek tek çiftlerin düz çizgileri gerçek yollar değil, ama ortalamaları doğru haritayı veriyor.\n\nOyuncak örnek: veri yalnızca iki noktadan oluşsun, $-1$ ve $+1$. $t=0.5$'te $x=0$ noktasına hem ($x_0=+1$, $z=-1$, velocity $-2$) çiftinden hem de ($x_0=-1$, $z=+1$, velocity $+2$) çiftinden eşit olasılıkla geliniyor. Network ortalamayı, yani $0$'ı öğreniyor. O noktadaki tüy kıpırdamıyor.\n\nDDPM'deki ε-prediction da aynı hileyi kullanıyordu: tek örnekteki gerçek noise noiselü bir hedef, ama MSE'nin minimize ettiği şey conditional expectation. İki yöntemin training'i bu yüzden bu kadar benziyor."
+          "heading": "12. Why training with the answer of a single pair gives the correct map",
+          "text": "Something here should look strange. The same point $x_t$ can be reached from many different pairs, and each one states a different target. The network is trained with mutually contradictory targets for the same input.\n\nThe answer lies in MSE itself. The estimate minimising MSE is the average of the targets — the same fact as \\\"if the noise is Gaussian you get MSE, and the solution of MSE is the mean\\\" from the MLE walkthrough. So at every point the network learns the average of the velocities of all the pairs passing through that point: $v^*(x, t) = \\mathbb{E}[\\, z - x_0 \\mid x_t = x \\,]$.\n\nThe real theorem of the flow matching papers is this: this average velocity field transports the noise distribution exactly onto the data distribution. The straight lines of the individual pairs are not the real paths, but their average gives the correct map.\n\nA toy example: let the data consist of only two points, $-1$ and $+1$. At $t=0.5$ the point $x=0$ is reached with equal probability from the pair ($x_0=+1$, $z=-1$, velocity $-2$) and from the pair ($x_0=-1$, $z=+1$, velocity $+2$). The network learns the average, that is, $0$. The feather at that point does not move.\n\nThe epsilon-prediction in DDPM used the same trick: the true noise in a single example is a noisy target, but what MSE minimises is the conditional expectation. This is why the training of the two methods resembles each other so much."
         },
         {
           "type": "text",
-          "heading": "13. Conditional'dan marginal'e: flow matching'in asıl hamlesi",
-          "text": "Continuity equation bir şart veriyor ama hedef velocity'yi elimize vermiyor. Marginal velocity field bütün veri distribution'ına bağlı olduğu için kapalı formda yazılamıyor.\n\nFlow matching'in çözümü problemi tek bir veri noktasına koşullamak. Tek bir $z$ sabitlendiğinde hem path hem velocity kapalı formda yazılabiliyor:\n\n$$p_t(x \\mid z) = \\mathcal{N}\\bigl(x;\\ \\mu_t(z),\\ \\sigma_t^2 I\\bigr)$$\n\nDüz çizgili tercihte bu path'i üreten velocity sabit bir yöne işaret ediyor, yani hesaplanacak bir şey kalmıyor.\n\nMarginal path, koşullu path'lerin veri üzerinden ortalaması:\n\n$$p_t(x) = \\int p_t(x \\mid z)\\, q(z)\\, dz$$\n\nMarginal velocity ise koşullu velocity'lerin ağırlıklı ortalaması; ağırlık, o $x$ noktasına hangi $z$'nin ne kadar katkı verdiği:\n\n$$u_t(x) = \\int u_t(x \\mid z)\\, \\frac{p_t(x \\mid z)\\, q(z)}{p_t(x)}\\, dz$$\n\nBu integral de hesaplanamıyor. Ama flow matching paperının teoremi şunu söylüyor: koşullu hedefle kurulan regression loss'un gradient'i, marginal hedefle kurulan loss'un gradient'iyle aynı. Yani marginal velocity hiç hesaplanmadan, koşullu hedeflerle training doğru çözümü veriyor.\n\nMekanizma MSE'nin doğasından geliyor: aynı girdiye karşılık birbirinden farklı hedefler veriliyorsa, MSE'yi minimize eden tahmin o hedeflerin koşullu ortalamasıdır. O ortalama da tam olarak yukarıdaki integral."
+          "heading": "13. From conditional to marginal: the real move of flow matching",
+          "text": "The continuity equation gives a condition but does not hand us the target velocity. The marginal velocity field cannot be written in closed form because it depends on the whole data distribution.\n\nFlow matching's solution is to condition the problem on a single data point. Once a single $z$ is fixed, both the path and the velocity can be written in closed form:\n\n$$p_t(x \\mid z) = \\mathcal{N}\\bigl(x;\\ \\mu_t(z),\\ \\sigma_t^2 I\\bigr)$$\n\nWith the straight-line choice, the velocity producing this path points in a constant direction, so nothing is left to compute.\n\nThe marginal path is the average of the conditional paths over the data:\n\n$$p_t(x) = \\int p_t(x \\mid z)\\, q(z)\\, dz$$\n\nThe marginal velocity is the weighted average of the conditional velocities; the weight is how much each $z$ contributes to that point $x$:\n\n$$u_t(x) = \\int u_t(x \\mid z)\\, \\frac{p_t(x \\mid z)\\, q(z)}{p_t(x)}\\, dz$$\n\nThis integral is not computable either. But the theorem of the flow matching paper says this: the gradient of the regression loss built with the conditional target is the same as the gradient of the loss built with the marginal target. So training with conditional targets gives the right solution without ever computing the marginal velocity.\n\nThe mechanism comes from the nature of MSE: if different targets are given for the same input, the estimate minimising MSE is the conditional average of those targets. And that average is exactly the integral above."
         },
         {
           "type": "svg",
-          "heading": "14. Çiftler düz, öğrenilen yollar değil",
+          "heading": "14. The pairs are straight, the learned paths are not",
           "svg": "<svg width=\"560\" height=\"230\" viewBox=\"0 0 560 230\" role=\"img\" aria-label=\"rastgele eslesme ve ogrenilen flow\"><text x=\"20\" y=\"16\">eğitim çiftleri: düz ama kesişiyor</text><line class=\"axis\" x1=\"20.0\" y1=\"34\" x2=\"20.0\" y2=\"194\" stroke-width=\"1\"/><line class=\"axis\" x1=\"250.0\" y1=\"34\" x2=\"250.0\" y2=\"194\" stroke-width=\"1\"/><text x=\"16\" y=\"212\">veri, t=0</text><text x=\"198\" y=\"212\">noise, t=1</text><text x=\"310\" y=\"16\">öğrenilen flow: kesişmiyor, bükülüyor</text><line class=\"axis\" x1=\"310.0\" y1=\"34\" x2=\"310.0\" y2=\"194\" stroke-width=\"1\"/><line class=\"axis\" x1=\"540.0\" y1=\"34\" x2=\"540.0\" y2=\"194\" stroke-width=\"1\"/><text x=\"306\" y=\"212\">veri, t=0</text><text x=\"488\" y=\"212\">noise, t=1</text><line class=\"p-curve\" x1=\"20.0\" y1=\"74.0\" x2=\"250.0\" y2=\"178.0\" stroke-width=\"1.3\"/><line class=\"p-curve\" x1=\"20.0\" y1=\"154.0\" x2=\"250.0\" y2=\"156.0\" stroke-width=\"1.3\"/><line class=\"p-curve\" x1=\"20.0\" y1=\"154.0\" x2=\"250.0\" y2=\"138.0\" stroke-width=\"1.3\"/><line class=\"p-curve\" x1=\"20.0\" y1=\"74.0\" x2=\"250.0\" y2=\"122.0\" stroke-width=\"1.3\"/><line class=\"p-curve\" x1=\"20.0\" y1=\"154.0\" x2=\"250.0\" y2=\"106.0\" stroke-width=\"1.3\"/><line class=\"p-curve\" x1=\"20.0\" y1=\"74.0\" x2=\"250.0\" y2=\"90.0\" stroke-width=\"1.3\"/><line class=\"p-curve\" x1=\"20.0\" y1=\"74.0\" x2=\"250.0\" y2=\"72.0\" stroke-width=\"1.3\"/><line class=\"p-curve\" x1=\"20.0\" y1=\"154.0\" x2=\"250.0\" y2=\"50.0\" stroke-width=\"1.3\"/><polyline class=\"q-line\" stroke-width=\"1.6\" points=\"540.0,178.0 535.4,176.7 530.8,175.5 526.2,174.3 521.6,173.1 517.0,172.0 512.4,170.8 507.8,169.8 503.2,168.7 498.6,167.7 494.0,166.8 489.5,165.9 484.9,165.0 480.3,164.2 475.7,163.5 471.1,162.8 466.5,162.1 461.9,161.5 457.3,161.0 452.7,160.5 448.1,160.1 443.5,159.7 438.9,159.4 434.3,159.1 429.7,158.9 425.1,158.6 420.5,158.4 415.9,158.2 411.3,158.0 406.7,157.8 402.1,157.7 397.5,157.5 392.9,157.3 388.4,157.1 383.8,156.9 379.2,156.7 374.6,156.6 370.0,156.4 365.4,156.2 360.8,156.0 356.2,155.8 351.6,155.7 347.0,155.5 342.4,155.3 337.8,155.1 333.2,154.9 328.6,154.7 324.0,154.6 319.4,154.4 314.8,154.2 310.2,154.0 310.0,154.0\"/><polyline class=\"q-line\" stroke-width=\"1.6\" points=\"540.0,156.0 535.4,155.2 530.8,154.4 526.2,153.6 521.6,152.8 517.0,152.0 512.4,151.3 507.8,150.6 503.2,149.9 498.6,149.3 494.0,148.7 489.5,148.1 484.9,147.5 480.3,147.0 475.7,146.5 471.1,146.1 466.5,145.8 461.9,145.4 457.3,145.2 452.7,145.0 448.1,144.8 443.5,144.8 438.9,144.8 434.3,144.8 429.7,145.0 425.1,145.1 420.5,145.4 415.9,145.7 411.3,146.0 406.7,146.3 402.1,146.7 397.5,147.0 392.9,147.4 388.4,147.8 383.8,148.1 379.2,148.5 374.6,148.9 370.0,149.2 365.4,149.6 360.8,150.0 356.2,150.3 351.6,150.7 347.0,151.1 342.4,151.4 337.8,151.8 333.2,152.2 328.6,152.5 324.0,152.9 319.4,153.2 314.8,153.6 310.2,154.0 310.0,154.0\"/><polyline class=\"q-line\" stroke-width=\"1.6\" points=\"540.0,138.0 535.4,137.5 530.8,137.1 526.2,136.6 521.6,136.2 517.0,135.7 512.4,135.3 507.8,134.9 503.2,134.5 498.6,134.2 494.0,133.8 489.5,133.5 484.9,133.2 480.3,132.9 475.7,132.6 471.1,132.4 466.5,132.2 461.9,132.0 457.3,131.9 452.7,131.9 448.1,131.8 443.5,131.9 438.9,132.0 434.3,132.2 429.7,132.5 425.1,132.9 420.5,133.3 415.9,133.9 411.3,134.6 406.7,135.3 402.1,136.1 397.5,136.9 392.9,137.8 388.4,138.7 383.8,139.6 379.2,140.5 374.6,141.4 370.0,142.3 365.4,143.2 360.8,144.1 356.2,145.0 351.6,145.9 347.0,146.8 342.4,147.7 337.8,148.6 333.2,149.5 328.6,150.4 324.0,151.3 319.4,152.2 314.8,153.1 310.2,154.0 310.0,154.0\"/><polyline class=\"q-line\" stroke-width=\"1.6\" points=\"540.0,122.0 535.4,121.8 530.8,121.7 526.2,121.5 521.6,121.4 517.0,121.2 512.4,121.1 507.8,121.0 503.2,120.8 498.6,120.7 494.0,120.6 489.5,120.5 484.9,120.4 480.3,120.3 475.7,120.2 471.1,120.1 466.5,120.1 461.9,120.0 457.3,120.0 452.7,120.0 448.1,120.0 443.5,120.0 438.9,120.1 434.3,120.2 429.7,120.3 425.1,120.5 420.5,120.8 415.9,121.2 411.3,121.7 406.7,122.3 402.1,123.2 397.5,124.2 392.9,125.4 388.4,126.8 383.8,128.4 379.2,129.9 374.6,131.5 370.0,133.1 365.4,134.7 360.8,136.3 356.2,137.9 351.6,139.5 347.0,141.1 342.4,142.7 337.8,144.3 333.2,145.9 328.6,147.5 324.0,149.1 319.4,150.7 314.8,152.3 310.2,153.9 310.0,153.9\"/><polyline class=\"q-line\" stroke-width=\"1.6\" points=\"540.0,106.0 535.4,106.2 530.8,106.3 526.2,106.5 521.6,106.6 517.0,106.8 512.4,106.9 507.8,107.0 503.2,107.2 498.6,107.3 494.0,107.4 489.5,107.5 484.9,107.6 480.3,107.7 475.7,107.8 471.1,107.9 466.5,107.9 461.9,108.0 457.3,108.0 452.7,108.0 448.1,108.0 443.5,108.0 438.9,107.9 434.3,107.8 429.7,107.7 425.1,107.5 420.5,107.2 415.9,106.8 411.3,106.3 406.7,105.7 402.1,104.8 397.5,103.8 392.9,102.6 388.4,101.2 383.8,99.6 379.2,98.1 374.6,96.5 370.0,94.9 365.4,93.3 360.8,91.7 356.2,90.1 351.6,88.5 347.0,86.9 342.4,85.3 337.8,83.7 333.2,82.1 328.6,80.5 324.0,78.9 319.4,77.3 314.8,75.7 310.2,74.1 310.0,74.1\"/><polyline class=\"q-line\" stroke-width=\"1.6\" points=\"540.0,90.0 535.4,90.5 530.8,90.9 526.2,91.4 521.6,91.8 517.0,92.3 512.4,92.7 507.8,93.1 503.2,93.5 498.6,93.8 494.0,94.2 489.5,94.5 484.9,94.8 480.3,95.1 475.7,95.4 471.1,95.6 466.5,95.8 461.9,96.0 457.3,96.1 452.7,96.1 448.1,96.2 443.5,96.1 438.9,96.0 434.3,95.8 429.7,95.5 425.1,95.1 420.5,94.7 415.9,94.1 411.3,93.4 406.7,92.7 402.1,91.9 397.5,91.1 392.9,90.2 388.4,89.3 383.8,88.4 379.2,87.5 374.6,86.6 370.0,85.7 365.4,84.8 360.8,83.9 356.2,83.0 351.6,82.1 347.0,81.2 342.4,80.3 337.8,79.4 333.2,78.5 328.6,77.6 324.0,76.7 319.4,75.8 314.8,74.9 310.2,74.0 310.0,74.0\"/><polyline class=\"q-line\" stroke-width=\"1.6\" points=\"540.0,72.0 535.4,72.8 530.8,73.6 526.2,74.4 521.6,75.2 517.0,76.0 512.4,76.7 507.8,77.4 503.2,78.1 498.6,78.7 494.0,79.3 489.5,79.9 484.9,80.5 480.3,81.0 475.7,81.5 471.1,81.9 466.5,82.2 461.9,82.6 457.3,82.8 452.7,83.0 448.1,83.2 443.5,83.2 438.9,83.2 434.3,83.2 429.7,83.0 425.1,82.9 420.5,82.6 415.9,82.3 411.3,82.0 406.7,81.7 402.1,81.3 397.5,81.0 392.9,80.6 388.4,80.2 383.8,79.9 379.2,79.5 374.6,79.1 370.0,78.8 365.4,78.4 360.8,78.0 356.2,77.7 351.6,77.3 347.0,76.9 342.4,76.6 337.8,76.2 333.2,75.8 328.6,75.5 324.0,75.1 319.4,74.8 314.8,74.4 310.2,74.0 310.0,74.0\"/><polyline class=\"q-line\" stroke-width=\"1.6\" points=\"540.0,50.0 535.4,51.3 530.8,52.5 526.2,53.7 521.6,54.9 517.0,56.0 512.4,57.2 507.8,58.2 503.2,59.3 498.6,60.3 494.0,61.2 489.5,62.1 484.9,63.0 480.3,63.8 475.7,64.5 471.1,65.2 466.5,65.9 461.9,66.5 457.3,67.0 452.7,67.5 448.1,67.9 443.5,68.3 438.9,68.6 434.3,68.9 429.7,69.1 425.1,69.4 420.5,69.6 415.9,69.8 411.3,70.0 406.7,70.2 402.1,70.3 397.5,70.5 392.9,70.7 388.4,70.9 383.8,71.1 379.2,71.3 374.6,71.4 370.0,71.6 365.4,71.8 360.8,72.0 356.2,72.2 351.6,72.3 347.0,72.5 342.4,72.7 337.8,72.9 333.2,73.1 328.6,73.3 324.0,73.4 319.4,73.6 314.8,73.8 310.2,74.0 310.0,74.0\"/><circle class=\"dot\" cx=\"20.0\" cy=\"154.0\" r=\"3.5\"/><circle class=\"dot\" cx=\"20.0\" cy=\"74.0\" r=\"3.5\"/><circle class=\"dot\" cx=\"250.0\" cy=\"178.0\" r=\"2.5\"/><circle class=\"dot\" cx=\"250.0\" cy=\"156.0\" r=\"2.5\"/><circle class=\"dot\" cx=\"250.0\" cy=\"138.0\" r=\"2.5\"/><circle class=\"dot\" cx=\"250.0\" cy=\"122.0\" r=\"2.5\"/><circle class=\"dot\" cx=\"250.0\" cy=\"106.0\" r=\"2.5\"/><circle class=\"dot\" cx=\"250.0\" cy=\"90.0\" r=\"2.5\"/><circle class=\"dot\" cx=\"250.0\" cy=\"72.0\" r=\"2.5\"/><circle class=\"dot\" cx=\"250.0\" cy=\"50.0\" r=\"2.5\"/><circle class=\"dot\" cx=\"310.0\" cy=\"154.0\" r=\"3.5\"/><circle class=\"dot\" cx=\"310.0\" cy=\"74.0\" r=\"3.5\"/><circle class=\"dot\" cx=\"540.0\" cy=\"178.0\" r=\"2.5\"/><circle class=\"dot\" cx=\"540.0\" cy=\"156.0\" r=\"2.5\"/><circle class=\"dot\" cx=\"540.0\" cy=\"138.0\" r=\"2.5\"/><circle class=\"dot\" cx=\"540.0\" cy=\"122.0\" r=\"2.5\"/><circle class=\"dot\" cx=\"540.0\" cy=\"106.0\" r=\"2.5\"/><circle class=\"dot\" cx=\"540.0\" cy=\"90.0\" r=\"2.5\"/><circle class=\"dot\" cx=\"540.0\" cy=\"72.0\" r=\"2.5\"/><circle class=\"dot\" cx=\"540.0\" cy=\"50.0\" r=\"2.5\"/></svg>",
-          "caption": "Tek boyutlu oyuncak: veri iki noktadan (−1, +1) oluşuyor. Solda training'de rastgele eşleşen çiftler — her biri düz ama birbirini kesiyor. Sağda aynı veriyle öğrenilen gerçek ortalama velocity field'ın ODE yolları (sayısal olarak çözüldü): kesişmiyor, bu yüzden bükülüyor."
+          "caption": "A one-dimensional toy: the data consists of two points (−1, +1). On the left, the randomly matched pairs during training — each straight but crossing one another. On the right, the ODE paths of the true average velocity field learned from the same data (solved numerically): they do not cross, which is why they bend."
         },
         {
           "type": "text",
-          "heading": "Yollar neden bükülüyor",
-          "text": "Bir ODE'nin yolları kesişemez: aynı noktada, aynı anda iki farklı velocity olamaz. Ama training'de çiftler rastgele eşleştiği için düz çizgileri sürekli kesişiyor. Kesişme noktalarında network ortalama alıyor ve öğrenilen yollar birbirinden kaçmak için bükülüyor.\n\nBunun pratik sonucu önemli. Tek bir çift için tek Euler adımı yetiyordu, çünkü yol düzdü. Öğrenilen yollar bükük olduğu için tek adım yetmiyor; düz çizgi varsayan her Euler adımı bükülme kadar hata yapıyor. Bu yüzden rectified flow ile eğitilmiş bir model de pratikte 20-50 adım istiyor. DDPM'in 1000'inden çok az, ama bir değil."
+          "heading": "Why the paths bend",
+          "text": "The paths of an ODE cannot cross: there cannot be two different velocities at the same point at the same moment. But because the pairs are matched at random during training, their straight lines keep crossing. At the crossing points the network takes an average and the learned paths bend to avoid one another.\n\nThe practical consequence matters. For a single pair one Euler step was enough, because the path was straight. Because the learned paths are bent, one step is not enough; every Euler step, which assumes a straight line, makes an error proportional to the bending. This is why a model trained with rectified flow also wants 20 to 50 steps in practice. Far fewer than DDPM's 1000, but not one."
         },
         {
           "type": "text",
-          "heading": "15. Reflow: yolları gerçekten düzleştirmek",
-          "text": "Rectified flow paperının (Liu, Gong, Liu — ICLR 2023) flow matching'den ayrılan asıl katkısı burada. Sorun rastgele eşleştirmeydi. O halde eşleştirmeyi değiştir.\n\nEğitilmiş modeli al. Bir sürü noise örneği çek, her birini ODE ile çözüp modelin ürettiği görüntüye taşı. Artık elinde rastgele değil, modelin kendi yollarıyla eşleşmiş $(z, \\hat{x}_0)$ çiftleri var. Bu yollar kesişmiyordu — ODE yolları kesişemez. Yeni modeli bu çiftlerle aynı loss'la yeniden eğit. Çiftler kesişmediği için ortalama alınacak bir çatışma da neredeyse yok, ve yeni yollar çok daha düz çıkıyor.\n\nBu işleme reflow deniyor, \"rectify\" de düzeltmek demek. Paper ayrıca bu işlemin transport maliyetini artırmadığını gösteriyor: her reflow, noise ile veri arasındaki eşleştirmeyi daha kısa yollu hale getiriyor ya da en azından kötüleştirmiyor. Bir iki reflow sonrasında yollar o kadar düz oluyor ki tek adımlık üretime distillation ile inmek kolaylaşıyor. InstaFlow (ICLR 2024) tek adımlık text-to-image'i bu yolla yaptı.\n\nÖnemli ayrım: SD3 ve FLUX'un kullandığı \"rectified flow\", reflow yapılmamış ilk aşama. Yani pratikte büyük modellerde \"rectified flow\" denildiğinde kastedilen çoğunlukla sadece düz çizgili interpolation ve velocity loss'u."
+          "heading": "15. Reflow: actually straightening the paths",
+          "text": "Here is the real contribution that separates the rectified flow paper (Liu, Gong, Liu — ICLR 2023) from flow matching. The problem was the random matching. So change the matching.\n\nTake the trained model. Draw a lot of noise samples, solve the ODE for each and transport it to the image the model produces. You now hold pairs $(z, \\hat{x}_0)$ matched not at random but by the model's own paths. Those paths did not cross — ODE paths cannot cross. Retrain a new model on these pairs with the same loss. Because the pairs do not cross there is almost no conflict left to average over, and the new paths come out far straighter.\n\nThis procedure is called reflow, and \\\"to rectify\\\" means to straighten. The paper also shows that this procedure does not increase the transport cost: every reflow makes the matching between noise and data shorter, or at least does not make it worse. After one or two reflows the paths become so straight that dropping to single-step generation by distillation becomes easy. InstaFlow (ICLR 2024) produced single-step text to image this way.\n\nAn important distinction: the \\\"rectified flow\\\" used by SD3 and FLUX is the first stage, without reflow. So in practice, when \\\"rectified flow\\\" is said of large models, what is usually meant is only the straight-line interpolation and the velocity loss."
         },
         {
           "type": "table",
-          "heading": "16. Rectified flow, flow matching, stochastic interpolants — aynı şey mi",
+          "heading": "16. Rectified flow, flow matching, stochastic interpolants — the same thing?",
           "rows": [
             [
               "",
@@ -28318,7 +28318,7 @@
               "Stochastic interpolants"
             ],
             [
-              "Yazarlar",
+              "Authors",
               "Liu, Gong, Liu",
               "Lipman, Chen, Ben-Hamu, Nickel, Le",
               "Albergo, Vanden-Eijnden"
@@ -28336,50 +28336,50 @@
               "2209.15571"
             ],
             [
-              "Çıkış noktası",
-              "Düz yol + iki distribution arasında transfer",
-              "Continuous normalizing flow'ları simülasyonsuz eğitmek",
-              "İki distribution arasında genel interpolation çerçevesi"
+              "Starting point",
+              "Straight path + transfer between two distributions",
+              "Training continuous normalizing flows without simulation",
+              "A general interpolation framework between two distributions"
             ],
             [
-              "Yol",
-              "Yalnızca düz çizgi",
-              "Genel Gaussian yollar; en iyisi düz (OT) yol",
-              "Genel, noise'lu ya da noise'suz"
+              "Path",
+              "Straight line only",
+              "General Gaussian paths; the best is the straight (OT) path",
+              "General, with or without noise"
             ],
             [
-              "Kendine özgü katkı",
-              "Reflow ile yolları düzleştirme",
-              "Conditional hedefin marginal ile aynı gradient'i verdiğinin ispatı",
-              "Diffusion ile flow'u tek çerçevede birleştirme"
+              "Own contribution",
+              "Straightening the paths with reflow",
+              "The proof that the conditional target gives the same gradient as the marginal",
+              "Unifying diffusion and flow in one framework"
             ],
             [
-              "Zaman",
-              "$t=0$ veri, $t=1$ noise",
-              "$t=0$ noise, $t=1$ veri",
+              "Time",
+              "$t=0$ data, $t=1$ noise",
+              "$t=0$ noise, $t=1$ data",
               "—"
             ]
           ]
         },
         {
           "type": "text",
-          "heading": "Kısa cevap",
-          "text": "Üç grup aynı fikri 2022 sonbaharında birbirinden bağımsız buldu ve üçü de ICLR 2023'te yayımlandı. Düz çizgili yol seçilince flow matching ile (reflow'suz) rectified flow aynı loss'u veriyor; literatürde isimler çoğu zaman birbirinin yerine kullanılıyor. Atıf verirken üçünü birlikte vermek standart.\n\nİşaret tuzağı: Lipman'da $t=0$ noise, $t=1$ veri ve velocity veriye doğru, yani $x_1 - x_0$ ile \"veri eksi noise\". CS231n ve Liu'da tersi: velocity $z - x_0$, noise eksi veri, ve sampling'de bu yüzden çıkarma yapılıyor. İki paperı yan yana okurken bir formülde işaretin ters görünmesi hata değil, zaman yönünün ters olması."
+          "heading": "The short answer",
+          "text": "The three groups found the same idea independently in the autumn of 2022 and all three were published at ICLR 2023. Once the straight path is chosen, flow matching and (reflow-free) rectified flow give the same loss; in the literature the names are often used interchangeably. Citing all three together is standard.\n\nThe sign trap: in Lipman, $t=0$ is noise and $t=1$ data and the velocity points towards the data, that is, $x_1 - x_0$, \\\"data minus noise\\\". In CS231n and Liu it is the reverse: the velocity is $z - x_0$, noise minus data, which is why there is a subtraction in sampling. When reading two papers side by side, a sign looking reversed in a formula is not an error but the reversal of the direction of time."
         },
         {
           "type": "text",
-          "heading": "17. DDPM ile ilişkisi: aynı aile, farklı yol",
-          "text": "CS231n'in genelleştirilmiş diffusion kartındaki çerçeve burada her şeyi birleştiriyor: $x_t = a(t)\\,x_0 + b(t)\\,z$. Rectified flow $a(t) = 1-t$, $b(t) = t$ seçiyor, yani katsayıların toplamı 1: düz çizgi. DDPM'in variance-preserving hali $a^2 + b^2 = 1$ seçiyor: katsayılar bir çeyrek çember üstünde, dolayısıyla tek bir çiftin yolu bile eğri.\n\nİkinci fark tahmin hedefi. DDPM noise'u ($\\epsilon$), rectified flow velocity'yi ($z - x_0$) tahmin ediyor. Ama bunlar birbirine cebirle çevrilebiliyor: $x_t$ ve velocity tahmini $\\hat{v}$ elindeyse $\\hat{x}_0 = x_t - t\\,\\hat{v}$ ve $\\hat{z} = x_t + (1-t)\\,\\hat{v}$. DDIM kartındaki \"$\\hat{x}_0$ yeni bir network değil, cebirle çıkıyor\" gözleminin aynısı.\n\nÜçüncü bağ ODE'nin kendisi. Song ve ark. (ICLR 2021) her diffusion modelinin, aynı marginal distribution'ları veren deterministik bir karşılığı olduğunu gösterdi (probability flow ODE). DDIM bu ODE'nin bir Euler çözümü gibi okunabiliyor. Yani DDIM ile sample alan bir DDPM de aslında bir flow takip ediyor; fark, yolun eğri seçilmiş olması.\n\nSonuç: flow matching diffusion'ı çöpe atmıyor. Aynı aileden, yolu düz seçen ve türetmeyi ELBO yerine regression'dan kuran bir üye."
+          "heading": "17. Its relation to DDPM: the same family, a different path",
+          "text": "The framework in CS231n's generalised diffusion card unifies everything here: $x_t = a(t)\\,x_0 + b(t)\\,z$. Rectified flow chooses $a(t) = 1-t$, $b(t) = t$, that is, the coefficients sum to 1: a straight line. The variance-preserving form of DDPM chooses $a^2 + b^2 = 1$: the coefficients lie on a quarter circle, so even the path of a single pair is curved.\n\nThe second difference is the prediction target. DDPM predicts the noise ($\\epsilon$), rectified flow the velocity ($z - x_0$). But these convert into each other by algebra: if you hold $x_t$ and the velocity estimate $\\hat{v}$, then $\\hat{x}_0 = x_t - t\\,\\hat{v}$ and $\\hat{z} = x_t + (1-t)\\,\\hat{v}$. The same observation as the DDIM card's \\\"$\\hat{x}_0$ is not a new network, it comes out of algebra\\\".\n\nThe third link is the ODE itself. Song and colleagues (ICLR 2021) showed that every diffusion model has a deterministic counterpart giving the same marginal distributions (the probability flow ODE). DDIM can be read as an Euler solution of that ODE. So a DDPM sampled with DDIM is in fact following a flow as well; the difference is that the path was chosen to be curved.\n\nThe conclusion: flow matching does not throw diffusion away. It is a member of the same family that chooses the path to be straight and builds the derivation from regression instead of the ELBO."
         },
         {
           "type": "svg",
-          "heading": "Yolun şekli: eğri mi düz mü",
+          "heading": "The shape of the path: curved or straight",
           "svg": "<svg width=\"430\" height=\"240\" viewBox=\"0 0 430 240\" role=\"img\" aria-label=\"yol sekli\"><line class=\"axis\" x1=\"70\" y1=\"180\" x2=\"250\" y2=\"180\" stroke-width=\"1\"/><line class=\"axis\" x1=\"70\" y1=\"180\" x2=\"70\" y2=\"5\" stroke-width=\"1\"/><text x=\"248\" y=\"200\" text-anchor=\"end\">x₀ katsayısı</text><text x=\"62\" y=\"20\" text-anchor=\"end\">noise kats.</text><polyline class=\"p-curve\" stroke-width=\"1.8\" points=\"210.0,180.0 210.0,176.3 209.8,172.7 209.6,169.0 209.2,165.4 208.8,161.7 208.3,158.1 207.7,154.5 206.9,150.9 206.1,147.3 205.2,143.8 204.2,140.2 203.1,136.7 202.0,133.3 200.7,129.8 199.3,126.4 197.9,123.1 196.4,119.7 194.7,116.4 193.0,113.2 191.2,110.0 189.4,106.9 187.4,103.8 185.4,100.7 183.3,97.7 181.1,94.8 178.8,91.9 176.5,89.1 174.0,86.3 171.6,83.6 169.0,81.0 166.4,78.4 163.7,76.0 160.9,73.5 158.1,71.2 155.2,68.9 152.3,66.7 149.3,64.6 146.2,62.6 143.1,60.6 140.0,58.8 136.8,57.0 133.6,55.3 130.3,53.6 126.9,52.1 123.6,50.7 120.2,49.3 116.7,48.0 113.3,46.9 109.8,45.8 106.2,44.8 102.7,43.9 99.1,43.1 95.5,42.3 91.9,41.7 88.3,41.2 84.6,40.8 81.0,40.4 77.3,40.2 73.7,40.0 70.0,40.0\"/><line class=\"q-line\" x1=\"210.0\" y1=\"180.0\" x2=\"70.0\" y2=\"40.0\" stroke-width=\"1.8\"/><circle class=\"dot\" cx=\"210.0\" cy=\"180.0\" r=\"3.5\"/><circle class=\"dot\" cx=\"70.0\" cy=\"40.0\" r=\"3.5\"/><text x=\"218\" y=\"174\">t=0, veri</text><text x=\"78\" y=\"32\">t=1, noise</text><circle class=\"dot\" cx=\"169.0\" cy=\"81.0\" r=\"3\"/><circle class=\"dot-a\" cx=\"140.0\" cy=\"110.0\" r=\"3\"/><text x=\"175\" y=\"71\">VP (DDPM)</text><text x=\"112\" y=\"130\">rectified flow</text></svg>",
-          "caption": "Yatay eksen $x_0$'ın katsayısı, dikey eksen noise'un katsayısı. Her nokta bir $t$ değerine karşılık geliyor. VP'de katsayıların kareleri toplamı 1 olduğu için yol bir çeyrek çember; rectified flow'da toplamları 1 olduğu için düz bir doğru. Noktalar $t=0.5$ anını gösteriyor: VP'de her iki katsayı da 0.71, rectified flow'da 0.5."
+          "caption": "The horizontal axis is the coefficient of $x_0$, the vertical axis the coefficient of the noise. Every point corresponds to a value of $t$. In VP the sum of the squares of the coefficients is 1, so the path is a quarter circle; in rectified flow their sum is 1, so it is a straight line. The dots mark the moment $t=0.5$: in VP both coefficients are 0.71, in rectified flow 0.5."
         },
         {
           "type": "table",
-          "heading": "Üç paradigmanın birleşik görünümü",
+          "heading": "The unified view of the three paradigms",
           "rows": [
             [
               "",
@@ -28389,30 +28389,30 @@
             ],
             [
               "Forward",
-              "Markov zinciri, adım adım noise",
+              "Markov chain, noise step by step",
               "SDE, continuous time",
-              "düz interpolasyon $x_t=(1-t)x_0+tz$"
+              "straight interpolation $x_t=(1-t)x_0+tz$"
             ],
             [
-              "Öğrenilen",
+              "What is learned",
               "$\\varepsilon_\\theta$",
               "$s_\\theta = \\nabla_x \\log p_t$",
-              "$u_\\theta$, velocity"
+              "$u_\\theta$, the velocity"
             ],
             [
-              "Üretim",
+              "Generation",
               "ancestral sampling",
               "reverse-time SDE",
-              "ODE çözümü"
+              "solving an ODE"
             ],
             [
-              "Deterministik hali",
+              "Deterministic form",
               "DDIM",
               "probability flow ODE",
-              "zaten deterministik"
+              "already deterministic"
             ],
             [
-              "Türetme",
+              "Derivation",
               "ELBO",
               "denoising score matching",
               "conditional regression"
@@ -28421,13 +28421,13 @@
         },
         {
           "type": "text",
-          "heading": "Üç paradigma neden aynı yere çıkıyor",
-          "text": "Tabloya satır satır bakınca aynı iskeletin üç farklı giydirilmiş hali görünüyor: bir forward süreç veriyi tanınmaz hale getiriyor, network o sürecin bir özelliğini tahmin etmeyi öğreniyor, üretim de o tahminle geriye yürüyor.\n\nFarklar üç yerde toplanıyor. Birincisi yolun şekli: diffusion eğri, flow matching düz. İkincisi network'ün hedefi: noise, score ya da velocity, ki bunlar sabit katsayılarla birbirine çevriliyor. Üçüncüsü üretimin stokastik mi deterministik mi olduğu, ki o da bir sampler tercihi.\n\nStochastic interpolants çerçevesi (Albergo, Vanden-Eijnden) üçünü tek bir tanımın özel halleri olarak yazıyor. Pratik sonucu şu: bir paper okurken sorulacak soru \"yeni bir generative model mi\" değil, \"yol mu, hedef mi, sampler mı değişmiş\" olmalı."
+          "heading": "Why the three paradigms end up in the same place",
+          "text": "Looking at the table row by row, the same skeleton appears in three different outfits: a forward process makes the data unrecognisable, the network learns to predict a property of that process, and generation walks backwards with that prediction.\n\nThe differences gather in three places. First the shape of the path: diffusion curved, flow matching straight. Second the network's target: noise, score or velocity, which convert into one another by fixed coefficients. Third whether generation is stochastic or deterministic, which is also a choice of sampler.\n\nThe stochastic interpolants framework (Albergo, Vanden-Eijnden) writes all three as special cases of a single definition. The practical consequence: while reading a paper the question to ask is not \\\"is this a new generative model\\\" but \\\"what changed — the path, the target, or the sampler\\\"."
         },
         {
           "type": "text",
-          "heading": "18. Neden düz yol az adım demek",
-          "text": "Euler adımı \"bu adım boyunca velocity sabit kalacak\" varsayımı. Yol düz ve velocity gerçekten sabitse bu varsayım tam doğru: tek adım yetiyor (5. bölümdeki örnek). Yol büküldükçe, adım boyunca velocity değişiyor ve her adım bükülme miktarı kadar hata yapıyor.\n\nAynı marginal distribution'ları veren yolların içinde düz olanlar Euler için en rahatı. DDPM'in eğri yolunda aynı kaliteye ulaşmak için daha fazla adım gerekiyor; rectified flow'da daha az. Reflow yolları daha da düzleştirip bu sayıyı daha da düşürüyor."
+          "heading": "18. Why a straight path means fewer steps",
+          "text": "An Euler step is the assumption \\\"the velocity will stay constant along this step\\\". If the path is straight and the velocity really is constant, this assumption is exactly right: one step is enough (the example in section 11). As the path bends, the velocity changes along the step and every step makes an error proportional to the bending.\n\nAmong paths giving the same marginal distributions, straight ones are the most comfortable for Euler. On DDPM's curved path more steps are needed to reach the same quality; on rectified flow fewer. Reflow straightens the paths further and lowers that number further still."
         },
         {
           "type": "algo",
@@ -28436,8 +28436,8 @@
           "lines": [
             "repeat",
             "  $x_0 \\sim p_{\\text{data}}$, $\\; z \\sim \\mathcal{N}(0, I)$, $\\; t \\sim \\mathcal{U}[0,1]$",
-            "  $x_t \\leftarrow (1-t)\\,x_0 + t\\,z$ >> çift arasındaki düz çizgi",
-            "  $v \\leftarrow z - x_0$ >> o çizginin velocity'si, sabit",
+            "  $x_t \\leftarrow (1-t)\\,x_0 + t\\,z$ >> the straight line between the pair",
+            "  $v \\leftarrow z - x_0$ >> the velocity of that line, constant",
             "  gradient step on $\\| v_\\theta(x_t, t) - v \\|^2$",
             "until converged"
           ]
@@ -28447,12 +28447,12 @@
           "number": "2",
           "title": "Rectified flow — sampling (Euler)",
           "lines": [
-            "Input: $N$ adım sayısı",
+            "Input: $N$, the number of steps",
             "",
-            "$x \\sim \\mathcal{N}(0, I)$ >> $t=1$'den başla",
+            "$x \\sim \\mathcal{N}(0, I)$ >> start from $t=1$",
             "for $i = N, \\ldots, 1$ do",
             "  $t \\leftarrow i / N$",
-            "  $x \\leftarrow x - \\frac{1}{N}\\, v_\\theta(x, t)$ >> velocity noise'a doğru, geriye git",
+            "  $x \\leftarrow x - \\frac{1}{N}\\, v_\\theta(x, t)$ >> the velocity points towards noise, so go backwards",
             "end for",
             "return $x$"
           ]
@@ -28473,13 +28473,13 @@
         },
         {
           "type": "text",
-          "heading": "19. Zaman nasıl örneklenmeli",
-          "text": "Loss'ta $t$ düzgün dağılımdan çekiliyor. Ama her $t$ aynı derecede öğretici değil. $t$ 0'a yakınken $x_t$ neredeyse temiz görüntü, en iyi tahmin kabaca \"$-x_0$ yönüne git\"; $t$ 1'e yakınken $x_t$ neredeyse saf noise, en iyi tahmin kabaca \"veri ortalamasına doğru git\". İki uçta da doğru cevap basit. Zor ve bilgi taşıyan kısım ortada.\n\nSD3 paperı (Esser ve ark., ICML 2024) birkaç alternatifi karşılaştırıp logit-normal dağılımın en iyi çalıştığını buldu: $t = \\text{sigmoid}(n)$, $n \\sim \\mathcal{N}(0,1)$. Bu $t$'yi ortaya yığıyor, uçlardan daha az örnek çekiyor. CS231n'in CFG kodundaki torch.randn(()).sigmoid() satırı tam olarak bu."
+          "heading": "19. How time should be sampled",
+          "text": "In the loss $t$ is drawn from a uniform distribution. But not every $t$ is equally instructive. When $t$ is close to 0, $x_t$ is almost the clean image and the best prediction is roughly \\\"go in the direction of $-x_0$\\\"; when $t$ is close to 1, $x_t$ is almost pure noise and the best prediction is roughly \\\"go towards the mean of the data\\\". At both ends the right answer is simple. The hard and informative part is in the middle.\n\nThe SD3 paper (Esser et al., ICML 2024) compared several alternatives and found the logit-normal distribution worked best: $t = \\text{sigmoid}(n)$ with $n \\sim \\mathcal{N}(0,1)$. This piles $t$ up in the middle and draws fewer samples from the ends. The line torch.randn(()).sigmoid() in the CFG code of CS231n is exactly this."
         },
         {
           "type": "text",
-          "heading": "20. Bugünkü tarif: latent + DiT + rectified flow",
-          "text": "SD3'ün başlığı \"Scaling Rectified Flow Transformers\" ve bugünkü büyük görüntü modellerinin tarifi üç parçadan oluşuyor:\n\nLatent diffusion — görüntü önce bir VAE ile küçük bir latent'e sıkıştırılıyor ve flow orada öğreniliyor. Rectified flow'un loss'u değişmiyor; $x_0$ artık görüntü değil, onun latent'i.\n\nDiT — velocity'yi tahmin eden network U-Net değil transformer. Flow'un matematiği ağdan bağımsız; DiT kartındaki \"diffusion ile onu hesaplayan network ayrılabilir\" gözlemi flow için de aynen geçerli.\n\nRectified flow — düz yol, velocity loss, logit-normal zaman sampling'i, 30-50 adımlık Euler ya da daha iyi bir ODE solver.\n\nFLUX da aynı tarifin üstünde. Yani bugün \"diffusion modeli\" denen büyük modellerin önemli bir kısmı teknik olarak flow matching modeli."
+          "heading": "20. Today's recipe: latent + DiT + rectified flow",
+          "text": "The title of SD3 is \\\"Scaling Rectified Flow Transformers\\\", and the recipe of today's large image models consists of three parts:\n\nLatent diffusion — the image is first compressed into a small latent with a VAE and the flow is learned there. The loss of rectified flow does not change; $x_0$ is no longer the image but its latent.\n\nDiT — the network predicting the velocity is not a U-Net but a transformer. The mathematics of the flow is independent of the network; the observation in the DiT card that \\\"diffusion and the network computing it are separable\\\" holds just as much for the flow.\n\nRectified flow — the straight path, the velocity loss, logit-normal time sampling, 30 to 50 steps of Euler or a better ODE solver.\n\nFLUX sits on top of the same recipe. So a significant portion of the large models called \\\"diffusion models\\\" today are technically flow matching models."
         },
         {
           "type": "ref",
@@ -28505,18 +28505,18 @@
         },
         {
           "type": "text",
-          "heading": "21. Noise zorunlu değil: iki distribution arasında flow",
-          "text": "Liu paperının adı \"learning to generate and transfer data\". İkinci kelime önemli. Loss'ta $z$'nin Gaussian olmasını gerektiren hiçbir şey yok. $z$ yerine başka bir distribution'dan örnek koyarsan, iki distribution arasında bir flow öğreniyorsun.\n\nMRI synthesis'te bunun anlamı doğrudan: $x_0$ hedef kontrast (T2), $z$ aynı hastanın kaynak kontrastı (T1). Eşleşmiş veride çiftleri veri zaten veriyor, rastgele eşleştirmeye gerek yok. Eğitim aynı loss; üretimde saf noise yerine kaynak görüntüden başlayıp ODE'yi çözüyorsun.\n\nBu, labın diffusion bridge çizgisine (I²SB, BBDM, SelfRDB) çok yakın. Bridge'ler de iki görüntü arasında bir yol kuruyor, ama yolun ortasına noise ekliyor. Düz transfer flow'u bunun noise'suz, deterministik ucu gibi düşünülebilir; bedeli, aynı kaynaktan hep aynı çıktının gelmesi (çeşitlilik ve belirsizlik yok).\n\nEşleşmemiş veride (translation) çiftler yok; eşleştirmeyi kendin kurman gerekiyor — reflow ya da optimal transport'a dayalı eşleştirmeler burada devreye giriyor.\n\nReconstruction'da ise öğrenilmiş flow bir prior olarak kullanılabilir: her Euler adımından sonra ölçülen k-space'e data consistency uygulanıyor, diffusion prior'la reconstruction'da yapılanın aynısı. Bu yönlerin medikalde ne kadar işlendiğine güncel literatürden bakmak gerekiyor."
+          "heading": "21. Noise is not compulsory: a flow between two distributions",
+          "text": "The title of the Liu paper is \\\"learning to generate and transfer data\\\". The second verb matters. Nothing in the loss requires $z$ to be Gaussian. If you put a sample from another distribution in place of $z$, you are learning a flow between two distributions.\n\nIn MRI synthesis the meaning is direct: $x_0$ is the target contrast (T2) and $z$ the source contrast (T1) of the same patient. With paired data the pairs are already given by the data, there is no need for random matching. Training uses the same loss; in generation you start from the source image instead of pure noise and solve the ODE.\n\nThis is very close to the lab's diffusion bridge line (I²SB, BBDM, SelfRDB). Bridges also build a path between two images, but they add noise in the middle of the path. A straight transfer flow can be thought of as the noise-free, deterministic end of that; its price is that the same source always yields the same output (no diversity, no uncertainty).\n\nWith unpaired data (translation) there are no pairs; you have to build the matching yourself — this is where reflow or matchings based on optimal transport come in.\n\nIn reconstruction the learned flow can be used as a prior: after every Euler step, data consistency is applied to the measured k-space, the same as what is done in reconstruction with a diffusion prior. How far these directions have been pursued in the medical setting has to be checked against the current literature."
         },
         {
           "type": "insight",
-          "heading": "Geriye ne kalsın",
-          "text": "Noise ile veri arasına düz çizgi çek, network'e o çizginin yönünü öğret, üretimde yönü geriye takip et. Tek bir çiftin cevabı bariz; network bütün çiftlerin ortalamasını öğreniyor ve bu ortalama doğru haritayı veriyor. Çiftler kesiştiği için öğrenilen yollar bükülüyor; reflow onları düzleştiriyor. DDPM ile aynı ailedir; farkı yolu düz seçmesi ve türetmeyi ELBO yerine regression'dan kurması. Noise yerine başka bir görüntü koyarsan aynı loss translation yapıyor."
+          "heading": "What should stay with you",
+          "text": "Draw a straight line between noise and data, teach the network the direction of that line, and follow the direction backwards at generation. The answer for a single pair is obvious; the network learns the average over all pairs, and that average gives the correct map. Because the pairs cross, the learned paths bend; reflow straightens them. It belongs to the same family as DDPM; its differences are choosing the path to be straight and building the derivation from regression instead of the ELBO. If you put another image in place of the noise, the same loss performs translation."
         },
         {
           "type": "note",
-          "heading": "Nereye bakılır",
-          "text": "Paperlar: Liu, Gong, Liu — Flow Straight and Fast: Learning to Generate and Transfer Data with Rectified Flow (ICLR 2023, arXiv 2209.03003) · Lipman ve ark. — Flow Matching for Generative Modeling (ICLR 2023, arXiv 2210.02747) · Albergo, Vanden-Eijnden — Building Normalizing Flows with Stochastic Interpolants (ICLR 2023, arXiv 2209.15571) · Esser ve ark. — Scaling Rectified Flow Transformers for High-Resolution Image Synthesis (ICML 2024, SD3).\n\nÖğrenme: MIT 6.S184 — Introduction to Flow Matching and Diffusion Models (ders notları + lab) · Lipman ve ark. — Flow Matching Guide and Code (arXiv 2412.06264) ve facebookresearch/flow_matching kütüphanesi.\n\nÇalıştırmak için: github.com/cloneofsimo/minRF — minimal rectified flow, MNIST/CIFAR üzerinde Colab'da çalışıyor."
+          "heading": "Where to look",
+          "text": "Papers: Liu, Gong, Liu — Flow Straight and Fast: Learning to Generate and Transfer Data with Rectified Flow (ICLR 2023, arXiv 2209.03003) · Lipman et al. — Flow Matching for Generative Modeling (ICLR 2023, arXiv 2210.02747) · Albergo, Vanden-Eijnden — Building Normalizing Flows with Stochastic Interpolants (ICLR 2023, arXiv 2209.15571) · Esser et al. — Scaling Rectified Flow Transformers for High-Resolution Image Synthesis (ICML 2024, SD3).\n\nFor learning: MIT 6.S184 — Introduction to Flow Matching and Diffusion Models (lecture notes and labs) · Lipman et al. — Flow Matching Guide and Code (arXiv 2412.06264) and the facebookresearch/flow_matching library.\n\nTo run something: github.com/cloneofsimo/minRF — a minimal rectified flow, runs on MNIST/CIFAR in Colab."
         }
       ]
     },
