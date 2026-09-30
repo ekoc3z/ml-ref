@@ -372,16 +372,6 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
   border:none;padding:0;cursor:pointer;text-align:left}
 .popup-back:hover{text-decoration:underline}
 .popup-depth{font-size:12px;font-weight:600;color:var(--bg);opacity:.75;white-space:nowrap}
-#papers-page{display:none;max-width:940px;margin:0 auto;padding:72px 32px 88px}
-.papers-list{margin:30px auto 0;max-width:720px}
-.papers-group{margin:26px auto 2px;max-width:720px;display:flex;align-items:baseline;gap:12px}
-.papers-group:first-child{margin-top:6px}
-.papers-group h3{font-family:var(--serif-ui);font-size:15px;font-weight:700;letter-spacing:.06em;color:var(--accent-light);margin:0;white-space:nowrap}
-.papers-group .pg-rule{flex:1;border-bottom:1px solid var(--border)}
-.papers-group .pg-n{font-size:11.5px;color:var(--muted)}
-.papers-empty{max-width:720px;margin:2px auto 0;padding:7px 2px;font-size:13px;color:var(--muted);font-style:italic}
-.paper-row .toc-meta{font-size:12.5px}
-@media(max-width:760px){#papers-page{padding:44px 22px 62px}}
 .home-guides{margin:34px auto 0;max-width:560px}
 .home-guides h3{font-size:13.5px;font-weight:700;letter-spacing:.06em;color:var(--muted);margin:0 0 4px}
 .home-guides-sub{font-size:14px;color:var(--muted);margin:0 0 10px}
@@ -655,12 +645,6 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
     <h2 onclick="switchSection('home')" title="Ana sayfa">ML Reference</h2>
     <button id="sidebar-close" onclick="closeSidebar()">&#10005;</button>
   </div>
-
-  <div class="nav-group-label" style="margin-top:10px;border-top:1px solid var(--border);padding-top:16px">PAPERS</div>
-  <button class="nav-btn" onclick="switchSection('papers');closeSidebar()" style="margin-bottom:8px">
-    <span class="nav-icon">🗂</span><span class="nav-num" style="font-size:.6rem">PPR</span>
-    <span class="nav-label">Paper Progress</span>
-  </button>
 
   <div class="nav-group-label" style="margin-top:10px;border-top:1px solid var(--border);padding-top:16px">COURSES</div>
   <div class="course-divider">ML · Machine Learning</div>
@@ -1735,7 +1719,6 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 <div id="ida-summary-page" style="display:none"></div>
 <div id="vs-summary-page" style="display:none"></div>
 <div id="home-page"></div>
-<div id="papers-page" style="display:none"></div>
 <div id="card-grid"></div>
 <div id="tx-tree-view" style="display:none"><div id="tx-container"></div></div>
 <div class="footer-text">Kart = detay popup &bull; <kbd>/</kbd> arama &bull; <kbd>ESC</kbd> kapat</div>
@@ -1789,7 +1772,6 @@ CHAPTERS.forEach(c => DATA[c] = []);
 let OVERVIEWS = {};
 let GUIDES = {};
 let MLO_ONLY = [];
-let PAPERS = {};
 let CARD_BY_ID = {};     // id -> kart (capraz referanslar icin)
 let POPUP_STACK = [];    // acik popup gecmisi (geri butonu)
 let CURRENT_POPUP = null;   // yalnizca ML-OVERALL'da gorunen kartlar (arama + sayim icin lazim)
@@ -1866,20 +1848,11 @@ function toggleMathGroup(){
 }
 
 function switchSection(sec){
-  if(sec === SEC && sec !== 'home' && sec !== 'papers'){ const tc = $('toc-'+sec); if(tc) tc.classList.toggle('open'); return; }
+  if(sec === SEC && sec !== 'home'){ const tc = $('toc-'+sec); if(tc) tc.classList.toggle('open'); return; }
   SEC = sec;
-  const isHome = sec === 'home', isPapers = sec === 'papers';
+  const isHome = sec === 'home';
   $('home-page').style.display = isHome ? 'block' : 'none';
-  const pp = $('papers-page'); if(pp) pp.style.display = isPapers ? 'block' : 'none';
-  $('hdr-root').style.display = (isHome || isPapers) ? 'none' : '';
-  if(isPapers){
-    document.querySelectorAll('.nav-btn[data-sec]').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.section-header').forEach(h => h.classList.remove('active'));
-    document.querySelectorAll('.toc.open').forEach(t => t.classList.remove('open'));
-    ['overview-panel','card-grid','summary-page','ida-summary-page','vs-summary-page','tx-tree-view']
-      .forEach(id => { const e = $(id); if(e) e.style.display = 'none'; });
-    buildPapers(); closeSidebar(); window.scrollTo(0,0); return;
-  }
+  $('hdr-root').style.display = isHome ? 'none' : '';
   if(isHome){
     document.querySelectorAll('.nav-btn[data-sec]').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.section-header').forEach(h => h.classList.remove('active'));
@@ -2587,73 +2560,6 @@ function homeSearch(q){
   });
 }
 
-/* ==================== PAPER PROGRESS ==================== */
-function paperRow(k){
-  const p = PAPERS[k];
-  const name = (p.title||k).replace(/ — .*$/,'');
-  const sub  = (p.title||'').includes(' — ') ? (p.title.split(' — ')[1]||'') : '';
-  return `<button class="toc-row paper-row" data-paper="${esc(k)}">` +
-    `<span class="toc-name">${esc(name)}</span>` +
-    (sub ? `<span class="toc-sub">${esc(sub)}</span>` : '') +
-    `<span class="toc-dots"></span>` +
-    `<span class="toc-meta">${esc(p.cat||'')} · ${(p.sections||[]).length} bölüm</span></button>`;
-}
-const VENUE_ORDER = ['ICON','NeurIPS','ICML','ICLR','CVPR','Diger'];
-const VENUE_LABEL = {ICON:'ICON LAB', NeurIPS:'NeurIPS', ICML:'ICML', ICLR:'ICLR', CVPR:'CVPR', Diger:'DİĞER'};
-function paperVenue(k){ const v = (PAPERS[k]||{}).venue; return VENUE_ORDER.includes(v) ? v : 'Diger'; }
-/* keys -> venue basliklariyla gruplanmis HTML. showEmpty: paper'i olmayan baslik da basilsin mi */
-function paperGroupsHTML(keys, showEmpty){
-  return VENUE_ORDER.map(v => {
-    const ks = keys.filter(k => paperVenue(k) === v);
-    if(!ks.length && (!showEmpty || v === 'Diger')) return '';   // bos 'Diger' hic basilmaz
-    const head = `<div class="papers-group"><h3>${esc(VENUE_LABEL[v])}</h3>`
-               + `<span class="pg-rule"></span><span class="pg-n">${ks.length}</span></div>`;
-    const body = ks.length ? `<div class="papers-list">${ks.map(paperRow).join('')}</div>`
-                           : `<div class="papers-empty">henüz yok</div>`;
-    return head + body;
-  }).join('');
-}
-function buildPapers(){
-  const host = $('papers-page'); if(!host) return;
-  const keys = Object.keys(PAPERS||{});
-  host.innerHTML =
-    `<div class="home-hero">
-       <h1>Paper Progress</h1>
-       <div class="home-rule"><div class="home-rule-in"></div></div>
-       <div class="home-meta">${keys.length} paper &middot; okuma notları, tam analiz ve arka plan teorisi</div>
-     </div>
-     <div class="home-search"><input id="paper-q" type="search" placeholder="Paper, yöntem, kavram ara…" autocomplete="off"></div>
-     <div id="papers-list">${paperGroupsHTML(keys, true)}</div>`;
-  bindPaperRows();
-  const qi = $('paper-q');
-  if(qi){ let t; qi.oninput = () => { clearTimeout(t); t = setTimeout(() => papersFilter(qi.value), 120); };
-          qi.onkeydown = e => { if(e.key === 'Escape'){ qi.value=''; papersFilter(''); qi.blur(); } }; }
-}
-function bindPaperRows(){
-  document.querySelectorAll('[data-paper]').forEach(el =>
-    el.onclick = () => showPaper(el.dataset.paper));
-}
-function papersFilter(q){
-  q = (q||'').trim().toLowerCase();
-  const box = $('papers-list'); if(!box) return;
-  const keys = Object.keys(PAPERS||{});
-  if(!q){ box.innerHTML = paperGroupsHTML(keys, true); bindPaperRows(); return; }
-  const hits = keys.filter(k => {
-    const p = PAPERS[k];
-    const blob = [p.title, p.cat, p.context, p.summary,
-      ...(p.sections||[]).map(x => [x.heading||'', secBody(x)].join(' '))].join(' ').toLowerCase();
-    return blob.includes(q);
-  });
-  box.innerHTML = hits.length ? paperGroupsHTML(hits, false)
-    : `<div class="sr-empty">“${esc(q)}” için sonuç yok.</div>`;
-  bindPaperRows();
-}
-function showPaper(k){
-  const p = PAPERS[k]; if(!p) return;
-  showPopup({title:p.title, cat:p.cat||'Paper', context:p.context,
-             summary:p.summary, sections:p.sections});
-}
-
 /* Ana sayfadaki konu anlatimi listesi — guides.json'dan uretilir */
 function guideIndexHTML(){
   const keys = Object.keys(GUIDES || {});
@@ -2835,7 +2741,6 @@ function applyData(d){
   CARD_BY_ID = IDX;
   if(d.overviews) OVERVIEWS = d.overviews;
   if(d.guides) GUIDES = d.guides;
-  if(d.papers) PAPERS = d.papers;
   if(d.summary) SUMMARY = d.summary;
   if(d.ida_summary) IDA_SUMMARY = d.ida_summary;
   if(d.vs_summary) VS_SUMMARY = d.vs_summary;
@@ -2853,7 +2758,7 @@ function applyData(d){
 }
 
 
-fetch('./data/unified.json?v=20260929122245')
+fetch('./data/unified.json?v=20260930180951')
   .then(r => { if(!r.ok) throw new Error(r.status); return r.json() })
   .then(applyData)
   .catch(() => {
