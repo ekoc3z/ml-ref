@@ -7043,127 +7043,6 @@
         "denoising",
         "noise schedule"
       ]
-    },
-    {
-      "title": "Guidance — From Classifier to Classifier-Free",
-      "cat": "Theory",
-      "summary": "Giving the condition as an input leaves the consistency weak. Guidance strengthens it during sampling: when Bayes' rule is written on the score, the conditional score decomposes into the unconditional score plus the classifier gradient. Classifier guidance takes that term from a separate model; classifier-free guidance sees that the same information is already present in the difference between the conditional and the unconditional prediction and deletes that model.",
-      "context": "Conditional generation — Dhariwal, Nichol 2021 · Ho, Salimans 2022 · CME 296 Lecture 4",
-      "mlo_only": true,
-      "sections": [
-        {
-          "type": "text",
-          "heading": "In one sentence",
-          "text": "Guidance is the technique of artificially strengthening the effect of the condition in conditional generation. It was first done with the gradient of a separate classifier, and later a method was found that removes that classifier entirely.\n\nBoth methods change sampling, not training; the second one makes a single small addition to training."
-        },
-        {
-          "type": "text",
-          "heading": "1. The problem: giving the condition is not enough",
-          "text": "The most direct route to conditional generation is to give the condition $y$ to the network as an extra input: $\\varepsilon_\\theta(x_t, y, t)$. During training you train on (image, label) pairs.\n\nThis works, but it works weakly. The generated samples are consistent with the label, yet the consistency is loose: when you say \"golden retriever\" a dog comes, but sometimes an indistinct dog, sometimes a scene full of irrelevant detail.\n\nThe reason is this: the model learns $p(x \\mid y)$ and samples honestly from that distribution. Inside the distribution there are also regions that match the label weakly, and sampling visits those too. What is wanted, though, are the regions that match the label most typically.\n\nThis is guidance's point of departure: increasing the weight of the condition during sampling."
-        },
-        {
-          "type": "text",
-          "heading": "2. Classifier guidance: the idea",
-          "text": "Dhariwal and Nichol (2021) proposed this: place a separately trained classifier next to an unconditionally trained generation model. The classifier answers the question \"which class does this image belong to\"; its gradient then gives the information \"in which direction do I change this image so that it resembles that class more\".\n\nDuring sampling this direction is added to the model's own step at each step. That is, the generation model says where to go, and the classifier bends that direction towards the class."
-        },
-        {
-          "type": "text",
-          "heading": "3. The derivation: applying Bayes on the score",
-          "text": "What is wanted is the conditional score, that is $\\nabla_x \\log p_t(x \\mid y)$. Writing Bayes' rule and taking the logarithm:\n\n$$\\log p_t(x \\mid y) = \\log p_t(x) + \\log p_t(y \\mid x) - \\log p_t(y)$$\n\nThe last term does not depend on $x$, and therefore it drops when the gradient with respect to $x$ is taken:\n\n$$\\nabla_x \\log p_t(x \\mid y) = \\nabla_x \\log p_t(x) + \\nabla_x \\log p_t(y \\mid x)$$\n\nThe reading of the equation is this: the conditional score is the unconditional score plus the classifier's gradient. The first term is already given by the trained diffusion model, the second by the classifier.\n\nThe two intermediate steps in the slides connect this result to the sampling formula. The first uses the fact that the unconditional transition in DDPM's step rule is Gaussian. The second linearises $\\log p_t(y \\mid x)$ with a first order Taylor expansion at the centre of the step. When the two are combined the expression that emerges is again a Gaussian, but with a shifted mean:\n\n$$\\mu_{\\text{guided}} = \\mu_\\theta(x_t,t) + \\Sigma \\cdot \\nabla_x \\log p_t(y \\mid x)$$\n\nThat is, the classifier's only effect is to push the centre of the step towards the class.\n\nThis Taylor step is an approximation; guidance's \"not theoretically clean but works in practice\" side comes from here."
-        },
-        {
-          "type": "insight",
-          "heading": "4. Guidance scale: why larger than 1",
-          "text": "The derivation naturally gives the coefficient of the classifier term as 1. But in experiments good results are not obtained with 1; the coefficient has to be enlarged:\n\n$$\\nabla_x \\log p_t(x) + s \\cdot \\nabla_x \\log p_t(y \\mid x), \\qquad s > 1$$\n\nWhat this means is that you are no longer sampling from $p(x \\mid y)$. Effectively you are sampling from a distribution like $p(x) \\cdot p(y \\mid x)^s$, in which the class probability has been sharpened. The result: images far more typical of the label and \"cleaner\", but less diverse.\n\nThe trade-off is always in the same direction: as $s$ grows, quality and consistency increase, diversity drops. At very large $s$ the images become saturated and cliched."
-        },
-        {
-          "type": "text",
-          "heading": "5. The cost of classifier guidance",
-          "text": "The method works but brings three burdens.\n\nLabelled data and a separate model are needed. You have to train the classifier in addition.\n\nAn off-the-shelf classifier cannot be used. Because guidance is applied at every noise level, the classifier has to work on corrupted inputs like $x_t$. An ordinary ImageNet classifier is trained on clean images and is therefore useless; you have to retrain it on noisy data.\n\nExtra cost at every step. At each step of sampling you have to pass through the classifier and take a gradient, and on top of that $s$ is a new parameter that has to be tuned separately.\n\nIt is also limited to class labels: conditioning on free text is not natural in this frame."
-        },
-        {
-          "type": "insight",
-          "heading": "6. Classifier-free guidance: deleting the classifier",
-          "text": "Ho and Salimans (2022) turned the equation in the derivation around and looked at it. From the same identity the classifier term can be isolated:\n\n$$\\nabla_x \\log p_t(y \\mid x) = \\nabla_x \\log p_t(x \\mid y) - \\nabla_x \\log p_t(x)$$\n\nThat is, the information the classifier provides is already present in the difference between the conditional and the unconditional score. There is no need to set up a separate model; a single network that can produce both is enough.\n\nFor this a single addition is made to training: on a fraction of the samples the condition is randomly dropped and an empty token is put in its place. The same network thus learns to produce both conditional and unconditional predictions.\n\nAt sampling time the two predictions are taken and the difference between them is amplified:\n\n$$\\tilde{\\varepsilon} = \\varepsilon_\\theta(x_t, \\varnothing, t) + w \\cdot \\bigl[ \\varepsilon_\\theta(x_t, y, t) - \\varepsilon_\\theta(x_t, \\varnothing, t) \\bigr]$$\n\nInside the bracket is the direction of \"the difference the condition brings\"; $w$ says how much you will exaggerate that direction. $w = 1$ is ordinary conditional generation, $w > 1$ is guidance."
-        },
-        {
-          "type": "table",
-          "heading": "7. The two methods compared",
-          "rows": [
-            [
-              "",
-              "Classifier guidance",
-              "Classifier-free guidance"
-            ],
-            [
-              "Extra model",
-              "yes, a classifier trained on noisy data",
-              "no"
-            ],
-            [
-              "Effect on training",
-              "none, a pure sampling technique",
-              "condition dropout is added"
-            ],
-            [
-              "Conditioning type",
-              "class label",
-              "text, image, any embedding"
-            ],
-            [
-              "Inference cost",
-              "classifier + gradient at every step",
-              "2 network calls at every step"
-            ],
-            [
-              "Approximation",
-              "Taylor expansion",
-              "none"
-            ],
-            [
-              "Place in practice",
-              "historical, the first solution",
-              "today's standard"
-            ]
-          ]
-        },
-        {
-          "type": "text",
-          "heading": "8. Its cost and practical notes",
-          "text": "The cost of classifier-free guidance is that it doubles sampling: at every step the network runs once conditionally and once unconditionally. Part of the work on distillation aims at exactly removing this second call.\n\nHow the condition is represented is free. In text conditioning the embedding of a text encoder such as CLIP or T5 is used; the network takes this vector through cross-attention or adaLN. The mathematics of guidance does not look at what the condition is, it only needs the pair \"conditional and unconditional prediction\".\n\nThe value of $w$ is tuned per model; the typical range is between 2 and 8. The \"CFG scale\" or \"guidance scale\" setting in image generation interfaces is exactly this number.\n\nFinally, guidance is independent of the parametrization: the same operation can be written identically on $\\varepsilon$, score or velocity predictions, because the three are related to each other by fixed coefficients."
-        },
-        {
-          "type": "insight",
-          "heading": "What should stay with you",
-          "text": "Giving the condition as an input leaves the consistency weak; guidance strengthens that consistency during sampling. When Bayes' rule is written on the score, the conditional score decomposes into the unconditional score plus the classifier gradient. Classifier guidance takes this second term from a separate model and requires a classifier trained on noisy data. Classifier-free guidance sees that the same term is already present in the difference between the conditional and the unconditional prediction and deletes the separate model; its cost is two network calls per step. As the guidance scale grows, consistency and quality increase and diversity decreases."
-        },
-        {
-          "type": "ref",
-          "heading": "Related cards",
-          "items": [
-            {
-              "id": "cs13-conditional-generation-and-classifier-free-guidance-cfg",
-              "label": "CS231n — CFG formulas and code"
-            },
-            {
-              "id": "ida11-conditional-diffusion-and-text-to-image-generation",
-              "label": "Conditional diffusion and text-to-image"
-            }
-          ]
-        },
-        {
-          "type": "note",
-          "heading": "Where to look",
-          "text": "Sources: Dhariwal, Nichol — Diffusion Models Beat GANs on Image Synthesis (2021), classifier guidance · Ho, Salimans — Classifier-Free Diffusion Guidance (2022).\n\nCourse: CME 296, Lecture 4, Part 3. The first part of the same lecture (from pixel space to latent space, AE to VAE, perceptual and adversarial loss) is in the Autoencoder and VAE walkthrough, and the second part (transformer, ViT, contrastive learning, CLIP) in the CS231n 15 cards."
-        }
-      ],
-      "id": "ida11-guidance-classifier-dan-classifier-free-ye",
-      "keywords": [
-        "Bayes",
-        "Bayes theorem",
-        "prior",
-        "posterior"
-      ]
     }
   ],
   "ida12": [
@@ -27846,16 +27725,16 @@
       ]
     },
     "clip": {
-      "title": "Conditioning Signal — CLIP and Text-Image Representation",
+      "title": "Conditioning Signal — From CLIP to Guidance",
       "cat": "Walkthrough",
-      "context": "The first half of text to image generation · CME 296 Lecture 4 Part 2",
+      "context": "The whole of text to image conditioning · CME 296 Lecture 4, Parts 2 and 3",
       "chapters": [
         "cs15",
         "cs13",
         "mlo18",
         "mlo21"
       ],
-      "summary": "The full route by which a sentence becomes a vector that can enter a generative model: tokenization, the text encoder, ViT, and the contrastive learning that brings the two spaces together. Why the CLIP loss is a cross-entropy whose classes are the batch itself, what SigLIP changes, and how the resulting embedding enters the diffusion model through adaLN or cross-attention.",
+      "summary": "The full route by which a sentence becomes a vector that can steer a generative model, and then the techniques that strengthen its effect: tokenization, the text encoder, ViT, contrastive learning and why the CLIP loss is a cross-entropy over the batch, SigLIP, how the embedding enters through adaLN or cross-attention, and then guidance — the Bayes derivation on the score, classifier guidance and what it costs, the implicit classifier that removes it, condition dropout in training and the extrapolation at sampling time.",
       "sections": [
         {
           "type": "text",
@@ -27909,9 +27788,69 @@
           "text": "The conditioning signal is ready; what remains is inserting it into the image model. Three routes are used and which one is chosen depends on the form of the signal.\n\nAddition. If the signal is a single vector it is treated like the timestep embedding and added into the intermediate layers. Simple but weak in effect.\n\nadaLN. Again a single vector, but that vector determines the normalization parameters (scale and shift) of the layers. The route DiT prefers; far stronger than addition.\n\nCross-attention. The natural choice if the signal is a sequence of tokens. The query comes from the image and the key and value from the text; thus every region of the image can look at different words of the sentence. This is the standard method in text conditioning.\n\nModern text to image models generally combine two of them: the pooled vector sets the overall tone through adaLN and the token sequence carries the detail through cross-attention. Moreover several encoders are used instead of one; CLIP's text tower brings semantic alignment, while pure language models such as T5 work better on long and complex sentences."
         },
         {
+          "type": "text",
+          "heading": "8. The condition is in the model, and it is still not enough",
+          "text": "Everything up to here produced a vector and found it a door into the network. That is conditional generation, and it works — but weakly.\n\nThe samples do follow the prompt, yet loosely. Ask for a golden retriever and a dog arrives; sometimes an indistinct dog, sometimes a scene cluttered with things nobody asked for.\n\nThe reason is not a bug. The model has learned $p(x \\mid y)$ and is sampling from it honestly. That distribution also contains regions that match the label only weakly, and honest sampling visits them in proportion to their mass. What you actually want are the regions most typical of the label — which is a different request from sampling the distribution.\n\nGuidance is the name of the family of techniques that make that different request. All of them change sampling, not the generative paradigm; one of them adds a single line to training."
+        },
+        {
+          "type": "text",
+          "heading": "9. The first idea: borrow a classifier's knowledge",
+          "text": "Dhariwal and Nichol (2021) started from an observation. A classifier already knows what makes an image belong to a class — that is exactly what it was trained for. Its gradient with respect to the image says: change the pixels in this direction and the image looks more like that class.\n\nSo put a separately trained classifier next to an unconditionally trained diffusion model, and at every sampling step let it bend the step towards the class.\n\nThe generative model says where to go next; the classifier tilts that direction."
+        },
+        {
+          "type": "text",
+          "heading": "10. The derivation: Bayes applied on the score",
+          "text": "What is wanted is the conditional score, $\\nabla_x \\log p_t(x \\mid y)$. Write Bayes' rule between $x$ and $y$ and take logarithms:\n\n$$\\log p_t(x \\mid y) = \\log p_t(x) + \\log p_t(y \\mid x) - \\log p_t(y)$$\n\nThe last term does not depend on $x$, so it dies under the gradient:\n\n$$\\nabla_x \\log p_t(x \\mid y) = \\nabla_x \\log p_t(x) + \\nabla_x \\log p_t(y \\mid x)$$\n\nRead it in words: the conditional score is the unconditional score plus the classifier's gradient. The first term is the diffusion model you already trained, the second is the classifier.\n\nThe lecture then takes two detours to connect this to an actual sampling step.\n\nThe first uses what DDPM already gave: the unconditional reverse step is a Gaussian with a known mean and variance. The second linearises $\\log p_t(y \\mid x)$ around the centre of that step with a first-order Taylor expansion, which turns the product of a Gaussian and an exponential into another Gaussian.\n\nWhat comes out is a Gaussian with the same variance and a shifted mean:\n\n$$\\mu_{\\text{guided}} = \\mu_\\theta(x_t,t) + \\Sigma \\cdot \\nabla_x \\log p_t(y \\mid x)$$\n\nSo the classifier's entire effect is to push the centre of each step towards the class. Note where the approximation entered: the Taylor step. This is the sense in which guidance is not theoretically clean yet works."
+        },
+        {
+          "type": "insight",
+          "heading": "11. What this buys you: the generator is untouched",
+          "text": "Look at what the per-step rule actually needs: the unconditional model's prediction and parameters, and the classifier's score. Nothing else.\n\nTwo consequences follow, and they are the reason the method was attractive.\n\nThe diffusion model is not retrained. An unconditional model that already exists can be made conditional without touching its weights — this is purely a sampling technique.\n\nOnly the classifier has to be trained. And it cannot be any classifier: guidance is applied at every noise level, so the classifier must read corrupted inputs $x_t$. It is trained with ordinary cross-entropy, but on noised images with the timestep as an input, drawing $t$ the same way the diffusion model does."
+        },
+        {
+          "type": "text",
+          "heading": "12. The guidance scale: the derivation says one, the experiment says more",
+          "text": "The derivation gives the classifier term a coefficient of exactly one. In practice that produces disappointing samples, and a scale is put in front of it:\n\n$$\\nabla_x \\log p_t(x) + s \\cdot \\nabla_x \\log p_t(y \\mid x), \\qquad s > 1$$\n\nIt is worth being honest about what this means: you are no longer sampling from $p(x \\mid y)$. Effectively the target has become proportional to $p(x) \\, p(y \\mid x)^s$, a distribution in which the class likelihood has been sharpened. The samples become far more typical of the label and visibly cleaner, and the diversity drops.\n\nThe trade-off always runs the same way, and it never disappears — classifier-free guidance inherits it unchanged."
+        },
+        {
+          "type": "text",
+          "heading": "13. The limitations, in two groups",
+          "text": "The lecture splits them, and the split is useful because the two groups bite at different times.\n\nWhat it requires. Labelled data, since a classifier has to be trained. A classifier that works on noised input, so no off-the-shelf ImageNet model can be used. And the two models' data distributions have to be aligned — a classifier trained on a different corpus quietly steers the generator somewhere else.\n\nWhat it costs at inference. An extra forward and backward pass through the classifier at every step. A new hyperparameter, the scale, that has to be tuned. And an approximation sitting at the bottom of the derivation, the Taylor expansion.\n\nThere is also a silent restriction: the condition is a class label. Free text does not fit this frame naturally, and text is where the field was heading."
+        },
+        {
+          "type": "insight",
+          "heading": "14. Removing the classifier: the implicit classifier",
+          "text": "Ho and Salimans (2022) looked at the same identity from the other side. Isolate the classifier term:\n\n$$\\nabla_x \\log p_t(y \\mid x) = \\nabla_x \\log p_t(x \\mid y) - \\nabla_x \\log p_t(x)$$\n\nThe statement this makes is the whole idea: the conditional and the unconditional signals together already define a classifier. You never needed a separate model — you needed the difference between two predictions you can produce yourself.\n\nThe motivation for wanting this is practical, and the lecture states it plainly: a classifier trained on noisy data is not something you find in the wild, and nobody wants an extra model call at inference time."
+        },
+        {
+          "type": "text",
+          "heading": "15. Training: one added line",
+          "text": "The training loop stays the DDPM loop. Draw a clean image, a noise and a timestep; build the noised image; have the network predict; take the loss; backpropagate.\n\nThe single addition is at the input: with some probability the condition is dropped and replaced by a null token. Typical rates are ten to twenty percent.\n\nThat is enough. One network learns both jobs — predicting with the condition and predicting without it — and the two live in the same weights."
+        },
+        {
+          "type": "text",
+          "heading": "16. Sampling: three predictions, one step",
+          "text": "At each step the network is run twice, once with the condition and once with the null token, and the two are combined:\n\n$$\\tilde{\\varepsilon} = \\varepsilon_\\theta(x_t, \\varnothing, t) + w \\cdot \\bigl[\\varepsilon_\\theta(x_t, y, t) - \\varepsilon_\\theta(x_t, \\varnothing, t)\\bigr]$$\n\nThe bracket is the direction the condition adds. The weight $w$ says how far to travel along it.\n\nThe geometry is worth holding onto, because it explains the failure mode: this is an extrapolation, not an interpolation. At $w = 1$ the result lands exactly on the conditional prediction. At $w > 1$ it shoots past the conditional prediction, further from the unconditional one than the model itself would ever go."
+        },
+        {
+          "type": "svg",
+          "heading": "Guidance as a direction, not an average",
+          "svg": "<svg width=\"560\" height=\"282\" viewBox=\"0 0 560 282\" role=\"img\" aria-label=\"classifier-free guidance as extrapolation\"><defs><marker id=\"c1\" viewBox=\"0 0 10 10\" refX=\"9\" refY=\"5\" markerWidth=\"5.5\" markerHeight=\"5.5\" orient=\"auto\"><path d=\"M0,0 L10,5 L0,10 z\" fill=\"#8a8f98\"/></marker><marker id=\"c2\" viewBox=\"0 0 10 10\" refX=\"9\" refY=\"5\" markerWidth=\"5.5\" markerHeight=\"5.5\" orient=\"auto\"><path d=\"M0,0 L10,5 L0,10 z\" fill=\"#4f8ef7\"/></marker><marker id=\"c3\" viewBox=\"0 0 10 10\" refX=\"9\" refY=\"5\" markerWidth=\"5.5\" markerHeight=\"5.5\" orient=\"auto\"><path d=\"M0,0 L10,5 L0,10 z\" fill=\"#e0a12a\"/></marker><marker id=\"c4\" viewBox=\"0 0 10 10\" refX=\"9\" refY=\"5\" markerWidth=\"5.5\" markerHeight=\"5.5\" orient=\"auto\"><path d=\"M0,0 L10,5 L0,10 z\" fill=\"#a855f7\"/></marker><marker id=\"c5\" viewBox=\"0 0 10 10\" refX=\"9\" refY=\"5\" markerWidth=\"5.5\" markerHeight=\"5.5\" orient=\"auto\"><path d=\"M0,0 L10,5 L0,10 z\" fill=\"#22a06b\"/></marker></defs><line x1=\"74\" y1=\"218\" x2=\"238\" y2=\"150\" stroke=\"#4f8ef7\" stroke-width=\"1.6\" marker-end=\"url(#c2)\"/><line x1=\"74\" y1=\"218\" x2=\"278\" y2=\"104\" stroke=\"#e0a12a\" stroke-width=\"1.6\" marker-end=\"url(#c3)\"/><line x1=\"238\" y1=\"150\" x2=\"278\" y2=\"104\" stroke=\"#22a06b\" stroke-width=\"1.4\" stroke-dasharray=\"5 4\" marker-end=\"url(#c5)\"/><line x1=\"74\" y1=\"218\" x2=\"342\" y2=\"30\" stroke=\"#a855f7\" stroke-width=\"1.8\" marker-end=\"url(#c4)\"/><circle cx=\"74\" cy=\"218\" r=\"3.2\" fill=\"#8a8f98\"/><text class=\"num\" x=\"68\" y=\"234\" text-anchor=\"end\">current x_t</text><text class=\"num\" x=\"242\" y=\"170\" text-anchor=\"middle\">unconditional prediction</text><text class=\"num\" x=\"208\" y=\"94\" text-anchor=\"middle\">conditional prediction</text><text class=\"num\" x=\"294\" y=\"131.0\" text-anchor=\"start\">the difference: what the condition adds</text><text class=\"num\" x=\"352.0\" y=\"34.39999999999999\" text-anchor=\"start\">guided, w &gt; 1</text><text class=\"sm\" x=\"14\" y=\"24\" text-anchor=\"start\">classifier-free guidance is an extrapolation, not an average</text><text class=\"sm\" x=\"14\" y=\"256\" text-anchor=\"start\">w = 1 lands exactly on the conditional prediction; w &gt; 1 overshoots past it</text><text class=\"sm\" x=\"14\" y=\"274\" text-anchor=\"start\">the further it overshoots, the more typical of the prompt and the less diverse the sample</text></svg>"
+        },
+        {
+          "type": "text",
+          "heading": "17. Practical notes",
+          "text": "What the condition is does not matter to the mathematics. A class label, a CLIP embedding of a sentence, another image — guidance only needs the pair of predictions, conditional and unconditional. This is why CLIP embeddings became the standard carrier: the same machinery works unchanged.\n\nThe scale is tuned per model; the usual band is roughly 2 to 8, and the slider labelled CFG scale or guidance scale in image generation interfaces is exactly this number. Push it high and the images saturate and turn cliched; leave it at one and the prompt adherence collapses to what the plain conditional model gives.\n\nGuidance is also independent of the parametrization. The identical operation can be written on the noise prediction, on the score or on the velocity, because the three are related by fixed coefficients — so the same technique carries over to flow matching without modification.\n\nThe cost is the honest part of the ledger: the bespoke classifier is gone, but sampling now needs two network calls per step. A large part of the distillation literature exists to remove that second call."
+        },
+        {
+          "type": "insight",
+          "heading": "18. Why this closes the conditioning story",
+          "text": "Three stages have now been covered, and they are in order.\n\nRepresentation: the sentence becomes a vector, in a space shared with images. Condition: that vector enters the network, through adaLN or cross-attention. Guidance: at sampling time, the effect of the condition is amplified beyond what honest sampling would give.\n\nEach stage is useless without the previous one, and the last is the one that is invisible in the architecture diagram and decides what the output looks like."
+        },
+        {
           "type": "insight",
           "heading": "What should stay with you",
-          "text": "The way to put text and image into the same space is to build training directly on that requirement: pull the matched pairs within a batch together and push the unmatched ones apart. The loss is a cross-entropy whose classes are the batch itself; this is why the batch size directly affects quality. CLIP did this with 400 million pairs and made zero-shot classification possible, while SigLIP turned the softmax into a sigmoid and removed the dependence on the batch. The entry point into the generative model depends on the form of the signal: adaLN for a single vector, cross-attention for a sequence of tokens."
+          "text": "The way to put text and image into the same space is to build training directly on that requirement: pull the matched pairs within a batch together and push the unmatched ones apart. The loss is a cross-entropy whose classes are the batch itself; this is why the batch size directly affects quality. CLIP did this with 400 million pairs and made zero-shot classification possible, while SigLIP turned the softmax into a sigmoid and removed the dependence on the batch. The entry point into the generative model depends on the form of the signal: adaLN for a single vector, cross-attention for a sequence of tokens. Putting the condition into the network is still not enough: honest sampling from $p(x \\mid y)$ visits regions that match the prompt only weakly. Bayes written on the score splits the conditional score into the unconditional score plus a classifier gradient; classifier guidance supplies that term from a separate model trained on noised images and leaves the generator untouched, at the price of labelled data, an extra pass per step and a Taylor approximation. Classifier-free guidance notices that the same term is the difference between the conditional and unconditional predictions, so condition dropout during training replaces the classifier entirely. At sampling the two predictions are extrapolated, not averaged — which is why a large scale buys prompt adherence with diversity."
         },
         {
           "type": "ref",
@@ -27938,7 +27877,7 @@
         {
           "type": "note",
           "heading": "Where to look",
-          "text": "Sources: Radford et al. — Learning Transferable Visual Models From Natural Language Supervision (CLIP, 2021) · Zhai et al. — Sigmoid Loss for Language Image Pre-Training (SigLIP, 2023) · Dosovitskiy et al. — An Image is Worth 16x16 Words (ViT, ICLR 2021).\n\nCourse: CME 296, Lecture 4, Part 2. For the inner mechanics of the transformer see the Attention and Transformer walkthrough; for how the condition is strengthened during sampling see the Guidance card; for the continuation into VLMs (LLaVA, Flamingo) see the CS231n 15 cards."
+          "text": "Sources: Radford et al. — Learning Transferable Visual Models From Natural Language Supervision (CLIP, 2021) · Zhai et al. — Sigmoid Loss for Language Image Pre-Training (SigLIP, 2023) · Dosovitskiy et al. — An Image is Worth 16x16 Words (ViT, ICLR 2021).\n\nCourse: CME 296, Lecture 4, Part 2. For the inner mechanics of the transformer see the Attention and Transformer walkthrough; for how the condition is strengthened during sampling see the Guidance card; for the continuation into VLMs (LLaVA, Flamingo) see the CS231n 15 cards. The guidance block follows CME 296 Lecture 4 Part 3; the papers are Dhariwal and Nichol, Diffusion Models Beat GANs on Image Synthesis (2021) for classifier guidance and Ho and Salimans, Classifier-Free Diffusion Guidance (2022). The CS231n treatment with code is in cs13."
         }
       ]
     },
@@ -29177,7 +29116,6 @@
         "ida11-ddpm-matematiksel-ozet-forward-reverse-prediction-ve-l-simpl",
         "ida11-ddpm-unet-dahil-bastan-sona",
         "ida11-ddpm-training-inference-tam-parametreler-ve-dimensionlar",
-        "ida11-guidance-classifier-dan-classifier-free-ye",
         "cs13-diffusion-models-intuition-and-rectified-flow",
         "cs13-conditional-generation-and-classifier-free-guidance-cfg",
         "cs13-noise-schedules-optimal-prediction-analysis",
