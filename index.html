@@ -95,7 +95,7 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .wiki-article>*{max-width:920px}
 #card-grid{max-width:1080px;width:100%;margin:0 auto}
 .section-header.active{max-width:1080px;margin:0 auto;padding:0 28px}
-.sec-text+.sec-text{margin-top:1.5em}
+.sec-text+.sec-text{margin-top:1.05em}
 .sec-block-qa .sec-text{font-size:16.5px}
 
 /* CHAPTER CATEGORY COLORS */
@@ -313,15 +313,15 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 
 /* Section rendering */
 .sec-block{margin-bottom:28px}
-.sec-heading{font-size:17px;font-weight:700;text-transform:none;letter-spacing:0;color:var(--accent-light);opacity:1;line-height:1.4;margin:1.25em 0 .4em}
+.sec-heading{font-size:17px;font-weight:700;text-transform:none;letter-spacing:0;color:var(--accent-light);opacity:1;line-height:1.35;margin:1.95em 0 .55em}
 .wiki-article-body .sec-block:first-child .sec-heading,.popup-box .sec-block:first-of-type .sec-heading{margin-top:0}
-.sec-text{font-size:17px;line-height:1.75;color:var(--sec-text);white-space:pre-wrap}
+.sec-text{font-size:17px;line-height:1.68;color:var(--sec-text);white-space:pre-wrap;max-width:34em}
 .sec-formula{font-family:'SF Mono',Consolas,'Courier New',monospace;background:var(--sec-formula-bg);border:1px solid var(--sec-formula-border);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:12px 16px;font-size:16px;color:var(--sec-formula-text);overflow-x:auto;line-height:1.9}
 .sec-formula .katex-display{margin:.3em 0;overflow-x:auto;overflow-y:hidden}
 .sec-formula .katex{font-size:1.05em;color:var(--text)}
 .katex-display>.katex{text-align:left!important;padding-left:8px}
 .sec-list{list-style:none;padding:0}
-.sec-list li{font-size:17px;color:var(--sec-text);line-height:1.7;padding:3px 0 3px 14px;position:relative}
+.sec-list li{font-size:17px;color:var(--sec-text);line-height:1.68;padding:3px 0 3px 14px;position:relative;max-width:34em}
 .sec-list li::before{content:"›";position:absolute;left:0;color:var(--accent);font-weight:700}
 .sec-fig{margin:10px 0 4px;color:var(--muted)}
 .sec-fig svg{max-width:100%;height:auto;display:block;overflow:hidden}
@@ -578,8 +578,8 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 /* satir ici KaTeX: cevresine nefes, daha yuksek satir araligi */
 .sec-text .katex{margin:0 .22em;font-size:1.06em}
 .sec-text .katex:first-child{margin-left:0}
-.sec-text{line-height:1.95}
-.sec-block-qa .sec-text{line-height:2.05}
+.sec-text{line-height:1.68}
+.sec-block-qa .sec-text{line-height:1.72}
 .sec-text .katex-display{margin:.6em 0;overflow-x:auto;overflow-y:hidden;padding:2px 0}
 /* tek basina duran formul satiri: ortali, biraz buyuk */
 .eq-line{display:block;text-align:center;margin:.55em 0}
@@ -2758,7 +2758,7 @@ function applyData(d){
 }
 
 
-fetch('./data/unified.json?v=20261002123924')
+fetch('./data/unified.json?v=20261002124224')
   .then(r => { if(!r.ok) throw new Error(r.status); return r.json() })
   .then(applyData)
   .catch(() => {
