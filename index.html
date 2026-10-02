@@ -7,20 +7,20 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
 <style>
 :root {
-  --bg:#111111; --panel:#161616; --sidebar:#141414; --card:#181818; --border:#2a2a2a; --border-hover:#c9a97a;
-  --accent:#c9a97a; --accent-bg:#2a2418; --accent-light:#dcc39a; --text:#ececec; --muted:#9a9a9a;
-  --code-bg:#181818;
-  --sec-text:#e0e0e0; --sec-formula-bg:transparent; --sec-formula-border:transparent; --sec-formula-text:#ececec;
-  --sec-cmp-bg:#171717; --sec-note-bg:#1c1a14; --sec-note-border:#3a3320; --sec-note-text:#e6d9b8;
-  --sec-insight-bg:#171717; --sec-insight-border:#c9a97a; --sec-insight-text:#e0e0e0; --sec-code-text:#e6e6e6;
+  --bg:#121110; --panel:#1b1916; --sidebar:#17150f; --card:#1b1916; --border:#302c25; --border-hover:#e8a33d;
+  --accent:#e8a33d; --accent-bg:#2e2416; --accent-light:#f3c583; --text:#efece6; --muted:#a39c90;
+  --code-bg:#1b1916;
+  --sec-text:#e6e2da; --sec-formula-bg:transparent; --sec-formula-border:transparent; --sec-formula-text:#efece6;
+  --sec-cmp-bg:#1b1916; --sec-note-bg:#201c13; --sec-note-border:#443b24; --sec-note-text:#ead9b0;
+  --sec-insight-bg:#1b1916; --sec-insight-border:#e8a33d; --sec-insight-text:#e6e2da; --sec-code-text:#e9e5dd;
   --serif:Georgia,'Iowan Old Style','Palatino Linotype',serif;
   --serif-ui:Charter,'Bitstream Charter','Sitka Text',Cambria,'Palatino Linotype',serif;
   --find:#3fbfae;
-  --popup-bg:#151515; --popup-tbl-head:#1c1c1c; --overview-bg:transparent; --overview-text:#d6d6d6;
-  --hdr-bg:rgba(17,17,17,.96);
+  --popup-bg:#191714; --popup-tbl-head:#221f19; --overview-bg:transparent; --overview-text:#dcd7cd;
+  --hdr-bg:rgba(18,17,16,.96);
   --chain-next-col:#8fbf9a; --chain-next-bg:rgba(143,191,154,.07); --chain-next-border:#8fbf9a;
   --chain-prob-col:#d08a7a; --chain-prob-bg:rgba(208,138,122,.08); --chain-prob-border:#d08a7a;
-  --nav-hover-bg:#1c1c1c; --nav-hover-text:#ececec; --nav-active-text:#ececec; --count-bg:transparent; --count-text:#9a9a9a;
+  --nav-hover-bg:#221f19; --nav-hover-text:#efece6; --nav-active-text:#efece6; --count-bg:transparent; --count-text:#a39c90;
 }
 [data-theme="light"]{
   --bg:#faf7f1; --panel:#f4f0e8; --sidebar:#f6f2ea; --card:#f4f0e8; --border:#e4ddd0; --border-hover:#8a5a2b;
@@ -603,7 +603,7 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 [data-theme="dark"] .sidebar-hdr h2{color:var(--text);font-weight:600}
 [data-theme="dark"] .nav-icon{display:none}
 [data-theme="dark"] .nav-count{background:transparent;color:var(--muted);padding:0;font-size:10.5px}
-[data-theme="dark"] .nav-btn{font-size:13.5px;padding:7px 16px;color:#bdbdbd}
+[data-theme="dark"] .nav-btn{font-size:13.5px;padding:7px 16px;color:#bdb6a9}
 [data-theme="dark"] .nav-btn:hover{background:transparent;color:var(--text)}
 [data-theme="dark"] .nav-btn.active{background:transparent;border-left-color:var(--text);color:var(--text);font-weight:700}
 [data-theme="dark"] .nav-group-toggle,[data-theme="dark"] .math-group-toggle{color:var(--text)}
@@ -2758,7 +2758,7 @@ function applyData(d){
 }
 
 
-fetch('./data/unified.json?v=20261001110000')
+fetch('./data/unified.json?v=20261002123924')
   .then(r => { if(!r.ok) throw new Error(r.status); return r.json() })
   .then(applyData)
   .catch(() => {
