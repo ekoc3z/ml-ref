@@ -27130,28 +27130,44 @@
     "score": {
       "title": "Score Matching — A Complete Walkthrough",
       "cat": "Walkthrough",
-      "context": "The second language of diffusion · CME 296 Lecture 2 — to be read in one sitting",
+      "context": "The second language of diffusion · CME 296 Lecture 2, following the slides",
       "chapters": [
         "ida11",
         "cs13",
         "mlo21"
       ],
-      "summary": "The score is the gradient of the log-density; because it removes the normalization constant it becomes computable. The true score is unknown but the score of the noise you added yourself is known — denoising score matching trains with that trick and ends up at the same loss as DDPM's epsilon-prediction. The SDE and probability flow ODE connection follows from here.",
+      "summary": "Why the gradient of the density cannot guide a sampler (the unknown Z in p = f(x)/Z, and gradients that vanish far from the data), how the logarithm fixes both through grad p / p, Langevin sampling, why score matching hits a wall, implicit and sliced score matching, denoising score matching and the noise-level trade-off, NCSN and annealed Langevin, the equivalence with DDPM, the Wiener process and the SDE with drift and diffusion, VP and VE, training and the reverse SDE, and the probability flow ODE derived from Fokker-Planck, up to DPM-Solver.",
       "sections": [
         {
           "type": "text",
-          "heading": "1. The problem: the normalization constant",
-          "text": "The natural way of writing a distribution with parameters is this: define an energy function $E_\\theta(x)$ and tie the probability to it.\n\n$$p_\\theta(x) = \\frac{e^{-E_\\theta(x)}}{Z_\\theta}, \\qquad Z_\\theta = \\int e^{-E_\\theta(x)}\\, dx$$\n\nThe problem is $Z_\\theta$. That integral is taken over the whole image space, that is, over a space of $256 \\times 256 \\times 3$ dimensions. It cannot be computed, and since it depends on $\\theta$ maximum likelihood cannot be done either.\n\nThe taxonomy of generative models before diffusion was largely shaped around this problem: the VAE escapes to a lower bound, the GAN never computes a likelihood, autoregressive models split the chain into pieces."
+          "heading": "1. Where we are coming from",
+          "text": "The previous lecture ended with a surprisingly simple recipe. Take a clean image $x_0$, mix it with noise as $\\sqrt{\\bar{\\alpha}_t}\\, x_0 + \\sqrt{1-\\bar{\\alpha}_t}\\, \\epsilon$, and train a network $\\epsilon_\\theta$ to tell you which noise $\\epsilon$ was added:\n\n$$\\mathcal{L} = \\mathbb{E}_{t, x_0, \\epsilon} \\bigl\\| \\epsilon_\\theta\\bigl(\\sqrt{\\bar{\\alpha}_t}\\, x_0 + \\sqrt{1-\\bar{\\alpha}_t}\\, \\epsilon,\\ t\\bigr) - \\epsilon \\bigr\\|^2$$\n\nThat recipe came out of a long derivation: a lower bound on the likelihood (the ELBO), KL divergences, Bayes' rule and Gaussian algebra.\n\nThis lecture arrives at almost the same recipe from a completely different direction, with no likelihood bound at all. It starts from a geometric question. The two roads meeting at the end is the real point of the lecture: it shows that diffusion is not one trick but something several pieces of mathematics agree on."
         },
         {
           "type": "text",
-          "heading": "2. Taking the gradient kills the constant",
-          "text": "Take the logarithm and differentiate with respect to $x$:\n\n$$\\nabla_x \\log p_\\theta(x) = \\nabla_x \\bigl[ -E_\\theta(x) - \\log Z_\\theta \\bigr] = -\\nabla_x E_\\theta(x)$$\n\n$\\log Z_\\theta$ is a constant number — it does not depend on $x$, so its gradient is zero. The incomputable term drops out by itself.\n\nThis gradient is called the score:\n\n$$s(x) := \\nabla_x \\log p(x)$$\n\nNote: the derivative is with respect to $x$, not $\\theta$. This is easy to confuse, because the derivative you are used to in likelihood discussions was the one with respect to $\\theta$."
+          "heading": "2. The question: which way is the data?",
+          "text": "Picture the distribution of images $p_{\\text{data}}$ as a landscape. Where realistic images live (the teddy bears in the lecture's picture), the landscape is high; everywhere else it is flat and almost zero. Now drop a point $x$ somewhere far away, a random noisy image, and ask the only question a generator really needs answered: from here, which way should I move to get closer to realistic images?\n\nThat is exactly the question a gradient answers. For any function $f(x)$ of a vector $x = (x_1, \\ldots, x_n)$, the gradient collects the partial derivatives\n\n$$\\nabla f(x) = \\Bigl( \\tfrac{\\partial f}{\\partial x_1}(x), \\ldots, \\tfrac{\\partial f}{\\partial x_n}(x) \\Bigr)$$\n\nand this vector points in the direction in which $f$ increases fastest. Draw the contour lines of $f$ like a map of a hill, and $\\nabla f$ at any point is the arrow pointing straight uphill.\n\nSo the natural idea is: compute $\\nabla_x p_{\\text{data}}(x)$, the uphill direction of the data density, and walk along it. Here $f$ is just a name for \"some function\"; the slides use $f(x)$ for the generic hill when they introduce the gradient."
         },
         {
-          "type": "insight",
-          "heading": "What the score is intuitively",
-          "text": "Place an arrow at every point of the image space: from that point, the direction in which the density of the distribution increases fastest. The score is this field of arrows.\n\nIn regions where realistic images lie the arrows point towards that region; in distant, noisy regions they point \"towards the data\". Generation then becomes following these arrows.\n\nIt is the same kind of object as the velocity field in flow matching: both assign a vector to every point in space. The difference is what they point at — one the direction of increase of the density, the other the velocity along the road to the data."
+          "type": "text",
+          "heading": "3. Why the gradient of the density itself does not work",
+          "text": "Two things go wrong, and the slides list them in turn.\n\nThe first is the normalization constant. A probability density has to integrate to one:\n\n$$Z = \\int p_{\\text{data}}(x)\\, dx = 1$$\n\nThe slides make this concrete by writing the density as a shape divided by its total mass:\n\n$$p_{\\text{data}}(x) = \\frac{f(x)}{Z}$$\n\nRead it like this. $f(x)$ is any positive function that has the right shape: it is high where images are likely and low where they are not, but nobody has made it add up to one. It is the landscape with the right relative heights and an arbitrary overall scale. $Z$ is the number that rescales it, the total volume under $f$. A neural network can easily output an $f(x)$, a single positive number per image. What it cannot do is compute $Z$, because that means integrating $f$ over every possible image, a space of $256 \\times 256 \\times 3 = 196{,}608$ dimensions. This is what the red word intractable on the slide means.\n\nTaking the gradient does not help: $\\nabla_x p_{\\text{data}}(x) = \\nabla_x \\bigl( f(x)/Z \\bigr) = \\nabla_x f(x) / Z$. The unknown $Z$ is still sitting there as a factor, so the length of the arrow is unknown, \"still intractable\".\n\nThe second problem is numerical. Far from the data the density is not just small, it is astronomically small, and so is its gradient. If $p$ is $10^{-40}$ the hill is perfectly flat as far as a computer is concerned, and the arrow that should tell a random starting point where to go has length essentially zero. The very points that need directions most get none.\n\nAside, because the term appears everywhere in the literature: many papers write the same shape as $f(x) = e^{-E(x)}$ and call $E$ an energy. It is only a change of name. Low energy means high $f$, that is, a likely image, the way a ball settles at the bottom of a valley. The lecture never needs it; $f(x)$ is the same object."
+        },
+        {
+          "type": "text",
+          "heading": "4. The fix: take the logarithm first",
+          "text": "The proposal on the slide is to use $\\nabla_x \\log p_{\\text{data}}(x)$ instead. Both problems disappear.\n\nThe constant disappears because the logarithm turns the division into a subtraction:\n\n$$\\nabla_x \\log p_{\\text{data}}(x) = \\nabla_x \\log f(x) - \\nabla_x \\log Z = \\nabla_x \\log f(x)$$\n\n$\\log Z$ is one fixed number. It does not change when $x$ changes, so its gradient with respect to $x$ is zero. We never learn what $Z$ is, and we do not have to: the shape $f$ alone gives the answer. \"Not intractable anymore!\"\n\nThe direction is unchanged. By the chain rule,\n\n$$\\nabla \\log p = \\frac{\\nabla p}{p}$$\n\nThe right-hand side is the old gradient divided by $p$, a positive number. Dividing a vector by a positive number changes its length but not its direction, so the new arrow still points uphill.\n\nAnd the length is now useful. This is the $\\nabla p / p$ picture on the slide, and it is the reason the logarithm is \"more numerically stable\". $\\nabla p / p$ is a relative rate of change, the same idea as a percentage. A shop whose income rises from 1 to 2 and a company whose income rises from 1,000 to 2,000 have very different absolute changes but the same relative change: both doubled. The logarithm measures exactly that. Far from the data, $\\nabla p$ is tiny but $p$ is tiny too, and their ratio is a perfectly ordinary number. The arrow no longer fades away where it is needed most."
+        },
+        {
+          "type": "svg",
+          "heading": "The density, its gradient and its score",
+          "svg": "<svg width=\"560\" height=\"356\" viewBox=\"0 0 560 356\" role=\"img\" aria-label=\"density, its gradient and its score\"><line x1=\"70\" y1=\"90\" x2=\"540\" y2=\"90\" stroke=\"#8a8f98\" stroke-width=\"0.8\"/><polyline points=\"70.0,90.0 71.0,90.0 72.0,90.0 72.9,90.0 73.9,90.0 74.9,90.0 75.9,90.0 76.9,90.0 77.8,90.0 78.8,90.0 79.8,90.0 80.8,90.0 81.8,90.0 82.7,90.0 83.7,90.0 84.7,90.0 85.7,90.0 86.6,90.0 87.6,90.0 88.6,90.0 89.6,90.0 90.6,90.0 91.5,90.0 92.5,90.0 93.5,90.0 94.5,90.0 95.5,90.0 96.4,90.0 97.4,90.0 98.4,90.0 99.4,90.0 100.4,90.0 101.3,90.0 102.3,90.0 103.3,90.0 104.3,90.0 105.3,90.0 106.2,90.0 107.2,90.0 108.2,90.0 109.2,90.0 110.1,90.0 111.1,90.0 112.1,90.0 113.1,90.0 114.1,90.0 115.0,90.0 116.0,90.0 117.0,90.0 118.0,90.0 119.0,90.0 119.9,90.0 120.9,90.0 121.9,90.0 122.9,90.0 123.9,90.0 124.8,90.0 125.8,90.0 126.8,90.0 127.8,90.0 128.8,90.0 129.7,90.0 130.7,90.0 131.7,90.0 132.7,90.0 133.6,90.0 134.6,90.0 135.6,90.0 136.6,90.0 137.6,89.9 138.5,89.9 139.5,89.9 140.5,89.9 141.5,89.9 142.5,89.9 143.4,89.9 144.4,89.8 145.4,89.8 146.4,89.8 147.4,89.8 148.3,89.7 149.3,89.7 150.3,89.6 151.3,89.6 152.2,89.5 153.2,89.5 154.2,89.4 155.2,89.3 156.2,89.2 157.1,89.1 158.1,89.0 159.1,88.8 160.1,88.7 161.1,88.5 162.0,88.4 163.0,88.2 164.0,87.9 165.0,87.7 166.0,87.4 166.9,87.2 167.9,86.8 168.9,86.5 169.9,86.1 170.9,85.7 171.8,85.3 172.8,84.8 173.8,84.3 174.8,83.7 175.8,83.1 176.7,82.5 177.7,81.8 178.7,81.0 179.7,80.3 180.6,79.4 181.6,78.5 182.6,77.6 183.6,76.6 184.6,75.5 185.5,74.4 186.5,73.3 187.5,72.0 188.5,70.8 189.5,69.4 190.4,68.1 191.4,66.6 192.4,65.1 193.4,63.6 194.4,62.0 195.3,60.4 196.3,58.7 197.3,57.0 198.3,55.3 199.2,53.5 200.2,51.8 201.2,50.0 202.2,48.1 203.2,46.3 204.1,44.5 205.1,42.7 206.1,40.9 207.1,39.1 208.1,37.4 209.0,35.7 210.0,34.0 211.0,32.3 212.0,30.8 213.0,29.3 213.9,27.8 214.9,26.5 215.9,25.2 216.9,24.0 217.9,22.9 218.8,21.9 219.8,21.0 220.8,20.2 221.8,19.5 222.8,19.0 223.7,18.6 224.7,18.2 225.7,18.1 226.7,18.0 227.6,18.1 228.6,18.2 229.6,18.6 230.6,19.0 231.6,19.5 232.5,20.2 233.5,21.0 234.5,21.9 235.5,22.9 236.5,24.0 237.4,25.2 238.4,26.5 239.4,27.8 240.4,29.3 241.4,30.8 242.3,32.3 243.3,34.0 244.3,35.7 245.3,37.4 246.2,39.1 247.2,40.9 248.2,42.7 249.2,44.5 250.2,46.3 251.1,48.1 252.1,50.0 253.1,51.8 254.1,53.5 255.1,55.3 256.0,57.0 257.0,58.7 258.0,60.4 259.0,62.0 260.0,63.6 260.9,65.1 261.9,66.6 262.9,68.1 263.9,69.4 264.9,70.8 265.8,72.0 266.8,73.3 267.8,74.4 268.8,75.5 269.8,76.6 270.7,77.6 271.7,78.5 272.7,79.4 273.7,80.2 274.6,81.0 275.6,81.8 276.6,82.5 277.6,83.1 278.6,83.7 279.5,84.2 280.5,84.8 281.5,85.2 282.5,85.7 283.5,86.1 284.4,86.4 285.4,86.8 286.4,87.1 287.4,87.4 288.4,87.6 289.3,87.9 290.3,88.1 291.3,88.3 292.3,88.4 293.2,88.6 294.2,88.7 295.2,88.8 296.2,88.9 297.2,89.0 298.1,89.1 299.1,89.2 300.1,89.2 301.1,89.2 302.1,89.3 303.0,89.3 304.0,89.3 305.0,89.3 306.0,89.3 307.0,89.3 307.9,89.3 308.9,89.2 309.9,89.2 310.9,89.2 311.9,89.1 312.8,89.0 313.8,89.0 314.8,88.9 315.8,88.8 316.8,88.7 317.7,88.6 318.7,88.5 319.7,88.4 320.7,88.3 321.6,88.1 322.6,88.0 323.6,87.8 324.6,87.6 325.6,87.4 326.5,87.2 327.5,87.0 328.5,86.8 329.5,86.5 330.5,86.3 331.4,86.0 332.4,85.7 333.4,85.4 334.4,85.1 335.4,84.7 336.3,84.4 337.3,84.0 338.3,83.6 339.3,83.1 340.3,82.7 341.2,82.2 342.2,81.7 343.2,81.2 344.2,80.7 345.1,80.1 346.1,79.6 347.1,78.9 348.1,78.3 349.1,77.7 350.0,77.0 351.0,76.3 352.0,75.6 353.0,74.8 354.0,74.1 354.9,73.3 355.9,72.5 356.9,71.6 357.9,70.8 358.9,69.9 359.8,69.0 360.8,68.1 361.8,67.2 362.8,66.2 363.8,65.3 364.7,64.3 365.7,63.3 366.7,62.3 367.7,61.3 368.6,60.3 369.6,59.3 370.6,58.3 371.6,57.2 372.6,56.2 373.5,55.2 374.5,54.2 375.5,53.2 376.5,52.2 377.5,51.2 378.4,50.2 379.4,49.2 380.4,48.3 381.4,47.4 382.4,46.5 383.3,45.6 384.3,44.7 385.3,43.9 386.3,43.1 387.2,42.3 388.2,41.6 389.2,40.9 390.2,40.3 391.2,39.7 392.1,39.1 393.1,38.6 394.1,38.1 395.1,37.7 396.1,37.3 397.0,36.9 398.0,36.7 399.0,36.4 400.0,36.2 401.0,36.1 401.9,36.0 402.9,36.0 403.9,36.0 404.9,36.1 405.9,36.2 406.8,36.4 407.8,36.7 408.8,36.9 409.8,37.3 410.8,37.7 411.7,38.1 412.7,38.6 413.7,39.1 414.7,39.7 415.6,40.3 416.6,40.9 417.6,41.6 418.6,42.3 419.6,43.1 420.5,43.9 421.5,44.7 422.5,45.6 423.5,46.5 424.5,47.4 425.4,48.3 426.4,49.2 427.4,50.2 428.4,51.2 429.4,52.2 430.3,53.2 431.3,54.2 432.3,55.2 433.3,56.2 434.2,57.2 435.2,58.3 436.2,59.3 437.2,60.3 438.2,61.3 439.1,62.3 440.1,63.3 441.1,64.3 442.1,65.3 443.1,66.2 444.0,67.2 445.0,68.1 446.0,69.0 447.0,69.9 448.0,70.8 448.9,71.6 449.9,72.5 450.9,73.3 451.9,74.1 452.9,74.8 453.8,75.6 454.8,76.3 455.8,77.0 456.8,77.7 457.8,78.3 458.7,78.9 459.7,79.6 460.7,80.1 461.7,80.7 462.6,81.2 463.6,81.7 464.6,82.2 465.6,82.7 466.6,83.1 467.5,83.6 468.5,84.0 469.5,84.4 470.5,84.7 471.5,85.1 472.4,85.4 473.4,85.7 474.4,86.0 475.4,86.3 476.4,86.5 477.3,86.8 478.3,87.0 479.3,87.2 480.3,87.4 481.2,87.6 482.2,87.8 483.2,88.0 484.2,88.1 485.2,88.3 486.1,88.4 487.1,88.5 488.1,88.7 489.1,88.8 490.1,88.9 491.0,89.0 492.0,89.1 493.0,89.1 494.0,89.2 495.0,89.3 495.9,89.3 496.9,89.4 497.9,89.5 498.9,89.5 499.9,89.5 500.8,89.6 501.8,89.6 502.8,89.7 503.8,89.7 504.7,89.7 505.7,89.8 506.7,89.8 507.7,89.8 508.7,89.8 509.6,89.8 510.6,89.9 511.6,89.9 512.6,89.9 513.6,89.9 514.5,89.9 515.5,89.9 516.5,89.9 517.5,89.9 518.5,89.9 519.4,89.9 520.4,90.0 521.4,90.0 522.4,90.0 523.4,90.0 524.3,90.0 525.3,90.0 526.3,90.0 527.3,90.0 528.2,90.0 529.2,90.0 530.2,90.0 531.2,90.0 532.2,90.0 533.1,90.0 534.1,90.0 535.1,90.0 536.1,90.0 537.1,90.0 538.0,90.0 539.0,90.0 540.0,90.0\" fill=\"none\" stroke=\"#8a8f98\" stroke-width=\"2\"/><text x=\"62.0\" y=\"57.0\" text-anchor=\"end\" font-size=\"12\" fill=\"currentColor\" font-weight=\"600\">p</text><text x=\"540.0\" y=\"21.0\" text-anchor=\"end\" font-size=\"10\" fill=\"currentColor\">density</text><line x1=\"70\" y1=\"165.0\" x2=\"540\" y2=\"165.0\" stroke=\"#8a8f98\" stroke-width=\"0.8\"/><polyline points=\"70.0,165.0 71.0,165.0 72.0,165.0 72.9,165.0 73.9,165.0 74.9,165.0 75.9,165.0 76.9,165.0 77.8,165.0 78.8,165.0 79.8,165.0 80.8,165.0 81.8,165.0 82.7,165.0 83.7,165.0 84.7,165.0 85.7,165.0 86.6,165.0 87.6,165.0 88.6,165.0 89.6,165.0 90.6,165.0 91.5,165.0 92.5,165.0 93.5,165.0 94.5,165.0 95.5,165.0 96.4,165.0 97.4,165.0 98.4,165.0 99.4,165.0 100.4,165.0 101.3,165.0 102.3,165.0 103.3,165.0 104.3,165.0 105.3,165.0 106.2,165.0 107.2,165.0 108.2,165.0 109.2,165.0 110.1,165.0 111.1,165.0 112.1,165.0 113.1,165.0 114.1,165.0 115.0,165.0 116.0,165.0 117.0,165.0 118.0,165.0 119.0,165.0 119.9,165.0 120.9,165.0 121.9,165.0 122.9,165.0 123.9,165.0 124.8,165.0 125.8,165.0 126.8,165.0 127.8,165.0 128.8,165.0 129.7,164.9 130.7,164.9 131.7,164.9 132.7,164.9 133.6,164.9 134.6,164.9 135.6,164.9 136.6,164.8 137.6,164.8 138.5,164.8 139.5,164.8 140.5,164.7 141.5,164.7 142.5,164.6 143.4,164.6 144.4,164.5 145.4,164.5 146.4,164.4 147.4,164.3 148.3,164.2 149.3,164.1 150.3,164.0 151.3,163.9 152.2,163.7 153.2,163.6 154.2,163.4 155.2,163.2 156.2,163.0 157.1,162.7 158.1,162.5 159.1,162.2 160.1,161.9 161.1,161.5 162.0,161.2 163.0,160.8 164.0,160.4 165.0,159.9 166.0,159.4 166.9,158.9 167.9,158.3 168.9,157.7 169.9,157.1 170.9,156.4 171.8,155.6 172.8,154.9 173.8,154.1 174.8,153.2 175.8,152.4 176.7,151.4 177.7,150.5 178.7,149.5 179.7,148.5 180.6,147.4 181.6,146.4 182.6,145.3 183.6,144.2 184.6,143.0 185.5,141.9 186.5,140.8 187.5,139.6 188.5,138.5 189.5,137.4 190.4,136.3 191.4,135.3 192.4,134.3 193.4,133.3 194.4,132.4 195.3,131.6 196.3,130.8 197.3,130.1 198.3,129.5 199.2,129.0 200.2,128.6 201.2,128.2 202.2,128.1 203.2,128.0 204.1,128.1 205.1,128.3 206.1,128.6 207.1,129.1 208.1,129.7 209.0,130.5 210.0,131.4 211.0,132.4 212.0,133.6 213.0,135.0 213.9,136.5 214.9,138.1 215.9,139.8 216.9,141.7 217.9,143.7 218.8,145.8 219.8,147.9 220.8,150.2 221.8,152.6 222.8,155.0 223.7,157.4 224.7,159.9 225.7,162.5 226.7,165.0 227.6,167.5 228.6,170.1 229.6,172.6 230.6,175.0 231.6,177.4 232.5,179.8 233.5,182.1 234.5,184.2 235.5,186.3 236.5,188.3 237.4,190.2 238.4,191.9 239.4,193.5 240.4,195.0 241.4,196.4 242.3,197.6 243.3,198.6 244.3,199.5 245.3,200.3 246.2,200.9 247.2,201.4 248.2,201.7 249.2,201.9 250.2,202.0 251.1,201.9 252.1,201.7 253.1,201.4 254.1,201.0 255.1,200.5 256.0,199.9 257.0,199.2 258.0,198.4 259.0,197.6 260.0,196.7 260.9,195.7 261.9,194.7 262.9,193.7 263.9,192.6 264.9,191.5 265.8,190.3 266.8,189.2 267.8,188.1 268.8,186.9 269.8,185.8 270.7,184.7 271.7,183.6 272.7,182.5 273.7,181.5 274.6,180.5 275.6,179.5 276.6,178.5 277.6,177.6 278.6,176.7 279.5,175.9 280.5,175.1 281.5,174.3 282.5,173.6 283.5,172.9 284.4,172.2 285.4,171.6 286.4,171.0 287.4,170.5 288.4,170.0 289.3,169.5 290.3,169.0 291.3,168.6 292.3,168.2 293.2,167.9 294.2,167.5 295.2,167.2 296.2,166.9 297.2,166.6 298.1,166.4 299.1,166.2 300.1,165.9 301.1,165.7 302.1,165.5 303.0,165.3 304.0,165.1 305.0,165.0 306.0,164.8 307.0,164.6 307.9,164.5 308.9,164.3 309.9,164.2 310.9,164.0 311.9,163.8 312.8,163.7 313.8,163.5 314.8,163.4 315.8,163.2 316.8,163.0 317.7,162.8 318.7,162.6 319.7,162.4 320.7,162.2 321.6,162.0 322.6,161.8 323.6,161.5 324.6,161.3 325.6,161.0 326.5,160.7 327.5,160.5 328.5,160.2 329.5,159.9 330.5,159.5 331.4,159.2 332.4,158.9 333.4,158.5 334.4,158.1 335.4,157.8 336.3,157.4 337.3,157.0 338.3,156.6 339.3,156.1 340.3,155.7 341.2,155.3 342.2,154.8 343.2,154.4 344.2,153.9 345.1,153.4 346.1,153.0 347.1,152.5 348.1,152.0 349.1,151.5 350.0,151.1 351.0,150.6 352.0,150.1 353.0,149.6 354.0,149.2 354.9,148.7 355.9,148.3 356.9,147.9 357.9,147.4 358.9,147.0 359.8,146.7 360.8,146.3 361.8,146.0 362.8,145.7 363.8,145.4 364.7,145.1 365.7,144.9 366.7,144.7 367.7,144.5 368.6,144.4 369.6,144.3 370.6,144.2 371.6,144.2 372.6,144.2 373.5,144.3 374.5,144.4 375.5,144.5 376.5,144.7 377.5,145.0 378.4,145.2 379.4,145.6 380.4,146.0 381.4,146.4 382.4,146.8 383.3,147.4 384.3,147.9 385.3,148.5 386.3,149.2 387.2,149.9 388.2,150.6 389.2,151.4 390.2,152.2 391.2,153.0 392.1,153.9 393.1,154.8 394.1,155.7 395.1,156.7 396.1,157.7 397.0,158.7 398.0,159.7 399.0,160.7 400.0,161.8 401.0,162.9 401.9,163.9 402.9,165.0 403.9,166.1 404.9,167.1 405.9,168.2 406.8,169.3 407.8,170.3 408.8,171.3 409.8,172.3 410.8,173.3 411.7,174.3 412.7,175.2 413.7,176.1 414.7,177.0 415.6,177.8 416.6,178.6 417.6,179.4 418.6,180.1 419.6,180.8 420.5,181.5 421.5,182.1 422.5,182.6 423.5,183.2 424.5,183.6 425.4,184.0 426.4,184.4 427.4,184.8 428.4,185.0 429.4,185.3 430.3,185.5 431.3,185.6 432.3,185.7 433.3,185.8 434.2,185.8 435.2,185.8 436.2,185.7 437.2,185.6 438.2,185.5 439.1,185.3 440.1,185.1 441.1,184.9 442.1,184.6 443.1,184.3 444.0,184.0 445.0,183.7 446.0,183.3 447.0,183.0 448.0,182.6 448.9,182.1 449.9,181.7 450.9,181.3 451.9,180.8 452.9,180.4 453.8,179.9 454.8,179.4 455.8,178.9 456.8,178.5 457.8,178.0 458.7,177.5 459.7,177.0 460.7,176.6 461.7,176.1 462.6,175.6 463.6,175.2 464.6,174.7 465.6,174.3 466.6,173.9 467.5,173.4 468.5,173.0 469.5,172.6 470.5,172.2 471.5,171.9 472.4,171.5 473.4,171.1 474.4,170.8 475.4,170.5 476.4,170.2 477.3,169.9 478.3,169.6 479.3,169.3 480.3,169.0 481.2,168.8 482.2,168.5 483.2,168.3 484.2,168.1 485.2,167.9 486.1,167.7 487.1,167.5 488.1,167.3 489.1,167.2 490.1,167.0 491.0,166.8 492.0,166.7 493.0,166.6 494.0,166.5 495.0,166.3 495.9,166.2 496.9,166.1 497.9,166.1 498.9,166.0 499.9,165.9 500.8,165.8 501.8,165.7 502.8,165.7 503.8,165.6 504.7,165.6 505.7,165.5 506.7,165.5 507.7,165.4 508.7,165.4 509.6,165.4 510.6,165.3 511.6,165.3 512.6,165.3 513.6,165.2 514.5,165.2 515.5,165.2 516.5,165.2 517.5,165.2 518.5,165.1 519.4,165.1 520.4,165.1 521.4,165.1 522.4,165.1 523.4,165.1 524.3,165.1 525.3,165.1 526.3,165.1 527.3,165.1 528.2,165.0 529.2,165.0 530.2,165.0 531.2,165.0 532.2,165.0 533.1,165.0 534.1,165.0 535.1,165.0 536.1,165.0 537.1,165.0 538.0,165.0 539.0,165.0 540.0,165.0\" fill=\"none\" stroke=\"#e0a12a\" stroke-width=\"2\"/><text x=\"62.0\" y=\"169.0\" text-anchor=\"end\" font-size=\"12\" fill=\"currentColor\" font-weight=\"600\">&#8711;p</text><text x=\"540.0\" y=\"133.0\" text-anchor=\"end\" font-size=\"10\" fill=\"currentColor\">gradient of p</text><line x1=\"70\" y1=\"277.0\" x2=\"540\" y2=\"277.0\" stroke=\"#8a8f98\" stroke-width=\"0.8\"/><polyline points=\"70.0,240.0 71.0,240.0 72.0,240.0 72.9,240.0 73.9,240.0 74.9,240.0 75.9,240.0 76.9,240.0 77.8,240.0 78.8,240.0 79.8,240.0 80.8,240.0 81.8,240.0 82.7,240.0 83.7,240.0 84.7,240.0 85.7,240.0 86.6,240.0 87.6,240.0 88.6,240.0 89.6,240.0 90.6,240.0 91.5,240.0 92.5,240.0 93.5,240.0 94.5,240.0 95.5,240.0 96.4,240.0 97.4,240.0 98.4,240.0 99.4,240.0 100.4,240.2 101.3,240.5 102.3,240.7 103.3,241.0 104.3,241.3 105.3,241.6 106.2,241.9 107.2,242.2 108.2,242.5 109.2,242.7 110.1,243.0 111.1,243.3 112.1,243.6 113.1,243.9 114.1,244.2 115.0,244.5 116.0,244.7 117.0,245.0 118.0,245.3 119.0,245.6 119.9,245.9 120.9,246.2 121.9,246.5 122.9,246.7 123.9,247.0 124.8,247.3 125.8,247.6 126.8,247.9 127.8,248.2 128.8,248.5 129.7,248.7 130.7,249.0 131.7,249.3 132.7,249.6 133.6,249.9 134.6,250.2 135.6,250.4 136.6,250.7 137.6,251.0 138.5,251.3 139.5,251.6 140.5,251.9 141.5,252.2 142.5,252.4 143.4,252.7 144.4,253.0 145.4,253.3 146.4,253.6 147.4,253.9 148.3,254.2 149.3,254.4 150.3,254.7 151.3,255.0 152.2,255.3 153.2,255.6 154.2,255.9 155.2,256.2 156.2,256.4 157.1,256.7 158.1,257.0 159.1,257.3 160.1,257.6 161.1,257.9 162.0,258.2 163.0,258.4 164.0,258.7 165.0,259.0 166.0,259.3 166.9,259.6 167.9,259.9 168.9,260.2 169.9,260.4 170.9,260.7 171.8,261.0 172.8,261.3 173.8,261.6 174.8,261.9 175.8,262.2 176.7,262.4 177.7,262.7 178.7,263.0 179.7,263.3 180.6,263.6 181.6,263.9 182.6,264.2 183.6,264.4 184.6,264.7 185.5,265.0 186.5,265.3 187.5,265.6 188.5,265.9 189.5,266.2 190.4,266.4 191.4,266.7 192.4,267.0 193.4,267.3 194.4,267.6 195.3,267.9 196.3,268.1 197.3,268.4 198.3,268.7 199.2,269.0 200.2,269.3 201.2,269.6 202.2,269.9 203.2,270.1 204.1,270.4 205.1,270.7 206.1,271.0 207.1,271.3 208.1,271.6 209.0,271.9 210.0,272.1 211.0,272.4 212.0,272.7 213.0,273.0 213.9,273.3 214.9,273.6 215.9,273.9 216.9,274.1 217.9,274.4 218.8,274.7 219.8,275.0 220.8,275.3 221.8,275.6 222.8,275.9 223.7,276.1 224.7,276.4 225.7,276.7 226.7,277.0 227.6,277.3 228.6,277.6 229.6,277.9 230.6,278.1 231.6,278.4 232.5,278.7 233.5,279.0 234.5,279.3 235.5,279.6 236.5,279.9 237.4,280.1 238.4,280.4 239.4,280.7 240.4,281.0 241.4,281.3 242.3,281.6 243.3,281.9 244.3,282.1 245.3,282.4 246.2,282.7 247.2,283.0 248.2,283.3 249.2,283.6 250.2,283.9 251.1,284.1 252.1,284.4 253.1,284.7 254.1,285.0 255.1,285.3 256.0,285.6 257.0,285.8 258.0,286.1 259.0,286.4 260.0,286.7 260.9,287.0 261.9,287.3 262.9,287.6 263.9,287.8 264.9,288.1 265.8,288.4 266.8,288.7 267.8,289.0 268.8,289.3 269.8,289.5 270.7,289.8 271.7,290.1 272.7,290.4 273.7,290.7 274.6,290.9 275.6,291.2 276.6,291.5 277.6,291.8 278.6,292.0 279.5,292.3 280.5,292.5 281.5,292.8 282.5,293.0 283.5,293.2 284.4,293.4 285.4,293.6 286.4,293.7 287.4,293.9 288.4,293.9 289.3,294.0 290.3,293.9 291.3,293.8 292.3,293.6 293.2,293.3 294.2,292.9 295.2,292.3 296.2,291.5 297.2,290.5 298.1,289.4 299.1,288.0 300.1,286.4 301.1,284.7 302.1,282.8 303.0,280.8 304.0,278.7 305.0,276.7 306.0,274.7 307.0,272.9 307.9,271.2 308.9,269.8 309.9,268.5 310.9,267.4 311.9,266.6 312.8,265.9 313.8,265.3 314.8,264.9 315.8,264.6 316.8,264.3 317.7,264.2 318.7,264.1 319.7,264.1 320.7,264.1 321.6,264.1 322.6,264.2 323.6,264.3 324.6,264.4 325.6,264.5 326.5,264.6 327.5,264.7 328.5,264.9 329.5,265.0 330.5,265.2 331.4,265.3 332.4,265.5 333.4,265.6 334.4,265.8 335.4,265.9 336.3,266.1 337.3,266.2 338.3,266.4 339.3,266.6 340.3,266.7 341.2,266.9 342.2,267.0 343.2,267.2 344.2,267.4 345.1,267.5 346.1,267.7 347.1,267.8 348.1,268.0 349.1,268.2 350.0,268.3 351.0,268.5 352.0,268.6 353.0,268.8 354.0,269.0 354.9,269.1 355.9,269.3 356.9,269.5 357.9,269.6 358.9,269.8 359.8,269.9 360.8,270.1 361.8,270.3 362.8,270.4 363.8,270.6 364.7,270.7 365.7,270.9 366.7,271.1 367.7,271.2 368.6,271.4 369.6,271.5 370.6,271.7 371.6,271.9 372.6,272.0 373.5,272.2 374.5,272.3 375.5,272.5 376.5,272.7 377.5,272.8 378.4,273.0 379.4,273.1 380.4,273.3 381.4,273.5 382.4,273.6 383.3,273.8 384.3,273.9 385.3,274.1 386.3,274.3 387.2,274.4 388.2,274.6 389.2,274.8 390.2,274.9 391.2,275.1 392.1,275.2 393.1,275.4 394.1,275.6 395.1,275.7 396.1,275.9 397.0,276.0 398.0,276.2 399.0,276.4 400.0,276.5 401.0,276.7 401.9,276.8 402.9,277.0 403.9,277.2 404.9,277.3 405.9,277.5 406.8,277.6 407.8,277.8 408.8,278.0 409.8,278.1 410.8,278.3 411.7,278.4 412.7,278.6 413.7,278.8 414.7,278.9 415.6,279.1 416.6,279.2 417.6,279.4 418.6,279.6 419.6,279.7 420.5,279.9 421.5,280.1 422.5,280.2 423.5,280.4 424.5,280.5 425.4,280.7 426.4,280.9 427.4,281.0 428.4,281.2 429.4,281.3 430.3,281.5 431.3,281.7 432.3,281.8 433.3,282.0 434.2,282.1 435.2,282.3 436.2,282.5 437.2,282.6 438.2,282.8 439.1,282.9 440.1,283.1 441.1,283.3 442.1,283.4 443.1,283.6 444.0,283.7 445.0,283.9 446.0,284.1 447.0,284.2 448.0,284.4 448.9,284.5 449.9,284.7 450.9,284.9 451.9,285.0 452.9,285.2 453.8,285.4 454.8,285.5 455.8,285.7 456.8,285.8 457.8,286.0 458.7,286.2 459.7,286.3 460.7,286.5 461.7,286.6 462.6,286.8 463.6,287.0 464.6,287.1 465.6,287.3 466.6,287.4 467.5,287.6 468.5,287.8 469.5,287.9 470.5,288.1 471.5,288.2 472.4,288.4 473.4,288.6 474.4,288.7 475.4,288.9 476.4,289.0 477.3,289.2 478.3,289.4 479.3,289.5 480.3,289.7 481.2,289.8 482.2,290.0 483.2,290.2 484.2,290.3 485.2,290.5 486.1,290.7 487.1,290.8 488.1,291.0 489.1,291.1 490.1,291.3 491.0,291.5 492.0,291.6 493.0,291.8 494.0,291.9 495.0,292.1 495.9,292.3 496.9,292.4 497.9,292.6 498.9,292.7 499.9,292.9 500.8,293.1 501.8,293.2 502.8,293.4 503.8,293.5 504.7,293.7 505.7,293.9 506.7,294.0 507.7,294.2 508.7,294.3 509.6,294.5 510.6,294.7 511.6,294.8 512.6,295.0 513.6,295.1 514.5,295.3 515.5,295.5 516.5,295.6 517.5,295.8 518.5,295.9 519.4,296.1 520.4,296.3 521.4,296.4 522.4,296.6 523.4,296.8 524.3,296.9 525.3,297.1 526.3,297.2 527.3,297.4 528.2,297.6 529.2,297.7 530.2,297.9 531.2,298.0 532.2,298.2 533.1,298.4 534.1,298.5 535.1,298.7 536.1,298.8 537.1,299.0 538.0,299.2 539.0,299.3 540.0,299.5\" fill=\"none\" stroke=\"#22a06b\" stroke-width=\"2\"/><text x=\"62.0\" y=\"281.0\" text-anchor=\"end\" font-size=\"12\" fill=\"currentColor\" font-weight=\"600\">score</text><text x=\"540.0\" y=\"245.0\" text-anchor=\"end\" font-size=\"10\" fill=\"currentColor\">gradient of log p = (grad p) / p</text><line x1=\"109.2\" y1=\"8\" x2=\"109.2\" y2=\"320\" stroke=\"#a855f7\" stroke-dasharray=\"3 3\"/><text x=\"113.2\" y=\"316.0\" text-anchor=\"start\" font-size=\"10\" fill=\"currentColor\">x = -5</text><text x=\"280.0\" y=\"336.0\" text-anchor=\"middle\" font-size=\"11\" fill=\"currentColor\">at x = -5:  p = 1.2e-06,  grad p = 1.0e-05,  score = +8.33</text><text x=\"280.0\" y=\"350.0\" text-anchor=\"middle\" font-size=\"10\" fill=\"currentColor\">the score axis is clipped at +/- 9</text></svg>",
+          "caption": "One-dimensional mixture of two bumps. Top: the density. Middle: its gradient, which is visible only on the slopes of the bumps and is flat zero elsewhere. Bottom: the score, the gradient divided by the density. Far away on the left, at $x = -5$, the density is about 1e-06 and its gradient about 1e-05, useless for steering; the score is about +8.3, a clear instruction to move right. It crosses zero at the top of each bump, where there is nothing left to climb, and once more between them, where the two pulls balance."
+        },
+        {
+          "type": "text",
+          "heading": "5. The score function",
+          "text": "This object gets a name:\n\n$$s(x) = \\nabla_x \\log p(x)$$\n\nit is the score function, or simply the score. At every point of image space it is an arrow pointing in the direction in which the data becomes more likely, with a length that stays informative even far from the data. The slide's picture shows it as a field of arrows around the density: long arrows far away pointing towards the data, short arrows near the peaks, where there is not much further to climb.\n\nOne point that is easy to get wrong: the derivative is with respect to the input $x$, not with respect to the network's parameters $\\theta$. The derivatives in a likelihood discussion are usually with respect to $\\theta$. Here we ask how the log-density changes when the image changes, at fixed parameters."
         },
         {
           "type": "svg",
@@ -27160,23 +27176,43 @@
         },
         {
           "type": "text",
-          "heading": "3. Why naive score matching does not work",
-          "text": "The target is clear: make the network's estimate $s_\\theta(x)$ close to the true score.\n\n$$J(\\theta) = \\mathbb{E}_{x \\sim p_{\\text{data}}} \\bigl\\| s_\\theta(x) - \\nabla_x \\log p_{\\text{data}}(x) \\bigr\\|^2$$\n\nBut we do not hold the term on the right: if we knew $p_{\\text{data}}$ there would be no problem in the first place.\n\nHyvärinen (2005) managed to remove that term from the equation with integration by parts; what remains is $\\operatorname{tr}(\\nabla_x s_\\theta(x))$, that is, the trace of the Jacobian. A solution in theory, not in practice: in high dimensions computing the trace of the Jacobian means $d$ backpropagations at every step."
+          "heading": "6. Using the score: Langevin sampling",
+          "text": "Suppose we had the score. Generation then becomes following the arrows, with a little randomness added at every step. Starting from a random point, the slide's Langevin sampling repeats\n\n$$x_t = x_{t-1} + \\frac{\\alpha}{2} \\nabla_x \\log p_{\\text{data}}(x_{t-1}) + \\sqrt{\\alpha}\\, \\epsilon_t$$\n\nRead the three terms from left to right. $x_{t-1}$ is where you are. $\\frac{\\alpha}{2} \\nabla_x \\log p_{\\text{data}}$ is a small step uphill, with $\\alpha$ a small step size. $\\sqrt{\\alpha}\\, \\epsilon_t$ with $\\epsilon_t \\sim \\mathcal{N}(0, I)$ is a random kick.\n\nWhy the kick? Without it you would only climb to the top of the nearest bump and stop there, producing the single most likely image again and again. The kick keeps you moving around the whole high-probability region, so that after many steps the points you visit are distributed like $p_{\\text{data}}$ itself, which is what sampling means. The particular balance, step $\\alpha/2$ and noise $\\sqrt{\\alpha}$, is what makes that last statement true.\n\nA notation warning: this $\\alpha$ is a step size. It has nothing to do with the $\\bar{\\alpha}_t$ of DDPM. Section 21 lists every letter in this lecture that gets reused."
+        },
+        {
+          "type": "formula",
+          "heading": "7. Score matching: the goal, and the wall",
+          "text": "Since we do not have the true score, train a network $s_\\theta(x)$ to approximate it. The obvious loss compares the two arrows at data points:\n\n$$\\mathcal{L}_{\\text{SM}} = \\mathbb{E}_x \\bigl\\| s_\\theta(x) - \\nabla_x \\log p_{\\text{data}}(x) \\bigr\\|^2$$\n\nSM stands for score matching. The problem is printed in red on the slide: the target $\\nabla_x \\log p_{\\text{data}}(x)$ is exactly what we do not have access to. We only have samples of images, not their density."
         },
         {
           "type": "text",
-          "heading": "4. Denoising score matching: the trick",
-          "text": "Vincent (2011) noticed this: the score of the noise you added yourself is known in closed form.\n\nLet $\\tilde{x} = x + \\sigma \\varepsilon$ with $\\varepsilon \\sim \\mathcal{N}(0,I)$. Then $q(\\tilde{x} \\mid x)$ is a Gaussian and its score can be written directly:\n\n$$\\nabla_{\\tilde{x}} \\log q(\\tilde{x} \\mid x) = -\\frac{\\tilde{x} - x}{\\sigma^2} = -\\frac{\\varepsilon}{\\sigma}$$\n\nThe target is no longer something unknown, it is the $\\varepsilon$ you drew yourself. The loss turns into a simple regression:\n\n$$J(\\theta) = \\mathbb{E}_{x,\\, \\varepsilon,\\, \\sigma} \\Bigl\\| s_\\theta(\\tilde{x}, \\sigma) + \\frac{\\varepsilon}{\\sigma} \\Bigr\\|^2$$\n\nWhat is proved is this: the network minimising this loss learns the true score of the noisy distribution. So you arrive at the right answer without knowing the target — the same trick as DDPM's \"take the noise of a single example as the target and let the average come out right\"."
-        },
-        {
-          "type": "insight",
-          "heading": "5. Exactly the same loss as DDPM",
-          "text": "Diffusion's forward process $x_t = \\sqrt{\\bar{\\alpha}_t}\\, x_0 + \\sqrt{1-\\bar{\\alpha}_t}\\, \\varepsilon$ is already \"adding a known amount of noise to the data\". So DDPM's training is exactly denoising score matching.\n\nThe connection is one line:\n\n$$s_\\theta(x_t, t) = -\\frac{\\varepsilon_\\theta(x_t, t)}{\\sqrt{1-\\bar{\\alpha}_t}}$$\n\n$\\varepsilon$-prediction and score prediction are two differently scaled versions of the same network. One asks \"what was the added noise\", the other \"in which direction does the density increase\" — the answer is the same vector, with a different sign and scale.\n\nThis is why the second lecture of CME 296 ends with \"parallel with diffusion\": not a new family of models, but another derivation of the same training."
+          "heading": "8. Two attempts to get around it",
+          "text": "Implicit score matching (Hyvärinen, 2005) uses integration by parts to rewrite the loss so that the unknown target disappears:\n\n$$\\mathcal{L}_{\\text{ISM}} = \\mathbb{E}_x \\Bigl[ \\tfrac{1}{2} \\| s_\\theta(x) \\|^2 + \\nabla_x \\cdot s_\\theta(x) \\Bigr]$$\n\nOnly the network appears now, which is a genuine solution in principle. The cost is the second term, the divergence $\\nabla_x \\cdot s_\\theta$: the sum of how much each output coordinate changes with its own input coordinate. For an image of $d$ pixels that needs $d$ separate backward passes per example, about 200,000 for a $256 \\times 256$ colour image. Fine for toy problems, hopeless for images.\n\nSliced score matching (Song et al., 2019) makes this affordable by projecting onto random directions $v$:\n\n$$\\mathcal{L}_{\\text{SSM}} = \\mathbb{E}_{x, v} \\Bigl[ 2\\, v^\\top \\nabla_x s_\\theta(x)\\, v + \\bigl( v^\\top s_\\theta(x) \\bigr)^2 \\Bigr]$$\n\nInstead of measuring the change of every coordinate, it measures the change along one random direction at a time, which costs a single extra backward pass. Cheaper, but still awkward, and the lecture moves on to the idea that actually won."
         },
         {
           "type": "text",
-          "heading": "6. How to sample with the score: Langevin",
-          "text": "If you hold the score, generation is following the arrows and adding a little randomness on top:\n\n$$x_{k+1} = x_k + \\frac{\\delta}{2}\\, s_\\theta(x_k) + \\sqrt{\\delta}\\, z_k, \\qquad z_k \\sim \\mathcal{N}(0,I)$$\n\nThis is called Langevin dynamics. After enough steps $x_k$ behaves like a sample coming from $p(x)$. Without the noise term you would only climb the nearest peak and get stuck at a single point; the randomness makes it possible to wander the whole distribution.\n\nWhy a single noise level is not enough: real data is squeezed into a thin region of a high-dimensional space. Far from that region $p(x)$ is almost zero, so there is neither data nor a signal the network could learn from — the score estimate comes out as garbage. If you start from a random point you are in exactly that garbage region.\n\nThe solution: many noise levels. At high $\\sigma$ the distribution spreads everywhere and the score is meaningful everywhere; you approach the data by lowering the level step by step. Song and Ermon's NCSN (2019) is this idea, and it looks at the same thing as DDPM's schedule."
+          "heading": "9. A score we can write down: the Gaussian",
+          "text": "Before the trick, one example. For a one-dimensional Gaussian $x \\sim \\mathcal{N}(\\mu, \\sigma^2)$,\n\n$$p(x) = \\frac{1}{\\sqrt{2\\pi\\sigma^2}} \\exp\\Bigl( -\\frac{(x-\\mu)^2}{2\\sigma^2} \\Bigr), \\qquad \\log p(x) = -\\frac{(x-\\mu)^2}{2\\sigma^2} + \\text{const}$$\n\nso the score is\n\n$$s(x) = -\\frac{x - \\mu}{\\sigma^2}$$\n\nRead it. The numerator $x - \\mu$ is how far you are from the centre, and the minus sign turns it around: the arrow always points back towards the mean. The farther away you are, the longer the arrow, like a spring. And the $1/\\sigma^2$ says that a narrow Gaussian pulls harder than a wide one: with $\\sigma = 0.5$ a point at distance 1 gets an arrow of length 4, with $\\sigma = 2$ only 0.25.\n\nThe normalizing factor $1/\\sqrt{2\\pi\\sigma^2}$ vanished on the way, exactly as $Z$ did in section 4."
+        },
+        {
+          "type": "text",
+          "heading": "10. The new idea: add noise and use a score you know",
+          "text": "Denoising score matching (Vincent, 2010) starts from the Gaussian example. Take a data point $x$ and add noise yourself:\n\n$$\\tilde{x} = x + \\sigma \\epsilon, \\qquad \\epsilon \\sim \\mathcal{N}(0, I)$$\n\nGiven $x$, the noisy point is Gaussian around it, $q_\\sigma(\\tilde{x} \\mid x) = \\mathcal{N}(x, \\sigma^2 I)$, and by section 9 its score is known exactly:\n\n$$\\nabla_{\\tilde{x}} \\log q_\\sigma(\\tilde{x} \\mid x) = -\\frac{\\tilde{x} - x}{\\sigma^2}$$\n\nThis arrow points from the noisy point back to the clean point it came from. And since $\\tilde{x} - x = \\sigma \\epsilon$, it equals $-\\epsilon / \\sigma$: the target is the noise you drew yourself, scaled. Nothing unknown remains in it."
+        },
+        {
+          "type": "text",
+          "heading": "11. What distribution does this target belong to?",
+          "text": "Doing this for every data point defines a new distribution, the noised data:\n\n$$q_\\sigma(\\tilde{x}) = \\int q_\\sigma(\\tilde{x} \\mid x)\\, p_{\\text{data}}(x)\\, dx$$\n\nIn words: pick a real image at random, add noise of size $\\sigma$, and $q_\\sigma$ is the distribution of what comes out. It is $p_{\\text{data}}$ blurred. The slide shows three panels: the sharp data density, then $q_\\sigma$ with $\\sigma \\ll 1$, almost the same shape slightly softened, then $q_\\sigma$ with $\\sigma \\gg 1$, a wide smear in which the original modes have run into each other."
+        },
+        {
+          "type": "formula",
+          "heading": "12. The key result: the conditional target is enough",
+          "text": "We would like to match the score of the blurred distribution:\n\n$$\\mathcal{L}_{\\text{SM}}(q_\\sigma) = \\mathbb{E}_{\\tilde{x}} \\bigl\\| s_\\theta(\\tilde{x}) - \\nabla_{\\tilde{x}} \\log q_\\sigma(\\tilde{x}) \\bigr\\|^2$$\n\nThat target is still unknown, because $q_\\sigma(\\tilde{x})$ involves the unknown $p_{\\text{data}}$. Vincent showed that the following loss differs from it only by a constant that does not depend on $\\theta$:\n\n$$\\mathcal{L}_{\\text{DSM}} = \\mathbb{E}_{x, \\tilde{x}} \\Bigl\\| s_\\theta(\\tilde{x}) - \\nabla_{\\tilde{x}} \\log q_\\sigma(\\tilde{x} \\mid x) \\Bigr\\|^2 = \\mathbb{E}_{x, \\tilde{x}} \\Bigl\\| s_\\theta(\\tilde{x}) + \\frac{\\tilde{x} - x}{\\sigma^2} \\Bigr\\|^2$$\n\nSo minimising one minimises the other. The derivation (expand the square, use the definition of the marginal) is in Vincent's paper; the intuition is worth more. A given noisy point $\\tilde{x}$ could have come from many different clean images, and each training example gives the network a different target arrow. The network cannot satisfy all of them, so the squared loss makes it output their average. And the average of \"the arrows back to every clean image that could have produced $\\tilde{x}$\", weighted by how likely each one is, is exactly the score of $q_\\sigma$ at $\\tilde{x}$. The network learns the right thing without ever seeing it. It is the same move DDPM made when it used the noise of a single example as the target."
+        },
+        {
+          "type": "text",
+          "heading": "13. The catch: which $\\sigma$?",
+          "text": "We now have a tractable loss, but the slide adds a warning: $\\mathcal{L}_{\\text{DSM}} = \\mathcal{L}_{\\text{SM}}(q_\\sigma)$, and $q_\\sigma$ is not exactly $p_{\\text{data}}$. We learn the score of the blurred data, not of the data. Remember what we wanted from section 2: arrows that guide a point from far away all the way into the data. The noise level decides which half of that wish we get.\n\nWith $\\sigma \\ll 1$, $q_\\sigma$ is close to $p_{\\text{data}}$, so the arrows near the data are accurate. But the noisy training points also stay close to the data, so the network never sees the empty regions far away. There it has no training signal and its arrows are guesses: poor estimations in low-density regions.\n\nWith $\\sigma \\gg 1$, the noisy points spread everywhere, so the arrows are well trained even far away: good estimations in low-density regions. But $q_\\sigma$ is far from $p_{\\text{data}}$: the arrows lead into the blurred smear, not to sharp images.\n\nNo single $\\sigma$ gives both."
         },
         {
           "type": "svg",
@@ -27185,182 +27221,295 @@
           "caption": "A data distribution consisting of two points, at two different noise levels. The curve is the density and the arrows below it the score; the arrow length shows the magnitude. On the left the density is squeezed around the data and in the distant regions the score is almost zero, so a sampler starting there does not know which way to go. On the right the same data is spread out with wide noise; the score is defined everywhere and points towards the data. This is why annealed sampling starts at a high level and comes down."
         },
         {
+          "type": "formula",
+          "heading": "14. NCSN: learn every noise level at once",
+          "text": "The resolution (Song and Ermon, 2019) is not to choose. Pick a ladder of noise levels $\\sigma_1 < \\ldots < \\sigma_T$ and give the level to the network as an extra input, $s_\\theta(x) \\to s_\\theta(x, \\sigma_i)$. One network, a Noise Conditional Score Network, learns the score of every blurred version:\n\n$$\\mathcal{L}_{\\text{NCSN}} = \\sum_{i=1}^{L} \\lambda(i)\\, \\mathbb{E}_x \\bigl\\| s_\\theta(x, \\sigma_i) - \\nabla_x \\log q_{\\sigma_i}(x) \\bigr\\|_2^2$$\n\nEach term is a denoising score matching loss at one level, so in practice the target is again $-(\\tilde{x} - x)/\\sigma_i^2$. The weights $\\lambda(i)$ balance the levels; since the target scales like $1/\\sigma_i$, the usual choice $\\lambda(i) = \\sigma_i^2$ keeps every level contributing a similar amount."
+        },
+        {
+          "type": "text",
+          "heading": "15. Sampling: annealed Langevin dynamics",
+          "text": "The intuition slides show the plan as a sequence of pictures. Start far away in the widest blur $q_{\\sigma_T}$ with $\\sigma_T \\gg 1$: everything is smeared, the arrows are reliable even where you start, and following them brings you into the broad region where data lives. Then switch to $q_{\\sigma_{T-1}}$, a little sharper; you are already in the right area, so its arrows are reliable for you, and they refine your position. Keep lowering the noise. By the time you reach $q_{\\sigma_1}$, close to the real data, you are already next to a mode, exactly where the low-noise arrows are accurate. Each level hands the next one a starting point in the region where that level is good.\n\nThis is annealed Langevin dynamics. Annealing is a term from metallurgy: cool slowly, so that the material settles into a good state instead of freezing wherever it happens to be."
+        },
+        {
+          "type": "algo",
+          "number": "1",
+          "title": "Annealed Langevin Dynamics",
+          "lines": [
+            "Input: noise levels $\\sigma_T > \\ldots > \\sigma_1$, steps per level $K$, step sizes $\\alpha_i$",
+            "",
+            "$x \\sim \\mathcal{N}(0, \\sigma_T^2 I)$ >> pure noise at the largest level",
+            "for $i = T, \\ldots, 1$ do",
+            "  for $k = 1, \\ldots, K$ do",
+            "    $\\epsilon \\sim \\mathcal{N}(0, I)$",
+            "    $x \\leftarrow x + \\frac{\\alpha_i}{2}\\, s_\\theta(x, \\sigma_i) + \\sqrt{\\alpha_i}\\, \\epsilon$ >> predicted score to move towards, plus a random kick",
+            "  end for",
+            "end for",
+            "return $x$ >> final image $x_0$"
+          ]
+        },
+        {
+          "type": "formula",
+          "heading": "16. The same thing as DDPM",
+          "text": "Put DDPM's forward process next to this. In DDPM the noisy image at step $t$ is\n\n$$x_t = \\sqrt{\\bar{\\alpha}_t}\\, x_0 + \\sqrt{1-\\bar{\\alpha}_t}\\, \\epsilon \\quad \\Longrightarrow \\quad q(x_t \\mid x_0) = \\mathcal{N}\\bigl( \\sqrt{\\bar{\\alpha}_t}\\, x_0,\\ (1-\\bar{\\alpha}_t) I \\bigr)$$\n\nIts score, by the Gaussian formula of section 9 with mean $\\sqrt{\\bar{\\alpha}_t}\\, x_0$ and variance $1-\\bar{\\alpha}_t$, is\n\n$$\\nabla_{x_t} \\log q(x_t \\mid x_0) = -\\frac{x_t - \\sqrt{\\bar{\\alpha}_t}\\, x_0}{1-\\bar{\\alpha}_t} = -\\frac{\\epsilon}{\\sqrt{1-\\bar{\\alpha}_t}}$$\n\nThe slide labels the two sides: on the left the score, the direction from noisy to clean; on the right the noise to remove from the noisy sample. They are the same vector up to sign and the factor $\\sqrt{1-\\bar{\\alpha}_t}$. So a network trained to predict $\\epsilon$ is, after rescaling, a network that predicts the score:\n\n$$s_\\theta(x_t, t) = -\\frac{\\epsilon_\\theta(x_t, t)}{\\sqrt{1-\\bar{\\alpha}_t}}$$\n\nDDPM and NCSN were developed independently, one from a likelihood bound and one from score matching, and they train the same network."
+        },
+        {
+          "type": "text",
+          "heading": "17. Why move to continuous time",
+          "text": "Line the two methods up. DDPM goes $x_0 \\to x_1 \\to \\ldots \\to x_T$; NCSN goes $x_0 \\to x_{\\sigma_1} \\to \\ldots \\to x_{\\sigma_T}$. Both chop the corruption of an image into a fixed number of steps, and the slide points out that this number is arbitrary: nothing about images says it must be 1,000. The steps are a choice we made, not part of the problem. So consider the corruption as a continuous process in time and let any number of steps be just one way of approximating it.\n\nWhat that buys, concretely:\n\nThe number of steps becomes free. With a discrete chain, the coefficients $\\beta_t$ and $\\bar{\\alpha}_t$ are tied to $T$. In continuous time the model is trained once and sampled with 1,000, 50 or 20 steps by the same network.\n\nUnification. DDPM and NCSN become two choices of the same equation, VP and VE (section 20).\n\nReady-made mathematics. Reversing a stochastic process in time, the probability flow ODE and high-order numerical solvers all exist already, and they apply as soon as the process is written in this language. DPM-Solver comes through that door."
+        },
+        {
+          "type": "text",
+          "heading": "18. The continuous noise: the Wiener process",
+          "text": "To add noise continuously we need the continuous version of \"add a little Gaussian noise at every step\". That object is the Wiener process $W_t$, also called Brownian motion: think of the jittering of a speck of dust on water. Its three properties, as listed on the slide:\n\n$W_0 = 0$: it starts at zero.\n\n$W_t - W_s \\sim \\mathcal{N}(0, (t - s) I)$: the change over any time interval is Gaussian, with variance equal to the length of the interval.\n\nIndependent increments: what happens in one interval tells you nothing about what happens in the next.\n\nThe second property has a consequence that will appear repeatedly: over a short time $dt$ the increment $dW$ has variance $dt$, so its size is $\\sqrt{dt}$, not $dt$. We write $dW = \\sqrt{dt}\\, \\epsilon$ with $\\epsilon \\sim \\mathcal{N}(0, I)$. The reason is that variances of independent pieces add: 100 small independent steps have 100 times the variance of one, but only 10 times the standard deviation. This square root is what makes random motion behave so differently from smooth motion."
+        },
+        {
+          "type": "text",
+          "heading": "19. From the discrete chains to equations",
+          "text": "DDPM first. Its discrete step is $x_t = \\sqrt{1 - \\beta_t}\\, x_{t-1} + \\sqrt{\\beta_t}\\, \\epsilon$. If you used twice as many steps, each step would have to add half as much noise, otherwise the total corruption would change. So the quantity that does not depend on the step size is the noise per unit time; call it $\\beta(t)$, and set $\\beta_t = \\beta(t)\\, \\Delta t$. This is the reparametrization of $\\beta$ mentioned on the slide.\n\nFor a small step, expand the square root with $(1 + u)^a \\approx 1 + a u$, here $u = -\\beta(t)\\Delta t$ and $a = \\tfrac{1}{2}$:\n\n$$\\sqrt{1 - \\beta(t)\\Delta t} \\approx 1 - \\tfrac{1}{2}\\beta(t)\\Delta t$$\n\nA number check: for $\\beta(t)\\Delta t = 0.01$ the true value is 0.994987 and the approximation 0.995. Substituting and writing the change $x_t - x_{t-1}$ gives\n\n$$\\Delta x = -\\tfrac{1}{2}\\beta(t)\\, x\\, \\Delta t + \\sqrt{\\beta(t)}\\, \\sqrt{\\Delta t}\\, \\epsilon$$\n\nand with $\\sqrt{\\Delta t}\\, \\epsilon \\to dW$ as $\\Delta t \\to 0$, this is the slide's continuous formulation:\n\n$$dx = -\\tfrac{1}{2}\\beta(t)\\, x\\, dt + \\sqrt{\\beta(t)}\\, dW$$\n\nNCSN is simpler. Its discrete step only adds noise, $x_t = x_{t-1} + \\sqrt{\\sigma_t^2 - \\sigma_{t-1}^2}\\, \\epsilon$, chosen so that the total variance after step $t$ is exactly $\\sigma_t^2$. The variance added per unit time is the rate of growth of $\\sigma^2(t)$, so by the definition of the Wiener process\n\n$$dx = \\sqrt{\\frac{d[\\sigma^2(t)]}{dt}}\\, dW$$"
+        },
+        {
+          "type": "text",
+          "heading": "20. The general form: drift and diffusion",
+          "text": "Both equations are special cases of one stochastic differential equation (SDE):\n\n$$dx = f(x, t)\\, dt + g(t)\\, dW$$\n\nThe slides walk through it term by term with pictures.\n\nThe drift $f(x, t)\\, dt$ is the deterministic part. If it were the only term, $x$ would follow a smooth path: at each instant it moves by $f(x, t)\\, dt$, like a boat carried by a current. In DDPM the drift is $-\\tfrac{1}{2}\\beta(t)\\, x$, a gentle pull of the image towards zero.\n\nThe diffusion $g(t)\\, dW$ is the random part. If it were the only term, $x$ would jitter around with no direction, by steps of size $g(t)\\sqrt{dt}$, like the speck of dust.\n\nTogether, every small step is a push by the current plus a random jolt, and the path looks like a drifting, trembling line.\n\nAn important warning about notation. This $f(x, t)$ is not the $f(x)$ of section 3. There, $f(x)$ was the unnormalized density, the shape of the data landscape. Here $f(x, t)$ is the drift, a velocity-like function that tells the process where to push. The lecture reuses the letter for a completely different object; in the rest of this walkthrough $f$ always means the drift."
+        },
+        {
           "type": "table",
-          "heading": "7. Three languages for the same process",
+          "heading": "21. Same letter, different meaning",
           "rows": [
             [
-              "",
-              "Latent variable",
-              "Score",
-              "SDE"
+              "Symbol",
+              "Where it appears",
+              "What it means there"
             ],
             [
-              "What the network predicts",
-              "$\\varepsilon_\\theta(x_t,t)$",
-              "$s_\\theta(x_t,t)$",
-              "the same network, continuous $t$"
+              "$f(x)$",
+              "section 3",
+              "unnormalized density: the shape of $p_{\\text{data}}$ before dividing by $Z$"
             ],
             [
-              "Derivation",
-              "ELBO",
-              "denoising score matching",
-              "stochastic differential equation"
+              "$f(x, t)$",
+              "SDE, reverse SDE, PF-ODE",
+              "drift: the deterministic push of the process"
             ],
             [
-              "Sampling",
-              "ancestral (DDPM)",
-              "annealed Langevin",
-              "reverse-time SDE solver"
+              "$f(t)\\, x$",
+              "DPM-Solver",
+              "the drift when it is linear in $x$, with $f(t)$ a scalar coefficient"
             ],
             [
-              "Source",
-              "Ho et al. 2020",
-              "Song, Ermon 2019",
-              "Song et al. 2021"
+              "$\\alpha$, $\\alpha_i$",
+              "Langevin, annealed Langevin",
+              "step size of one Langevin update"
+            ],
+            [
+              "$\\bar{\\alpha}_t$",
+              "DDPM",
+              "how much of the clean image remains at step $t$ (VP)"
+            ],
+            [
+              "$\\alpha_t$",
+              "training derivation, DPM-Solver",
+              "signal coefficient in $x_t = \\alpha_t x_0 + \\sigma_t \\epsilon$"
+            ],
+            [
+              "$\\sigma$, $\\sigma_i$",
+              "denoising score matching, NCSN",
+              "standard deviation of the noise added to the data"
+            ],
+            [
+              "$\\sigma_t$",
+              "training derivation, DPM-Solver",
+              "noise coefficient in $x_t = \\alpha_t x_0 + \\sigma_t \\epsilon$"
+            ],
+            [
+              "$t$",
+              "Langevin vs SDE",
+              "an iteration counter in Langevin; continuous time in the SDE"
             ]
           ]
         },
         {
-          "type": "text",
-          "heading": "Why we move to continuous time",
-          "text": "One should ask first: the discrete chain was working, so what is the trouble with moving to continuous time.\n\nIn the discrete form the number of steps is part of the definition of the model. When you choose $T = 1000$, the $\\beta_t$ values, the $\\bar{\\alpha}_t$ products and the posterior coefficients are all set up according to that number. Once you move to continuous time, $T$ stops being a definition and turns into a choice of solver. The difference between a staircase and a ramp: on a staircase the step height is fixed, on a ramp you step wherever you like.\n\nIt has four concrete gains.\n\nUnification. In the discrete form DDPM and NCSN looked like two independent methods; one shrinks the image and adds noise, the other only piles it on top. In the continuous form both are different choices of $f$ and $g$ in a single equation, namely VP and VE. This unification is the real contribution of the paper by Song and colleagues.\n\nThe number of steps becomes free. The model is trained once, and then with the same network you can take samples in 1000, 50 or 20 steps. In the discrete definition this flexibility did not exist because the coefficients were embedded in $T$; the door DDIM opened with respect to respacing comes for free in the language of continuous time.\n\nAccess to ready-made mathematics. Reversing SDEs in time, the probability flow ODE, high-order numerical solvers — these are tools that have existed for decades. The moment you write the process as an SDE all of them become usable. DPM-Solver enters through exactly this door.\n\nThe noise level becomes continuous. You draw $t$ from the interval $[0,1]$ rather than from 1 to 1000, and the network works at any intermediate level too. Choices such as flow matching's logit-normal time sampling are only meaningful on this ground.\n\nSo no new model is being invented: the same process is written in a more general language and the toolbox that language brings is used."
-        },
-        {
-          "type": "text",
-          "heading": "8. Moving to continuous time: where the SDE comes from",
-          "text": "DDPM's forward step was this: $x_t = \\sqrt{1-\\beta_t}\\, x_{t-1} + \\sqrt{\\beta_t}\\, z$. If you raised the number of steps from 1000 to 10000 you would have to add less noise at every step, otherwise the total corruption would change. So $\\beta_t$ really means \"how much noise per unit time\", and it depends on the step duration.\n\nLet us write this explicitly. $t$ is no longer an index counted as 1, 2, 3 but a continuous number between 0 and 1; the duration between two successive steps is $\\Delta t$. If you double the number of steps, $\\Delta t$ halves and the noise added at every step must halve as well, otherwise the total corruption changes. So the quantity independent of the step is \"noise added per unit time\"; call it $\\beta(t)$:\n\n$$\\beta_t = \\beta(t)\\, \\Delta t$$\n\nNow we expand the square root for small $\\Delta t$. The rule used is $(1+u)^a \\approx 1 + a u$, here with $u = -\\beta(t)\\Delta t$ and $a = \\tfrac{1}{2}$:\n\n$$\\sqrt{1-\\beta(t)\\Delta t} \\approx 1 - \\tfrac{1}{2}\\beta(t)\\Delta t$$\n\nCheck with a number: for $\\beta(t)\\Delta t = 0.01$ the true value is $0.994987$ and the approximation $0.995$. As the step shrinks the gap closes further and in the limit disappears entirely.\n\nPutting this into $x_t = \\sqrt{1-\\beta_t}\\, x_{t-1} + \\sqrt{\\beta_t}\\, z$ and writing the difference $x_t - x_{t-1}$, the change in one step becomes:\n\n$$\\Delta x = -\\tfrac{1}{2}\\beta(t)\\, x\\, \\Delta t + \\sqrt{\\beta(t)}\\, \\sqrt{\\Delta t}\\, z$$\n\nIn the limit $\\Delta t \\to 0$ this becomes a stochastic differential equation:\n\n$$dx = \\underbrace{f(x,t)}_{\\text{drift}}\\, dt + \\underbrace{g(t)}_{\\text{diffusion}}\\, dw$$\n\nThe meaning of the two terms is very concrete separately:\n\n$f(x,t)$ is the drift, that is, the deterministic pull. In the example above it is $-\\tfrac{1}{2}\\beta(t)x$, that is, at every moment it draws the image a little towards zero. Like a current carrying you down a windless river.\n\n$g(t)$ is the diffusion, that is, the intensity of the random jitter. $dw$ is Brownian motion: an infinitesimal, independent noise drawn at every instant. The trembling of a dust speck on water.\n\nA detail worth noticing: the noise term scales with $\\sqrt{\\Delta t}$, not with $\\Delta t$. Because the variances of independent random steps add, the standard deviation grows with the square root of the number of steps. This is the fundamental property of the random walk and the reason SDEs are a branch of mathematics of their own."
-        },
-        {
           "type": "table",
-          "heading": "9. VP and VE — two design choices",
+          "heading": "22. Two settings of one equation: VP and VE",
           "rows": [
             [
               "",
-              "VP-SDE (variance preserving)",
-              "VE-SDE (variance exploding)"
+              "Variance Preserving (VP)",
+              "Variance Exploding (VE)"
             ],
             [
-              "Who uses it",
+              "Example",
               "DDPM",
-              "NCSN (Song, Ermon 2019)"
+              "NCSN"
             ],
             [
-              "Drift $f$",
-              "$-\\tfrac{1}{2}\\beta(t)\\, x$ — shrinks the image",
-              "$0$ — the image is untouched"
+              "Drift $f(x, t)$",
+              "$-\\tfrac{1}{2}\\beta(t)\\, x$: shrinks the image",
+              "$0$: the image is untouched"
             ],
             [
-              "Diffusion $g$",
+              "Diffusion $g(t)$",
               "$\\sqrt{\\beta(t)}$",
-              "$\\sigma(t)$, growing fast"
+              "$\\sqrt{d[\\sigma^2(t)]/dt}$"
             ],
             [
               "Scale of $x_t$",
-              "fixed, variance always $1$",
-              "grows continuously, huge $\\sigma_{\\max}$ at the end"
+              "fixed, total variance stays near 1",
+              "grows, enormous $\\sigma$ at the end"
             ],
             [
               "Final state",
-              "$\\mathcal{N}(0,I)$",
-              "$\\mathcal{N}(x_0, \\sigma_{\\max}^2 I)$, in practice independent of the data"
+              "$\\mathcal{N}(0, I)$",
+              "$\\mathcal{N}(x_0, \\sigma_{\\max}^2 I)$, in practice data-independent"
             ],
             [
               "Advantage",
-              "the network's input is always of the same magnitude",
-              "the data is never corrupted, only added to"
+              "the network's input always has the same magnitude",
+              "the data is never shrunk, only added to"
             ],
             [
               "Difficulty",
               "signal and noise are scaled together",
-              "the network must handle a very wide range of $\\sigma$"
+              "the network must handle a huge range of $\\sigma$"
             ]
           ]
         },
         {
           "type": "insight",
-          "heading": "Why the difference between VP and VE matters",
-          "text": "Both do the same job: making the data unrecognisable and leaving a known distribution at the end. The difference is how they do it.\n\nVP shrinks the image a little at every step and puts noise in its place, so the total magnitude stays fixed. Like pouring out half a glass of coloured water and adding water in its place: the level is always the same, the colour disappears. Because the network's input is at the same scale at every $t$, it is comfortable in terms of normalization and architecture.\n\nVE never touches the image, it only piles ever larger noise on top. Like never pouring out the coloured water and adding bucketfuls of clear water on top: the colour disappears again but the vessel overflows. The difficulty here is scale: $\\sigma$ can range from 0.01 to 50 and the network has to work at all of them.\n\nSong and colleagues (2021) showed that both are special cases of the same framework. This unification revealed that DDPM and NCSN are not two independent inventions but two settings of a single equation — this is the real contribution of the paper."
+          "heading": "Why the difference matters",
+          "text": "Both make the data unrecognisable and end at a known distribution; they differ in how.\n\nVP shrinks the image a little at every step and puts noise in its place, so the total stays the same. Like pouring out part of a glass of coloured water and topping it up with clear water: the level never changes, the colour fades. Because the input has the same scale at every $t$, the network is comfortable.\n\nVE never touches the image and only pours more and more noise on top. Like never pouring anything out and adding buckets of clear water: the colour fades again, but the vessel overflows. The difficulty is scale: $\\sigma$ may range from 0.01 to 50, and one network must work at all of them."
         },
         {
           "type": "text",
           "heading": "Making the table concrete: what the network sees",
-          "text": "The network's input is $x_t$ in both setups, that is, the corrupted image at that level $t$. The difference is what that input looks like numerically.\n\nIn VP the sum of the squares of the two coefficients is always 1, so the pixel values stay in the same band at every $t$:\n\n$$x_t = \\sqrt{\\bar{\\alpha}_t}\\, x_0 + \\sqrt{1-\\bar{\\alpha}_t}\\, \\varepsilon$$\n\n$$t \\text{ small: } 0.99\\, x_0 + 0.10\\, \\varepsilon \\qquad t \\text{ middle: } 0.71\\, x_0 + 0.71\\, \\varepsilon \\qquad t \\text{ large: } 0.10\\, x_0 + 0.99\\, \\varepsilon$$\n\nIn VE the coefficient of the image never changes, only the noise added on top grows:\n\n$$x_t = x_0 + \\sigma(t)\\, \\varepsilon$$\n\nAt $\\sigma = 0.01$, $x_t$ is almost the clean image and the values lie between $-1$ and $1$. At $\\sigma = 50$ the values of the same image spread into the band from $-150$ to $150$ and the structure inside is completely lost. The sentence \"the data is never corrupted, only added to\" says this: the $x_0$ term is never shrunk."
+          "text": "In VP the squares of the two coefficients always add to one, so the pixel values stay in the same band:\n\n$$x_t = \\sqrt{\\bar{\\alpha}_t}\\, x_0 + \\sqrt{1-\\bar{\\alpha}_t}\\, \\epsilon$$\n\n$$t \\text{ small: } 0.99\\, x_0 + 0.10\\, \\epsilon \\qquad t \\text{ middle: } 0.71\\, x_0 + 0.71\\, \\epsilon \\qquad t \\text{ large: } 0.10\\, x_0 + 0.99\\, \\epsilon$$\n\nIn VE the image keeps coefficient 1 and only the noise grows, $x_t = x_0 + \\sigma(t)\\, \\epsilon$. At $\\sigma = 0.01$ the input is the clean image with values between $-1$ and $1$; at $\\sigma = 50$ the same image's values spread over roughly $-150$ to $150$ and its structure is gone.\n\nEach side pays somewhere. VE pays in range: the input magnitude changes by a factor of thousands, which networks dislike, so in practice the input is divided by its scale and $\\sigma$ is given as a separate input. VP pays in sensitivity: to recover the image you divide by $\\sqrt{\\bar{\\alpha}_t}$, which is 0.10 at large $t$, so a small error in the predicted noise becomes ten times larger in the predicted image. That is why clean-image estimates at high noise are blurry."
         },
         {
           "type": "text",
-          "heading": "What each side costs",
-          "text": "VE's cost is scale. The network has to handle both $\\sigma = 0.01$ and $\\sigma = 50$ with the same weights, that is, the magnitude of the input changes by thousands of times. Neural networks do not like this: activations either saturate or fall to zero. In practice it is solved with preprocessing such as dividing the input by $\\sigma$ and giving $\\sigma$ separately as an input.\n\nVP's cost is that signal and noise are scaled together. There the coefficient of $x_0$ goes to zero as $t$ grows, and to recover $x_0$ you have to divide by it:\n\n$$\\hat{x}_0 = \\frac{x_t - \\sqrt{1-\\bar{\\alpha}_t}\\, \\varepsilon_\\theta}{\\sqrt{\\bar{\\alpha}_t}}$$\n\nAt large $t$ this division means dividing by $0.10$: a small error in $\\varepsilon_\\theta$ grows tenfold in $\\hat{x}_0$. This is why $\\hat{x}_0$ estimates at large $t$ are blurry and unreliable — and the same mechanism lies behind our inability to generate in a single step in DDIM.\n\nSo both do the same job but put the difficulty in a different place: VE in the range of scales, VP in the sensitivity of the inversion."
+          "heading": "23. The timeline: two lines that met",
+          "text": "The slide's timeline shows why the unification was a real event. On the score-matching line: Hyvärinen's principle of score matching (2005), Vincent's denoising score matching (2010) and Song and Ermon's NCSN (2019). On the diffusion line: Sohl-Dickstein and colleagues' original diffusion paper (2015) and Ho and colleagues' DDPM (2020). The two lines were built by different people with different mathematics, and in 2020 Song and colleagues showed with the SDE formulation that they describe the same process. Their paper, Score-Based Generative Modeling through Stochastic Differential Equations, is the source of most of the rest of this walkthrough."
+        },
+        {
+          "type": "formula",
+          "heading": "24. Training: one recipe for both",
+          "text": "The objective is now a score network for every time, $s_\\theta(x_t, t)$, trained with denoising score matching:\n\n$$\\mathcal{L}_{\\text{DSM}} = \\mathbb{E}_{t, x_0, x_t} \\Bigl[ \\lambda_t \\bigl\\| s_\\theta(x_t, t) - \\nabla_{x_t} \\log p(x_t \\mid x_0) \\bigr\\|^2 \\Bigr]$$\n\nWhat does $x_t$ given $x_0$ look like? In VP (DDPM-style) $x_t \\mid x_0 \\sim \\mathcal{N}(\\sqrt{\\bar{\\alpha}_t}\\, x_0, (1 - \\bar{\\alpha}_t) I)$; in VE (NCSN-style) $x_t \\mid x_0 \\sim \\mathcal{N}(x_0, \\sigma_t^2 I)$. Both fit one form,\n\n$$x_t = \\alpha_t x_0 + \\sigma_t \\epsilon$$\n\nwith $\\alpha_t = \\sqrt{\\bar{\\alpha}_t}$, $\\sigma_t = \\sqrt{1 - \\bar{\\alpha}_t}$ for VP and $\\alpha_t = 1$ for VE. (Yet another $\\alpha$: here the signal coefficient.) The Gaussian score then gives the target directly:\n\n$$\\nabla_{x_t} \\log p(x_t \\mid x_0) = -\\frac{\\epsilon}{\\sigma_t}$$\n\nThe design space of these choices, which $\\alpha_t$, $\\sigma_t$, $\\lambda_t$, is analysed carefully in Karras and colleagues' Elucidating the Design Space of Diffusion-Based Generative Models (2022)."
+        },
+        {
+          "type": "algo",
+          "number": "2",
+          "title": "Training recipe",
+          "lines": [
+            "repeat",
+            "  $x_0 \\sim p_{\\text{data}}$, $\\epsilon \\sim \\mathcal{N}(0, I)$, $t \\sim \\mathcal{U}(0, T)$ >> clean image, noise, time step",
+            "  $x_t = \\alpha_t x_0 + \\sigma_t \\epsilon$ >> noised image",
+            "  $\\mathcal{L} = \\lambda_t \\| s_\\theta(x_t, t) + \\epsilon / \\sigma_t \\|^2$ >> use $x_t$ and $t$ to predict $-\\epsilon/\\sigma_t$",
+            "  backpropagate $\\mathcal{L}$ through $s_\\theta$",
+            "until converged"
+          ]
         },
         {
           "type": "text",
-          "heading": "An aside: what $p_t(x)$ exactly is",
-          "text": "Something called $p_t(x)$ appeared in the equations; let us open it up.\n\n$p_t$ is the distribution of the noisy data at level $t$. That is, if you took the whole dataset and added $t$ worth of noise to every example, it is the distribution of the resulting cloud.\n\n$$p_0 = p_{\\text{data}} \\qquad p_1 \\approx \\mathcal{N}(0,I)$$\n\nFor every $t$ in between, $p_t$ is a slightly more blurred version of the data distribution. Along the forward process sharp structures start to melt, the modes blend into each other, and at the end a single Gaussian peak remains.\n\nTwo points matter:\n\nWe never compute this explicitly. $p_t$ has no formula, because $p_{\\text{data}}$ has no formula. We can only produce samples from it: draw an $x_0$, add the appropriate noise, and the $x_t$ you hold is already a sample from $p_t$.\n\nWhat the network learns is exactly the score of this: $\\nabla_x \\log p_t(x)$. There is a separate score field for every $t$, and because $t$ is given to the network as an input, a single network learns all of them at once.\n\nThis is also why $p_t$ appears in the reverse equation: going backwards in time requires the information \"where is the data dense right now\", and that information sits in the score of $p_t$."
+          "heading": "25. Going backwards in time: the reverse SDE",
+          "text": "Training gives us the score at every time. To generate, we have to run the corruption backwards: start from noise and end at data. Anderson (1982) showed that an SDE can be reversed in time, and that the reverse process is another SDE:\n\n$$dx = \\bigl[ f(x, t) - g(t)^2 \\nabla_x \\log p_t(x) \\bigr] dt + g(t)\\, d\\bar{W}$$\n\nThe derivation uses the Fokker-Planck equation and is beyond the scope of the lecture; the slides instead build the equation up term by term, and that reading is what matters.\n\n$f(x, t)\\, dt$, the forward drift coefficient: the same current as in the forward process.\n\n$g(t)\\, d\\bar{W}$, the forward diffusion coefficient times a Wiener process. It is a Wiener process, but a different one from the forward process: fresh randomness, run backwards in time.\n\n$-g(t)^2 \\nabla_x \\log p_t(x)$, the correction to the drift, and inside it the score. Going forward, the noise kept pushing points away from the data. Going backward, the noise term still jitters points randomly, which on its own would spread them out further. To end up concentrated on the data instead, the process must go even more towards regions of high density, and the score is exactly the arrow pointing there. Its coefficient is $g(t)^2$ because the stronger the noise that has to be compensated, the stronger the push must be.\n\nHere $p_t$ is the distribution of the noisy data at time $t$: take the whole dataset, corrupt every image to level $t$, and $p_t$ describes the resulting cloud, with $p_0 = p_{\\text{data}}$ and $p_T$ close to pure noise. We never have a formula for $p_t$, only samples, but its score is precisely what $s_\\theta(x, t)$ was trained to output."
+        },
+        {
+          "type": "algo",
+          "number": "3",
+          "title": "Inference recipe (reverse SDE, Euler-Maruyama)",
+          "lines": [
+            "$x_{t_N} \\sim \\mathcal{N}(0, \\sigma_T^2 I)$ >> start from noise",
+            "for $i = N, \\ldots, 1$ do",
+            "  $\\xi_i \\sim \\mathcal{N}(0, I)$",
+            "  $x_{t_{i-1}} = x_{t_i} + \\bigl[ f(x_{t_i}, t_i) - g(t_i)^2 s_\\theta(x_{t_i}, t_i) \\bigr] \\Delta t + g(t_i) \\sqrt{|\\Delta t|}\\, \\xi_i$",
+            "end for",
+            "return $x_{t_0}$ >> final image $x_0$"
+          ]
         },
         {
           "type": "text",
-          "heading": "10. Going backwards in time: why the score is compulsory",
-          "text": "The forward process destroys information. When you hold only $x_t$, the question \"which image did this noise come from\" has no single answer, because many different images can lead to the same $x_t$.\n\nThe result Anderson proved in 1982 is this: an SDE can be reversed in time, but the reverse equation carries an extra term, and that term is the score:\n\n$$dx = \\bigl[ f(x,t) - g(t)^2 \\nabla_x \\log p_t(x) \\bigr] dt + g(t)\\, d\\bar{w}$$\n\nRead the terms one by one:\n\n$f(x,t)$ — the current that carried you while going forwards is also in play while going back.\n\n$-g(t)^2 \\nabla_x \\log p_t(x)$ — the new term. The score pointed in the direction in which the density increases; this term pushes you that way. The intuition is direct: while going forwards the noise drove you away from the data, and on the way back somebody has to tell you \"the data is over there\". The score is exactly that information.\n\n$g(t)\\, d\\bar{w}$ — there is randomness on the way back too. This is why you can start from the same $x_T$ and produce different images.\n\nThe coefficient being $g(t)^2$ is no coincidence either: the more intense the noise, the larger the push needed to undo it.\n\nThe practical consequence: if you know the score for every $t$ and every $x$, you can start from pure noise and produce data by solving this equation. And that is the only thing the network learns."
+          "heading": "Reading the inference step",
+          "text": "Euler-Maruyama is the simplest way to step through an SDE: freeze everything at the current point, take one step of size $\\Delta t$ for the deterministic part, and add a Gaussian kick of size $\\sqrt{|\\Delta t|}$ for the random part, the square root coming from section 18.\n\nOne detail that the compact formula hides: we are moving backwards, from $t_i$ to the earlier time $t_{i-1}$, so $\\Delta t = t_{i-1} - t_i$ is negative. With the minus sign in front of the score term, a negative $\\Delta t$ turns $-g^2 s_\\theta\\, \\Delta t$ into a step along the score, towards the data, which is what the intuition demanded. The random kick uses the absolute value, because a standard deviation cannot be negative."
         },
         {
           "type": "text",
-          "heading": "11. The probability flow ODE: the same distribution, no randomness",
-          "text": "Now the truly interesting part. There is another equation that gives the same marginals and contains no randomness at all:\n\n$$\\frac{dx}{dt} = f(x,t) - \\tfrac{1}{2} g(t)^2 \\nabla_x \\log p_t(x)$$\n\nThe claim here is this: the distribution at every $t$ of the points you transport by solving this ODE is identical to that of the SDE. The individual paths differ, but the distribution is the same.\n\nHow can that be? There are two ways of moving a distribution. Either you jitter every particle randomly and the crowd spreads, or you push every particle with a computed velocity and produce the same spreading deterministically. In the end the shape of the crowd is the same; who ends up where is different.\n\nThe factor of $\\tfrac{1}{2}$ comes from here too: in the SDE part of the spreading was done by the randomness. Once the randomness is removed entirely, the velocity field has to produce that lost spreading on its own, and the balance is struck exactly at one half.\n\nThis has three consequences:\n\nDeterministic generation becomes possible. The moment you choose the starting point the output is determined. DDIM's $\\eta = 0$ sampler is exactly a discretization of this ODE.\n\nSkipping steps becomes legitimate. If you hold an ODE you are free to choose a solver; enlarging the step increases the error but does not break the process. In the stochastic chain this was not possible.\n\nThe bridge to flow matching is built here. The right-hand side of the probability flow ODE is a velocity field. Flow matching, instead of extracting that field indirectly through the score, learns it directly, and moreover chooses the path to be straight. The same target built by a shorter route."
+          "heading": "26. The weakness of the SDE: randomness costs time",
+          "text": "The stochastic term $g(t)\\, d\\bar{W}$ has two costs.\n\nA slower solver. Typically 1,000 to 2,000 steps are needed, partly because we do not know in advance which parts of the trajectory are easy and could take big steps, and which are hard. With fresh randomness injected at every step, large steps quickly degrade quality.\n\nMore sources of error. There is the usual discretization error from finite steps, and on top of it the injected noise itself.\n\nSuppose, hypothetically, the same process could be written with something in place of the drift and nothing in place of the random term: no stochasticity at all. That would mean a faster solver, because the mathematics of ordinary differential equations lets you go fast where the path is smooth and slow where it bends, and a single source of error, only the finite step size. Is there such an equation, and what goes in the box labelled \"something\"?"
+        },
+        {
+          "type": "text",
+          "heading": "27. Finding the ODE: from particles to the crowd",
+          "text": "The derivation on the slides has three arrows, and each has a plain meaning.\n\nForward SDE to Fokker-Planck. Instead of following one noisy particle, describe how the whole crowd's density $p_t(x)$ changes in time. The Fokker-Planck equation does this:\n\n$$\\frac{\\partial p_t(x)}{\\partial t} = -\\nabla \\cdot \\bigl( f(x, t)\\, p_t(x) \\bigr) + \\tfrac{1}{2} g(t)^2 \\Delta p_t(x)$$\n\nThe first term is the current carrying density along with it; $\\nabla \\cdot$ (the divergence) measures how much flows out of each small region. The second term is the spreading caused by the noise; $\\Delta$ is the Laplacian, which makes peaks melt and valleys fill in, the way a drop of ink spreads in water.\n\nFokker-Planck to the continuity equation, by algebra. Here the trick of section 4 comes back. Since $\\nabla \\log p = \\nabla p / p$, we have $\\nabla p = p\\, \\nabla \\log p$, and therefore $\\Delta p = \\nabla \\cdot \\nabla p = \\nabla \\cdot \\bigl( p\\, \\nabla \\log p \\bigr)$. The spreading term can be written as a flow too, and both terms combine into one:\n\n$$\\frac{\\partial p_t}{\\partial t}(x) = -\\nabla \\cdot \\Bigl( \\bigl[ f(x, t) - \\tfrac{1}{2} g(t)^2 \\nabla_x \\log p_t(x) \\bigr]\\, p_t(x) \\Bigr)$$\n\nContinuity equation to PF-ODE. This has the form of the continuity equation, $\\partial_t p = -\\nabla \\cdot (v\\, p)$: the density changes only because mass is moved around by a velocity field $v$, with nothing created or destroyed. So recognise the bracket as a velocity,\n\n$$v(x, t) = f(x, t) - \\tfrac{1}{2} g(t)^2 \\nabla_x \\log p_t(x)$$\n\nand move every particle with it deterministically:\n\n$$dx = \\bigl[ f(x, t) - \\tfrac{1}{2} g(t)^2 \\nabla \\log p_t(x) \\bigr] dt$$\n\nThis is the probability flow ODE. In it, $f$ and $g$ are modelling assumptions, the same ones chosen for the forward process (VP or VE), and the score is approximated by our trained model.\n\nThe factor $\\tfrac{1}{2}$ now has a clear origin: it is the $\\tfrac{1}{2}$ in front of the Laplacian in Fokker-Planck. In the SDE, half of the work of moving density around was done by randomness. With the randomness removed, the velocity field has to do that work itself, and the bookkeeping balances at exactly one half of the reverse SDE's coefficient."
+        },
+        {
+          "type": "text",
+          "heading": "28. What the PF-ODE means, and what it does not",
+          "text": "Probability flow: the equation moves probability mass like a fluid. It satisfies the continuity equation with velocity $v(x, t)$, so the density it produces at every time is exactly $p_t$, the same as the SDE.\n\nOrdinary differential equation: no random term, $+ \\varnothing$ on the slide. Given a starting point, the path is fully determined.\n\nThe warning sign on the slide is the subtle part: same marginal densities is not the same as same trajectories. The cloud of points has the same shape at every time under both processes, but individual points travel completely different routes. Picture a crowd leaving a stadium: everyone could walk the shortest path calmly, or everyone could stagger randomly with a slight bias towards the exits. At every moment the crowd may occupy the same areas, while each person's walk looks entirely different."
         },
         {
           "type": "table",
-          "heading": "12. Reverse SDE and PF-ODE — which one when",
+          "heading": "29. Reverse SDE or PF-ODE",
           "rows": [
             [
               "",
               "Reverse SDE",
-              "Probability flow ODE"
+              "PF-ODE"
             ],
             [
               "Equation",
-              "$\\bigl[f - g^2 \\nabla_x \\log p_t\\bigr] dt + g\\, d\\bar{w}$",
-              "$\\bigl[f - \\tfrac{1}{2} g^2 \\nabla_x \\log p_t\\bigr] dt$"
+              "$\\bigl[ f - g^2 \\nabla_x \\log p_t \\bigr] dt + g\\, d\\bar{W}$",
+              "$\\bigl[ f - \\tfrac{1}{2} g^2 \\nabla_x \\log p_t \\bigr] dt$"
             ],
             [
-              "Process",
+              "Nature of process",
               "stochastic",
               "deterministic"
             ],
             [
-              "Diversity",
-              "high",
-              "low"
+              "Sampling diversity",
+              "higher",
+              "lower"
             ],
             [
-              "Sample quality",
-              "high",
-              "low"
+              "Sampling quality",
+              "higher",
+              "lower"
             ],
             [
-              "Speed",
-              "slow",
-              "fast"
+              "Sampling speed",
+              "slower",
+              "faster"
             ]
           ]
         },
         {
           "type": "text",
-          "heading": "The reason behind the three rows of the table",
-          "text": "Diversity. The reverse SDE draws fresh noise at every step, so even if you start from the same $x_T$ a different image comes out on every run. In the ODE the randomness is only at the beginning; if $x_T$ is fixed the output is fixed too. Diversity comes entirely from the distribution of the starting point.\n\nQuality. The difference here is intuitively this: the noise added by the SDE acts as a kind of error correction. If you are thrown somewhere far from the data along the way, the score term pulls you back in the following steps and the added randomness lets you probe different regions. In the ODE there is no such correction: you follow a single trajectory and the discretization error you make at every step accumulates, with no way back. If you have a generous step budget the SDE generally gives better samples.\n\nSpeed. The ODE's advantage comes exactly from its determinism. If you hold an ordinary differential equation you can use high-order solvers and enlarge the step; finishing in 20 to 50 steps is possible. In the SDE, because every step adds new randomness, enlarging the step directly damages quality, so hundreds of steps are needed.\n\nThe practical division follows from here: if you have a large step budget and want diversity, the SDE; if you want fast generation in few steps, the ODE. DDIM's $\\eta$ dial already travels between these two ends — $\\eta = 1$ is the SDE side, $\\eta = 0$ the ODE side."
+          "heading": "The reasons behind the rows",
+          "text": "Diversity. The SDE draws fresh noise at every step, so even from the same starting noise each run ends at a different image. In the ODE all randomness is in the starting point; fix it and the output is fixed.\n\nQuality. The injected noise acts as error correction. If a step throws you somewhat off, the randomness lets you explore and the score term pulls you back over the following steps. The ODE follows a single trajectory, and every discretization error it makes is carried along with no way back. With a generous step budget, the SDE usually gives better samples.\n\nSpeed. Determinism is what lets ODE solvers take large steps safely, finishing in tens of steps instead of hundreds.\n\nThe slide then lines this up with what came before: DDIM is to the PF-ODE what DDPM is to the reverse SDE. Each pair is a deterministic and a stochastic way of sampling, DDIM can reuse a model trained for DDPM exactly as the PF-ODE reuses the score network, and the trade-offs match: lower diversity, lower quality at equal steps, faster."
         },
         {
           "type": "text",
-          "heading": "13. The four disguises of the same network: $x_0$, $\\varepsilon$, score, velocity",
-          "text": "So far we have seen the network's output under three different names, and all of them converted into one another by algebra. There is a fourth as well.\n\n$$\\hat{x}_0 = \\frac{x_t - \\sqrt{1-\\bar{\\alpha}_t}\\, \\varepsilon_\\theta}{\\sqrt{\\bar{\\alpha}_t}} \\qquad s_\\theta = -\\frac{\\varepsilon_\\theta}{\\sqrt{1-\\bar{\\alpha}_t}} \\qquad v_\\theta = \\sqrt{\\bar{\\alpha}_t}\\, \\varepsilon_\\theta - \\sqrt{1-\\bar{\\alpha}_t}\\, \\hat{x}_0$$\n\nThe last one is the velocity, that is, v-prediction (Salimans, Ho 2022). It is called velocity because it gives the direction of change of $x_t$ with respect to $t$: it says in which direction one is moving at that moment along the road between $x_0$ and $\\varepsilon$.\n\nWhy a separate parametrization was needed: $\\varepsilon$-prediction behaves badly at small $t$. There $x_t$ is already almost clean and the added noise is tiny; predicting it is both hard and the error in that prediction grows through the division in $\\hat{x}_0$. $x_0$-prediction suffers the same problem at large $t$. The velocity is a target that sits between the two and behaves in a balanced way at every $t$. This is why it is preferred in distillation and few-step sampling work.\n\nThe connection to flow matching is exactly here: there the network learned a velocity field directly. The right-hand side of the probability flow ODE is also a velocity field. So the two approaches learn the same object; diffusion arrives at it by going around through the score, flow matching directly, by drawing a straight line."
+          "heading": "30. Solving the ODE: counting network calls",
+          "text": "Generation is now solving $dx = v(x, t)\\, dt$ with a known starting point $x(t_0) = x_0$, here pure noise, backwards to the data. The cost that matters is the number of function evaluations (NFE): how many times the network has to be run, because each evaluation of $v$ requires the score, and so a full forward pass.\n\nThe simplest method is Euler: evaluate the velocity once and step in a straight line, $x_{t_{i+1}} = x_{t_i} + v(x_{t_i}, t_i)\\, \\Delta t$. One NFE per step, but a large error wherever the path bends, as the slide's picture shows with the straight red line missing the curve.\n\nRunge-Kutta 4 evaluates the velocity at four cleverly chosen points along the step and averages them, $x_{t_{i+1}} = x_{t_i} + \\frac{k_1 + 2k_2 + 2k_3 + k_4}{6} \\Delta t$. Four NFE per step and a much smaller error, so far fewer steps are needed for the same accuracy."
         },
         {
           "type": "text",
-          "heading": "14. DPM-Solver: solving the ODE knowingly",
-          "text": "Once you have the PF-ODE, the first thing that comes to mind is to solve it with Euler like an ordinary ODE. This is also what DDIM does. But this ignores the structure of the equation.\n\nThe equation is half linear: one part is linear in $x$ and solvable in closed form, and the rest is the non-linear part requiring a network call. Euler solves both approximately, that is, it makes an error even in the part that is known analytically.\n\nDPM-Solver (Lu et al., NeurIPS 2022) solves the linear part exactly and applies a numerical approximation only to the part involving the network. For this it changes variables: $\\lambda_t = \\log(\\sqrt{\\bar{\\alpha}_t}/\\sqrt{1-\\bar{\\alpha}_t})$, that is, the logarithm of the signal-to-noise ratio. In this variable the equation behaves much more smoothly and high-order steps can be built.\n\nThe practical result is large: the quality DDIM reaches in 50 steps is reached with 10 to 20 network calls. The DPM++ options you see in Stable Diffusion interfaces are refined versions of this.\n\nThe general lesson here is the continuation of the line running from the start of this text: the same trained network stays in place, and the only thing that changes is how you sample from it. First we dropped the chain (DDIM), then we saw the process as an ODE, and now we solve that ODE more cleverly."
+          "heading": "31. A smarter solver: DPM-Solver",
+          "text": "Both methods treat $v$ as an unknown black box. But we know its form: $v(x, t) = f(x, t) - \\tfrac{1}{2} g(t)^2 \\nabla_x \\log p_t(x)$, and in diffusion the drift is linear in $x$, $f(x, t) = f(t)\\, x$ (in VP, $f(t) = -\\tfrac{1}{2}\\beta(t)$). So the right-hand side splits into two parts:\n\n$$f(t)\\, x - \\tfrac{1}{2} g(t)^2 \\nabla_x \\log p_t(x)$$\n\nThe first part is linear in $x$, and a linear equation can be solved exactly with pen and paper. Only the second part, non-linear in $x$ and containing the network, really needs numerical approximation. Traditional solvers discretize both parts and so make an error even in the part that could have been solved exactly. A smarter solver solves the linear part exactly and discretizes only the network's part.\n\nThat is DPM-Solver (Lu et al., 2022). Using variation of constants and a change of variables, the exact solution from $t_i$ to $t_{i-1}$ is\n\n$$x_{t_{i-1}} = \\frac{\\alpha_{t_{i-1}}}{\\alpha_{t_i}}\\, x_{t_i} - \\alpha_{t_{i-1}} \\int_{\\lambda_{t_i}}^{\\lambda_{t_{i-1}}} e^{-\\lambda}\\, \\hat{\\epsilon}_\\theta(\\hat{x}_{t_\\lambda}, t_\\lambda)\\, d\\lambda$$\n\nwith $\\lambda_t = \\log(\\alpha_t / \\sigma_t)$, the logarithm of the signal-to-noise ratio, and $\\hat{\\epsilon}_\\theta(x_t, t) = -\\sigma_t\\, \\hat{s}_\\theta(x_t, t)$, the score network rewritten as a noise predictor (the relation of section 16). The first term is the linear part, solved exactly: it simply rescales $x$. All the approximation is pushed into one integral over $\\lambda$, and the open question the slide raises is what to do with that term."
+        },
+        {
+          "type": "text",
+          "heading": "32. The variants, and the result",
+          "text": "The answer is a Taylor expansion of the network's output in $\\lambda$. DPM-Solver-1 treats $\\hat{\\epsilon}_\\theta$ as constant over the step, its value at the start: one NFE per step, and it turns out to be exactly DDIM. DPM-Solver-2 adds the first derivative, the rate at which $\\hat{\\epsilon}_\\theta$ changes with $\\lambda$: two NFE per step and a more accurate integral. In general DPM-Solver-k uses a Taylor expansion of order $k - 1$ and costs $k$ NFE per step.\n\nThe conclusion slides summarise the whole second half of the lecture. The mindset: forward SDE, then Fokker-Planck, then the continuity equation, then the PF-ODE, and then exploiting the structure of the PF-ODE to build DPM-Solver. The performance: for a fixed budget of network calls it beats traditional solvers, most clearly when that budget is small. And in practice no retraining is needed, the same trained network is used, and reasonable images come out after only 10 to 20 NFE. The DPM++ options in Stable Diffusion interfaces are refined versions of this solver."
+        },
+        {
+          "type": "text",
+          "heading": "Beyond the slides: four disguises of the same network",
+          "text": "Section 16 converted a noise predictor into a score, and DPM-Solver converted it back. These conversions are pure algebra, and there is a fourth common output, the velocity of v-prediction (Salimans and Ho, 2022):\n\n$$\\hat{x}_0 = \\frac{x_t - \\sigma_t\\, \\epsilon_\\theta}{\\alpha_t} \\qquad s_\\theta = -\\frac{\\epsilon_\\theta}{\\sigma_t} \\qquad v_\\theta = \\alpha_t\\, \\epsilon_\\theta - \\sigma_t\\, \\hat{x}_0$$\n\nA network may be trained to output any of the four, and the others follow. They differ in how well-behaved the training target is: predicting $\\epsilon$ is hard at small noise, predicting $x_0$ is hard at large noise, and the velocity sits between them and behaves evenly at every level, which is why it is popular for distillation and few-step sampling. It is also the link to flow matching: the PF-ODE's right-hand side is a velocity field, and flow matching learns such a field directly, choosing the paths to be straight."
         },
         {
           "type": "insight",
           "heading": "What should stay with you",
-          "text": "The score is the gradient of the logarithm of the density with respect to $x$; it is computable because it kills the normalization constant. The true score is unknown but the score of the noise you added yourself is known, and training with that target gives the right answer. This training is the same thing as DDPM's $\\varepsilon$-prediction; the two convert into each other by a single scale factor. Once you move to continuous time the process becomes an SDE, and its deterministic counterpart, the probability flow ODE, is the common ground of DDIM and flow matching."
+          "text": "We wanted arrows pointing towards the data. The gradient of the density gives them in principle but fails twice: it contains the unknown normalization $Z$ of $p_{\\text{data}} = f(x)/Z$, and it fades to zero far from the data. Taking the logarithm first fixes both: $Z$ drops out because it is a constant, and $\\nabla p / p$ keeps the direction while turning the length into a relative rate that stays informative far away. That arrow field is the score. Its true value is unknown, but the score of the noise you add yourself is known, $-(\\tilde{x} - x)/\\sigma^2$, and training on it learns the score of the blurred data. Small noise is accurate near the data, large noise covers empty space, so NCSN learns all levels and annealed Langevin walks down them. The score target is DDPM's noise target rescaled. In continuous time the two methods become one SDE, $dx = f\\, dt + g\\, dW$, with VP and VE as two settings. Reversing it adds a score correction; rewriting the crowd's evolution with $\\nabla p = p\\, \\nabla \\log p$ gives the deterministic PF-ODE with the same marginals but different paths, the common ground of DDIM and flow matching, and DPM-Solver solves its linear part exactly to sample in 10 to 20 network calls."
         },
         {
           "type": "ref",
@@ -27383,7 +27532,7 @@
         {
           "type": "note",
           "heading": "Where to look",
-          "text": "Sources: Hyvärinen 2005 (score matching) · Vincent 2011 (denoising score matching) · Song, Ermon — Generative Modeling by Estimating Gradients of the Data Distribution (NeurIPS 2019) · Song et al. — Score-Based Generative Modeling through SDEs (ICLR 2021) · Lu et al. — DPM-Solver (NeurIPS 2022).\n\nCourse: CME 296, Lecture 2. For what follows see the Flow Matching and Rectified Flow walkthrough; for the whole of the DDPM side see the DDPM walkthrough."
+          "text": "Course: CME 296 (Stanford), Lecture 2 — Score matching, by Afshine and Shervine Amidi. This walkthrough follows the order and the notation of the slides: Motivation, Score estimation, Differential formulation, Training, Inference, Probability flows.\n\nPapers: Hyvärinen — Estimation of Non-Normalized Statistical Models by Score Matching (2005) · Vincent — A Connection Between Score Matching and Denoising Autoencoders (2010) · Song et al. — Sliced Score Matching (2019) · Song and Ermon — Generative Modeling by Estimating Gradients of the Data Distribution (NeurIPS 2019) · Song et al. — Score-Based Generative Modeling through Stochastic Differential Equations (ICLR 2021) · Anderson — Reverse-Time Diffusion Equation Models (1982) · Karras et al. — Elucidating the Design Space of Diffusion-Based Generative Models (2022) · Lu et al. — DPM-Solver (NeurIPS 2022).\n\nOn this site: the DDPM walkthrough for the likelihood road to the same loss; the Flow Matching walkthrough for the velocity-field view that continues from the PF-ODE."
         }
       ]
     },
