@@ -29028,24 +29028,90 @@
       ]
     },
     "frontier": {
-      "title": "The Frontier — Current Models, Video, Editing and Diffusion for Text",
+      "title": "The Frontier — Recap, Current Models, Video, Editing and Diffusion for Text",
       "cat": "Walkthrough",
-      "context": "Where the field stands and where it is going · CME 296 Lecture 8",
+      "context": "CME 296 Lecture 8, the closing lecture, following the slides",
       "chapters": [
         "ida11",
         "cs13",
         "mlo21"
       ],
-      "summary": "The six axes any generation system reads off and how today's open models fill them; the trend back to pixel space; what the time dimension drags along in video; editing with guardrails instead of generating; what the image world borrowed from the text world and the return journey, diffusion language models with masking as noise and commit-and-remask decoding; and the four open problems.",
+      "summary": "The whole course rewound lecture by lecture with its formulas and assembled into six labels; the May 2026 leaderboard and what its Elo gaps mean; FLUX.2, Qwen-Image and HiDream-O1 read off the labels and the return to pixel space; video with a worked token count, FVD and the Wan architecture; editing through a VLM and editing software; what images borrowed from text; diffusion language models with [MASK] as noise, commit and revise; use cases, prices, open challenges and how to stay current.",
       "sections": [
         {
+          "type": "text",
+          "heading": "1. The picture the whole course fills in",
+          "text": "The last lecture starts by rewinding the quarter, and it does so around one picture. A prompt, \"A teddy bear reading a book\", goes into a box called the generation model, and an image comes out. Each lecture of the course answered one question about that box, and the slides add the answers to the picture one label at a time: the generation paradigm (lectures 1 to 3), the condition and the image representation (lecture 4), the model architecture (lecture 5), model training (lecture 6) and evaluation (lecture 7). Sections 2 to 8 follow that rewind, with the formula each lecture ended on, and section 9 assembles the six labels into one table."
+        },
+        {
+          "type": "formula",
+          "heading": "2. Lecture 1 — Diffusion: add noise, learn to remove it",
+          "text": "Two processes. The forward process $q(x_t \\mid x_{t-1})$ adds a little Gaussian noise at each step, from the image $x_{\\text{image}} = x_0$ to almost pure noise $\\epsilon \\approx x_T$. The reverse process $p_\\theta(x_{t-1} \\mid x_t)$ is learned and walks back, from $\\epsilon = x_T$ to an image.\n\nThe strategy for training it had four steps: derive a lower bound on the log-likelihood (the ELBO), expand its terms (KL divergences appear), show that every term is tractable (Bayes' rule and Gaussian properties), and deduce the final loss, an incredibly simple noise prediction:\n\n$$\\mathcal{L} = \\mathbb{E}_{t, x_0, \\epsilon} \\Bigl[ \\bigl\\| \\epsilon_\\theta\\bigl( \\sqrt{\\bar{\\alpha}_t}\\, x_0 + \\sqrt{1-\\bar{\\alpha}_t}\\, \\epsilon,\\ t \\bigr) - \\epsilon \\bigr\\|^2 \\Bigr]$$\n\nRead with the slide's labels: $\\epsilon_\\theta$ is the noise predictor, $\\sqrt{\\bar{\\alpha}_t} x_0 + \\sqrt{1-\\bar{\\alpha}_t}\\, \\epsilon$ is the noised image, $t$ is the noise level, and the last $\\epsilon$ is the actual noise."
+        },
+        {
+          "type": "formula",
+          "heading": "3. Lecture 2 — Score matching: arrows towards the data",
+          "text": "The second view asks for the direction $\\nabla_x \\log p_{\\text{data}}(x)$ that leads from a random point to the data, the score. It is learned by denoising score matching:\n\n$$\\mathcal{L}_{\\text{DSM}} = \\mathbb{E}_{t, x_0, x_t} \\Bigl[ \\lambda_t \\bigl\\| s_\\theta(x_t, t) - \\nabla_{x_t} \\log p(x_t \\mid x_0) \\bigr\\|^2 \\Bigr]$$\n\nand it meets lecture 1 through one identity, the score from noisy to clean equals the noise to remove from the noisy sample, rescaled:\n\n$$\\nabla_{x_t} \\log q(x_t \\mid x_0) = -\\frac{\\epsilon}{\\sqrt{1-\\bar{\\alpha}_t}}$$\n\nIn continuous time the forward process is an SDE, $dx = f(x,t)\\, dt + g(t)\\, dW$, a deterministic drift plus a random diffusion; the slide draws one step from $x$ to $x + dx$ as a straight push $f(x,t)\\, dt$ followed by a random kick $g(t)\\, dW$. Its reverse adds the score as a correction to the drift:\n\n$$dx = \\bigl[ f(x,t) - g(t)^2 \\nabla_x \\log p_t(x) \\bigr] dt + g(t)\\, d\\bar{W}$$"
+        },
+        {
+          "type": "formula",
+          "heading": "4. Lecture 3 — Flow matching: learn the velocity directly",
+          "text": "The third view moves a simple initial distribution to the target one along a velocity field. For a single sample, the motion is an ordinary differential equation,\n\n$$\\frac{dx}{dt} = u_t(x)$$\n\nso in a short time $x$ moves to $x + u_t(x)\\, dt$. For the whole distribution $p_t$, the continuity equation says that density only changes because mass flows:\n\n$$\\frac{\\partial p_t}{\\partial t}(x) = -\\nabla \\cdot \\bigl( p_t\\, u_t \\bigr)(x)$$\n\nTraining estimates $u_t(x)$ with a network $u_t^\\theta(x)$. Inference maps $x_0 \\sim p_0$ to $x_1 \\sim p_1$ by integrating it:\n\n$$\\hat{x}_1 = x_0 + \\int_0^1 u_t^\\theta(x)\\, dt$$\n\nThe loss that makes this trainable is conditional flow matching, with the straight-line target velocity $x_1 - x_0$:\n\n$$\\mathcal{L}_{\\text{CFM}} = \\mathbb{E}_{t, x_1, x} \\Bigl[ \\bigl\\| u_t^\\theta(x) - u_t(x \\mid x_1) \\bigr\\|^2 \\Bigr], \\qquad u_t(x \\mid x_1) = x_1 - x_0$$\n\nA notation trap: in lectures 1 and 2, $x_0$ is the clean image and large $t$ is noise. In lecture 3, $x_0 \\sim p_0$ is the noise and $x_1 \\sim p_1$ is the data, so time runs the other way. The pictures are the same; only the labels flip."
+        },
+        {
+          "type": "formula",
+          "heading": "5. Lecture 4 — Latent space and guidance",
+          "text": "Two labels are added to the picture here: the image representation and the condition.\n\nImage representation. Running diffusion on every pixel of an $H \\times W \\times C$ image is expensive. An autoencoder compresses it: the encoder maps pixel space to a small latent $h \\times w \\times c$ at the bottleneck, and the decoder maps it back. Diffusion then runs in the latent space. A plain autoencoder scatters the training images as isolated points in that space, with empty gaps between them; the variational autoencoder fixes this by regularizing the latent space so that it is filled continuously, with the loss\n\n$$\\mathcal{L}_{\\text{VAE}} = \\underbrace{-\\mathbb{E}_z \\bigl[ \\log p_\\theta(x \\mid z) \\bigr]}_{\\mathcal{L}_{\\text{rec}}} + \\underbrace{\\text{KL}\\bigl( q_\\varphi(z \\mid x) \\,\\|\\, p(z) \\bigr)}_{\\mathcal{L}_{\\text{KL}}}$$\n\nthe first term for reconstruction, the second for regularization of the latent space.\n\nCondition. The prompt enters as embeddings from a text encoder (CLIP and its successors), and guidance strengthens its effect at sampling time."
+        },
+        {
+          "type": "text",
+          "heading": "6. Lecture 5 — Image generation architectures",
+          "text": "The fifth label is the model architecture. Whatever the paradigm, the network has the same interface: it takes the noisy latent $x_t$, the condition $c$ (the prompt) and the noise level $t$, and outputs a prediction of the same shape, here a velocity $u_\\theta(x_t, t, c)$.\n\nTwo families fill that box. The U-Net and its variants, a convolutional encoder-decoder with skip connections, and the Diffusion Transformer (DiT) and its variants, which patchify the latent into tokens and process them with transformer blocks whose normalization is modulated by the timestep and the condition.\n\nThe slide's timeline shows the shift: the original U-Net (2015), a U-Net in pixel space for DDPM (2020), a U-Net in latent space for latent diffusion (2021), the Diffusion Transformer (2022 to 2023), a big U-Net in Stable Diffusion XL (2023), then transformer-based models from 2024 on, Stable Diffusion 3, FLUX.1, Qwen-Image (2025) and Z-Image (2026). Since 2024 the frontier has been almost entirely DiT and its variants."
+        },
+        {
           "type": "table",
-          "heading": "1. The six axes a generation model is made of",
+          "heading": "7. Lecture 6 — Model training, in four stages",
           "rows": [
             [
-              "Axis",
+              "Stage",
+              "What the model learns",
+              "Typical tools"
+            ],
+            [
+              "Pre-training",
+              "how to generate images",
+              "large-scale data, the paradigm's loss"
+            ],
+            [
+              "Post-training",
+              "how to generate good images",
+              "curated data, preference optimization, reinforcement learning"
+            ],
+            [
+              "Tuning",
+              "how to generate images for a special case",
+              "DreamBooth, LoRA"
+            ],
+            [
+              "Distillation",
+              "how to generate images fast",
+              "fewer sampling steps from a student model"
+            ]
+          ]
+        },
+        {
+          "type": "formula",
+          "heading": "8. Lecture 7 — Evaluation",
+          "text": "The last label is evaluation, and lecture 7 offered three kinds.\n\nHuman preference, aggregated with Elo ratings as on the Artificial Analysis leaderboard. After each comparison, model $A$'s rating is updated by\n\n$$R_A \\leftarrow R_A + K \\times \\Delta$$\n\nwhere $\\Delta$ is the surprise of the result, the actual outcome (1 for a win, 0 for a loss) minus the expected outcome, and $K$ sets how fast ratings move. Section 11 turns rating gaps into win probabilities.\n\nA distribution distance, FID. Real and generated images are both passed through a pre-trained encoder, each set of features is summarised by a mean and a covariance, $(\\mu_r, \\Sigma_r)$ for real and $(\\mu_g, \\Sigma_g)$ for generated, and the distance between the two Gaussians is computed. Section 15 writes it out for video.\n\nA model as judge. A multimodal LLM is shown the image and asked a question (\"How cute is this teddy bear?\"), and answers (\"Very cute!\"). In practice the three are combined in a loop: image generation is scored by an MLLM-as-a-judge, which is calibrated against human ratings."
+        },
+        {
+          "type": "table",
+          "heading": "9. The six labels, assembled",
+          "rows": [
+            [
+              "Label",
               "The question it answers",
-              "Where it is built"
+              "Where it is built on this site"
             ],
             [
               "Generation paradigm",
@@ -29054,7 +29120,7 @@
             ],
             [
               "Image representation",
-              "in what space is the diffusion run: pixels or a VAE latent",
+              "in what space does the generation run: pixels or a latent",
               "autoencoder and VAE walkthrough"
             ],
             [
@@ -29080,75 +29146,267 @@
           ]
         },
         {
-          "type": "text",
-          "heading": "2. Why the axes matter more than the model names",
-          "text": "Any current text-to-image system can be read off these six axes, and this is the most durable thing to carry out of the whole subject: model names change every few months, the axes do not.\n\nA worked example. FLUX.2 is rectified flow as the paradigm, a VAE latent as the representation, text embeddings from a language model as the condition, a hybrid dual and single stream MM-DiT as the architecture. Qwen-Image is a flow matching loss, again a VAE latent, embeddings from a vision-language model, a double-stream MM-DiT.\n\nTwo different systems, the same six slots, different choices in three of them. Once you can do this reading, a technical report becomes a table rather than a novelty.\n\nThe current state of the field in one line: the best-performing models come from the large labs and are closed, but the open-weights models are not far behind, and their reports are where these axes are actually visible."
-        },
-        {
           "type": "insight",
-          "heading": "3. The trend to watch: back to pixel space",
-          "text": "One of those slots is currently under pressure. HiDream-O1 keeps the flow matching loss and the transformer architecture, but changes two things: the VAE is removed and the diffusion runs directly in pixel space, and there is no separate pre-trained text encoder — the text is handled inside the same unified transformer.\n\nThis is worth watching because latent diffusion was the move that made everything affordable in 2021, and the VAE has sat in every pipeline since. Two things have changed in the meantime: compute is cheaper, and the VAE has become a visible source of error, since whatever it loses in encoding can never be recovered by the decoder.\n\nRemoving the disjoint text encoder points in the same direction as MM-DiT: rather than a text tower and an image tower joined at a seam, a single model in which both modalities are citizens.\n\nNot a settled outcome, a direction. But it is exactly the kind of move that is worth spotting early, because a slot that everyone treats as fixed is the slot where a contribution is still available."
-        },
-        {
-          "type": "text",
-          "heading": "4. Video: one extra dimension and everything it drags along",
-          "text": "Moving from image to video adds a single axis, time, and four separate consequences follow.\n\nTemporal consistency. Each frame on its own can be perfectly good while the sequence is unusable: the identity of the subject drifts, the colour of a garment changes between frames, an object appears and disappears. This is a property the per-frame loss does not see.\n\nComputation. The token count is multiplied by the number of frames, and attention is quadratic in the token count. This is the reason the compression has to be spatio-temporal: the VAE compresses along time as well as space, so that several frames collapse into one latent frame.\n\nMetrics. FID does not carry over, because it scores each frame separately and is blind to temporal incoherence. Its counterpart is FVD, the Fréchet Video Distance, which runs the same Fréchet construction over the features of a network trained on video, so that the features themselves carry motion.\n\nArchitecture. The leading open model, Wan, is built exactly this way: a spatio-temporal VAE first, then a diffusion transformer over the compressed latent video."
-        },
-        {
-          "type": "text",
-          "heading": "5. An alternative to generating: let the model edit",
-          "text": "There is a failure mode that no amount of scaling removes. Ask a text-and-image to image model to make this image black and white, and it will generate a new image: greyscale as requested, but the face is slightly different, the objects have moved, a detail has vanished. It regenerated when it should have preserved.\n\nThe reformulation is to stop generating altogether for such tasks. A vision-language model looks at the image and the instruction and emits editing actions — desaturate, adjust the curve, mask this region — and those actions are applied by ordinary editing software.\n\nThe gain is guardrails. The pixels that were not asked to change cannot change, because nothing regenerates them. What the model contributes is the understanding of the instruction, not the pixels.\n\nThis is the same pattern as tool use in the language world, and it is the reasonable answer wherever the requirement is preservation rather than creation."
+          "heading": "Why the labels matter more than the model names",
+          "text": "Any current text-to-image system can be read off these six labels, and this is the most durable thing to carry out of the course: model names change every few months, the labels do not. The next sections do exactly this reading for the models leading in May 2026."
         },
         {
           "type": "table",
-          "heading": "6. What the image world borrowed from the text world",
+          "heading": "10. The leaderboard in May 2026",
           "rows": [
             [
-              "From text",
-              "To image",
-              "What was carried over"
+              "",
+              "Model",
+              "Creator",
+              "Elo",
+              "Released",
+              "API price per 1,000 images (USD)"
             ],
             [
-              "Transformer (2017)",
-              "DiT (2022)",
-              "the backbone itself, with adaLN in place of the text decoder"
+              "1",
+              "GPT Image 2 (high)",
+              "OpenAI",
+              "1,339",
+              "Apr 2026",
+              "USD 211"
             ],
             [
-              "DPO (2023)",
-              "Diffusion-DPO (2023)",
-              "preference optimisation without a reward model"
+              "2",
+              "GPT Image 1.5 (high)",
+              "OpenAI",
+              "1,266",
+              "Dec 2025",
+              "USD 133"
             ],
             [
-              "GRPO (2024)",
-              "Flow-GRPO (2025)",
-              "group-relative online RL, on flow models"
+              "3",
+              "Nano Banana 2 (Gemini 3.1 Flash Image Preview)",
+              "Google",
+              "1,264",
+              "Feb 2026",
+              "USD 67"
             ],
             [
-              "Next-token prediction",
-              "the thing being replaced",
-              "see the following sections: diffusion is now going the other way"
+              "4",
+              "Nano Banana Pro (Gemini 3 Pro Image)",
+              "Google",
+              "1,220",
+              "Nov 2025",
+              "USD 134"
+            ],
+            [
+              "5",
+              "grok-imagine-image-quality",
+              "xAI",
+              "1,211",
+              "Apr 2026",
+              "USD 50"
+            ],
+            [
+              "open 1",
+              "HiDream-O1-Image-Dev-2604",
+              "HiDream",
+              "1,187",
+              "May 2026",
+              "no API"
+            ],
+            [
+              "open 2",
+              "Qwen Image Max 2512",
+              "Alibaba",
+              "1,159",
+              "Dec 2025",
+              "USD 20"
+            ],
+            [
+              "open 3",
+              "FLUX.2 [dev]",
+              "Black Forest Labs",
+              "1,159",
+              "Nov 2025",
+              "USD 12"
+            ],
+            [
+              "open 4",
+              "FLUX.2 [dev] Turbo",
+              "Fal",
+              "1,159",
+              "Dec 2025",
+              "USD 8"
+            ],
+            [
+              "open 5",
+              "FLUX.2 [dev] Flash",
+              "Fal",
+              "1,143",
+              "Dec 2025",
+              "USD 5"
             ]
           ]
         },
         {
           "type": "text",
-          "heading": "7. Diffusion for text: why anyone would want it",
-          "text": "The traffic has been one-way for years, from text to image. The last section of the course is about the return journey.\n\nA language model generates by next-token prediction: one token at a time, each conditioned on all the previous ones. That is a hard structural constraint — producing $N$ tokens takes $N$ sequential forward passes, and no hardware parallelism removes the dependency.\n\nThe diffusion idea breaks exactly that. Start from a fully corrupted text, refine the whole sequence at once, and repeat. The cost then stops being the number of tokens and becomes the number of diffusion steps, which is a number you choose. This is the entire motivation."
+          "heading": "11. How far behind is \"not too far\"?",
+          "text": "The best-performing models come from the top AI labs and are closed-source; the open-weights models, the slides say, are not too far behind. Elo makes that statement measurable, because a rating gap translates into a win probability. If model $A$ is rated $d$ points above model $B$, the expected share of comparisons $A$ wins is\n\n$$P(A \\text{ wins}) = \\frac{1}{1 + 10^{-d/400}}$$\n\nSo a gap of 0 means 50%, and every 400 points multiplies the odds by ten. The best closed model (1,339) against the best open one (1,187) is a gap of 152, which gives about 70%: in seven comparisons out of ten, people prefer the closed model's image. GPT Image 2 against its own predecessor GPT Image 1.5 is a gap of 73, about 60%. And the four open models from Qwen to FLUX.2 Turbo are tied at 1,159, statistically indistinguishable given the confidence interval of about 9 points. \"Not too far behind\" means: clearly worse on average, but losing three times out of ten to the best model in the world, at a small fraction of the price (USD 5 to USD 20 per thousand images against USD 211)."
+        },
+        {
+          "type": "svg",
+          "heading": "Elo gap to win probability",
+          "svg": "<svg width=\"600\" height=\"250\" viewBox=\"0 0 600 250\" role=\"img\" aria-label=\"Elo difference to win probability\"><line x1=\"50\" y1=\"200\" x2=\"380\" y2=\"200\" stroke=\"#8a8f98\"/><line x1=\"215.0\" y1=\"24\" x2=\"215.0\" y2=\"200\" stroke=\"#8a8f98\" stroke-dasharray=\"3 3\"/><line x1=\"50\" y1=\"156.0\" x2=\"380\" y2=\"156.0\" stroke=\"#8a8f98\" stroke-width=\"0.4\"/><text x=\"44.0\" y=\"160.0\" text-anchor=\"end\" font-size=\"10\" fill=\"currentColor\">0.25</text><line x1=\"50\" y1=\"112.0\" x2=\"380\" y2=\"112.0\" stroke=\"#8a8f98\" stroke-width=\"0.4\"/><text x=\"44.0\" y=\"116.0\" text-anchor=\"end\" font-size=\"10\" fill=\"currentColor\">0.50</text><line x1=\"50\" y1=\"68.0\" x2=\"380\" y2=\"68.0\" stroke=\"#8a8f98\" stroke-width=\"0.4\"/><text x=\"44.0\" y=\"72.0\" text-anchor=\"end\" font-size=\"10\" fill=\"currentColor\">0.75</text><text x=\"50.0\" y=\"214.0\" text-anchor=\"middle\" font-size=\"10\" fill=\"currentColor\">-400</text><text x=\"132.5\" y=\"214.0\" text-anchor=\"middle\" font-size=\"10\" fill=\"currentColor\">-200</text><text x=\"215.0\" y=\"214.0\" text-anchor=\"middle\" font-size=\"10\" fill=\"currentColor\">0</text><text x=\"297.5\" y=\"214.0\" text-anchor=\"middle\" font-size=\"10\" fill=\"currentColor\">+200</text><text x=\"380.0\" y=\"214.0\" text-anchor=\"middle\" font-size=\"10\" fill=\"currentColor\">+400</text><polyline points=\"50.0,184.0 52.1,183.6 54.1,183.1 56.2,182.7 58.2,182.2 60.3,181.8 62.4,181.3 64.4,180.8 66.5,180.3 68.6,179.8 70.6,179.3 72.7,178.8 74.8,178.2 76.8,177.7 78.9,177.1 80.9,176.5 83.0,175.9 85.1,175.3 87.1,174.7 89.2,174.1 91.2,173.4 93.3,172.8 95.4,172.1 97.4,171.4 99.5,170.7 101.6,170.0 103.6,169.3 105.7,168.6 107.8,167.8 109.8,167.0 111.9,166.3 113.9,165.5 116.0,164.7 118.1,163.8 120.1,163.0 122.2,162.2 124.2,161.3 126.3,160.4 128.4,159.5 130.4,158.6 132.5,157.7 134.6,156.8 136.6,155.8 138.7,154.9 140.8,153.9 142.8,152.9 144.9,151.9 146.9,150.9 149.0,149.9 151.1,148.8 153.1,147.8 155.2,146.7 157.2,145.7 159.3,144.6 161.4,143.5 163.4,142.4 165.5,141.2 167.6,140.1 169.6,139.0 171.7,137.8 173.8,136.7 175.8,135.5 177.9,134.3 179.9,133.1 182.0,131.9 184.1,130.7 186.1,129.5 188.2,128.3 190.2,127.0 192.3,125.8 194.4,124.6 196.4,123.3 198.5,122.1 200.6,120.8 202.6,119.6 204.7,118.3 206.8,117.1 208.8,115.8 210.9,114.5 212.9,113.3 215.0,112.0 217.1,110.7 219.1,109.5 221.2,108.2 223.2,106.9 225.3,105.7 227.4,104.4 229.4,103.2 231.5,101.9 233.6,100.7 235.6,99.4 237.7,98.2 239.7,97.0 241.8,95.7 243.9,94.5 245.9,93.3 248.0,92.1 250.1,90.9 252.1,89.7 254.2,88.5 256.2,87.3 258.3,86.2 260.4,85.0 262.4,83.9 264.5,82.8 266.6,81.6 268.6,80.5 270.7,79.4 272.8,78.3 274.8,77.3 276.9,76.2 278.9,75.2 281.0,74.1 283.1,73.1 285.1,72.1 287.2,71.1 289.2,70.1 291.3,69.1 293.4,68.2 295.4,67.2 297.5,66.3 299.6,65.4 301.6,64.5 303.7,63.6 305.8,62.7 307.8,61.8 309.9,61.0 311.9,60.2 314.0,59.3 316.1,58.5 318.1,57.7 320.2,57.0 322.2,56.2 324.3,55.4 326.4,54.7 328.4,54.0 330.5,53.3 332.6,52.6 334.6,51.9 336.7,51.2 338.8,50.6 340.8,49.9 342.9,49.3 344.9,48.7 347.0,48.1 349.1,47.5 351.1,46.9 353.2,46.3 355.2,45.8 357.3,45.2 359.4,44.7 361.4,44.2 363.5,43.7 365.6,43.2 367.6,42.7 369.7,42.2 371.8,41.8 373.8,41.3 375.9,40.9 377.9,40.4 380.0,40.0\" fill=\"none\" stroke=\"#4f8ef7\" stroke-width=\"2\"/><circle cx=\"245.1\" cy=\"93.8\" r=\"4\" fill=\"#e0a12a\"/><line x1=\"245.1\" y1=\"93.8\" x2=\"245.1\" y2=\"200\" stroke=\"#e0a12a\" stroke-dasharray=\"2 2\"/><line x1=\"245.1\" y1=\"93.8\" x2=\"293.4\" y2=\"122.1\" stroke=\"#e0a12a\" stroke-width=\"0.8\"/><text x=\"294.2\" y=\"126.1\" text-anchor=\"start\" font-size=\"10\" fill=\"currentColor\">+73: 60%, GPT Image 2 vs GPT Image 1.5</text><circle cx=\"277.7\" cy=\"75.8\" r=\"4\" fill=\"#d9534f\"/><line x1=\"277.7\" y1=\"75.8\" x2=\"277.7\" y2=\"200\" stroke=\"#d9534f\" stroke-dasharray=\"2 2\"/><line x1=\"277.7\" y1=\"75.8\" x2=\"293.4\" y2=\"143.2\" stroke=\"#d9534f\" stroke-width=\"0.8\"/><text x=\"294.2\" y=\"147.2\" text-anchor=\"start\" font-size=\"10\" fill=\"currentColor\">+152: 71%, GPT Image 2 vs best open model</text><text x=\"215.0\" y=\"238.0\" text-anchor=\"middle\" font-size=\"11\" fill=\"currentColor\">Elo difference (row model minus opponent)</text><text x=\"50.0\" y=\"18.0\" text-anchor=\"start\" font-size=\"11\" fill=\"currentColor\">P(win)</text></svg>",
+          "caption": "The logistic curve behind Elo. A gap of 152 points (GPT Image 2 against the best open model) means the higher-rated model is preferred about 70% of the time; 73 points (GPT Image 2 against GPT Image 1.5) about 60%."
+        },
+        {
+          "type": "table",
+          "heading": "12. Reading the open models off the six labels",
+          "rows": [
+            [
+              "Label",
+              "FLUX.2 [dev] (Black Forest Labs)",
+              "Qwen Image Max (Alibaba)",
+              "HiDream-O1 (May 2026)"
+            ],
+            [
+              "Generation paradigm",
+              "rectified flow",
+              "flow matching-based loss",
+              "flow matching-based loss"
+            ],
+            [
+              "Image representation",
+              "relies on a VAE latent",
+              "relies on a VAE latent",
+              "VAE removed: pixel space"
+            ],
+            [
+              "Condition",
+              "Mistral 3 embeddings",
+              "Qwen2.5-VL embeddings",
+              "no disjoint pre-trained text encoder"
+            ],
+            [
+              "Model architecture",
+              "hybrid dual and single-stream MM-DiT",
+              "double-stream MM-DiT",
+              "transformer-based, unified"
+            ]
+          ]
         },
         {
           "type": "text",
-          "heading": "8. What is noise for text",
-          "text": "Carrying diffusion over to text requires answering one question, and it is not a detail: what plays the role of Gaussian noise.\n\nIn images the data is continuous and the noise is Gaussian, so a partially corrupted image is a meaningful object — an intermediate point between the image and the noise.\n\nText is discrete, and there is no natural halfway point between two tokens. Worse, corrupting by replacing tokens at random does not give something meaningless: a random token is still a word, and it carries a definite meaning that actively misleads the model.\n\nThe answer that worked is a special token: [MASK]. The corruption is not perturbation but erasure. The noise level becomes the fraction of tokens masked — zero masked is the clean text, all masked is pure noise. The axis is recovered without needing a continuous space."
+          "heading": "What the table shows",
+          "text": "Two of the leading open models make the usual choices: a flow matching family loss, a VAE latent, an MM-DiT, and text embeddings from a large language model (FLUX.2 uses Mistral 3) or from a vision-language model (Qwen uses its own Qwen2.5-VL). Note that neither uses CLIP as its main text encoder any more; the condition now comes from much larger models that understand long, compositional prompts.\n\nThe one that stands out is the newest. HiDream-O1, released in May 2026 and already first among open models, keeps the flow matching loss and the transformer, but removes two components everyone else treats as fixed: the VAE, so the generation runs directly in pixel space, and the separate pre-trained text encoder, so text and image are processed by one unified transformer. The slide asks it as a question, back to pixel-space diffusion?, and the honest answer is: a trend to watch. Latent diffusion was what made generation affordable in 2021, and the VAE has been in every pipeline since. Two things changed: compute is cheaper, and the VAE has become a visible bottleneck, since detail it loses in encoding can never be recovered by the decoder. A component that everyone treats as fixed is exactly where a contribution may still be available."
         },
         {
           "type": "text",
-          "heading": "9. Training: learn to fill in the blanks",
-          "text": "With that settled the training loop is short, and it is the exact counterpart of the image one.\n\nDraw a text, draw a noise level, and mask that fraction of the tokens at random. Give the corrupted sequence to the model and ask it to predict the tokens that were masked. The loss is the cross-entropy on the masked positions.\n\nThis is where the relation to BERT's masked language modelling becomes visible, and also where the difference lies. BERT masks a small, fixed fraction — around fifteen percent — and is used as an encoder. Here the mask ratio is drawn across the whole range up to complete masking, which is what turns the model into a generator: it has to be able to produce text from nothing, not only to fill small gaps."
+          "heading": "13. From image to video: one extra dimension",
+          "text": "A video is a stack of images, frames, along a new axis: time. Everything else in the course carries over, but that one axis brings three new problems, and the slides go through them in order.\n\nTemporal consistency from one frame to another. Two consecutive frames $t$ and $t+1$ must show the same scene. The slide's good pair is the same teddy bear slightly moved; the bad pair has the bear suddenly wearing a hat and sunglasses. Each frame on its own can be perfect while the sequence is unusable, so a loss that looks at frames one by one cannot see the problem.\n\nComputation. The amount of data is height times width times time, and time can be large: a few seconds at 16 or 24 frames per second is already a hundred frames.\n\nMetrics. Image metrics such as FID score frames independently and are blind to flicker and drift, so video needs its own (section 15)."
+        },
+        {
+          "type": "table",
+          "heading": "14. How large is \"large\"? A worked count",
+          "rows": [
+            [
+              "Stage",
+              "Shape",
+              "Number of values or tokens"
+            ],
+            [
+              "Raw video: 5 s at 16 fps, 480 x 832",
+              "[81, 480, 832, 3]",
+              "97,044,480 values"
+            ],
+            [
+              "After the spatio-temporal VAE (time / 4, space / 8, 16 channels)",
+              "[21, 60, 104, 16]",
+              "2,096,640 values"
+            ],
+            [
+              "Tokens for the DiT (patches of 1 x 2 x 2)",
+              "21 x 30 x 52",
+              "32,760 tokens"
+            ],
+            [
+              "One image of the same size, for comparison",
+              "1 x 30 x 52",
+              "1,560 tokens"
+            ]
+          ]
         },
         {
           "type": "text",
-          "heading": "10. Inference: commit and revise",
-          "text": "Generation starts from a fully masked sequence and proceeds coarse to fine.\n\nAt each round the model predicts every masked position at once. Then it commits: the positions it is most confident about are kept, written into the sequence and never asked again. The rest are masked back and passed into the next round.\n\nThat remasking step is the important one, and it is what an autoregressive model cannot do. A token an ARM has emitted is final; if it went wrong at position three, everything after it is conditioned on the mistake. Here a token that was tentatively written can be erased and reconsidered in the light of what has since been decided elsewhere in the sequence.\n\nIn the figure below the first round commits A, is and the end token, writes brown and sleeping tentatively and then takes them back; the second round, now seeing the committed context, arrives at teddy and reading."
+          "heading": "Reading the count",
+          "text": "Even after compressing 8 times along each spatial axis and 4 times along time, the video gives 32,760 tokens against 1,560 for a single frame, 21 times as many. Attention compares every token with every other one, so its cost grows with the square of that factor: about 441 times the work of one image, in every layer, at every sampling step. That is why compression along time is not optional for video, and why the first thing the leading model does is a spatio-temporal VAE."
+        },
+        {
+          "type": "formula",
+          "heading": "15. Measuring video: Fréchet Video Distance",
+          "text": "FVD is FID's construction carried over to video:\n\n$$\\text{FVD} = \\| \\mu_r - \\mu_g \\|^2 + \\text{Tr}\\Bigl( \\Sigma_r + \\Sigma_g - 2 \\bigl( \\Sigma_r \\Sigma_g \\bigr)^{1/2} \\Bigr)$$\n\nRead it term by term. $\\mu_r$ and $\\mu_g$ are the mean feature vectors of real and generated videos; the first term asks whether the two sets are centred in the same place, on average the same kind of content. $\\Sigma_r$ and $\\Sigma_g$ are their covariances, how the features vary from video to video; the trace term asks whether the spread matches, which is where a lack of diversity shows up. The term is zero when the two covariances are equal.\n\nThe essential difference from FID is the encoder: the features come from a network trained on video, so they encode motion as well as appearance. A sequence of individually perfect frames that flickers ends up far from real videos in that feature space, which a per-frame metric would never notice."
+        },
+        {
+          "type": "text",
+          "heading": "16. The leading model: Wan",
+          "text": "The architecture of Wan (2025), the leading open video model, is the course's image recipe with time added.\n\nThe spatio-temporal VAE comes first. Its encoder takes an input video of shape $[1+T, H, W, 3]$ and, through blocks that downsample space only and blocks that downsample space and time together, produces a latent of shape $[1 + T/4, H/8, W/8, C]$. The first frame is kept separately (the leading 1 in $[1+T, H, W, 3]$), so that a single image is also a valid one-frame video. The decoder mirrors it to produce the output video.\n\nThe diffusion process runs in that latent with a stack of $N$ DiT blocks. The noisy latent comes in, the timestep $t$ enters every block, and the text prompt (\"A panda is holding up a cardboard that says Wan2.1\") is encoded by umT5, a multilingual T5, and enters through cross-attention. The Wan decoder turns the final latent back into frames. Read off the six labels: flow matching, a spatio-temporal VAE latent, a T5 text encoder, a DiT with cross-attention."
+        },
+        {
+          "type": "text",
+          "heading": "17. A limitation that scaling does not fix",
+          "text": "Give a text-and-image-to-image model a photograph of a teddy bear reading a book and the instruction \"Make this image black and white\". It returns a black and white image, but a new one: look closely and the bear's paw is in a different position, the book has changed, details have moved. The model did what it always does, generate, when the task required it to preserve. For such a request the result is simply wrong, however good it looks."
+        },
+        {
+          "type": "text",
+          "heading": "18. Reformulate the problem to put guardrails",
+          "text": "The idea is to avoid from-scratch generation, which is prone to such mistakes, by putting guardrails around it. A vision-language model (VLM) reads the image and the instruction, but instead of producing pixels it produces editing actions, chosen from a fixed set, here the set of colouring actions. Those actions are executed by ordinary editing software, which applies them to the original image, and the VLM can inspect the result and issue further actions.\n\nThe guardrail is structural: pixels that the instruction does not concern cannot change, because nothing regenerates them. The model contributes its understanding of the request; the software guarantees fidelity. It is the same pattern as tool use for language models, and the suggested readings (SmartEdit, MonetGPT, JarvisArt, RetouchIQ) build exactly such agents for photo retouching."
+        },
+        {
+          "type": "table",
+          "heading": "19. Concepts the image world borrowed from the text world",
+          "rows": [
+            [
+              "From text",
+              "To images",
+              "What was carried over"
+            ],
+            [
+              "Transformer (Vaswani et al., 2017)",
+              "Diffusion Transformer (Peebles and Xie, 2022)",
+              "the backbone: patches as tokens, with the timestep and label injected through adaptive layer norm"
+            ],
+            [
+              "DPO (Rafailov et al., 2023)",
+              "Diffusion-DPO (Wallace et al., 2023)",
+              "learning from preference pairs without a separate reward model"
+            ],
+            [
+              "GRPO (Shao et al., 2024)",
+              "Flow-GRPO (Liu et al., 2025)",
+              "group-relative online reinforcement learning, applied to flow matching models"
+            ]
+          ]
+        },
+        {
+          "type": "text",
+          "heading": "20. Traditional generation for text, and its bottleneck",
+          "text": "Text generation models rely on next-token prediction. An autoregressive model (ARM) LLM reads [BOS] and writes \"A\", reads \"A\" and writes \"teddy\", then \"bear\", \"is\", \"reading\", [EOS], one token per forward pass, each conditioned on everything before it.\n\nThe problem is structural: inference-time generation needs $\\mathcal{O}(\\#\\text{output tokens})$ iterations. A thousand-token answer means a thousand sequential passes, and no amount of hardware parallelism removes that dependency."
+        },
+        {
+          "type": "text",
+          "heading": "21. What about diffusion for text?",
+          "text": "The idea is to adapt the diffusion paradigm to text. A diffusion-based LLM starts from text with random noise and refines the whole sequence at once, producing text with less noise, then less, until the final sentence. The number of iterations moves from $\\mathcal{O}(\\#\\text{output tokens})$ to $\\mathcal{O}(\\#\\text{diffusion steps})$, and the number of steps is a choice, independent of the length of the answer. The slide draws it side by side with the image case: the same stack of denoising passes, with a sentence in place of the teddy bear."
+        },
+        {
+          "type": "text",
+          "heading": "22. Finding the equivalent of noise for text",
+          "text": "Carrying diffusion over requires one answer: what is noisy text?\n\nA noisy image is continuous, and its noise is Gaussian: a pixel can be slightly brighter, and an image halfway between a photograph and static is a meaningful object.\n\nText is discrete: there is no token halfway between \"bear\" and \"dog\". And replacing tokens with random tokens does not produce meaningless noise, because random tokens have a semantic meaning. \"A teddy cat is reading\" is not noise; it is a different, misleading sentence.\n\nThe answer is a special token, [MASK]. Noise becomes erasure. A token is either known or masked, and the noise level is the fraction of masked tokens, from 0 (the clean text) to 100% (all masks, the equivalent of pure Gaussian noise)."
+        },
+        {
+          "type": "text",
+          "heading": "23. Training: learn to fill the blanks",
+          "text": "The training loop mirrors the image one. Step 1: sample a noise level $t \\sim \\mathcal{U}(0, 1)$ and use it as the mask ratio, corrupting the text with noise level $t$, so \"A teddy bear is reading [EOS]\" might become \"A [MASK] bear is [MASK] [EOS]\". Step 2: the diffusion-based LLM predicts the tokens that were masked, here \"teddy\" and \"reading\", and the loss is the cross-entropy at the masked positions.\n\nThis looks like BERT's masked language modelling, and the difference is what makes it a generator. BERT masks a small fixed fraction, about 15%, and learns to fill small gaps. Here $t$ ranges over the whole interval up to 100%, so the model must also learn to write a sentence from nothing."
+        },
+        {
+          "type": "text",
+          "heading": "24. Inference: coarse to fine",
+          "text": "Initialize with a fully masked input, $t = 100\\%$ noise. Then iterate. The model predicts every masked token at once. It commits the tokens it is confident about, in the slides \"A\", \"is\" and [EOS], shown in blue. And it performs remasking on the rest: its tentative guesses \"brown\", \"bear\" and \"sleeping\", shown in pink, are revised, turned back into [MASK]. The sequence is now at $t = 50\\%$ noise: \"A [MASK] [MASK] is [MASK] [EOS]\". The next pass, seeing the committed context, fills the rest, and the output at $t = 0\\%$ is \"A teddy bear is reading [EOS]\".\n\nThe revise step is what an autoregressive model cannot do. Once an ARM has written a token it is final, and every later token is conditioned on it, mistakes included. Here a tentative token is reconsidered in the light of everything decided elsewhere in the sequence, in both directions."
         },
         {
           "type": "svg",
@@ -29157,49 +29415,90 @@
         },
         {
           "type": "text",
-          "heading": "11. Where diffusion LLMs win and what they still cost",
-          "text": "The speed gain is real and is quoted at about ten times against an autoregressive model of comparable quality, because the sequential dependency on the token count has been replaced by a chosen number of steps.\n\nThe structural gain is a better fit for tasks where the text is not written left to right. Filling in the middle is the natural example, and this is why coding is the first serious application: a coding agent usually has to insert into an existing file with context on both sides, and speed is the bottleneck of such agents.\n\nThe costs are equally concrete. Training is significantly more expensive, since the model has to learn to fill every mask ratio rather than a single next-token task. The whole toolbox built around autoregressive models over the past years — the post-training methods, the preference tuning, the serving infrastructure, the key-value cache — does not carry over unchanged and has to be adapted. And the best results at the moment come from hybrids that interpolate between the two: autoregressive across blocks, diffusion inside a block."
-        },
-        {
-          "type": "text",
-          "heading": "12. Four open problems",
-          "text": "The course closes on what is not solved, and the list is worth keeping because it is where the work is.\n\nCost. Both training and inference are expensive, and part of the search has moved down to the hardware, towards in-memory computing for attention.\n\nData quality. Generated images are now on the open internet in volume, and a model trained on its own kind of output degrades — the effect known as model collapse, where variance shrinks with each generation and the outputs converge on an average. Knowing the provenance of the data is no longer optional.\n\nTrust. Whether an image is generated should be discoverable. The metadata standard, C2PA, has a trivial flaw: a screenshot strips it. Which is why the effort has moved to watermarking, a signal embedded in the pixels themselves that survives ordinary manipulation, such as SynthID.\n\nSafety. Deepfakes and impersonation are already the practical problem, and legislation is moving far slower than the capability."
+          "heading": "25. Advantages, challenges, and why everyone is talking about it",
+          "text": "Advantages. About 10x speed compared to an ARM of similar quality, because sequential cost no longer grows with length. And a natural fit for coding: code editing is a fill in the middle task, inserting into a file with context on both sides, and speed is the bottleneck for coding agents that call the model hundreds of times.\n\nChallenges and current work. Training is significantly more expensive, since the model learns every mask ratio rather than one next-token task. The techniques developed for ARMs over the past years, post-training approaches in particular, have to be adapted. And current work combines the benefits of autoregression and diffusion, for example block diffusion: autoregressive across blocks of text, diffusion within each block.\n\nIt is currently a very hot topic. Google presented a diffusion approach to LLM deployment in 2025; Inception raised USD 50 million to build diffusion models for code and text and launched Mercury 2, described as the fastest reasoning LLM, about 5x faster than leading speed-optimized models; and the number of papers on diffusion language models grows steeply each year, discrete diffusion models dominating. The suggested readings run from D3PM (Austin et al., 2021) through LLaDA (Nie et al., 2025) and its 100-billion-parameter successor LLaDA2.0, to Block Diffusion, Seed Diffusion and dLLM (2026)."
         },
         {
           "type": "table",
-          "heading": "13. Where the field is going, by horizon",
+          "heading": "26. More use cases to be expected",
           "rows": [
             [
               "Horizon",
               "What is expected",
-              "Concrete form"
+              "Examples from the lecture"
             ],
             [
-              "Now",
-              "democratisation of what already exists",
-              "the same capability through cheap APIs from several providers"
+              "Tomorrow",
+              "democratization of existing generation capabilities",
+              "image generation through APIs at cents per image (section 27)"
             ],
             [
               "Near term",
-              "carrying over the wins from other modalities",
-              "reasoning before generating; generating through tools, such as building the image in design software"
+              "integrate wins seen across modalities",
+              "reasoning: a truly insightful diagram · coding: create an image using Photoshop or CAD · deep research: synthesize an entire class"
             ],
             [
               "Long term",
-              "consequences in other industries",
-              "robotics: custom training environments · medicine: accelerated MRI · design: shorter iteration cycles"
+              "translation of consequences across industries",
+              "robotics: custom environments · medicine: accelerated MRIs · visual design: faster cycles"
+            ],
+            [
+              "Impossible?",
+              "the open question",
+              "putting together a perfectly filmed, coherent and insightful class lecture"
+            ]
+          ]
+        },
+        {
+          "type": "table",
+          "heading": "27. What \"democratization\" costs today",
+          "rows": [
+            [
+              "Model",
+              "How it is priced",
+              "Cost of one 1024 x 1024 image"
+            ],
+            [
+              "GPT Image 2",
+              "by quality setting",
+              "USD 0.006 (low) · USD 0.053 (medium) · USD 0.211 (high)"
+            ],
+            [
+              "Gemini 3 Pro Image Preview",
+              "USD 120 per million output tokens; a 1K or 2K image is 1,120 tokens",
+              "USD 0.134 (up to USD 0.24 at 4K)"
+            ],
+            [
+              "FLUX.2 [max]",
+              "per megapixel",
+              "USD 0.07 for the first megapixel, USD 0.03 for each further one"
+            ],
+            [
+              "Stable Image Ultra",
+              "credits per successful result",
+              "8 credits, nothing charged for failed results"
             ]
           ]
         },
         {
           "type": "text",
-          "heading": "14. How to stay current",
-          "text": "The concrete advice from the course, and it matches what has to be done anyway.\n\nPapers: arXiv under computer vision and pattern recognition for the daily flow; the general ML venues NeurIPS, ICML and ICLR alongside the vision venues CVPR and ECCV for the filtered view.\n\nCode: the authors' own repositories, linked from the papers, and paperswithcode for finding the current state of the art on a given task.\n\nThe rest: course websites such as CS231n, the accounts of active researchers, and the technical blogs of the labs.\n\nOne thing to add that the slides do not say. A general-ML venue is where an idea is born and a domain venue is where it is applied, so the two lists are not interchangeable: reading only the domain venues makes you a follower of ideas that are already two or three years old."
+          "heading": "Reading the prices",
+          "text": "A single high-quality image from the best model in the world costs about 21 cents, and a low-quality one less than one cent. That is what \"tomorrow: democratization\" means concretely: the capability already exists and is becoming a commodity priced per image, the way compute is priced per hour. The interesting work moves to what is built on top of it."
+        },
+        {
+          "type": "text",
+          "heading": "28. Ongoing challenges",
+          "text": "The areas of improvement that are top of mind.\n\nCosts. Training and inference are both expensive, and part of the search has moved down into hardware: analog in-memory computing for the attention mechanism (Leroux et al., 2025) computes the dot products inside memory cells instead of moving data to a processor, for speed and energy efficiency.\n\nData quality. Generated images are now everywhere on the web, so the next models are increasingly trained on the outputs of the previous ones. The slide's figure follows such a self-consuming loop through generations 2, 5, 10 and 20: the share of synthesized data grows, the real data recedes, and the distribution of what the model produces drifts away from it. This is model collapse (Alemohammad et al., Self-Consuming Generative Models Go MAD, 2023): without enough fresh real data at each generation, quality or diversity degrades.\n\nTrust. Can a viewer tell that an image is generated? The C2PA standard writes content credentials into the file's metadata, and platforms display them, \"Made with AI\" on Twitter, \"AI info\" on Instagram and Facebook. But the flaw is trivial: metadata is stripped by re-saving or simply screenshotting. Watermarking puts the signal into the pixels instead, and a good watermark (SynthID-Image, Gowal et al., 2025) survives the usual manipulations, impulse noise, rotation, changes of saturation, so that it is still detected after them.\n\nSafety. Deepfakes are the immediate practical harm, and deepfake laws are not moving at the speed of AI."
+        },
+        {
+          "type": "text",
+          "heading": "29. How to stay up to date with vision advances",
+          "text": "Papers: arXiv under Computer Science, Computer Vision and Pattern Recognition, for the daily flow; the general ML venues (NeurIPS, ICML, ICLR) and the vision venues (CVPR, ECCV) for the filtered view.\n\nCode: the authors' GitHub repositories linked in their papers, and paperswithcode.com to browse state-of-the-art datasets and methods for each task.\n\nMiscellaneous: Stanford course websites such as CS231n; academics and industry leaders on Twitter; YouTube channels, theoretical (Two Minute Papers, Yannic Kilcher) and practical (Google Developers, HuggingFace); and the technical papers and blogs of companies and labs (Amazon Science, Apple ML, Google AI, Google DeepMind, Microsoft Research, OpenAI). And for after the class, the course's VIP cheatsheet on GitHub.\n\nOne addition the slides do not make. A general-ML venue such as NeurIPS or ICLR is where a method is first published; a domain venue, a conference or journal for one field of application, such as MICCAI or IEEE TMI in medical imaging, is where that method is later applied. Reading only the domain venues therefore means meeting ideas that are already two or three years old."
         },
         {
           "type": "insight",
           "heading": "What should stay with you",
-          "text": "Any generation system reads off six axes — paradigm, representation, condition, architecture, training, evaluation — and model names are far less durable than that reading. Today's open models fill them with rectified flow or flow matching, a VAE latent, embeddings from a language or vision-language model, and a dual-stream MM-DiT.\n\nThe trend worth watching is the removal of two components that everyone treats as fixed: the VAE, with diffusion returning to pixel space, and the separate text encoder, with the text folded into the same transformer.\n\nVideo adds one dimension and four consequences: temporal consistency, which per-frame losses cannot see; a token count that forces spatio-temporal compression; FVD in place of FID; and a spatio-temporal VAE ahead of the transformer.\n\nWhere the requirement is preservation rather than creation, generating is the wrong tool: a vision-language model emitting editing actions into editing software gives guardrails that a regenerating model cannot.\n\nDiffusion for text replaces the sequential cost in the token count with a chosen number of steps. The role of noise is played by masking, because text is discrete and a random token carries a misleading meaning. Training fills masks at every ratio; inference commits the confident positions and remasks the rest, which is the capacity for revision that an autoregressive model lacks. The gains are speed and fill-in-the-middle tasks; the costs are expensive training and a toolbox that does not carry over.\n\nThe open problems are cost, data quality under model collapse, trust through watermarking rather than strippable metadata, and safety."
+          "text": "The course built one picture: a generation model with six labels, the generation paradigm (noise, score or velocity), the image representation (pixels or a VAE latent), the condition, the architecture (U-Net or DiT), training (pre-, post-, tuning, distillation) and evaluation (Elo, FID, MLLM judges). Every current model reads off it. In May 2026 the closed leaders are about 150 Elo points ahead of the best open model, a 70% preference rate, while the open models make the usual choices (flow matching, VAE latent, MM-DiT, LLM or VLM text embeddings) and the newest one drops the VAE and the separate text encoder. Video adds time, which brings temporal consistency, a token count tens of times larger and an attention cost hundreds of times larger, a spatio-temporal VAE, and FVD. Where preservation matters, a VLM emitting editing actions into software beats regeneration. Diffusion now travels back to text: [MASK] plays the role of noise, training fills blanks at every ratio, inference commits and revises, with roughly 10x speed and a natural fit for coding, at the price of costlier training. The open problems are cost, model collapse, trust (strippable metadata against watermarks) and safety."
         },
         {
           "type": "ref",
@@ -29218,7 +29517,7 @@
         {
           "type": "note",
           "heading": "Where to look",
-          "text": "Course: CME 296, Lecture 8 — the closing lecture. The course's own cheatsheet is on GitHub under stanford-cme-296-diffusion-large-vision-models, and the sister course on transformers and language models is CME 295.\n\nCurrent models: FLUX.2, Black Forest Labs (2025) · Qwen-Image Technical Report (2025) · HiDream-O1-Image, Cai et al. (2026), pixel-space unified transformer.\n\nVideo: Unterthiner et al., Towards Accurate Generative Models of Video (2018), FVD · Ho et al., Video Diffusion Models (2022) · Blattmann et al., Stable Video Diffusion (2023) · Kong et al., HunyuanVideo (2024) · Wan (2025).\n\nEditing as an agent: Huang et al., SmartEdit (2024) · Dutt et al., MonetGPT (2025) · Lin et al., JarvisArt (2025) · Wu et al., RetouchIQ (2026).\n\nDiffusion language models: Austin et al., Structured Denoising Diffusion Models in Discrete State-Spaces (2021) · Nie et al., Large Language Diffusion Models (2025) · Arriola et al., Block Diffusion (2025) · Song et al., Seed Diffusion (2025) · Li et al., A Survey on Diffusion Language Models (2025).\n\nOpen problems: Alemohammad et al., Self-Consuming Generative Models Go MAD (2023), model collapse · C2PA, the content provenance standard · Gowal et al., SynthID-Image (2025).\n\nThe six axes of the first section are each built in their own walkthrough: DDPM, score, flow matching, autoencoder and VAE, conditioning signal, backbone, training lifecycle, evaluation."
+          "text": "Course: CME 296 (Stanford), Lecture 8 — the closing lecture, by Afshine and Shervine Amidi: Recap, State-of-the-art models, Extension to videos, Alternatives to generation, Diffusion for LLMs, Closing thoughts. Leaderboard: Artificial Analysis Text to Image Leaderboard, screenshots of May 24th, 2026; prices from the providers' API pages, May 27th, 2026. Sister course on transformers and language models: CME 295.\n\nCurrent models: FLUX.2, Black Forest Labs (2025) · Qwen-Image Technical Report (2025) · HiDream-O1-Image, Cai et al. (2026).\n\nVideo: Unterthiner et al., Towards Accurate Generative Models of Video (2018), FVD · Ho et al., Video Diffusion Models (2022) · Zhou et al., MagicVideo (2022) · Blattmann et al., Stable Video Diffusion (2023) · OpenAI, Video generation models as world simulators (2024) · Meta, Movie Gen (2024) · Kong et al., HunyuanVideo (2024) · Wan team, Wan (2025).\n\nEditing: Huang et al., SmartEdit (2024) · Dutt et al., MonetGPT (2025) · Lin et al., JarvisArt (2025) · Wu et al., RetouchIQ (2026).\n\nDiffusion language models: Austin et al., D3PM (2021) · Nie et al., Scaling up Masked Diffusion Models on Text (2024) and Large Language Diffusion Models (2025) · Arriola et al., Block Diffusion (2025) · Song et al., Seed Diffusion (2025) · Bie et al., LLaDA2.0 (2025) · Zhou et al., dLLM (2026) · Li et al., A Survey on Diffusion Language Models (2025).\n\nOpen problems: Leroux et al., analog in-memory attention (2025) · Alemohammad et al., Self-Consuming Generative Models Go MAD (2023) · C2PA content credentials · Gowal et al., SynthID-Image (2025).\n\nOn this site, each of the six labels has its own walkthrough: DDPM, score, flow matching, autoencoder and VAE, conditioning signal, backbone, training lifecycle, evaluation."
         }
       ]
     }
