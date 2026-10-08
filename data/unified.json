@@ -30426,6 +30426,57 @@
           ]
         },
         {
+          "type": "table",
+          "heading": "At a glance: if you are asked ...",
+          "rows": [
+            [
+              "Question",
+              "What to do",
+              "Watch out"
+            ],
+            [
+              "Is the system memoryless?",
+              "check whether $y(t_1)$ needs any $u(t)$ with $t \\neq t_1$",
+              "derivatives, integrals, delays all mean memory"
+            ],
+            [
+              "Is it causal?",
+              "look for $u(t + \\cdot)$ or an integral beyond $t$",
+              "$y(t) = u(t + 1)$ is not causal; $u(t - 1)$ is"
+            ],
+            [
+              "Is it linear?",
+              "test both scaling and adding, with the initial states scaled and added too",
+              "constant offset or nonzero initial state breaks it ($y = 2u + 1$)"
+            ],
+            [
+              "Is it time-invariant?",
+              "shift the input by $T$: does the output just shift? any explicit $t$ in the coefficients?",
+              "$y = t\\,u(t)$ is linear but time-varying"
+            ],
+            [
+              "Lumped or distributed?",
+              "count the initial conditions needed: order of the ODE",
+              "any pure delay makes it distributed"
+            ],
+            [
+              "Choose the states",
+              "take the energy-storing quantities: capacitor voltages, inductor currents, positions, velocities",
+              "number of states = order of the system"
+            ],
+            [
+              "Get the transfer function from an ODE",
+              "Laplace with zero initial conditions, $D \\to s$, divide output by input",
+              "keep input terms on the right-hand side ($bs + k$ in the suspension)"
+            ],
+            [
+              "Under- or overdamped?",
+              "sign of the discriminant of the denominator, $b^2 - 4mk$",
+              "complex poles ring, real negative poles creep"
+            ]
+          ]
+        },
+        {
           "type": "note",
           "heading": "Where to look",
           "text": "EEE 501 Lecture Notes 1 (A. B. Özgüler, Bilkent 2026-27), slides 5-11 · Chen, Linear System Theory and Design, 3rd ed., Chapter 1 (introduction) and Sections 2.1-2.2. Next: LST 02, where input-linearity leads to the impulse response, the transfer matrix and the state-space form."
@@ -30768,6 +30819,72 @@
               "Linearization",
               "$A(t) = \\frac{\\partial\\mathbf{f}}{\\partial\\mathbf{x}}$, $B(t) = \\frac{\\partial\\mathbf{f}}{\\partial\\mathbf{u}}$, $C(t) = \\frac{\\partial\\mathbf{h}}{\\partial\\mathbf{x}}$, $D(t) = \\frac{\\partial\\mathbf{h}}{\\partial\\mathbf{u}}$ at $(\\mathbf{x}_o, \\mathbf{u}_o)$",
               "Jacobians along the nominal trajectory; generally time-varying"
+            ]
+          ]
+        },
+        {
+          "type": "table",
+          "heading": "At a glance: if you are asked ...",
+          "rows": [
+            [
+              "Question",
+              "What to do",
+              "Watch out"
+            ],
+            [
+              "Find the impulse response $g(t)$",
+              "apply $u = \\delta$ and follow it (block diagram), or $g = \\mathcal{L}^{-1}\\{\\hat{g}(s)\\}$ via partial fractions",
+              "causal LTI: $g(t) = 0$ for $t < 0$"
+            ],
+            [
+              "Response to an arbitrary input",
+              "convolution $\\int_0^t g(t - \\tau)u(\\tau)d\\tau$, or $\\hat{y} = \\hat{g}\\hat{u}$ and invert",
+              "with an impulse train, each $\\delta(t - i)$ picks $u(t - i)$"
+            ],
+            [
+              "Proper / strictly proper?",
+              "compare $\\deg N$ and $\\deg D$, or take $s \\to \\infty$",
+              "for a matrix: check the limit of every entry"
+            ],
+            [
+              "Poles and zeros of $\\hat{g}(s)$",
+              "factor $N$ and $D$, cancel common factors, then read roots",
+              "uncancelled forms give false poles"
+            ],
+            [
+              "Poles of $\\hat{G}(s)$",
+              "write each entry in coprime form; take the lcm of denominators",
+              "a pole of any entry is a pole of the matrix"
+            ],
+            [
+              "Blocking zero of $\\hat{G}(s)$",
+              "find $\\lambda$ with $\\hat{G}(\\lambda) = 0$: a common zero of every entry",
+              "a zero of one entry is not enough"
+            ],
+            [
+              "Is it rational / lumped?",
+              "rational $\\hat{g}$ iff finite dimensional",
+              "$e^{-sT}$ means a delay"
+            ],
+            [
+              "State-space model from an ODE",
+              "states $x_1 = y$, $x_2 = \\dot{y}$, ...; write $\\dot{\\mathbf{x}} = A\\mathbf{x} + B\\mathbf{u}$, $y = C\\mathbf{x} + Du$",
+              "$D \\neq 0$ only if the input reaches the output directly"
+            ],
+            [
+              "Transfer matrix from $(A, B, C, D)$",
+              "$\\hat{G}(s) = C(sI - A)^{-1}B + D$",
+              "for $2 \\times 2$, invert by swap-negate-divide"
+            ],
+            [
+              "Zero-input vs zero-state response",
+              "$C(sI - A)^{-1}\\mathbf{x}(0)$ vs $[C(sI - A)^{-1}B + D]\\hat{\\mathbf{u}}$",
+              "the output is their sum"
+            ],
+            [
+              "Linearize a nonlinear model",
+              "check the operating point satisfies $\\dot{\\mathbf{x}}_o = \\mathbf{f}(\\mathbf{x}_o, \\mathbf{u}_o, t)$; Jacobians at $(\\mathbf{x}_o, \\mathbf{u}_o)$",
+              "Jacobian entry $(i, j) = \\partial f_i/\\partial x_j$; may depend on $t$"
             ]
           ]
         },
@@ -31152,6 +31269,87 @@
           ]
         },
         {
+          "type": "table",
+          "heading": "At a glance: if you are asked ...",
+          "rows": [
+            [
+              "Question",
+              "What to do",
+              "Watch out"
+            ],
+            [
+              "Is $S$ a subspace?",
+              "check $\\mathbf{0} \\in S$, then closure under $\\alpha_1\\mathbf{x}_1 + \\alpha_2\\mathbf{x}_2$",
+              "a set missing $\\mathbf{0}$ fails at once"
+            ],
+            [
+              "Are the vectors independent?",
+              "put them as columns, row reduce: independent iff every column has a pivot (square: $\\det \\neq 0$)",
+              "more than $n$ vectors in $\\mathbf{R}^n$: always dependent"
+            ],
+            [
+              "Find a basis / dimension of $\\operatorname{span}$",
+              "row reduce the column matrix; the pivot columns of the original matrix are a basis",
+              "take columns of $A$, not of $R$"
+            ],
+            [
+              "Representation w.r.t. a basis",
+              "solve $Q\\tilde{\\mathbf{x}} = \\mathbf{x}$",
+              "check by recombining the columns"
+            ],
+            [
+              "Orthonormal basis",
+              "Gram-Schmidt: subtract $(\\mathbf{u}_k^T\\mathbf{v})\\mathbf{u}_k$, normalize",
+              "verify $\\mathbf{u}_i^T\\mathbf{u}_j = 0$"
+            ],
+            [
+              "Rank and nullity",
+              "row reduce: $r$ = pivots, $\\nu = n - r$",
+              "row ops keep the null space, not the column space"
+            ],
+            [
+              "Null space basis",
+              "RREF, free variables as parameters; or columns of $P[-B; I]$",
+              "one basis vector per free column"
+            ],
+            [
+              "Does $A\\mathbf{x} = \\mathbf{y}$ have a solution?",
+              "row reduce $[A \\ \\mathbf{y}]$: no pivot in the last column",
+              "for every $\\mathbf{y}$: $r(A) = m$"
+            ],
+            [
+              "All solutions of $A\\mathbf{x} = \\mathbf{y}$",
+              "$\\mathbf{x}_p$ (free variables 0) plus the null space basis",
+              "unique iff $\\nu(A) = 0$"
+            ],
+            [
+              "Invertible? inverse?",
+              "$\\det A \\neq 0$; $A^{-1} = \\operatorname{adj}A/\\det A$ or row reduce $[A \\ I]$",
+              "triangular: det = product of the diagonal"
+            ],
+            [
+              "Representation of a map in a new basis",
+              "$\\hat{A} = Q^{-1}AQ$; column $j$ of $\\hat{A}$ = coordinates of $A\\mathbf{q}_j$",
+              "same eigenvalues as $A$"
+            ],
+            [
+              "Eigenvalues and eigenvectors",
+              "roots of $\\det(\\lambda I - A)$; then $\\mathcal{N}(A - \\lambda I)$",
+              "eigenvector $\\neq \\mathbf{0}$; complex roots in pairs"
+            ],
+            [
+              "Is $A$ diagonalizable?",
+              "distinct eigenvalues: yes; repeated: is $\\nu(A - \\lambda_iI) = n_i$ for every $i$?",
+              "same $\\Delta$, different answers (Examples 1, 2)"
+            ],
+            [
+              "Jordan form",
+              "count blocks $\\nu(A - \\lambda_iI)$; find chains $(A - \\lambda I)^k\\mathbf{v} = \\mathbf{0}$; $Q$ = chains, bottom first",
+              "$\\nu$ alone may not fix block sizes (Example 3)"
+            ]
+          ]
+        },
+        {
           "type": "note",
           "heading": "Where to look",
           "text": "EEE 501 Lecture Notes 3 (A. B. Özgüler, Bilkent 2026-27), slides 2-32 · Chen, Linear System Theory and Design, 3rd ed., Sections 3.1-3.5 · C. D. Meyer, Matrix Analysis and Applied Linear Algebra (SIAM, 2000), recommended in the notes for the details (Chapters 2-4 and 7). Next: LST 04, functions of a matrix, $e^{At}$, symmetric and positive definite matrices and the SVD."
@@ -31479,6 +31677,67 @@
               "Condition number",
               "$\\kappa = \\sigma_1/\\sigma_n$ ($\\infty$ if singular)",
               "error amplification in $A\\mathbf{x} = \\mathbf{y}$"
+            ]
+          ]
+        },
+        {
+          "type": "table",
+          "heading": "At a glance: if you are asked ...",
+          "rows": [
+            [
+              "Question",
+              "What to do",
+              "Watch out"
+            ],
+            [
+              "Compute $A^k$ or any $f(A)$",
+              "interpolating polynomial: $h$ of degree $n - 1$, match $f$ and derivatives at each eigenvalue",
+              "repeated eigenvalue: also match the derivative(s)"
+            ],
+            [
+              "Compute $e^{At}$",
+              "same, with $f(\\lambda) = e^{\\lambda t}$ (derivative $te^{\\lambda t}$); or Jordan form; or $\\mathcal{L}^{-1}\\{(sI - A)^{-1}\\}$",
+              "check $e^{A0} = I$ and $\\frac{d}{dt}e^{At}|_0 = A$"
+            ],
+            [
+              "Reduce a high power",
+              "Cayley-Hamilton: $A^n = -(a_1A^{n-1} + \\cdots + a_nI)$",
+              "or the remainder of $f$ divided by $\\Delta$"
+            ],
+            [
+              "Minimal polynomial",
+              "Jordan form: exponent = largest block per eigenvalue; or test $\\Delta$'s factors with lower powers",
+              "$\\Psi$ divides $\\Delta$"
+            ],
+            [
+              "$f$ of a Jordan block",
+              "$f(\\lambda_1)$ on the diagonal, $f^{(j)}(\\lambda_1)/j!$ on the $j$-th upper diagonal",
+              "nilpotent part dies after block-size steps"
+            ],
+            [
+              "Is $e^{(A+B)t} = e^{At}e^{Bt}$?",
+              "only if $AB = BA$",
+              "counterexample with nilpotent $A$, $B$"
+            ],
+            [
+              "Is $M$ positive definite?",
+              "symmetric first; then leading principal minors $> 0$, or eigenvalues $> 0$, or complete the square",
+              "semi-definite: all principal minors $\\geq 0$, not only leading"
+            ],
+            [
+              "Orthogonal diagonalization",
+              "eigenvectors of symmetric $M$, normalized; Gram-Schmidt within a repeated eigenvalue",
+              "$Q^{-1} = Q^T$"
+            ],
+            [
+              "Singular values / SVD",
+              "eigenvalues of $H^TH$, $\\sigma_j = \\sqrt{\\lambda_j}$; $Q$ from eigenvectors of $H^TH$, $\\mathbf{r}_j = H\\mathbf{q}_j/\\sigma_j$",
+              "number of zero singular values $= \\min\\{m - r, n - r\\}$"
+            ],
+            [
+              "$\\|A\\|_2$ and condition number",
+              "$\\sigma_1$ and $\\sigma_1/\\sigma_n$",
+              "symmetric: $|\\lambda|_{\\max}$ and $|\\lambda|_{\\max}/|\\lambda|_{\\min}$"
             ]
           ]
         },
