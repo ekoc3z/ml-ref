@@ -852,6 +852,24 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
     <span class="nav-count" id="cnt-vs04">0</span>
   </button>
 
+  <div class="course-divider">LST · Linear System Theory</div>
+  <button class="nav-btn" data-sec="lst01" onclick="switchSection('lst01');closeSidebar()">
+    <span class="nav-icon">⚙</span><span class="nav-num">01</span>
+    <span class="nav-label">Mathematical Description of Systems</span>
+  </button>
+  <button class="nav-btn" data-sec="lst02" onclick="switchSection('lst02');closeSidebar()">
+    <span class="nav-icon">📈</span><span class="nav-num">02</span>
+    <span class="nav-label">Impulse Response, Transfer Matrix, State Space</span>
+  </button>
+  <button class="nav-btn" data-sec="lst03" onclick="switchSection('lst03');closeSidebar()">
+    <span class="nav-icon">🧮</span><span class="nav-num">03</span>
+    <span class="nav-label">Linear Algebra I: Spaces, Rank, Jordan Form</span>
+  </button>
+  <button class="nav-btn" data-sec="lst04" onclick="switchSection('lst04');closeSidebar()">
+    <span class="nav-icon">∑</span><span class="nav-num">04</span>
+    <span class="nav-label">Linear Algebra II: Functions of a Matrix, SVD</span>
+  </button>
+
   <div class="course-divider">Stanford CS231n</div>
   <button class="nav-btn" data-sec="cs01" onclick="switchSection('cs01');closeSidebar()">
     <span class="nav-icon">📊</span><span class="nav-num">L2</span>
@@ -1408,6 +1426,22 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
       <span class="pill" id="pill-vs04">0 cards</span>
     </div>
   </div>
+  <div id="hdr-lst01" class="section-header">
+    <div class="hdr-title">LST · 01 — Mathematical Description of Systems</div>
+    <div class="hdr-sub">EEE 501, Bilkent (Özgüler) · Lecture Notes 1 — Causality · state · lumped vs distributed · linearity</div>
+  </div>
+  <div id="hdr-lst02" class="section-header">
+    <div class="hdr-title">LST · 02 — Impulse Response, Transfer Matrix, State Space</div>
+    <div class="hdr-sub">EEE 501, Bilkent (Özgüler) · Lecture Notes 2 — Input-linearity · g(t,τ) · time invariance · poles/zeros · linearization</div>
+  </div>
+  <div id="hdr-lst03" class="section-header">
+    <div class="hdr-title">LST · 03 — Linear Algebra I: Spaces, Rank, Jordan Form</div>
+    <div class="hdr-sub">EEE 501, Bilkent (Özgüler) · Lecture Notes 3 — Basis · norms · Gram-Schmidt · rank/nullity · Ax=y · similarity · eigen · Jordan</div>
+  </div>
+  <div id="hdr-lst04" class="section-header">
+    <div class="hdr-title">LST · 04 — Linear Algebra II: Functions of a Matrix, SVD</div>
+    <div class="hdr-sub">EEE 501, Bilkent (Özgüler) · Lecture Notes 4 — Cayley-Hamilton · minimal polynomial · f(A) · e^{At} · symmetric · p.d. · SVD</div>
+  </div>
 
   <!-- CS231n section headers -->
   <div id="hdr-cs01" class="section-header">
@@ -1912,6 +1946,7 @@ function showGuide(key){
 }
 function showOverview(sec){
   const panel = $('overview-panel');
+  if(sec.startsWith('lst')){ panel.style.display = 'none'; return; }
   const body = $('ch-ov-body');
   // Girdi ya duz metin ya da {text, anim} — anim, OVERVIEWS._anims icinde anahtarla durur
   const ov   = OVERVIEWS[sec];
@@ -2001,6 +2036,7 @@ function render(){
   if(SEC === 'summary'){ renderSummary(); return; }
   if(SEC === 'ida-summary'){ renderIdaSummary(); return; }
   if(SEC === 'vs-summary'){ renderVsSummary(); return; }
+  if(SEC.startsWith('lst')){ renderLst(SEC); return; }
   renderCards(SEC);
 }
 
@@ -2120,6 +2156,30 @@ function renderCards(sec){
   $('pill-'+sec).textContent = items.length + ' articles';
 
   // Render inline math for all newly added content
+  if(typeof renderMathInElement === 'function'){
+    renderMathInElement(grid, {
+      delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],
+      throwOnError:false
+    });
+  }
+  initAnims(grid);
+}
+
+/* ==================== LST: ders bolumu = konu anlatiminin kendisi ==================== */
+/* guides.json'da chapters:['lstNN'] olan anlatim, kart yerine sayfanin govdesi olarak basilir.
+   Bu anlatimlar ana sayfadaki KONU ANLATIMLARI listesine girmez (home:false). */
+function renderLst(sec){
+  const grid = $('card-grid'); grid.innerHTML = '';
+  guidesFor(sec).forEach(k => {
+    const g = GUIDES[k];
+    const art = document.createElement('div'); art.className = 'wiki-article';
+    art.innerHTML = `<div class="wiki-article-header"><div class="wiki-article-title">${esc(g.title)}</div>` +
+      `<div class="wiki-article-meta"><span class="wiki-article-ctx">${esc(g.context||'')}</span></div></div>` +
+      (g.summary ? `<p class="wiki-article-lead">${esc(g.summary)}</p>` : '') +
+      `<div class="wiki-article-body">` +
+      g.sections.map((s,i) => `<div id="lst-${sec}-${i}">${renderSection(s)}</div>`).join('') + `</div>`;
+    grid.appendChild(art);
+  });
   if(typeof renderMathInElement === 'function'){
     renderMathInElement(grid, {
       delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],
@@ -2564,7 +2624,7 @@ function homeSearch(q){
 
 /* Ana sayfadaki konu anlatimi listesi — guides.json'dan uretilir */
 function guideIndexHTML(){
-  const keys = Object.keys(GUIDES || {});
+  const keys = Object.keys(GUIDES || {}).filter(k => GUIDES[k].home !== false);
   if(!keys.length) return '';
   const rows = keys.map(k => {
     const g = GUIDES[k];
@@ -2695,7 +2755,22 @@ function revealSec(sec){
 function buildToc(){
   document.querySelectorAll('.toc').forEach(t => t.remove());
   document.querySelectorAll('.nav-btn[data-sec]').forEach(btn => {
-    const sec = btn.dataset.sec; const cards = DATA[sec]; if(!cards || !cards.length) return;
+    const sec = btn.dataset.sec;
+    if(sec.startsWith('lst')){
+      const ks = guidesFor(sec); if(!ks.length) return;
+      const box = document.createElement('div'); box.className = 'toc' + (sec===SEC?' open':''); box.id = 'toc-'+sec;
+      GUIDES[ks[0]].sections.forEach((s,i) => {
+        if(!s.heading || !/^\d+\./.test(s.heading)) return;
+        const a = document.createElement('a'); a.className = 'toc-item'; a.href = '#';
+        a.textContent = s.heading.replace(/\$/g,'');
+        a.onclick = (e) => { e.preventDefault(); if(SEC!==sec) switchSection(sec); closeSidebar();
+          setTimeout(() => { const el = document.getElementById('lst-'+sec+'-'+i); if(el) el.scrollIntoView({block:'start'}); }, 30); };
+        box.appendChild(a);
+      });
+      btn.insertAdjacentElement('afterend', box);
+      return;
+    }
+    const cards = DATA[sec]; if(!cards || !cards.length) return;
     const box = document.createElement('div'); box.className = 'toc' + (sec===SEC?' open':''); box.id = 'toc-'+sec;
     cards.forEach(c => {
       const a = document.createElement('a'); a.className = 'toc-item'; a.href = '#'; a.textContent = c.title;
@@ -2760,7 +2835,7 @@ function applyData(d){
 }
 
 
-fetch('./data/unified.json?v=20261007184751')
+fetch('./data/unified.json?v=20261008124125')
   .then(r => { if(!r.ok) throw new Error(r.status); return r.json() })
   .then(applyData)
   .catch(() => {
