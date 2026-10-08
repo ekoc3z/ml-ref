@@ -30349,6 +30349,83 @@
           "text": "A model keeps what matters for the question, and the course works on its mathematical representation, $\\mathbf{y} = H \\mathbf{u}$ with $p$ inputs and $q$ outputs. For the suspension, the force balance $m D^2 x_o + b(D x_o - D x_i) + k(x_o - x_i) = 0$ gives the second order transfer function $(bs + k)/(ms^2 + bs + k)$; sinusoids come out as sinusoids of the same frequency, and the sign of $b^2 - 4mk$ decides between an underdamped and an overdamped response to a square wave. A system is memoryless if the output now depends only on the input now, causal if it never depends on the future input. The state $\\mathbf{x}(t_0)$ is the information that, with the future input, fixes the future output: it summarises the past, like a save file. Lumped systems have finitely many states (the RLC circuit has two), distributed ones do not (the unit delay must remember a whole second of input). Linearity requires that combining initial states and inputs combines the outputs, for all $\\alpha_1, \\alpha_2$; an offset or a nonzero initial state breaks it."
         },
         {
+          "type": "table",
+          "heading": "At a glance: definitions",
+          "rows": [
+            [
+              "Term",
+              "Definition",
+              "Test / example"
+            ],
+            [
+              "System",
+              "operator $\\mathbf{y} = H\\mathbf{u}$, $p$ inputs, $q$ outputs",
+              "suspension: $p = q = 1$"
+            ],
+            [
+              "Memoryless",
+              "$\\mathbf{y}(t_1)$ depends only on $\\mathbf{u}(t_1)$",
+              "resistor yes; suspension no"
+            ],
+            [
+              "Causal (non-anticipatory)",
+              "$\\mathbf{y}(t_1)$ does not depend on $\\mathbf{u}(t)$, $t > t_1$",
+              "every real-time physical system"
+            ],
+            [
+              "State $\\mathbf{x}(t_0)$",
+              "information at $t_0$ that, with $\\mathbf{u}(t)$, $t \\geq t_0$, fixes $\\mathbf{y}(t)$, $t \\geq t_0$",
+              "RLC: $v_C$, $i_L$; mass: position, velocity"
+            ],
+            [
+              "Lumped / distributed",
+              "finitely / infinitely many states",
+              "RLC lumped; $y(t) = u(t - 1)$ distributed"
+            ],
+            [
+              "Linear",
+              "$\\alpha_1(\\mathbf{x}_1(t_0), \\mathbf{u}_1) + \\alpha_2(\\mathbf{x}_2(t_0), \\mathbf{u}_2) \\to \\alpha_1\\mathbf{y}_1 + \\alpha_2\\mathbf{y}_2$, all $\\alpha_i$",
+              "$y = 2u + 1$ fails (affine)"
+            ]
+          ]
+        },
+        {
+          "type": "table",
+          "heading": "At a glance: equations of this lecture",
+          "rows": [
+            [
+              "Object",
+              "Equation",
+              "Read it as"
+            ],
+            [
+              "Suspension, force balance",
+              "$m D^2 x_o + b(Dx_o - Dx_i) + k(x_o - x_i) = 0$",
+              "inertia + damper + spring = 0, $D = d/dt$"
+            ],
+            [
+              "Suspension, transfer function",
+              "$\\frac{X_o(s)}{X_i(s)} = \\frac{bs + k}{ms^2 + bs + k}$",
+              "$= 1$ at $s = 0$, $\\approx b/(ms)$ for large $s$"
+            ],
+            [
+              "Damping type",
+              "$b^2 - 4mk$",
+              "$< 0$ underdamped (rings), $> 0$ overdamped (creeps)"
+            ],
+            [
+              "RLC state equations",
+              "$Dv_C = \\frac{1}{C}(i - \\frac{v_C}{R} - i_L)$, $Di_L = \\frac{v_C}{L}$",
+              "two states, two initial conditions"
+            ],
+            [
+              "Sinusoid through LTI",
+              "$e^{j\\omega t} \\mapsto \\hat{g}(j\\omega)e^{j\\omega t}$",
+              "same frequency, gain $|\\hat{g}|$, phase $\\angle\\hat{g}$"
+            ]
+          ]
+        },
+        {
           "type": "note",
           "heading": "Where to look",
           "text": "EEE 501 Lecture Notes 1 (A. B. Özgüler, Bilkent 2026-27), slides 5-11 · Chen, Linear System Theory and Design, 3rd ed., Chapter 1 (introduction) and Sections 2.1-2.2. Next: LST 02, where input-linearity leads to the impulse response, the transfer matrix and the state-space form."
@@ -30560,6 +30637,139 @@
           "type": "insight",
           "heading": "What should stay with you",
           "text": "Input-linearity (zero initial states) is the only ingredient of the impulse response: write the input as a sum of area-one pulses, $u(t) \\cong \\sum u(t_i)\\delta_\\Delta(t - t_i)\\Delta$, add up the responses, and let $\\Delta \\to 0$ to get $y(t) = \\int g(t, \\tau) u(\\tau) d\\tau$, with limits $[t_0, t]$ for a relaxed causal system and a $q \\times p$ matrix $G(t, \\tau)$ for several inputs and outputs. Time invariance makes $g$ depend only on $t - \\tau$, so the output is a convolution, and causality means $g(t) = 0$ for $t < 0$. The Laplace transform turns the convolution into $\\hat{y} = \\hat{g}\\hat{u}$. Lumped systems have rational transfer functions, a delay gives the irrational $e^{-sT}$; properness compares degrees, poles and zeros are read from coprime $N/D$, the poles of a transfer matrix are the roots of the lcm of its denominators, and a blocking zero $z_0$ removes the mode $e^{z_0 t}$ of the input from the output. Every finite-dimensional LTI system has the form $\\dot{\\mathbf{x}} = A\\mathbf{x} + B\\mathbf{u}$, $\\mathbf{y} = C\\mathbf{x} + D\\mathbf{u}$; Laplace splits its output into zero-input and zero-state responses and gives $\\hat{G}(s) = C(sI - A)^{-1}B + D$. Nonlinear models are linearized with the Jacobians $\\partial \\mathbf{f}/\\partial \\mathbf{x}$, $\\partial \\mathbf{f}/\\partial \\mathbf{u}$ along an operating trajectory, generally giving a time-varying linear model valid only for small perturbations."
+        },
+        {
+          "type": "table",
+          "heading": "At a glance: from linearity to the transfer matrix",
+          "rows": [
+            [
+              "Step",
+              "Formula",
+              "Condition"
+            ],
+            [
+              "Pulse decomposition",
+              "$u(t) \\cong \\sum_i u(t_i)\\delta_\\Delta(t - t_i)\\Delta$",
+              "$\\delta_\\Delta$: width $\\Delta$, height $1/\\Delta$"
+            ],
+            [
+              "General impulse response (1)",
+              "$y(t) = \\int_{-\\infty}^{\\infty} g(t, \\tau)u(\\tau)d\\tau$",
+              "input-linear (zero initial states)"
+            ],
+            [
+              "Relaxed (2)",
+              "$y(t) = \\int_{t_0}^{\\infty} g(t, \\tau)u(\\tau)d\\tau$",
+              "all initial conditions zero at $t_0$"
+            ],
+            [
+              "Relaxed + causal (3)",
+              "$y(t) = \\int_{t_0}^{t} g(t, \\tau)u(\\tau)d\\tau$",
+              "$g(t, \\tau) = 0$ for $\\tau > t$"
+            ],
+            [
+              "Multivariable",
+              "$\\mathbf{y}(t) = \\int_{t_0}^{t} G(t, \\tau)\\mathbf{u}(\\tau)d\\tau$, $G \\in \\mathbf{R}^{q \\times p}$",
+              "$g_{ij}$: output $i$, input $j$"
+            ],
+            [
+              "Time-invariant",
+              "$g(t, \\tau) = g(t - \\tau)$, $y = \\int_0^t g(t - \\tau)u(\\tau)d\\tau$",
+              "causal: $g(t) = 0$, $t < 0$"
+            ],
+            [
+              "Transfer function",
+              "$\\hat{y}(s) = \\hat{g}(s)\\hat{u}(s)$, $\\hat{g}(s) = \\int_0^\\infty g(t)e^{-st}dt$",
+              "convolution becomes product"
+            ],
+            [
+              "Transfer matrix",
+              "$\\hat{G}(s) = [\\hat{g}_{ij}(s)]_{q \\times p}$",
+              "one transfer function per input-output pair"
+            ]
+          ]
+        },
+        {
+          "type": "table",
+          "heading": "At a glance: terminology of transfer functions",
+          "rows": [
+            [
+              "Name",
+              "Definition",
+              "Remember"
+            ],
+            [
+              "Rational",
+              "$\\hat{g} = N(s)/D(s)$",
+              "lumped systems; delay gives $e^{-sT}$ (irrational)"
+            ],
+            [
+              "Proper / strictly / bi- / improper",
+              "$\\deg N \\leq$, $<$, $=$, $>$ $\\deg D$",
+              "limit at $s \\to \\infty$: bounded, 0, nonzero constant, $\\infty$"
+            ],
+            [
+              "Pole, zero",
+              "$\\hat{g} \\to \\infty$ / $\\hat{g} = 0$",
+              "read from coprime $N/D$: cancel common factors first"
+            ],
+            [
+              "Zeros / poles at infinity",
+              "$\\deg D - \\deg N$ / $\\deg N - \\deg D$",
+              "strictly proper / improper"
+            ],
+            [
+              "Pole of $\\hat{G}(s)$",
+              "pole of some entry",
+              "root of the lcm of the denominators"
+            ],
+            [
+              "Blocking zero of $\\hat{G}(s)$",
+              "$\\hat{G}(\\lambda) = 0$",
+              "blocks inputs $e^{\\lambda t}$"
+            ],
+            [
+              "Biproper $\\hat{G}$",
+              "$\\hat{G}$ and $\\hat{G}^{-1}$ proper",
+              "$K = \\lim_{s \\to \\infty}\\hat{G}(s)$ nonsingular"
+            ]
+          ]
+        },
+        {
+          "type": "table",
+          "heading": "At a glance: state space and linearization",
+          "rows": [
+            [
+              "Object",
+              "Formula",
+              "Note"
+            ],
+            [
+              "State space (4), (5)",
+              "$\\dot{\\mathbf{x}} = A\\mathbf{x} + B\\mathbf{u}$, $\\mathbf{y} = C\\mathbf{x} + D\\mathbf{u}$",
+              "$A$: $n \\times n$, $B$: $n \\times p$, $C$: $q \\times n$, $D$: $q \\times p$"
+            ],
+            [
+              "Laplace solution",
+              "$\\hat{\\mathbf{x}} = (sI - A)^{-1}\\mathbf{x}(0) + (sI - A)^{-1}B\\hat{\\mathbf{u}}$",
+              "zero-input + zero-state"
+            ],
+            [
+              "Transfer matrix",
+              "$\\hat{G}(s) = C(sI - A)^{-1}B + D$",
+              "rational, proper; poles among eigenvalues of $A$"
+            ],
+            [
+              "Mass-spring-damper",
+              "$\\hat{g}(s) = \\frac{1/m}{s^2 + (b/m)s + k/m}$",
+              "$m = 1, b = 3, k = 2$: $g = e^{-t} - e^{-2t}$"
+            ],
+            [
+              "Linearization",
+              "$A(t) = \\frac{\\partial\\mathbf{f}}{\\partial\\mathbf{x}}$, $B(t) = \\frac{\\partial\\mathbf{f}}{\\partial\\mathbf{u}}$, $C(t) = \\frac{\\partial\\mathbf{h}}{\\partial\\mathbf{x}}$, $D(t) = \\frac{\\partial\\mathbf{h}}{\\partial\\mathbf{u}}$ at $(\\mathbf{x}_o, \\mathbf{u}_o)$",
+              "Jacobians along the nominal trajectory; generally time-varying"
+            ]
+          ]
         },
         {
           "type": "note",
@@ -30794,6 +31004,154 @@
           "text": "A subspace is closed under combinations and contains $\\mathbf{0}$; a basis is independent (nothing redundant) and spanning (nothing missing), its size is the dimension, and the representation $\\tilde{\\mathbf{x}}$ in $\\mathbf{x} = Q\\tilde{\\mathbf{x}}$ is unique. Every $A\\mathbf{v}$ is a combination of the columns of $A$ weighted by the entries of $\\mathbf{v}$; this single reading explains range spaces, existence of solutions and similarity. Norms measure length (1, 2, $\\infty$), and Gram-Schmidt subtracts projections $(\\mathbf{u}_k^T\\mathbf{v})\\mathbf{u}_k$ to build an orthonormal basis of the same span. Row reduction gives $TA = R$; the pivots count the rank, the free columns give a null space basis $P[-B; I]$, and $r(A) + \\nu(A) = n$. $A\\mathbf{x} = \\mathbf{y}$ is solvable iff $\\mathbf{y} \\in \\mathcal{R}(A)$, i.e. $r(A) = r([A \\ \\mathbf{y}])$, for every $\\mathbf{y}$ iff $r(A) = m$, and all solutions are $\\mathbf{x}_p$ plus the null space. $\\det A = 0$ iff the columns are dependent iff $\\nu(A) > 0$, and $A^{-1} = \\operatorname{adj}A/\\det A$. A matrix is a linear map whose columns are the images of the basis; changing the basis gives the similar matrix $Q^{-1}AQ$. Distinct eigenvalues give independent eigenvectors and $Q^{-1}AQ = \\Lambda$; repeated ones may not (same $\\Delta$, different nullities), and then chains of generalized eigenvectors give the Jordan form, with $\\nu(A - \\lambda_i I)$ blocks per eigenvalue and block sizes fixed by the grades."
         },
         {
+          "type": "table",
+          "heading": "At a glance: spaces and bases",
+          "rows": [
+            [
+              "Concept",
+              "Definition",
+              "Key fact"
+            ],
+            [
+              "Subspace $S$",
+              "closed under $\\alpha_1\\mathbf{x}_1 + \\alpha_2\\mathbf{x}_2$",
+              "contains $\\mathbf{0}$"
+            ],
+            [
+              "Span",
+              "all combinations $\\sum\\alpha_i\\mathbf{x}_i$",
+              "always a subspace"
+            ],
+            [
+              "Linear independence",
+              "$\\sum\\alpha_i\\mathbf{x}_i = \\mathbf{0} \\Rightarrow$ all $\\alpha_i = 0$",
+              "dependent iff one vector is a combination of the others"
+            ],
+            [
+              "Basis",
+              "independent and spanning",
+              "$\\dim$ = number of basis vectors $\\leq n$"
+            ],
+            [
+              "Representation",
+              "$\\mathbf{x} = Q\\tilde{\\mathbf{x}}$, $Q = [\\mathbf{q}_1 \\cdots \\mathbf{q}_m]$",
+              "unique; $A\\mathbf{v}$ = columns of $A$ weighted by $\\mathbf{v}$"
+            ],
+            [
+              "Norms",
+              "$\\|\\mathbf{x}\\|_1 = \\sum|x_i|$, $\\|\\mathbf{x}\\|_2 = \\sqrt{\\mathbf{x}^T\\mathbf{x}}$, $\\|\\mathbf{x}\\|_\\infty = \\max|x_i|$",
+              "$\\|\\mathbf{x}_1 + \\mathbf{x}_2\\| \\leq \\|\\mathbf{x}_1\\| + \\|\\mathbf{x}_2\\|$"
+            ],
+            [
+              "Gram-Schmidt",
+              "$\\mathbf{q}_m = \\mathbf{v}_m - \\sum_{k < m}(\\mathbf{u}_k^T\\mathbf{v}_m)\\mathbf{u}_k$, $\\mathbf{u}_m = \\mathbf{q}_m/\\|\\mathbf{q}_m\\|$",
+              "subtract projections, normalize; same span"
+            ]
+          ]
+        },
+        {
+          "type": "table",
+          "heading": "At a glance: rank, null space, Ax = y",
+          "rows": [
+            [
+              "Concept",
+              "Formula",
+              "How to compute"
+            ],
+            [
+              "Row reduction",
+              "$TA = R$, $\\tilde{T}A = \\tilde{R}$",
+              "pivots = leading entries; reduced: pivots 1, zeros above/below"
+            ],
+            [
+              "Rank $r(A)$",
+              "$\\dim\\mathcal{R}(A)$",
+              "number of pivots = number of basic columns"
+            ],
+            [
+              "Nullity $\\nu(A)$",
+              "$\\dim\\mathcal{N}(A)$, $\\mathcal{N}(A) = \\{\\mathbf{x}: A\\mathbf{x} = \\mathbf{0}\\}$",
+              "number of free columns"
+            ],
+            [
+              "Rank-nullity",
+              "$r(A) + \\nu(A) = n$",
+              "$\\tilde{R}P = [I_r \\ B; 0 \\ 0]$, null basis $P[-B; I_{n-r}]$"
+            ],
+            [
+              "Existence (Thm 1)",
+              "$\\mathbf{y} \\in \\mathcal{R}(A) \\iff r(A) = r([A \\ \\mathbf{y}])$",
+              "for every $\\mathbf{y}$: $r(A) = m$"
+            ],
+            [
+              "All solutions (Thm 2)",
+              "$\\mathbf{x} = \\mathbf{x}_p + \\alpha_1\\mathbf{n}_1 + \\cdots + \\alpha_\\nu\\mathbf{n}_\\nu$",
+              "unique iff $\\nu(A) = 0$"
+            ],
+            [
+              "Determinant",
+              "$\\det A = \\sum_j a_{ij}c_{ij}$, $c_{ij} = (-1)^{i+j}\\det M_{ij}$",
+              "$\\det A = 0 \\iff \\nu(A) > 0$; $\\det AB = \\det A\\det B$"
+            ],
+            [
+              "Inverse",
+              "$A^{-1} = \\operatorname{adj}A/\\det A$",
+              "$2 \\times 2$: swap diagonal, negate off-diagonal, divide by det"
+            ]
+          ]
+        },
+        {
+          "type": "table",
+          "heading": "At a glance: similarity, eigenvalues, Jordan form",
+          "rows": [
+            [
+              "Concept",
+              "Formula",
+              "Meaning"
+            ],
+            [
+              "Similarity",
+              "$\\hat{A} = Q^{-1}AQ$",
+              "same map, basis $\\{\\mathbf{q}_i\\}$; same $\\Delta$, eigenvalues, det, rank"
+            ],
+            [
+              "Companion form",
+              "$Q = [\\mathbf{b} \\ A\\mathbf{b} \\cdots A^{n-1}\\mathbf{b}]$",
+              "$A$ shifts the columns; last column holds $\\beta$'s"
+            ],
+            [
+              "Eigenpair",
+              "$(A - \\lambda I)\\mathbf{x} = \\mathbf{0}$, $\\mathbf{x} \\neq \\mathbf{0}$",
+              "direction only stretched by $\\lambda$"
+            ],
+            [
+              "Characteristic polynomial",
+              "$\\Delta(\\lambda) = \\det(\\lambda I - A)$",
+              "$n$ roots counting multiplicity"
+            ],
+            [
+              "Distinct eigenvalues",
+              "$Q^{-1}AQ = \\Lambda$",
+              "eigenvectors independent"
+            ],
+            [
+              "Repeated eigenvalue",
+              "diagonalizable iff $\\nu(A - \\lambda_iI) = n_i$ for all $i$",
+              "same $\\Delta$ can give different forms"
+            ],
+            [
+              "Generalized eigenvector, grade $k$",
+              "$(A - \\lambda I)^k\\mathbf{v} = \\mathbf{0}$, $(A - \\lambda I)^{k-1}\\mathbf{v} \\neq \\mathbf{0}$",
+              "chain $\\mathbf{v}_j = (A - \\lambda I)^{k-j}\\mathbf{v}$, $\\mathbf{v}_1$ true eigenvector"
+            ],
+            [
+              "Jordan form",
+              "$J_A = \\operatorname{diag}\\{\\Lambda_1, \\ldots, \\Lambda_k\\}$, blocks with 1's above the diagonal",
+              "number of blocks for $\\lambda_i$: $\\nu(A - \\lambda_iI)$; sizes: grades"
+            ]
+          ]
+        },
+        {
           "type": "note",
           "heading": "Where to look",
           "text": "EEE 501 Lecture Notes 3 (A. B. Özgüler, Bilkent 2026-27), slides 2-32 · Chen, Linear System Theory and Design, 3rd ed., Sections 3.1-3.5 · C. D. Meyer, Matrix Analysis and Applied Linear Algebra (SIAM, 2000), recommended in the notes for the details (Chapters 2-4 and 7). Next: LST 04, functions of a matrix, $e^{At}$, symmetric and positive definite matrices and the SVD."
@@ -30980,6 +31338,149 @@
           "type": "insight",
           "heading": "What should stay with you",
           "text": "Polynomials of a matrix respect block-diagonal structure and similarity, $f(Q^{-1}AQ) = Q^{-1}f(A)Q$, and by Cayley-Hamilton $\\Delta(A) = 0$, so every power of an $n \\times n$ matrix is a combination of $I, A, \\ldots, A^{n-1}$. The minimal polynomial $\\Psi$ is the monic annihilating polynomial of least degree; it is unique, divides $\\Delta$, and equals $\\prod(\\lambda - \\lambda_i)^{m_i}$ with $m_i$ the size of the largest Jordan block of $\\lambda_i$, so $A$ is diagonalizable iff every index $m_i = 1$. A function of a matrix is $f(A) := h(A)$, where $h$ of degree $n - 1$ matches $f$ and its derivatives on the spectrum: $A^{100}$ for a $2 \\times 2$ matrix costs two scalar equations, and $e^{At}$ for a $3 \\times 3$ costs three. On a Jordan block, $f(J)$ has $f^{(j)}(\\lambda_1)/j!$ on the $j$-th upper diagonal, the source of $te^{\\lambda t}$ terms, and the power series gives the same answer. $e^{At}$ satisfies $e^{A0} = I$, the semigroup law, $\\frac{d}{dt}e^{At} = Ae^{At}$ and $\\mathcal{L}\\{e^{At}\\} = (sI - A)^{-1}$, and $e^{(A+B)t} = e^{At}e^{Bt}$ only if $AB = BA$. Symmetric matrices have real eigenvalues and an orthonormal eigenbasis; they are positive definite iff all eigenvalues are positive, iff all leading principal minors are positive, iff $M = N^TN$ with $N$ nonsingular. Every $H = RSQ^T$: rotate, stretch along axes by the singular values $\\sigma_j = \\sqrt{\\lambda_j(H^TH)}$, rotate; $\\|A\\|_2 = \\sigma_1$, $\\|A^{-1}\\|_2 = 1/\\sigma_n$, and $\\kappa = \\sigma_1/\\sigma_n$ measures how badly a linear system can amplify errors."
+        },
+        {
+          "type": "table",
+          "heading": "At a glance: polynomials and functions of a matrix",
+          "rows": [
+            [
+              "Concept",
+              "Formula",
+              "Use"
+            ],
+            [
+              "Polynomial of $A$",
+              "$f(A) = f_nA^n + \\cdots + f_1A + f_0I$",
+              "block-diagonal stays block-diagonal; $f(Q^{-1}AQ) = Q^{-1}f(A)Q$"
+            ],
+            [
+              "Cayley-Hamilton",
+              "$\\Delta(A) = 0$",
+              "every power is a combination of $I, A, \\ldots, A^{n-1}$"
+            ],
+            [
+              "Minimal polynomial",
+              "$\\Psi(\\lambda) = \\prod(\\lambda - \\lambda_i)^{m_i}$",
+              "$m_i$ = largest Jordan block of $\\lambda_i$; $\\Psi$ divides $\\Delta$"
+            ],
+            [
+              "Diagonalizable",
+              "all indices $m_i = 1$",
+              "$\\Psi$ has no repeated roots"
+            ],
+            [
+              "Interpolating polynomial",
+              "$f^{(l)}(\\lambda_i) = h^{(l)}(\\lambda_i)$, $l < n_i$; $f(A) := h(A)$",
+              "$n$ conditions, $h$ of degree $n - 1$"
+            ],
+            [
+              "Example",
+              "$\\begin{bmatrix} 0 & 1 \\\\ -1 & -2 \\end{bmatrix}^{100} = -99I - 100A$",
+              "$h(\\lambda) = -99 - 100\\lambda$"
+            ],
+            [
+              "Jordan block",
+              "$f(J)$: $f^{(j)}(\\lambda_1)/j!$ on the $j$-th upper diagonal",
+              "source of $te^{\\lambda t}$ terms"
+            ],
+            [
+              "Power series",
+              "$f(A) = \\sum\\beta_i(A - aI)^i$, $e^{At} = \\sum\\frac{t^k}{k!}A^k$",
+              "converges if $|\\lambda_i - a| < \\rho$; $e^{At}$ always"
+            ]
+          ]
+        },
+        {
+          "type": "table",
+          "heading": "At a glance: the matrix exponential",
+          "rows": [
+            [
+              "Property",
+              "Formula",
+              "Why it matters"
+            ],
+            [
+              "P1",
+              "$e^{A0} = I$",
+              "initial condition"
+            ],
+            [
+              "P2",
+              "$e^{A(t_1 + t_2)} = e^{At_1}e^{At_2}$",
+              "run $t_1$ then $t_2$"
+            ],
+            [
+              "P3",
+              "$[e^{At}]^{-1} = e^{-At}$",
+              "always invertible"
+            ],
+            [
+              "P4",
+              "$e^{(A + B)t} = e^{At}e^{Bt}$ only if $AB = BA$",
+              "fails in general"
+            ],
+            [
+              "P5",
+              "$\\frac{d}{dt}e^{At} = Ae^{At} = e^{At}A$",
+              "$\\mathbf{x}(t) = e^{At}\\mathbf{x}(0)$ solves $\\dot{\\mathbf{x}} = A\\mathbf{x}$"
+            ],
+            [
+              "P6",
+              "$\\mathcal{L}\\{e^{At}\\} = (sI - A)^{-1}$",
+              "links to $C(sI - A)^{-1}\\mathbf{x}(0)$"
+            ]
+          ]
+        },
+        {
+          "type": "table",
+          "heading": "At a glance: symmetric, positive definite, SVD",
+          "rows": [
+            [
+              "Concept",
+              "Statement",
+              "Remember"
+            ],
+            [
+              "Symmetric $M = M^T$",
+              "real eigenvalues, real eigenvectors, $Q^TMQ$ diagonal with $Q$ orthogonal",
+              "stretches along perpendicular axes"
+            ],
+            [
+              "$M > 0$ ($\\geq 0$)",
+              "$\\mathbf{x}^TM\\mathbf{x} > 0$ ($\\geq 0$) for $\\mathbf{x} \\neq \\mathbf{0}$",
+              "level sets are ellipses (a bowl)"
+            ],
+            [
+              "Tests (Fact 3)",
+              "eigenvalues $> 0$ · leading principal minors $> 0$ · $M = N^TN$, $N$ nonsingular",
+              "semi-definite: $\\geq 0$, all principal minors"
+            ],
+            [
+              "Singular values",
+              "$\\sigma_j = \\sqrt{\\lambda_j(H^TH)}$",
+              "lengths of the axes of the image ellipse"
+            ],
+            [
+              "SVD",
+              "$H = RSQ^T$, $R$, $Q$ orthogonal",
+              "rotate, stretch, rotate"
+            ],
+            [
+              "Vectors",
+              "columns of $Q$: eigenvectors of $H^TH$; columns of $R$: of $HH^T$",
+              "$H\\mathbf{q}_j = \\sigma_j\\mathbf{r}_j$"
+            ],
+            [
+              "2-norm",
+              "$\\|A\\|_2 = \\sigma_1$, $\\|A^{-1}\\|_2 = 1/\\sigma_n$",
+              "largest stretch"
+            ],
+            [
+              "Condition number",
+              "$\\kappa = \\sigma_1/\\sigma_n$ ($\\infty$ if singular)",
+              "error amplification in $A\\mathbf{x} = \\mathbf{y}$"
+            ]
+          ]
         },
         {
           "type": "note",
