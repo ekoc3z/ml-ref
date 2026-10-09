@@ -30755,7 +30755,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "Questions on this section ask why a certain input leaves no trace in the output, or which input produces a given output. Think in the Laplace domain: $\\hat{y}(s) = \\hat{g}(s)\\hat{u}(s)$, and every pole of $\\hat{y}$ gives one term of $y(t)$. An input $e^{at}$ brings the pole $s = a$; if $\\hat{g}(a) = 0$, the factor $s - a$ in the numerator of $\\hat{g}$ cancels it and $e^{at}$ disappears from $y(t)$.\n\nTo find an input for a desired output, divide: $\\hat{u} = \\hat{y}/\\hat{g}$. Reduce $\\hat{g}$ to lowest terms first, and do not be surprised by an impulse $\\delta(t)$ in the answer when the quotient is not strictly proper."
+          "text": "Questions on this section ask why a certain input leaves no trace in the output, or which input produces a given output. Think in the Laplace domain: $\\hat{y}(s) = \\hat{g}(s)\\hat{u}(s)$, and after partial fractions every pole $p$ of $\\hat{y}$ gives a term $e^{pt}$ (or $t^ke^{pt}$) in $y(t)$. An input $e^{at}$ has $\\hat{u}(s) = \\frac{1}{s - a}$, so it brings the pole $s = a$. If $\\hat{g}(a) = 0$ ($a$ is a zero of $\\hat{g}$), the factor $s - a$ in the numerator of $\\hat{g}$ cancels that pole, and $e^{at}$ does not appear in $y(t)$.\n\nTo find an input for a desired output, divide: $\\hat{u} = \\hat{y}/\\hat{g}$. Reduce $\\hat{g}$ to lowest terms first, and do not be surprised by an impulse $\\delta(t)$ in the answer when the quotient is not strictly proper."
         },
         {
           "type": "insight",
@@ -30781,7 +30781,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "Response questions are bookkeeping. Keep the zero-input part $C(sI - A)^{-1}\\mathbf{x}(0)$ and the zero-state part $\\hat{g}(s)\\hat{u}(s)$ separate, compute each with partial fractions, and add. When $A$ is block diagonal or in Jordan form, invert $sI - A$ block by block instead of as a whole.\n\nIf a realization with fewer states is asked next, look for a cancellation in $\\hat{g}(s)$: every eigenvalue of $A$ that cancels can be removed, and the controllable canonical form of the reduced $\\hat{g}$ is the smaller realization. Check $y(0) = C\\mathbf{x}(0)$ and, for a Hurwitz $A$, $y(\\infty) = \\hat{g}(0)$."
+          "text": "In response questions, keep the zero-input part $C(sI - A)^{-1}\\mathbf{x}(0)$ and the zero-state part $\\hat{g}(s)\\hat{u}(s)$ separate, compute each with partial fractions, and add. When $A$ is block diagonal or in Jordan form, invert $sI - A$ block by block instead of as a whole.\n\nIf a realization with fewer states is asked next, look for a common factor of the numerator and the denominator of $\\hat{g}(s)$: each eigenvalue of $A$ that cancels this way can be removed, and the controllable canonical form (LST 05) of the reduced $\\hat{g}$ is the smaller realization. Check $y(0) = C\\mathbf{x}(0)$ and, when all eigenvalues of $A$ have negative real parts, the final value $y(\\infty) = \\hat{g}(0)$ for a unit step."
         },
         {
           "type": "insight",
@@ -31172,7 +31172,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "When an exam defines a new notion built like a basis (for instance a set whose combinations with nonnegative coefficients give every vector), reuse the structure of the basis proofs. Show the spanning half by constructing the coefficients for an arbitrary $\\mathbf{x}$, and the independence half by assuming that one vector of the set is an allowed combination of the others and reaching a contradiction. Only the restriction on the coefficients is new, so watch where it is used: with nonnegative coefficients, the signs of the entries of $\\mathbf{x}$ decide the construction."
+          "text": "When an exam defines a new notion built like a basis (for instance a set whose combinations with nonnegative coefficients give every vector), reuse the structure of the basis proofs. Show the spanning half by constructing the coefficients for an arbitrary $\\mathbf{x}$, and the independence half by assuming that one vector of the set is a combination of the others with coefficients of the permitted kind, and reaching a contradiction. Only the restriction on the coefficients is new, so watch where it is used: with nonnegative coefficients, the signs of the entries of $\\mathbf{x}$ decide the construction."
         },
         {
           "type": "insight",
@@ -31231,7 +31231,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "Questions here ask to complete one or two given unit vectors to an orthogonal matrix, or to build an orthonormal set of eigenvectors. The given unit vectors are the first outputs $\\mathbf{u}_1, \\ldots$ of Gram-Schmidt. The remaining input vectors are not given: you choose them, and any vector outside the span of the vectors already produced works; natural basis vectors $\\mathbf{e}_i$ keep the arithmetic short.\n\nEach step is the same: subtract from the new vector its projections $(\\mathbf{u}_k^T\\mathbf{v})\\mathbf{u}_k$ onto the vectors already produced, then normalize. For a symmetric matrix, eigenvectors of different eigenvalues are already orthogonal, so Gram-Schmidt is needed only inside the eigenspace of a repeated eigenvalue. Finish by checking $U^TU = I$."
+          "text": "Questions here ask to complete one or two given unit vectors to an orthogonal matrix, or to build an orthonormal set of eigenvectors. In the notation of this section, Gram-Schmidt turns vectors $\\mathbf{v}_1, \\mathbf{v}_2, \\ldots$ into orthonormal $\\mathbf{u}_1, \\mathbf{u}_2, \\ldots$; a given unit vector simply plays the role of $\\mathbf{u}_1$. The other $\\mathbf{v}$'s are not given, so you choose them: any vector outside the span of the $\\mathbf{u}$'s already obtained works, and natural basis vectors $\\mathbf{e}_i$ keep the arithmetic short.\n\nEach step is the same: subtract from the new $\\mathbf{v}$ its projections $(\\mathbf{u}_k^T\\mathbf{v})\\mathbf{u}_k$ onto the $\\mathbf{u}$'s already obtained, then normalize. For a symmetric matrix, eigenvectors of different eigenvalues are already orthogonal, so Gram-Schmidt is needed only among the eigenvectors of a repeated eigenvalue, i.e. inside $\\mathcal{N}(A - \\lambda I)$. Finish by putting the $\\mathbf{u}$'s as the columns of $U$ and checking $U^TU = I$."
         },
         {
           "type": "insight",
@@ -31282,7 +31282,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "For a claimed inequality between ranks or nullities, test small diagonal matrices first: $\\operatorname{diag}(1, 0)$ and $\\operatorname{diag}(0, 1)$ each have nullity 1, but their sum $I$ has nullity 0, which already disproves many claims. True statements are proved with rank-nullity or with inclusions between ranges and null spaces.\n\nTo prove that a square matrix $B$ is nonsingular, use that nonsingular means $\\nu(B) = 0$: assume $B\\mathbf{x} = \\mathbf{0}$ and show $\\mathbf{x} = \\mathbf{0}$. Split $B\\mathbf{x} = \\mathbf{0}$ into the equations of its blocks and use the given condition on ranges and null spaces. A recurring step: a vector lying both in $\\mathcal{R}(M^T)$ and in $\\mathcal{N}(M)$ is zero, because $\\mathbf{x} = M^T\\mathbf{v}$ and $M\\mathbf{x} = \\mathbf{0}$ give $\\|\\mathbf{x}\\|^2 = \\mathbf{v}^TM\\mathbf{x} = 0$.\n\nFor bases of null spaces and ranges of a matrix with parameters, row reduce but divide only by expressions known to be nonzero, and treat the parameter values that make a pivot vanish as a separate case. The number of free parameters in the solutions of $A\\mathbf{x} = \\mathbf{y}$ is $\\nu(A) = n - r(A)$."
+          "text": "For a claimed inequality between ranks or nullities, test small diagonal matrices first: $\\operatorname{diag}(1, 0)$ and $\\operatorname{diag}(0, 1)$ each have nullity 1, but their sum $I$ has nullity 0, which already disproves many claims. True statements are proved with rank-nullity or with inclusions of subspaces, for example $\\mathcal{R}(A + B) \\subseteq \\mathcal{R}(A) + \\mathcal{R}(B)$, which gives $r(A + B) \\leq r(A) + r(B)$.\n\nTo prove that a square matrix $B$ is nonsingular, use that nonsingular means $\\nu(B) = 0$: assume $B\\mathbf{x} = \\mathbf{0}$ and show $\\mathbf{x} = \\mathbf{0}$. When $B$ is given in blocks, e.g. $B = \\begin{bsmallmatrix} B_1 \\\\ B_2 \\end{bsmallmatrix}$, $B\\mathbf{x} = \\mathbf{0}$ means $B_1\\mathbf{x} = \\mathbf{0}$ and $B_2\\mathbf{x} = \\mathbf{0}$; combine these with the given condition on ranges and null spaces. A recurring step: for any matrix $M$, a vector lying both in $\\mathcal{R}(M^T)$ and in $\\mathcal{N}(M)$ is zero, because $\\mathbf{x} = M^T\\mathbf{v}$ and $M\\mathbf{x} = \\mathbf{0}$ give $\\|\\mathbf{x}\\|^2 = \\mathbf{v}^TM\\mathbf{x} = 0$.\n\nFor bases of null spaces and ranges of a matrix with parameters, row reduce but divide only by expressions known to be nonzero, and treat the parameter values that make a pivot vanish as a separate case. The number of free parameters in the solutions of $A\\mathbf{x} = \\mathbf{y}$ is $\\nu(A) = n - r(A)$."
         },
         {
           "type": "insight",
@@ -31313,7 +31313,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "The minimum-norm solution of $A\\mathbf{x} = \\mathbf{y}$ is the solution orthogonal to $\\mathcal{N}(A)$: among all $\\mathbf{x}_p$ plus null-space vectors, the shortest is the one with no part in the null space. Write the general solution, then either minimize $\\|\\mathbf{x}\\|^2$ over the free parameters or impose $\\mathbf{n}_i^T\\mathbf{x} = 0$ for each basis vector of $\\mathcal{N}(A)$; both give the same small linear system. Check $A\\mathbf{x} = \\mathbf{y}$ at the end."
+          "text": "The minimum-norm solution of $A\\mathbf{x} = \\mathbf{y}$ is the solution orthogonal to $\\mathcal{N}(A)$: among all solutions $\\mathbf{x}_p + \\mathbf{n}$ ($\\mathbf{n} \\in \\mathcal{N}(A)$), the shortest is the one orthogonal to every vector of $\\mathcal{N}(A)$. Write the general solution, then either minimize $\\|\\mathbf{x}\\|^2$ over the free parameters or impose $\\mathbf{n}_i^T\\mathbf{x} = 0$ for each basis vector of $\\mathcal{N}(A)$; both give the same small linear system. Check $A\\mathbf{x} = \\mathbf{y}$ at the end."
         },
         {
           "type": "insight",
@@ -31416,7 +31416,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "Prove-or-disprove questions about eigenvalues are usually settled by a tiny example. Keep four in mind: $I$ (repeated eigenvalue, yet diagonal), $\\begin{bsmallmatrix} 0 & 1 \\\\ 0 & 0 \\end{bsmallmatrix}$ (repeated eigenvalue, not diagonalizable), $\\begin{bsmallmatrix} 0 & -1 \\\\ 1 & 0 \\end{bsmallmatrix}$ (no real eigenvalues), and a diagonal matrix with distinct entries.\n\nFor a matrix with special structure, use the structure instead of expanding $\\Delta(\\lambda)$: symmetry gives real eigenvalues and diagonalizability, $P^2 = I$ gives eigenvalues $\\pm 1$, and the multiplicities are the nullities $\\nu(P - I)$ and $\\nu(P + I)$."
+          "text": "Prove-or-disprove questions about eigenvalues are usually settled by a tiny example. Keep four in mind: $I$ (repeated eigenvalue, yet diagonal), $\\begin{bsmallmatrix} 0 & 1 \\\\ 0 & 0 \\end{bsmallmatrix}$ (repeated eigenvalue, not diagonalizable), $\\begin{bsmallmatrix} 0 & -1 \\\\ 1 & 0 \\end{bsmallmatrix}$ (no real eigenvalues), and a diagonal matrix with distinct entries.\n\nFor a matrix with special structure, use the structure instead of expanding $\\Delta(\\lambda)$. If the matrix is symmetric, its eigenvalues are real and it is diagonalizable (LST 04). If it satisfies $P^2 = I$ (for example the exchange matrix, with 1's on the anti-diagonal), then $P\\mathbf{v} = \\lambda\\mathbf{v}$ gives $\\mathbf{v} = \\lambda^2\\mathbf{v}$, so $\\lambda = \\pm 1$, and the multiplicities are the nullities $\\nu(P - I)$ and $\\nu(P + I)$."
         },
         {
           "type": "insight",
@@ -31443,7 +31443,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "The nullities $\\nu((A - \\lambda I)^k)$ grow, from one power to the next, by the number of Jordan blocks of $\\lambda$ of size at least $k$, and stop growing at the multiplicity $n_i$. So $\\nu(A - \\lambda I) < \\nu((A - \\lambda I)^2)$ holds exactly when $\\lambda$ has a block of size 2 or more; for a diagonalizable matrix all these nullities are equal, which is the counterexample to claims that they always increase."
+          "text": "The nullities $\\nu((A - \\lambda I)^k)$ grow, from one power to the next, by the number of Jordan blocks of $\\lambda$ of size at least $k$, and stop growing once they reach $n_i$, the multiplicity of $\\lambda$. So $\\nu(A - \\lambda I) < \\nu((A - \\lambda I)^2)$ holds exactly when $\\lambda$ has a block of size 2 or more; for a diagonalizable matrix all these nullities are equal, which is the counterexample to claims that they always increase."
         },
         {
           "type": "insight",
@@ -31506,7 +31506,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "Jordan form questions are decided by numbers before any vector is computed: $n_i$ (from $\\Delta$) is the total size of the blocks of $\\lambda_i$, $\\nu_i = n - r(A - \\lambda_iI)$ is their number, and the nullities of the powers of $A - \\lambda_iI$ give their sizes. Compute these first. Only then build $Q$ from chains, starting each chain at its top vector (grade equal to the block size) and applying $A - \\lambda_iI$ down to the eigenvector.\n\nWhen the matrix contains a parameter, the eigenvalues often do not depend on it but $\\nu_i$ does: find the parameter values where $r(A - \\lambda_iI)$ drops and describe what changes there (one more eigenvector, a block splitting, a different $Q$). When only some of $n_i$, $m_i$, $\\nu_i$ are given, list the ways to split $n_i$ into $\\nu_i$ blocks with largest block $m_i$. Check the result with $AQ = QJ_A$ rather than by inverting $Q$."
+          "text": "Jordan form questions are decided by numbers before any vector is computed: $n_i$ (from $\\Delta$) is the total size of the blocks of $\\lambda_i$, $\\nu_i = n - r(A - \\lambda_iI)$ is their number, and the nullities of the powers of $A - \\lambda_iI$ give their sizes. Compute these first. Only then build $Q$ from chains, starting each chain at its top vector (grade equal to the block size) and applying $A - \\lambda_iI$ down to the eigenvector.\n\nWhen the matrix contains a parameter, the eigenvalues often do not depend on it but $\\nu_i$ does: find the parameter values where $r(A - \\lambda_iI)$ drops and describe what changes there (one more eigenvector, a block splitting, a different $Q$). When only some of $n_i$, $m_i$ (the size of the largest block, called the index in LST 04) and $\\nu_i$ are given, list the ways to split $n_i$ into $\\nu_i$ blocks with largest block $m_i$. Check the result with $AQ = QJ_A$ rather than by inverting $Q$."
         },
         {
           "type": "insight",
@@ -31902,7 +31902,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "Both the uniqueness of the minimal polynomial and the equality $\\Psi = \\Delta$ for companion matrices are degree arguments. If two monic annihilating polynomials of least degree existed, their difference would annihilate $A$ and have smaller degree, so it is zero. For a companion matrix (1's above the diagonal), no nonzero polynomial of degree below $n$ annihilates $A$: the first row of $A^k$ is $\\mathbf{e}_{k+1}^T$ for $k < n$, so the first row of $m(A)$ simply lists the coefficients of $m$."
+          "text": "Both the uniqueness of the minimal polynomial and the equality $\\Psi = \\Delta$ for companion matrices are degree arguments. (\"Annihilates $A$\" means $p(A) = 0$.) If two monic polynomials of the least degree both annihilated $A$, their difference would annihilate $A$ and have smaller degree, so it must be the zero polynomial. For a companion matrix with 1's above the diagonal, no nonzero polynomial of degree below $n$ annihilates $A$: the first row of $A^k$ is $\\mathbf{e}_{k+1}^T$ (the natural basis vector with a 1 in position $k + 1$) for $k < n$, so the first row of $m(A)$ is the list of coefficients of $m$, which is zero only if $m = 0$."
         },
         {
           "type": "text",
@@ -31944,7 +31944,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "For any $f(A)$, think \"only the eigenvalues matter\": $f(A) = h(A)$ for the polynomial $h$ of degree $n - 1$ that agrees with $f$ at the eigenvalues, and with $f'$, $f''$, ... at repeated ones. Set up these conditions, solve for the coefficients of $h$, and evaluate. When $f(A)$ is asked \"as a product of three matrices\", give $Qf(J_A)Q^{-1}$ with $f(J_A)$ written from the Jordan block formula, and do not multiply.\n\nQuestions on $\\ln A$, $\\sqrt{A}$ or $e^B = C$ are really about assumptions. A power-series definition needs every eigenvalue inside the disc of convergence; the interpolation definition needs $f$ and its derivatives to exist at the eigenvalues. So the logarithm needs nonzero eigenvalues (real positive ones for a real logarithm), and $e^B = C$ needs $C$ nonsingular, because $\\det e^B = e^{\\operatorname{tr}B}$ is never zero. When $f$ contains $t$, differentiate with respect to $\\lambda$, and check the answer with the defining identity, $(\\sqrt{A})^2 = A$ or $e^{\\ln A} = A$."
+          "text": "For any $f(A)$, think \"only the eigenvalues matter\": $f(A) = h(A)$ for the polynomial $h$ of degree $n - 1$ that agrees with $f$ at the eigenvalues, and with $f'$, $f''$, ... at repeated ones. Set up these conditions, solve for the coefficients of $h$, and evaluate. When $f(A)$ is asked \"as a product of three matrices\", give $Qf(J_A)Q^{-1}$ with $f(J_A)$ written from the Jordan block formula of section 7, and do not multiply.\n\nQuestions on $\\ln A$, $\\sqrt{A}$ or $e^B = C$ are really about assumptions. A power-series definition (section 8) needs every eigenvalue inside the disc $|\\lambda - a| < \\rho$ where the series converges; the interpolation definition needs $f$ and its derivatives to exist at the eigenvalues. So the logarithm needs nonzero eigenvalues (real positive ones for a real logarithm), and $e^B = C$ needs $C$ nonsingular, because $\\det e^B = e^{\\operatorname{tr}B}$ is never zero. When $f$ contains $t$, differentiate with respect to $\\lambda$, and check the answer with the defining identity, $(\\sqrt{A})^2 = A$ or $e^{\\ln A} = A$."
         },
         {
           "type": "insight",
@@ -32029,7 +32029,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "The scalar rule $e^{a + b} = e^ae^b$ relies on $ab = ba$, and that is the whole story for matrices. A counterexample needs two matrices that do not commute; nilpotent ones such as $\\begin{bsmallmatrix} 0 & 1 \\\\ 0 & 0 \\end{bsmallmatrix}$ and $\\begin{bsmallmatrix} 0 & 0 \\\\ 1 & 0 \\end{bsmallmatrix}$ keep the exponentials as simple as $I + At$. A proof needs $AB = BA$: then $e^{At}e^{Bt}$ and $e^{(A + B)t}$ both solve $\\dot{X} = (A + B)X$ with $X(0) = I$, so they coincide. State the assumption as broadly as the question allows."
+          "text": "The scalar rule $e^{a + b} = e^ae^b$ relies on $ab = ba$, and that is the whole story for matrices. A counterexample needs two matrices that do not commute; nilpotent ones ($A^2 = 0$) such as $\\begin{bsmallmatrix} 0 & 1 \\\\ 0 & 0 \\end{bsmallmatrix}$ and $\\begin{bsmallmatrix} 0 & 0 \\\\ 1 & 0 \\end{bsmallmatrix}$ keep the exponentials as simple as $I + At$. A proof needs $AB = BA$: then $e^{At}e^{Bt}$ and $e^{(A + B)t}$ both solve $\\dot{X} = (A + B)X$ with $X(0) = I$, so they coincide. State the assumption as broadly as the question allows."
         },
         {
           "type": "insight",
@@ -32050,7 +32050,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "In quadratic-form questions only the symmetric part counts: $\\mathbf{x}^TA\\mathbf{x} = \\mathbf{x}^T\\frac{A + A^T}{2}\\mathbf{x}$. Build $M$ by putting the coefficients of $x_i^2$ on the diagonal and half the coefficients of $x_ix_j$ off the diagonal. Diagonalizing $M$ with an orthogonal $Q$ is the same as completing the square: with $\\mathbf{z} = Q^T\\mathbf{x}$, $\\mathbf{x}^TM\\mathbf{x} = \\sum\\lambda_iz_i^2$.\n\nThis also gives sign arguments: if some nonzero $\\mathbf{x}$ makes $\\mathbf{x}^T(A + A^T)\\mathbf{x} = 0$, the eigenvalues of $A + A^T$ cannot all be strictly positive, nor all strictly negative."
+          "text": "In quadratic-form questions only the symmetric part counts: $\\mathbf{x}^TA\\mathbf{x} = \\mathbf{x}^T\\frac{A + A^T}{2}\\mathbf{x}$. Build $M$ by putting the coefficients of $x_i^2$ on the diagonal and half the coefficients of $x_ix_j$ off the diagonal. Diagonalizing $M$ with an orthogonal $Q$ is the same as completing the square: with $\\mathbf{z} = Q^T\\mathbf{x}$, $\\mathbf{x}^TM\\mathbf{x} = \\sum\\lambda_iz_i^2$.\n\nThis gives a quick argument about the signs of eigenvalues: if some nonzero $\\mathbf{x}$ makes $\\mathbf{x}^T(A + A^T)\\mathbf{x} = 0$, the eigenvalues of $A + A^T$ cannot all be strictly positive, nor all strictly negative."
         },
         {
           "type": "insight",
@@ -32135,7 +32135,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "$\\kappa = \\sigma_1/\\sigma_n$ compares the largest and the smallest stretching of a matrix; it is at least 1, and equals 1 exactly for a multiple of an orthogonal matrix. With a parameter, compute the eigenvalues of $H^TH$, minimize $\\kappa^2 = \\lambda_{\\max}/\\lambda_{\\min}$, and at $\\kappa = 1$ write the SVD down directly. When asked what a large $\\kappa$ means: relative errors in $\\mathbf{b}$ can be amplified up to $\\kappa$ times in the solution of $H\\mathbf{x} = \\mathbf{b}$."
+          "text": "$\\kappa = \\sigma_1/\\sigma_n$ is the ratio of the largest to the smallest singular value; it is at least 1, and equals 1 exactly for a multiple of an orthogonal matrix. With a parameter, compute the eigenvalues of $H^TH$, minimize $\\kappa^2 = \\lambda_{\\max}/\\lambda_{\\min}$, and at $\\kappa = 1$ write the SVD down directly. When asked what a large $\\kappa$ means: relative errors in $\\mathbf{b}$ can be amplified up to $\\kappa$ times in the solution of $H\\mathbf{x} = \\mathbf{b}$."
         },
         {
           "type": "insight",
@@ -32473,7 +32473,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "For $\\mathbf{x}(t)$ under a step or impulse input, keep the zero-input and zero-state parts apart and use partial fractions entry by entry. To judge a drawn trajectory, use three facts: it must start at $\\mathbf{x}(0)$; with a Hurwitz $A$ and a constant input $u_0$ it must approach the equilibrium $-A^{-1}Bu_0$; and with only real eigenvalues there are no oscillations, so a curve that keeps circling cannot be right."
+          "text": "For $\\mathbf{x}(t)$ under a step or impulse input, keep the zero-input and zero-state parts apart and use partial fractions entry by entry. To judge a drawn trajectory, use three facts: it must start at $\\mathbf{x}(0)$; when all eigenvalues of $A$ have negative real parts and the input is a constant $u_0$, it must approach the equilibrium, the state where $\\dot{\\mathbf{x}} = \\mathbf{0}$, i.e. $-A^{-1}Bu_0$; and with only real eigenvalues there are no oscillations, so a curve that keeps circling cannot be right."
         },
         {
           "type": "insight",
@@ -32587,7 +32587,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "A realization that is both controllable and observable is minimal, and the controllable canonical form is minimal exactly when the numerator and the denominator of $\\hat{g}$ have no common root. So cancel common factors before writing it. Fix the companion convention (coefficients in the first or in the last row) and keep it, because the state-feedback gain read off later depends on it. For a $1 \\times p$ transfer matrix, realize the transposed column with the block companion form, transpose the result, and then check controllability."
+          "text": "A realization that is both controllable and observable is minimal, i.e. has the fewest states (LST 07), and the controllable canonical form is minimal exactly when the numerator and the denominator of $\\hat{g}$ have no common root. So cancel common factors before writing it. Fix the companion convention (coefficients in the first or in the last row) and keep it, because the state-feedback gain read off later depends on it. For a $1 \\times p$ transfer matrix, realize the transposed column with the block companion form, transpose the result, and then check controllability."
         },
         {
           "type": "insight",
@@ -32608,7 +32608,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "A state trajectory of an LTI system with zero or constant input cannot cross itself. The right-hand side $A\\mathbf{x} + Bu_0$ depends only on the state, so the continuation from any point is unique (Fact 1), and a trajectory that returns to a point must repeat the same path. Use this to reject drawn curves with self-crossings. The argument does not hold for time-varying systems, where the same point can be passed at different times with different velocities."
+          "text": "A state trajectory of an LTI system with zero or constant input cannot cross itself. The right-hand side $A\\mathbf{x} + Bu_0$ depends only on the state, so the continuation from any point is unique (existence and uniqueness, section 14), and a trajectory that returns to a point must repeat the same path. Use this to reject drawn curves with self-crossings. The argument does not hold for time-varying systems, where the same point can be passed at two different times with two different values of $\\dot{\\mathbf{x}}$."
         },
         {
           "type": "insight",
@@ -32640,7 +32640,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "For a triangular $A(t)$, solve the decoupled equation first and substitute upward; $\\Phi(t, t_0)$ is the coefficient matrix of $\\mathbf{x}(t_0)$. A transformation making $\\hat{A} = 0$ is $P = X(t)^{-1}$ for a fundamental matrix $X(t)$ (in these coordinates every free solution is constant), and one making $\\hat{A}$ a constant $\\bar{A}$ is $e^{\\bar{A}t}X(t)^{-1}$. Such questions often continue with \"is this a Lyapunov transformation?\": check whether $P(t)$ and $P(t)^{-1}$ stay bounded."
+          "text": "For a triangular $A(t)$, first solve the equation that contains only one state, then substitute it into the next one; $\\Phi(t, t_0)$ is the coefficient matrix of $\\mathbf{x}(t_0)$. A transformation making $\\hat{A} = 0$ is $P = X(t)^{-1}$ for a fundamental matrix $X(t)$ (in these coordinates every solution with zero input is constant), and one making $\\hat{A}$ a constant $\\bar{A}$ is $e^{\\bar{A}t}X(t)^{-1}$. Such questions often continue with \"is this a Lyapunov transformation?\": check whether $P(t)$ and $P(t)^{-1}$ stay bounded."
         },
         {
           "type": "insight",
@@ -32991,7 +32991,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "Keep two questions apart. An uncontrollable combination $\\tilde{x} = \\mathbf{v}^T\\mathbf{x}$ (with $\\mathbf{v}^T$ a left eigenvector of $A$ orthogonal to $B$) obeys $\\dot{\\tilde{x}} = \\lambda\\tilde{x}$ regardless of the input, so whether it tends to zero depends only on that $\\lambda$. The stability of the reduced controllable part depends only on the eigenvalues of $\\hat{A}_c$. One can decay while the other grows; asymptotic stability of the whole system needs all eigenvalues of $A$ in the open left half-plane."
+          "text": "Keep two questions apart (the controllability terms are from LST 07). An uncontrollable combination of states $\\tilde{x} = \\mathbf{v}^T\\mathbf{x}$, with $\\mathbf{v}^TA = \\lambda\\mathbf{v}^T$ (a left eigenvector) and $\\mathbf{v}^TB = \\mathbf{0}^T$, obeys $\\dot{\\tilde{x}} = \\lambda\\tilde{x}$ regardless of the input, so whether it tends to zero depends only on that $\\lambda$. The stability of the reduced controllable part $(\\hat{A}_c, \\hat{B}_c)$ depends only on the eigenvalues of $\\hat{A}_c$. One can decay while the other grows; asymptotic stability of the whole system needs all eigenvalues of $A$ in the open left half-plane."
         },
         {
           "type": "insight",
@@ -33495,7 +33495,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "For LTV controllability the Gramian $W_c(t_0, t_1)$ decides, and $\\mathbf{u}(t) = -B^T(t)\\Phi^T(t_1, t)W_c^{-1}(t_0, t_1)\\Phi(t_1, t_0)\\mathbf{x}_0$ steers $\\mathbf{x}_0$ to the origin. When asked whether a constant input can do the same, solve the state equation with $\\mathbf{u} = u_0$ explicitly. A state component that evolves independently of the input can never be steered to zero (unless it starts there), and this also proves uncontrollability. The rank test with $M_k$ is only sufficient, and the answer depends on $t_0$."
+          "text": "For LTV controllability the Gramian $W_c(t_0, t_1)$ decides, and $\\mathbf{u}(t) = -B^T(t)\\Phi^T(t_1, t)W_c^{-1}(t_0, t_1)\\Phi(t_1, t_0)\\mathbf{x}_0$ steers $\\mathbf{x}_0$ to the origin. When asked whether a constant input can do the same, solve the state equation with $\\mathbf{u} = u_0$ explicitly. A state component that evolves independently of the input can never be steered to zero (unless it starts there), and this also proves uncontrollability. The rank test with the matrices $M_k$ of section 12 is only sufficient, and the answer depends on $t_0$."
         },
         {
           "type": "insight",
@@ -33536,7 +33536,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "For LTV observability the $N_k$ rank test can only prove observability. If it fails, look at the columns of $C(t)\\Phi(t, t_0)$ as functions of $t$: linearly independent functions mean observable, proportional ones mean not observable. With parameters in $C$, find the parameter values that make these functions dependent."
+          "text": "For LTV observability the rank test with the matrices $N_k$ (Theorem 6) can only prove observability. If it fails, look at the columns of $C(t)\\Phi(t, t_0)$ as functions of $t$: linearly independent functions mean observable, proportional ones mean not observable. With parameters in $C$, find the parameter values that make these functions dependent."
         },
         {
           "type": "insight",
@@ -33811,7 +33811,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "Pole placement with one input is linear algebra: the coefficients of $\\det(sI - A + \\mathbf{b}\\mathbf{k}^T)$ are linear in the entries of $\\mathbf{k}$, so matching them with the desired polynomial gives $n$ linear equations, uniquely solvable when $(A, \\mathbf{b})$ is controllable. In companion form the gain is read off as a difference of coefficient vectors, in the order of your convention.\n\nUniqueness of $\\mathbf{k}$ follows by comparing $\\mathbf{k}^T(sI - A)^{-1}\\mathbf{b}$ for two gains that give the same polynomial: expanding in powers of $s^{-1}$ gives $(\\mathbf{k}_1 - \\mathbf{k}_2)^T\\mathcal{C} = \\mathbf{0}^T$, and $\\mathcal{C}$ is nonsingular."
+          "text": "Pole placement with one input is linear algebra: the coefficients of $\\det(sI - A + \\mathbf{b}\\mathbf{k}^T)$ are linear in the entries of $\\mathbf{k}$, so matching them with the desired polynomial gives $n$ linear equations, uniquely solvable when $(A, \\mathbf{b})$ is controllable. If $(A, \\mathbf{b})$ is already in the companion form of section 2, the gain is read off as the difference of the coefficient vectors of the desired and the present characteristic polynomial, in the order of your convention.\n\nUniqueness of $\\mathbf{k}$ follows by comparing $\\mathbf{k}^T(sI - A)^{-1}\\mathbf{b}$ for two gains that give the same polynomial: expanding in powers of $s^{-1}$ gives $(\\mathbf{k}_1 - \\mathbf{k}_2)^T\\mathcal{C} = \\mathbf{0}^T$, and $\\mathcal{C}$ is nonsingular."
         },
         {
           "type": "insight",
@@ -33842,7 +33842,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "With several inputs, reduce to one. If $A$ is cyclic, almost any mixing vector $\\mathbf{v}$ makes $(A, B\\mathbf{v})$ controllable; if not, first apply a simple $K_0$ that makes $A - BK_0$ cyclic. Place the poles of the single-input pair $(A - BK_0, B\\mathbf{v})$ and combine, $K = K_0 + \\mathbf{v}\\mathbf{k}^T$. The gain is not unique, so choose $K_0$ and $\\mathbf{v}$ to keep the arithmetic short. For several outputs, apply the same steps to the dual pair."
+          "text": "With several inputs, reduce to one: drive all inputs by one scalar signal through a fixed vector $\\mathbf{v}$, so that $B$ is replaced by the single column $B\\mathbf{v}$. If $A$ is cyclic, almost any $\\mathbf{v}$ makes $(A, B\\mathbf{v})$ controllable; if not, first apply a simple $K_0$ that makes $A - BK_0$ cyclic. Place the poles of the single-input pair $(A - BK_0, B\\mathbf{v})$ and combine, $K = K_0 + \\mathbf{v}\\mathbf{k}^T$. The gain is not unique, so choose $K_0$ and $\\mathbf{v}$ to keep the arithmetic short. For several outputs, apply the same steps to the dual pair."
         },
         {
           "type": "insight",
@@ -33998,7 +33998,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "Output-feedback design is degree bookkeeping on $qd + pn = \\sigma$. The Bezout polynomials $x$, $y$ and one Euclidean division of $y\\sigma$ by $q$ give $n$ and $d$, and the degree of $\\sigma$ fixes the order of the controller: $2\\deg q$ in the general construction, one less for a strictly proper plant. For a low-order design by coefficient matching, write the controller with unknown coefficients and equate $qd + pn$ with $\\sigma$. Always verify $qd + pn = \\sigma$ at the end."
+          "text": "Output-feedback design works with the plant $G = p/q$, the controller $K = n/d$ (all four are polynomials) and the closed-loop polynomial $qd + pn$, which must equal a chosen Hurwitz $\\sigma$. The Bezout polynomials $x$, $y$ with $qx + py = 1$ (section 13) and one Euclidean division of $y\\sigma$ by $q$ give $n$ and $d$, and the degree of $\\sigma$ fixes the order of the controller: $2\\deg q$ in the general construction, one less for a strictly proper plant. For a low-order design by coefficient matching, write the controller with unknown coefficients and equate $qd + pn$ with $\\sigma$. Always verify $qd + pn = \\sigma$ at the end."
         },
         {
           "type": "insight",
