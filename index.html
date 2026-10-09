@@ -869,6 +869,22 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
     <span class="nav-icon">∑</span><span class="nav-num">04</span>
     <span class="nav-label">Linear Algebra II: Functions of a Matrix, SVD</span>
   </button>
+  <button class="nav-btn" data-sec="lst05" onclick="switchSection('lst05');closeSidebar()">
+    <span class="nav-icon">📐</span><span class="nav-num">05</span>
+    <span class="nav-label">Solution, Equivalence, Realization</span>
+  </button>
+  <button class="nav-btn" data-sec="lst06" onclick="switchSection('lst06');closeSidebar()">
+    <span class="nav-icon">🛡</span><span class="nav-num">06</span>
+    <span class="nav-label">Stability</span>
+  </button>
+  <button class="nav-btn" data-sec="lst07" onclick="switchSection('lst07');closeSidebar()">
+    <span class="nav-icon">🎯</span><span class="nav-num">07</span>
+    <span class="nav-label">Controllability and Observability</span>
+  </button>
+  <button class="nav-btn" data-sec="lst08" onclick="switchSection('lst08');closeSidebar()">
+    <span class="nav-icon">🔁</span><span class="nav-num">08</span>
+    <span class="nav-label">State Feedback, Observers, Stabilization</span>
+  </button>
 
   <div class="course-divider">Stanford CS231n</div>
   <button class="nav-btn" data-sec="cs01" onclick="switchSection('cs01');closeSidebar()">
@@ -1441,6 +1457,22 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
   <div id="hdr-lst04" class="section-header">
     <div class="hdr-title">LST · 04 — Linear Algebra II: Functions of a Matrix, SVD</div>
     <div class="hdr-sub">EEE 501, Bilkent (Özgüler) · Lecture Notes 4 — Cayley-Hamilton · minimal polynomial · f(A) · e^{At} · symmetric · p.d. · SVD</div>
+  </div>
+  <div id="hdr-lst05" class="section-header">
+    <div class="hdr-title">LST · 05 — Solution, Equivalence, Realization</div>
+    <div class="hdr-sub">EEE 501, Bilkent (Özgüler) · Lecture Notes 5 — LTI solution · equivalence · realization · LTV transition matrix · Lyapunov transformations</div>
+  </div>
+  <div id="hdr-lst06" class="section-header">
+    <div class="hdr-title">LST · 06 — Stability</div>
+    <div class="hdr-sub">EEE 501, Bilkent (Özgüler) · Lecture Notes 6-7 — BIBO · Lyapunov and asymptotic · Lyapunov equation · Routh · LTV stability</div>
+  </div>
+  <div id="hdr-lst07" class="section-header">
+    <div class="hdr-title">LST · 07 — Controllability and Observability</div>
+    <div class="hdr-sub">EEE 501, Bilkent (Özgüler) · Lecture Notes 6-7 — Gramians · rank and Hautus tests · duality · Kalman decomposition · LTV</div>
+  </div>
+  <div id="hdr-lst08" class="section-header">
+    <div class="hdr-title">LST · 08 — State Feedback, Observers, Stabilization</div>
+    <div class="hdr-sub">EEE 501, Bilkent (Özgüler) · Lecture Notes 8 — pole placement · stabilizability · observer · separation · fractional approach</div>
   </div>
 
   <!-- CS231n section headers -->
@@ -2835,7 +2867,7 @@ function applyData(d){
 }
 
 
-fetch('./data/unified.json?v=20261009094221')
+fetch('./data/unified.json?v=20261009101418')
   .then(r => { if(!r.ok) throw new Error(r.status); return r.json() })
   .then(applyData)
   .catch(() => {
