@@ -428,6 +428,8 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .sec-cmp-pts li::before{content:"·";position:absolute;left:0;color:var(--accent)}
 .sec-note-box{background:var(--sec-note-bg);border:1px solid var(--sec-note-border);border-radius:8px;padding:11px 14px}
 .sec-note-box .sec-text{font-size:15px;color:var(--sec-note-text)}
+.lst-exam{float:right;margin:2px 0 4px 10px;padding:2px 8px;border:1px solid var(--sec-insight-border);border-radius:8px;font-size:12px;font-weight:600;color:var(--sec-insight-text);background:var(--sec-insight-bg)}
+.lst-exam-star{font-size:18px;color:#d4a017;vertical-align:-2px}
 .sec-insight-box{background:var(--sec-insight-bg);border-left:3px solid var(--sec-insight-border);border-radius:0 8px 8px 0;padding:11px 14px}
 .sec-insight-box .sec-text{color:var(--sec-insight-text)}
 
@@ -2209,7 +2211,7 @@ function renderLst(sec){
       `<div class="wiki-article-meta"><span class="wiki-article-ctx">${esc(g.context||'')}</span></div></div>` +
       (g.summary ? `<p class="wiki-article-lead">${esc(g.summary)}</p>` : '') +
       `<div class="wiki-article-body">` +
-      g.sections.map((s,i) => `<div id="lst-${sec}-${i}">${renderSection(s)}</div>`).join('') + `</div>`;
+      g.sections.map((s,i) => `<div id="lst-${sec}-${i}">${s.exam?`<div class="lst-exam" title="asked in past exams"><span class="lst-exam-star">★</span> ${esc(s.exam)}</div>`:''}${renderSection(s)}</div>`).join('') + `</div>`;
     grid.appendChild(art);
   });
   if(typeof renderMathInElement === 'function'){
@@ -2867,7 +2869,7 @@ function applyData(d){
 }
 
 
-fetch('./data/unified.json?v=20261009152240')
+fetch('./data/unified.json?v=20261009160751')
   .then(r => { if(!r.ok) throw new Error(r.status); return r.json() })
   .then(applyData)
   .catch(() => {
