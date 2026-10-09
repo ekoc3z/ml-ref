@@ -31172,7 +31172,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "- A new definition in the exam (positive span, frame): copy the two basis proofs, spanning and independence, and change only the condition on the coefficients.\n- For nonnegative coefficients, split into cases by the signs of the entries of $\\mathbf{x}$.\n- \"The number of vectors is not unique\": two examples with different numbers of vectors are enough."
+          "text": "- Exams sometimes define a new notion similar to a basis, for example a set of vectors whose combinations with only nonnegative coefficients give every vector of $\\mathbf{R}^n$. Prove it like a basis: show that every vector can be written (spanning) and that no vector of the set is such a combination of the others (independence); only the condition on the coefficients is new.\n- For nonnegative coefficients, split into cases by the signs of the entries of $\\mathbf{x}$.\n- \"The number of vectors is not unique\": two examples with different numbers of vectors are enough."
         },
         {
           "type": "insight",
@@ -31313,7 +31313,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "- Minimum-norm solution: impose $\\mathbf{n}^T\\mathbf{x} = 0$ for the null-space vectors instead of minimizing $\\|\\mathbf{x}\\|^2$; it is quicker and gives the same answer.\n- Check $A\\mathbf{x} = \\mathbf{y}$ at the end."
+          "text": "- Exams also ask for the solution of $A\\mathbf{x} = \\mathbf{y}$ with the smallest length $\\|\\mathbf{x}\\|$, called the minimum-norm solution (not in the notes, but it uses only this section).\n- Start from the general solution of Theorem 2: $\\mathbf{x} = \\mathbf{x}_p + \\alpha\\mathbf{n}$ (one free parameter $\\alpha$, $\\mathbf{n}$ a basis vector of $\\mathcal{N}(A)$).\n- The shortest of these is the one orthogonal to $\\mathbf{n}$. So choose $\\alpha$ from the single equation $\\mathbf{n}^T(\\mathbf{x}_p + \\alpha\\mathbf{n}) = 0$. With two free parameters, impose this for both null-space basis vectors.\n- Check $A\\mathbf{x} = \\mathbf{y}$ at the end."
         },
         {
           "type": "insight",
@@ -31416,7 +31416,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "- Keep three counterexamples ready: $I$, $\\begin{bsmallmatrix} 0 & 1 \\\\ 0 & 0 \\end{bsmallmatrix}$, $\\begin{bsmallmatrix} 0 & -1 \\\\ 1 & 0 \\end{bsmallmatrix}$.\n- \"Diagonalizable only if the eigenvalues are distinct\": false, take $A = I$.\n- Structured matrix: symmetric means real eigenvalues and diagonalizable; $P^2 = I$ means eigenvalues $\\pm 1$, counted by $\\nu(P - I)$ and $\\nu(P + I)$. No need to expand $\\Delta(\\lambda)$."
+          "text": "- Keep three counterexamples ready: $I$, $\\begin{bsmallmatrix} 0 & 1 \\\\ 0 & 0 \\end{bsmallmatrix}$, $\\begin{bsmallmatrix} 0 & -1 \\\\ 1 & 0 \\end{bsmallmatrix}$.\n- \"Diagonalizable only if the eigenvalues are distinct\": false, take $A = I$.\n- If the matrix has a special form, use it instead of computing $\\Delta(\\lambda)$. Symmetric: eigenvalues are real and the matrix is diagonalizable. $P^2 = I$ (for example the exchange matrix, with 1's on the anti-diagonal): from $P\\mathbf{v} = \\lambda\\mathbf{v}$ follows $\\mathbf{v} = \\lambda^2\\mathbf{v}$, so $\\lambda = \\pm 1$, and the number of each is $\\nu(P - I)$ and $\\nu(P + I)$."
         },
         {
           "type": "insight",
@@ -32050,7 +32050,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "- Building $M$ from a quadratic form: off-diagonal entries are half the coefficient of $x_ix_j$.\n- \"Complete to squares\" means orthogonal diagonalization: $\\mathbf{z} = Q^T\\mathbf{x}$, $\\mathbf{x}^TM\\mathbf{x} = \\sum\\lambda_iz_i^2$.\n- If $\\mathbf{x}^TA\\mathbf{x} = 0$ for some $\\mathbf{x} \\neq \\mathbf{0}$, then $A + A^T$ cannot be positive definite or negative definite."
+          "text": "- Building $M$ from a quadratic form: off-diagonal entries are half the coefficient of $x_ix_j$.\n- \"Complete to squares\" means orthogonal diagonalization: $\\mathbf{z} = Q^T\\mathbf{x}$, $\\mathbf{x}^TM\\mathbf{x} = \\sum\\lambda_iz_i^2$.\n- Questions about the signs of the eigenvalues of $A + A^T$: note $\\mathbf{x}^T(A + A^T)\\mathbf{x} = 2\\mathbf{x}^TA\\mathbf{x}$. If $\\mathbf{x}^TA\\mathbf{x} = 0$ for some $\\mathbf{x} \\neq \\mathbf{0}$, then $A + A^T$ is neither positive definite nor negative definite."
         },
         {
           "type": "insight",
@@ -32473,7 +32473,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "- Judging a plotted trajectory: correct start $\\mathbf{x}(0)$, correct end $-A^{-1}Bu_0$ (stable $A$), no self-crossing, and spiralling only if the eigenvalues are complex.\n- Put $t = 0$ in your $\\mathbf{x}(t)$ to check it."
+          "text": "- Exams may draw a curve in the $(x_1, x_2)$-plane and ask whether it can be the state trajectory. Check: it starts at $\\mathbf{x}(0)$; for a constant input $u_0$ and eigenvalues with negative real parts it ends at the point where $\\dot{\\mathbf{x}} = \\mathbf{0}$, i.e. $-A^{-1}Bu_0$; it does not cross itself; it spirals only if $A$ has complex eigenvalues.\n- Put $t = 0$ in your $\\mathbf{x}(t)$ to check it."
         },
         {
           "type": "insight",
@@ -32640,7 +32640,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "- Triangular $A(t)$: solve the equation with one state first, then substitute.\n- $P(t)$ making $\\hat{A} = 0$: $P = X(t)^{-1}$.\n- Then check whether it is a Lyapunov transformation: are $P$ and $P^{-1}$ bounded?"
+          "text": "- Triangular $A(t)$: solve the equation with one state first, then substitute.\n- \"Find a transformation $\\hat{\\mathbf{x}} = P(t)\\mathbf{x}$ that makes the new $\\hat{A}(t)$ zero\": take $P = X(t)^{-1}$ with $X(t)$ a fundamental matrix (for example $\\Phi(t, t_0)$).\n- Then check whether it is a Lyapunov transformation: are $P$ and $P^{-1}$ bounded?"
         },
         {
           "type": "insight",
@@ -32991,7 +32991,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "- An uncontrollable combination $\\tilde{x}$ tends to zero iff its own eigenvalue is negative; nothing else matters for it.\n- \"Is the reduced pair asymptotically stable?\" and \"Does $\\tilde{x} \\to 0$?\" are different questions; answer them separately."
+          "text": "- Final exams combine this section with LST 07: after splitting the state into a controllable part and an uncontrollable part, they ask about the stability of each.\n- The uncontrollable part (a combination of states $\\tilde{x}$ that the input cannot affect, LST 07 section 9) evolves on its own as $e^{\\lambda t}\\tilde{x}(0)$; it tends to zero iff its eigenvalue $\\lambda$ is negative.\n- The controllable part has its own eigenvalues, those of $\\hat{A}_c$. \"Is the controllable part asymptotically stable?\" and \"Does $\\tilde{x} \\to 0$?\" are therefore different questions with possibly different answers."
         },
         {
           "type": "insight",
@@ -33396,7 +33396,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "- \"Determine $\\mathbf{x}(0)$ from the output\": $y(0)$, $\\dot{y}(0)$, $\\ddot{y}(0)$ give $\\mathcal{O}\\mathbf{x}(0)$; solve that system.\n- Zero output from $\\mathbf{x}_0$ means $\\mathbf{x}_0 \\in \\mathcal{N}(\\mathcal{O})$; this is the idea behind \"design an experiment\" questions."
+          "text": "- \"Determine $\\mathbf{x}(0)$ from the output\": $y(0)$, $\\dot{y}(0)$, $\\ddot{y}(0)$ give $\\mathcal{O}\\mathbf{x}(0)$; solve that system.\n- \"Design an experiment to decide whether $\\mathbf{x}(0)$ is of a certain kind\": apply $u = 0$ and look at $y$. The initial states that give $y(t) = 0$ for all $t$ are exactly those in $\\mathcal{N}(\\mathcal{O})$, so watching whether the output stays zero tells which kind you have."
         },
         {
           "type": "insight",
@@ -33442,7 +33442,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "- \"Show that a linear combination of the states is uncontrollable\": find $\\mathbf{v}$ with $\\mathbf{v}^T\\mathcal{C} = \\mathbf{0}^T$; the combination is $\\mathbf{v}^T\\mathbf{x}$.\n- Observability without computing $\\mathcal{O}$: count the eigenvalues missing from $\\hat{G}$; those not explained by uncontrollable modes are unobservable."
+          "text": "- \"Show that a linear combination of the states is uncontrollable\": find $\\mathbf{v}$ with $\\mathbf{v}^T\\mathcal{C} = \\mathbf{0}^T$; the combination is $\\mathbf{v}^T\\mathbf{x}$.\n- Exams ask to decide observability from the uncontrollable part and the transfer function, without computing $\\mathcal{O}$. Count: an eigenvalue of $A$ that does not appear as a pole of $\\hat{G}$ (it cancelled) is uncontrollable or unobservable. If more eigenvalues are missing from $\\hat{G}$ than there are uncontrollable ones, the extra missing ones are unobservable, so the system is not observable."
         },
         {
           "type": "insight",
@@ -33956,7 +33956,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "- Inverse realization: poles and zeros swap, controllability and observability stay, and the inverse is stable iff the zeros of $G$ are in the left half-plane."
+          "text": "- Final exams give a SISO system $(A, \\mathbf{b}, \\mathbf{c}^T, 1)$ with transfer function $G(s)$ and ask to show that $(A - \\mathbf{b}\\mathbf{c}^T, \\mathbf{b}, -\\mathbf{c}^T, 1)$ has transfer function $1/G(s)$, then to compare the two systems.\n- To show it: the second system is the first one under the feedback $u = r - \\mathbf{c}^T\\mathbf{x}$; use $\\det(I + GH) = \\det(I + HG)$ as in section 10.\n- To compare: the poles of $1/G$ are the zeros of $G$ and conversely; controllability and observability are the same for both (the change $A \\to A - \\mathbf{b}\\mathbf{c}^T$ is both a state feedback and an output injection, and neither changes them); $1/G$ is BIBO stable iff all zeros of $G$ have negative real part."
         },
         {
           "type": "insight",
