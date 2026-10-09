@@ -30487,6 +30487,42 @@
           ]
         },
         {
+          "type": "table",
+          "heading": "At a glance: examples to remember",
+          "rows": [
+            [
+              "Example",
+              "Data",
+              "Result",
+              "What it shows"
+            ],
+            [
+              "Suspension",
+              "$m, b, k$, road $x_i$",
+              "$\\frac{bs + k}{ms^2 + bs + k}$",
+              "a model as a transfer function; damping decided by $b^2 - 4mk$"
+            ],
+            [
+              "RLC circuit",
+              "current source, $R \\parallel L \\parallel C$",
+              "states $v_C$, $i_L$",
+              "state = energy-storing variables"
+            ],
+            [
+              "Unit delay",
+              "$y(t) = u(t - 1)$",
+              "infinitely many states",
+              "distributed system"
+            ],
+            [
+              "$y = 2u + 1$",
+              "memoryless",
+              "not linear",
+              "offsets break superposition"
+            ]
+          ]
+        },
+        {
           "type": "note",
           "heading": "Where to look",
           "text": "EEE 501 Lecture Notes 1 (A. B. Özgüler, Bilkent 2026-27), slides 5-11 · Chen, Linear System Theory and Design, 3rd ed., Chapter 1 (introduction) and Sections 2.1-2.2. Next: LST 02, where input-linearity leads to the impulse response, the transfer matrix and the state-space form."
@@ -30920,6 +30956,48 @@
               "Linearize a nonlinear model",
               "check the operating point satisfies $\\dot{\\mathbf{x}}_o = \\mathbf{f}(\\mathbf{x}_o, \\mathbf{u}_o, t)$; Jacobians at $(\\mathbf{x}_o, \\mathbf{u}_o)$",
               "Jacobian entry $(i, j) = \\partial f_i/\\partial x_j$; may depend on $t$"
+            ]
+          ]
+        },
+        {
+          "type": "table",
+          "heading": "At a glance: examples to remember",
+          "rows": [
+            [
+              "Example",
+              "Data",
+              "Result",
+              "What it shows"
+            ],
+            [
+              "Feedback with delay",
+              "gain $a$, unit delay, negative feedback",
+              "$g = \\sum(-1)^{i-1}a^i\\delta(t - i)$",
+              "impulse response of a distributed system"
+            ],
+            [
+              "$T$-delay",
+              "$y = u(t - T)$",
+              "$\\hat{g} = e^{-sT}$",
+              "irrational transfer function"
+            ],
+            [
+              "Blocking zero",
+              "$\\hat{g} = \\frac{s - z_0}{s - p}$, $u = e^{z_0t}$",
+              "$y = e^{pt}$",
+              "a zero removes an input mode"
+            ],
+            [
+              "Mass-spring-damper",
+              "$m = 1, b = 3, k = 2$",
+              "$g = e^{-t} - e^{-2t}$",
+              "state space to transfer function"
+            ],
+            [
+              "Linearization",
+              "$\\dot{x} = \\sin x + u_1^2 + u_2^2 - t$",
+              "$\\dot{\\tilde{x}} = \\tilde{x} + 2\\sqrt{t}\\,\\tilde{u}_2$",
+              "linear models can be time-varying"
             ]
           ]
         },
@@ -31445,6 +31523,54 @@
           ]
         },
         {
+          "type": "table",
+          "heading": "At a glance: examples to remember",
+          "rows": [
+            [
+              "Example",
+              "Data",
+              "Result",
+              "What it shows"
+            ],
+            [
+              "Representation",
+              "$\\mathbf{q}_1 = [1, 3]$, $\\mathbf{q}_2 = [2, 2]$",
+              "$[4, 1] \\to [-3/2, 11/4]$",
+              "coordinates in a basis"
+            ],
+            [
+              "Gram-Schmidt in $\\mathbf{R}^3$",
+              "$[1, 0, 1]$, $[0, 1, -1]$",
+              "$\\mathbf{q}_2 = [1/2, 1, -1/2]$",
+              "subtract the projection"
+            ],
+            [
+              "Rank-nullity",
+              "$3 \\times 5$ matrix",
+              "$r = 2$, $\\nu = 3$",
+              "null basis $P[-B; I]$"
+            ],
+            [
+              "All solutions",
+              "$A \\in \\mathbf{R}^{3 \\times 4}$, $\\mathbf{y} = [2, 3, 3]$",
+              "$\\mathbf{x}_p + x_2\\mathbf{n}_1 + x_4\\mathbf{n}_2$",
+              "particular plus null space"
+            ],
+            [
+              "Example 1 vs 2",
+              "same $\\Delta = (\\lambda - 1)^2(\\lambda - 2)$",
+              "diagonal vs one $2 \\times 2$ block",
+              "nullity decides diagonalizability"
+            ],
+            [
+              "Example 3",
+              "$\\Delta = (\\lambda - \\lambda_1)^4(\\lambda - \\lambda_2)$",
+              "five possible Jordan forms",
+              "$\\nu$ alone may not fix block sizes"
+            ]
+          ]
+        },
+        {
           "type": "note",
           "heading": "Where to look",
           "text": "EEE 501 Lecture Notes 3 (A. B. Özgüler, Bilkent 2026-27), slides 2-32 · Chen, Linear System Theory and Design, 3rd ed., Sections 3.1-3.5 · C. D. Meyer, Matrix Analysis and Applied Linear Algebra (SIAM, 2000), recommended in the notes for the details (Chapters 2-4 and 7). Next: LST 04, functions of a matrix, $e^{At}$, symmetric and positive definite matrices and the SVD."
@@ -31867,6 +31993,48 @@
           ]
         },
         {
+          "type": "table",
+          "heading": "At a glance: examples to remember",
+          "rows": [
+            [
+              "Example",
+              "Data",
+              "Result",
+              "What it shows"
+            ],
+            [
+              "$A^{100}$",
+              "$A = [[0, 1], [-1, -2]]$",
+              "$-99I - 100A$",
+              "interpolating polynomial with a repeated eigenvalue"
+            ],
+            [
+              "$e^{At}$",
+              "Example 1 of LST 03",
+              "only $e^t$, $e^{2t}$ survive",
+              "diagonalizable: no $te^t$"
+            ],
+            [
+              "Positive definite",
+              "$M = [[1, -1], [-1, a]]$",
+              "$M > 0$ iff $a > 1$",
+              "complete the square / minors"
+            ],
+            [
+              "SVD",
+              "$H = [[-4, -1, 2], [2, 1/2, -1]]$",
+              "$\\sigma = \\sqrt{105/4}, 0$",
+              "rank 1 matrix"
+            ],
+            [
+              "Ill-conditioning",
+              "$[[1, 1], [1, 1.0001]]$",
+              "$\\kappa \\approx 4 \\times 10^4$",
+              "tiny data change, large solution change"
+            ]
+          ]
+        },
+        {
           "type": "note",
           "heading": "Where to look",
           "text": "EEE 501 Lecture Notes 4 (A. B. Özgüler; the 2024-25 version of the notes, slides 2-21) · Chen, Linear System Theory and Design, 3rd ed., Sections 3.6-3.9 · C. D. Meyer, Matrix Analysis and Applied Linear Algebra (SIAM, 2000), Chapters 5 and 7 · F. R. Gantmacher, Theory of Matrices, Vol. 1, for the minor test. Next in the course: solution of state equations, where $e^{At}$ of this note is the state transition matrix."
@@ -32175,6 +32343,48 @@
           ]
         },
         {
+          "type": "table",
+          "heading": "At a glance: examples to remember",
+          "rows": [
+            [
+              "Example",
+              "Data",
+              "Result",
+              "What it shows"
+            ],
+            [
+              "Laplace solution",
+              "$A = [[1, 1], [-1, 1]]$, $u = 1$",
+              "$e^t\\cos t$, $e^t\\sin t$ terms",
+              "eigenvalues $1 \\pm j$ set the modes"
+            ],
+            [
+              "Two circuits",
+              "$0.5\\,\\Omega$ vs resistor bridge",
+              "same $G = 0.5$, orders 0 and 1",
+              "transfer function does not fix the state"
+            ],
+            [
+              "MIMO realization",
+              "$G = [\\frac{4s - 10}{2s + 1}, \\frac{3}{s + 2}]$",
+              "4 states by (2), 2 states possible",
+              "block companion not minimal"
+            ],
+            [
+              "SISO canonical",
+              "$\\frac{2s^2 + 3s - 1}{s^2 - 2s - 5}$",
+              "$A = [[2, 5], [1, 0]]$, $C = [7, 9]$, $D = 2$",
+              "read coefficients"
+            ],
+            [
+              "Transition matrix",
+              "$A(t) = [[0, 0], [t, 0]]$",
+              "$\\Phi = [[1, 0], [(t^2 - t_0^2)/2, 1]]$",
+              "commuting case"
+            ]
+          ]
+        },
+        {
           "type": "note",
           "heading": "Where to look",
           "text": "EEE 501 Lecture Notes 5 (A. B. Özgüler; the 2024-25 version of the notes, which matches the 2026 versions of notes 1-3 apart from the cover and a few wordings), slides 1-25 · Chen, Linear System Theory and Design, 3rd ed., Sections 4.2-4.7. Next: LST 06, stability of input-output and state representations."
@@ -32389,6 +32599,48 @@
               "LTV stability",
               "compute or bound $\\Phi(t, t_0)$",
               "do not use eigenvalues of $A(t)$"
+            ]
+          ]
+        },
+        {
+          "type": "table",
+          "heading": "At a glance: examples to remember",
+          "rows": [
+            [
+              "Example",
+              "Data",
+              "Result",
+              "What it shows"
+            ],
+            [
+              "BIBO check",
+              "$\\frac{s + 3}{(s + 2)(s + 1)^3}$",
+              "$\\int|g| \\leq 9/2$",
+              "poles in LHP, BIBO stable"
+            ],
+            [
+              "MIMO",
+              "$G(t) = [1 + e^{-2t}, e^{-t}]$",
+              "pole at 0",
+              "not BIBO stable"
+            ],
+            [
+              "Hidden mode",
+              "$\\dot{x} = x + u$, $y = 0.5u$",
+              "BIBO stable, state diverges",
+              "poles $\\subseteq$ eigenvalues"
+            ],
+            [
+              "Routh",
+              "$s^4 + 3s^3 + 5s^2 + 11s + 8$",
+              "2 sign changes",
+              "$0.1241 \\pm j1.8822$ unstable"
+            ],
+            [
+              "Lyapunov",
+              "$A = [[0, 1], [-2, -3]]$, $N = I$",
+              "$M = [[1.25, 0.25], [0.25, 0.25]] > 0$",
+              "Hurwitz without eigenvalues"
             ]
           ]
         },
@@ -32667,6 +32919,54 @@
           ]
         },
         {
+          "type": "table",
+          "heading": "At a glance: examples to remember",
+          "rows": [
+            [
+              "Example",
+              "Data",
+              "Result",
+              "What it shows"
+            ],
+            [
+              "Uncontrollable",
+              "$A = [[1, 1], [1, 1]]$, $B = [2, 2]$",
+              "$\\operatorname{rank}\\mathcal{C} = 1$",
+              "$x_1 - x_2$ never changes"
+            ],
+            [
+              "Double integrator",
+              "$A = [[0, 0], [1, 0]]$, $B = [1, 0]$",
+              "$W_c = [[t, t^2/2], [t^2/2, t^3/3]]$",
+              "input grows like $1/t^2$ as $t \\to 0$"
+            ],
+            [
+              "Double pendulum",
+              "4 states, 1 force",
+              "$\\det\\mathcal{C} = (bd)^2d^2$",
+              "one input controls everything"
+            ],
+            [
+              "Unobservable",
+              "$C = [1, 0]$ on the double integrator",
+              "$x_2(0)$ invisible",
+              "observability needs the right sensor"
+            ],
+            [
+              "Decomposition",
+              "$3 \\times 3$ example",
+              "$\\hat{A}_{\\bar{c}} = 1$",
+              "uncontrollable mode cancels in $G$"
+            ],
+            [
+              "LTV",
+              "$B = [e^t, e^{2t}]$ / $M_k$ example",
+              "uncontrollable / $\\det = t^2 + 1$",
+              "Gramian vs sufficient rank test"
+            ]
+          ]
+        },
+        {
           "type": "note",
           "heading": "Where to look",
           "text": "EEE 501 Lecture Notes 6-7 (A. B. Özgüler; 2024-25 version), slides 17-49 · Chen, Linear System Theory and Design, 3rd ed., Sections 6.2-6.8 (Theorem 6.O11 for the last exercise). Next: LST 08, state feedback and state estimators."
@@ -32934,6 +33234,42 @@
               "Find $\\gcd(p, q)$ and $x$, $y$",
               "Euclidean algorithm, then substitute back",
               "a nonzero constant remainder means coprime"
+            ]
+          ]
+        },
+        {
+          "type": "table",
+          "heading": "At a glance: examples to remember",
+          "rows": [
+            [
+              "Example",
+              "Data",
+              "Result",
+              "What it shows"
+            ],
+            [
+              "Pole placement",
+              "$\\det(sI - A) = s^4 - 5s^2$",
+              "$\\mathbf{k}^T = -\\frac{1}{3}[1, 4, 17, 8]$",
+              "all poles to $-1$"
+            ],
+            [
+              "Cyclic",
+              "companion of $(s + 1)^3$",
+              "one Jordan block",
+              "companion matrices are cyclic"
+            ],
+            [
+              "Double pendulum",
+              "measure $\\theta_1$, push $m_2$",
+              "$\\mathbf{l}$, $\\mathbf{k}$ give 8 poles at $-2$",
+              "observer + feedback, separation"
+            ],
+            [
+              "Output feedback",
+              "$G = 1/(s - 2)^2$, $\\sigma = (s + 1)^4$",
+              "$K = \\frac{108s - 135}{s^2 + 8s + 34}$",
+              "Bezout construction"
             ]
           ]
         },
