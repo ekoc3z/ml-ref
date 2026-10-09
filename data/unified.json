@@ -30755,7 +30755,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "Two recurring questions. Why does an input such as $e^{-2t}$ get \"lost\" in the output? Because $\\hat{u}(s) = \\frac{1}{s + 2}$ and $\\hat{g}(-2) = 0$: the factor $s + 2$ of the numerator cancels the pole of $\\hat{u}$, so $-2$ never appears among the poles of $\\hat{y} = \\hat{g}\\hat{u}$, and no $e^{-2t}$ term survives. Which input produces a prescribed output (zero initial state)? Run the transfer function backwards: $\\hat{u}(s) = \\hat{y}(s)/\\hat{g}(s)$, then invert the Laplace transform; impulses $\\delta(t)$ are allowed if $\\hat{u}$ is not strictly proper."
+          "text": "- If asked why an input such as $e^{-2t}$ \"gets lost\" in the output: write $\\hat{u}(s) = \\frac{1}{s + 2}$ and evaluate $\\hat{g}(-2)$. If it is $0$, the factor $s + 2$ of the numerator cancels the pole of $\\hat{u}$, $-2$ is not a pole of $\\hat{y} = \\hat{g}\\hat{u}$, and no $e^{-2t}$ term survives. The sentence to write: \"the pole of the input is a (blocking) zero of the transfer function\".\n- If asked for an input that produces a prescribed output from $\\mathbf{x}(0) = \\mathbf{0}$: run the transfer function backwards, $\\hat{u}(s) = \\hat{y}(s)/\\hat{g}(s)$, then partial fractions and inverse Laplace.\n- Watch out: if $\\hat{y}/\\hat{g}$ is not strictly proper, its constant part gives an impulse, so answers like $u(t) = \\delta(t) - \\ldots$ are normal. Use $\\hat{g}$ in lowest terms; an uncancelled common factor gives a wrong input."
         },
         {
           "type": "insight",
@@ -30777,6 +30777,11 @@
           "heading": "15. Solving the state equation with the Laplace transform",
           "text": "Let $\\hat{\\mathbf{y}} := \\mathcal{L}\\{\\mathbf{y}\\}$, $\\hat{\\mathbf{u}} := \\mathcal{L}\\{\\mathbf{u}\\}$, $\\hat{\\mathbf{x}} := \\mathcal{L}\\{\\mathbf{x}\\}$. The derivative transforms to $s\\hat{\\mathbf{x}}(s) - \\mathbf{x}(0)$, so (4) and (5) become\n\n$$s\\hat{\\mathbf{x}}(s) - \\mathbf{x}(0) = A\\hat{\\mathbf{x}}(s) + B\\hat{\\mathbf{u}}(s), \\qquad \\hat{\\mathbf{y}}(s) = C\\hat{\\mathbf{x}}(s) + D\\hat{\\mathbf{u}}(s)$$\n\nMove $A\\hat{\\mathbf{x}}$ to the left, $(sI - A)\\hat{\\mathbf{x}} = \\mathbf{x}(0) + B\\hat{\\mathbf{u}}$, and multiply by the inverse:\n\n$$\\hat{\\mathbf{x}}(s) = (sI - A)^{-1}\\mathbf{x}(0) + (sI - A)^{-1}B\\hat{\\mathbf{u}}(s)$$\n\n$$\\hat{\\mathbf{y}}(s) = C(sI - A)^{-1}\\mathbf{x}(0) + \\bigl[ C(sI - A)^{-1}B + D \\bigr] \\hat{\\mathbf{u}}(s)$$\n\n$\\mathcal{L}^{-1}\\{C(sI - A)^{-1}\\mathbf{x}(0)\\}$ is called the zero-input response: what the initial state does by itself. $\\mathcal{L}^{-1}\\{[C(sI - A)^{-1}B + D]\\hat{\\mathbf{u}}(s)\\}$ is called the zero-state response: what the input does starting from rest. The output is their sum, which is the decomposition behind the \"equal initial states\" example of section 1.\n\nThe transfer matrix of the system (4), (5) is\n\n$$\\hat{G}(s) = C(sI - A)^{-1}B + D$$\n\nSince $(sI - A)^{-1} = \\frac{\\operatorname{adj}(sI - A)}{\\det(sI - A)}$ (LST 03), every entry is a ratio of polynomials whose denominator divides $\\det(sI - A)$: the transfer matrix of a state-space system is rational and proper, and its poles are among the eigenvalues of $A$.",
           "exam": "M12 M16 M18 M19"
+        },
+        {
+          "type": "insight",
+          "heading": "Exam thinking",
+          "text": "- If asked for the unit-step response with a given $\\mathbf{x}(0)$: $\\hat{\\mathbf{y}} = C(sI - A)^{-1}\\mathbf{x}(0) + C(sI - A)^{-1}B\\frac{1}{s}$, partial fractions, inverse Laplace. Keep the two parts separate; it makes errors easy to locate.\n- If $A$ is already block diagonal or in Jordan form, write $(sI - A)^{-1}$ and $e^{At}$ block by block (LST 04, functions of a Jordan block) instead of inverting a $3 \\times 3$ matrix.\n- If asked for a lower-dimensional realization: compute $\\hat{g}(s) = C(sI - A)^{-1}B$, cancel common factors, and write the controllable canonical form of the reduced $\\hat{g}$ (LST 05). The number of cancelled factors is the number of states you saved.\n- Watch out: check $\\mathbf{y}(0) = C\\mathbf{x}(0)$, and for a Hurwitz $A$ the final value $\\mathbf{y}(\\infty) = \\hat{G}(0) = -CA^{-1}B + D$."
         },
         {
           "type": "insight",
@@ -31166,6 +31171,11 @@
         },
         {
           "type": "insight",
+          "heading": "Exam thinking",
+          "text": "- If the exam defines a new notion that imitates a basis (a positive span, a frame, ...): copy the structure of the basis proofs. For \"spans\", take an arbitrary $\\mathbf{x}$ and write it explicitly with coefficients of the required kind (for nonnegative coefficients, split according to the signs of the entries of $\\mathbf{x}$). For \"independent\", assume one vector is such a combination of the others and derive a contradiction from the signs.\n- If asked to show non-uniqueness, give two concrete examples (different numbers of vectors) and verify both."
+        },
+        {
+          "type": "insight",
           "heading": "Why it matters",
           "text": "The dimension counts the independent directions, and in this course it counts states: the order of a system is the dimension of its state space, and \"rank $n$\" tests ask whether some construction reaches all $n$ dimensions."
         },
@@ -31220,6 +31230,11 @@
         },
         {
           "type": "insight",
+          "heading": "Exam thinking",
+          "text": "- If asked to complete a given unit vector $\\mathbf{u}_1$ to an orthogonal matrix: append any vectors that make the matrix nonsingular (unit vectors $\\mathbf{e}_i$ are easiest), run Gram-Schmidt starting from $\\mathbf{u}_1$, normalize each result.\n- If asked for an orthogonal $Q$ diagonalizing a symmetric $M$: eigenvectors of different eigenvalues are already orthogonal; only inside a repeated eigenvalue do you need Gram-Schmidt.\n- Watch out: normalize at the end, and check $Q^TQ = I$ on one or two entries."
+        },
+        {
+          "type": "insight",
           "heading": "Why it matters",
           "text": "A short tool with one purpose: turn any basis into an orthonormal one with the same span. Orthonormal bases are convenient because coordinates are just inner products ($\\alpha_i = \\mathbf{u}_i^T\\mathbf{x}$) and the change-of-basis matrix is orthogonal, $Q^{-1} = Q^T$. In this course you meet it in the proofs about symmetric matrices and the SVD (LST 04), where an orthonormal set has to be completed."
         },
@@ -31267,7 +31282,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "Proof questions on rank and nullity are usually settled by one of three moves. To disprove an inequality, try the simplest matrices first: $0$, $I$, a single $1$ in a corner, and pairs such as $\\begin{bsmallmatrix} 1 & 0 \\\\ 0 & 0 \\end{bsmallmatrix}$, $\\begin{bsmallmatrix} 0 & 0 \\\\ 0 & 1 \\end{bsmallmatrix}$ whose sum is $I$. To prove that a matrix built from blocks is nonsingular, assume $B\\mathbf{x} = \\mathbf{0}$ and use the given inclusion between a range and a null space to force $\\mathbf{x} = \\mathbf{0}$; $\\mathcal{R}(M^T)$ is the orthogonal complement of $\\mathcal{N}(M)$, which turns \"range\" statements into \"null space\" statements. To count free parameters, remember that the general solution has exactly $\\nu(A)$ of them, so \"two free parameters\" means \"make $r(A) = n - 2$\"."
+          "text": "- If asked to prove or disprove an inequality on rank or nullity: try $2 \\times 2$ counterexamples first, $0$, $I$, and the pair $\\begin{bsmallmatrix} 1 & 0 \\\\ 0 & 0 \\end{bsmallmatrix}$, $\\begin{bsmallmatrix} 0 & 0 \\\\ 0 & 1 \\end{bsmallmatrix}$ (each of nullity 1, sum $I$ of nullity 0).\n- If asked to prove that a partitioned matrix is nonsingular: assume $B\\mathbf{x} = \\mathbf{0}$, write the block equations, and use the given inclusion of a range in a null space to force $\\mathbf{x} = \\mathbf{0}$. The tool: $\\mathcal{R}(M^T)$ is the orthogonal complement of $\\mathcal{N}(M)$, so a vector in both is zero.\n- If asked for bases of $\\mathcal{N}(M)$ and $\\mathcal{R}(M)$ with parameters: row reduce symbolically, but divide only by quantities known to be nonzero (use given relations such as $\\alpha^2 + \\beta^2 = 1$); treat the remaining parameter values separately.\n- If asked to change $A$ so that the solution has $k$ free parameters: make $\\nu(A) = k$, i.e. $r(A) = n - k$, while keeping $\\mathbf{y} \\in \\mathcal{R}(A)$; otherwise there is no solution at all."
         },
         {
           "type": "insight",
@@ -31298,7 +31313,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "Minimum-norm solution: every solution is $\\mathbf{x} = \\mathbf{x}_p + \\alpha_1\\mathbf{n}_1 + \\cdots + \\alpha_\\nu\\mathbf{n}_\\nu$, so $\\|\\mathbf{x}\\|_2^2$ is a quadratic function of the $\\alpha_i$; set its derivatives to zero. The minimizer is the solution orthogonal to $\\mathcal{N}(A)$ (each $\\mathbf{n}_i^T\\mathbf{x} = 0$), which is a quick check of the answer."
+          "text": "- If asked for the minimum-norm solution: write $\\mathbf{x} = \\mathbf{x}_p + \\alpha_1\\mathbf{n}_1 + \\cdots + \\alpha_\\nu\\mathbf{n}_\\nu$, then minimize $\\|\\mathbf{x}\\|_2^2$ over the $\\alpha_i$ (set the derivatives to zero), or impose $\\mathbf{n}_i^T\\mathbf{x} = 0$ for every $i$; both give the same answer.\n- Watch out: the minimizer is the solution orthogonal to $\\mathcal{N}(A)$; check it, and check $A\\mathbf{x} = \\mathbf{y}$."
         },
         {
           "type": "insight",
@@ -31401,7 +31416,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "Prove-or-disprove statements about eigenvalues and diagonalization almost always fall to a tiny counterexample. \"Diagonalizable only if the eigenvalues are distinct\" fails for $A = I$. Statements about a special matrix (an exchange matrix, a matrix with $P^2 = I$) use its structure: symmetric gives real eigenvalues and diagonalizability; $P^2 = I$ gives $\\lambda^2 = 1$, so $\\lambda = \\pm 1$; the multiplicities are then the nullities $\\nu(P - I)$ and $\\nu(P + I)$, which add up to $n$."
+          "text": "- If asked to prove or disprove a statement about eigenvalues and diagonalization: test it on $I$, a diagonal matrix, a $2 \\times 2$ Jordan block, and a rotation. \"Diagonalizable only if the eigenvalues are distinct\" fails for $A = I$.\n- If asked about a special matrix (exchange matrix, $P = P^T$, $P^2 = I$): symmetric gives real eigenvalues and diagonalizability; $P^2 = I$ gives $\\lambda^2 = 1$, so $\\lambda = \\pm 1$; the multiplicities are $\\nu(P - I)$ and $\\nu(P + I)$ (write $P \\mp I$ in blocks, separately for $n$ even and odd); the Jordan form is $\\operatorname{diag}\\{I, -I\\}$ with those sizes.\n- Watch out: real eigenvalues alone do not give diagonalizability; symmetry does."
         },
         {
           "type": "insight",
@@ -31428,7 +31443,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "To test a claim about the chain of nullities $\\nu(A - \\lambda I) \\leq \\nu((A - \\lambda I)^2) \\leq \\cdots$: the inequality is strict exactly while there are Jordan blocks longer than the current power. A diagonalizable matrix (all blocks of size 1) makes every later inequality an equality, so it is the natural counterexample to \"strictly increasing\"."
+          "text": "- If asked whether $\\nu(A - \\lambda I) < \\nu((A - \\lambda I)^2)$ always: no. The inequality is strict exactly when $\\lambda$ has a Jordan block of size at least 2 ($m_i \\geq 2$); any diagonalizable matrix is a counterexample.\n- In general the chain $\\nu(A - \\lambda I) \\leq \\nu((A - \\lambda I)^2) \\leq \\cdots$ increases by the number of blocks longer than the current power and stops at $n_i$."
         },
         {
           "type": "insight",
@@ -31491,7 +31506,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "When $A$ contains a parameter, or when only partial information is given, reason with the numbers rather than computing everything. The multiplicity $n_i$ fixes the total size of the blocks of $\\lambda_i$, $\\nu(A - \\lambda_iI)$ fixes how many there are, and the index $m_i$ fixes the largest. A parameter usually changes the rank of $A - \\lambda_iI$, hence the number of eigenvectors: check the special values of the parameter separately (one more eigenvector means one more block, and then a generalized eigenvector is no longer needed). With $n_i = 4$ and $m_i = 2$, for example, the blocks are $2 + 2$ or $2 + 1 + 1$: list all splits of $n_i$ with largest part $m_i$."
+          "text": "- If asked for $J_A$ and $Q$: (1) $\\Delta(\\lambda)$, roots $\\lambda_i$, multiplicities $n_i$; (2) $\\nu_i = \\nu(A - \\lambda_iI)$ = number of blocks; (3) for a block of size $k$, take $\\mathbf{v}$ in $\\mathcal{N}((A - \\lambda_iI)^k)$ but not in $\\mathcal{N}((A - \\lambda_iI)^{k-1})$ and build the chain down to an eigenvector; (4) $Q$ = the chains side by side, eigenvector first; (5) check $AQ = QJ_A$ instead of inverting $Q$.\n- With a parameter $\\alpha$: block triangular $A$ often has eigenvalues independent of $\\alpha$, but $\\nu(A - \\lambda_iI)$ depends on it. Treat the special value (often $\\alpha = 0$) separately and say what changes: number of blocks, need for a generalized eigenvector, $Q$.\n- If asked for all possible Jordan forms from partial data ($n_i$, $m_i$): list the splits of $n_i$ with largest part $m_i$; e.g. $n_i = 4$, $m_i = 2$: $2 + 2$ or $2 + 1 + 1$.\n- Watch out: $Q$ is not unique, any valid chains work; blocks of a block-diagonal $A$ can be handled one at a time."
         },
         {
           "type": "insight",
@@ -31885,10 +31900,20 @@
           "exam": "M22 F23"
         },
         {
+          "type": "insight",
+          "heading": "Exam thinking",
+          "text": "- If asked to prove that the minimal polynomial is unique: two monic annihilating polynomials of least degree; their difference annihilates $A$ and has smaller degree, so it is zero (or use the Euclidean division of the notes).\n- If asked to show that $\\Psi = \\Delta$ for a companion matrix: every eigenvalue has $\\nu(A - \\lambda I) = 1$ (delete the first column and last row: an identity-like block of rank $n - 1$ remains), so one Jordan block per eigenvalue, so the largest block has size $n_i$."
+        },
+        {
           "type": "text",
           "heading": "5. Indices, and when a matrix is diagonalizable",
           "text": "The characteristic and minimal polynomials of $A$ in factored form are\n\n$$\\Delta(\\lambda) = \\prod_{i = 1}^{k}(\\lambda - \\lambda_i)^{n_i}, \\qquad \\Psi(\\lambda) = \\prod_{i = 1}^{k}(\\lambda - \\lambda_i)^{m_i}$$\n\nThe integers $m_i$ of Fact 2 are called the indices of $A$, and $1 \\leq m_i \\leq n_i$. The two numbers describe the blocks of $\\lambda_i$ differently: the multiplicity $n_i$ is their total size, the index $m_i$ the size of the largest one.\n\nFact. $A$ is diagonalizable by a similarity transformation if and only if all its indices are equal to 1, i.e. iff $m_i = 1$ for $i = 1, \\ldots, k$: all Jordan blocks have size 1. In LST 03, Example 1 has $\\Psi(\\lambda) = (\\lambda - 1)(\\lambda - 2)$ (diagonalizable) and Example 2 has $\\Psi(\\lambda) = (\\lambda - 1)^2(\\lambda - 2) = \\Delta(\\lambda)$ (not diagonalizable), although their characteristic polynomials are equal.",
           "exam": "M14 M16 M18 M24"
+        },
+        {
+          "type": "insight",
+          "heading": "Exam thinking",
+          "text": "- If asked for $n_i$, $m_i$, $\\nu_i$: $n_i$ from $\\Delta$; $\\nu_i = n - r(A - \\lambda_iI)$; $m_i$ = smallest $k$ with $\\nu((A - \\lambda_iI)^k) = n_i$, which is the size of the largest block.\n- Diagonalizable iff every $m_i = 1$ iff every $\\nu_i = n_i$; say this explicitly when the question asks \"is $A$ diagonalizable\".\n- Watch out: for a block-diagonal $A$, compute these per block and add the nullities."
         },
         {
           "type": "insight",
@@ -31919,7 +31944,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "For \"give two definitions of $f(A)$\" ($\\ln A$, $\\sqrt{A}$, $e^B = C$): one is the power series about a point $a$, which needs all eigenvalues inside its disc of convergence ($|\\lambda_i - a| < \\rho$); the other is the interpolating polynomial, which needs $f$ (and enough derivatives) defined at every eigenvalue. The assumptions follow from this: $\\ln$ needs no zero eigenvalue (and positive real eigenvalues for a real logarithm), $\\sqrt{\\ }$ needs nonnegative real eigenvalues for a real square root (otherwise a complex one, and a nonzero eigenvalue where a derivative is needed). Check an answer by the defining property: $(\\sqrt{A})^2 = A$, $e^{\\ln A} = A$."
+          "text": "- If asked for $f(A)$ ($\\sin(A\\pi)$, $\\cos A$, $\\ln(Bt)$, $A^{100}$): eigenvalues with multiplicities, $h(\\lambda)$ with $n$ unknown coefficients, conditions $f^{(l)}(\\lambda_i) = h^{(l)}(\\lambda_i)$ (derivatives at repeated eigenvalues), solve, $f(A) = h(A)$.\n- If asked \"as a product of three matrices, do not multiply out\": $f(A) = Qf(J_A)Q^{-1}$ with $f(J_A)$ from the Jordan block formula ($f$, $f'$, $f''/2$ on the diagonals).\n- If asked for two definitions of $\\ln A$ or $\\sqrt{A}$: (i) power series about $a$ (e.g. $a = 1$), valid when all $|\\lambda_i - a| < \\rho$; (ii) interpolating polynomial, valid when $f$ and the needed derivatives exist at the eigenvalues. State the assumption with each: no zero eigenvalue for $\\ln$, real positive eigenvalues for a real $\\ln$ or $\\sqrt{\\ }$.\n- If asked when $e^B = C$ has a solution: $\\det e^B = e^{\\operatorname{tr}B} \\neq 0$, so $C$ must be nonsingular, and that suffices over $\\mathbf{C}$; for a real $B$, real positive eigenvalues of $C$ are sufficient.\n- Watch out: when $f$ contains $t$ ($\\sin(At)$, $\\ln(Bt)$), differentiate with respect to $\\lambda$, with $t$ a parameter. Check with the defining property: $(\\sqrt{A})^2 = A$, $e^{\\ln A} = A$, $\\frac{d}{dt}\\ln(Bt) = \\frac{1}{t}I$."
         },
         {
           "type": "insight",
@@ -32004,7 +32029,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "Two classic questions. A counterexample to $e^{(A + B)t} = e^{At}e^{Bt}$: take the two nilpotent matrices with a single 1 above and below the diagonal (their exponentials are $I + At$, $I + Bt$). A proof under $AB = BA$: both sides solve $\\dot{X} = (A + B)X$, $X(0) = I$ (differentiate $e^{At}e^{Bt}$ and move $B$ past $e^{At}$, which is allowed when they commute), and solutions are unique. Similarly, $e^{At} = e^{Bt}$ for all $t$ forces $A = B$: differentiate once at $t = 0$."
+          "text": "- If asked for an example with $e^{(A + B)t} \\neq e^{At}e^{Bt}$: take the two nilpotent $2 \\times 2$ matrices with a single 1 above, resp. below, the diagonal; $e^{At} = I + At$, $e^{Bt} = I + Bt$, and $A + B$ has eigenvalues $\\pm 1$.\n- If asked to prove equality \"under a suitable assumption\": assume $AB = BA$ (as large a class as allowed); both sides solve $\\dot{X} = (A + B)X$, $X(0) = I$, and solutions are unique. Alternative: multiply the two series and use the binomial formula, which needs commuting.\n- If asked whether $e^{At} = e^{Bt}$ for all $t$ forces $A = B$: yes, differentiate at $t = 0$ (or compare Laplace transforms)."
         },
         {
           "type": "insight",
@@ -32025,7 +32050,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "Quadratic form questions reduce to $\\mathbf{x}^TM\\mathbf{x}$ with $M = \\frac{1}{2}(A + A^T)$ (only the symmetric part counts). \"Complete to squares\" is orthogonal diagonalization: $\\mathbf{z} = Q^T\\mathbf{x}$ gives $\\mathbf{x}^TM\\mathbf{x} = \\sum\\lambda_iz_i^2$. A sign argument: if a nonzero $\\mathbf{x}$ gives $\\mathbf{x}^TM\\mathbf{x} = 0$ (for instance $\\mathbf{x}^TA\\mathbf{x} = \\mathbf{x}^T\\mathbf{b} = 0$ for a solution of $A\\mathbf{x} = \\mathbf{b}$ orthogonal to $\\mathbf{b}$), then $\\sum\\lambda_iz_i^2 = 0$ with $\\mathbf{z} \\neq \\mathbf{0}$, so the eigenvalues cannot all have the same strict sign."
+          "text": "- If asked for $M$ with $f(\\mathbf{x}) = \\mathbf{x}^TM\\mathbf{x}$: the diagonal holds the coefficients of $x_i^2$, the off-diagonal entries are half the coefficients of $x_ix_j$. Watch the factor $\\frac{1}{2}$ and any overall factor in front of $f$.\n- If asked to diagonalize or complete to squares: orthonormal eigenvectors as the columns of $Q$, $\\mathbf{z} = Q^T\\mathbf{x}$, $f = \\sum\\lambda_iz_i^2$.\n- If asked a sign argument (e.g. \"$A + A^T$ has eigenvalues of both signs\" when $A\\mathbf{x} = \\mathbf{b}$ has a solution orthogonal to $\\mathbf{b}$): only the symmetric part counts, $\\mathbf{x}^TA\\mathbf{x} = \\frac{1}{2}\\mathbf{x}^T(A + A^T)\\mathbf{x}$. A nonzero $\\mathbf{x}$ with $\\mathbf{x}^TA\\mathbf{x} = \\mathbf{x}^T\\mathbf{b} = 0$ gives $\\sum\\lambda_iz_i^2 = 0$ with $\\mathbf{z} \\neq \\mathbf{0}$, impossible if all $\\lambda_i$ have the same strict sign.\n- Watch out: a follow-up \"is $\\mathbf{x}$ in $\\mathcal{N}(A + A^T)$?\" is answered with a $2 \\times 2$ counterexample."
         },
         {
           "type": "insight",
@@ -32048,6 +32073,11 @@
           "type": "formula",
           "heading": "Fact 3: three equivalent tests",
           "text": "Fact 3. A symmetric $M \\in \\mathbf{R}^{n \\times n}$ is positive definite (semi-definite) if and only if one of the following equivalent conditions holds:\n\n(i) every eigenvalue of $M$ is positive (nonnegative);\n\n(ii) every leading principal minor of $M$ is positive (every principal minor of $M$ is nonnegative);\n\n(iii) there is a square nonsingular matrix (a matrix) $N$ such that $M = N^TN$.\n\nProof. [$M > 0 \\Rightarrow$ (i)] By Fact 2 there is an orthogonal $Q$ with $Q^TMQ = \\operatorname{diag}\\{\\lambda_1, \\ldots, \\lambda_n\\}$. If $\\mathbf{e}_j$ is the $j$-th natural basis vector, then $\\mathbf{e}_j^TQ^TMQ\\mathbf{e}_j = \\lambda_j > 0$, as claimed, since $Q\\mathbf{e}_j \\neq \\mathbf{0}$. [(i) $\\Rightarrow$ (iii)] If each $\\lambda_j > 0$, let $D := \\operatorname{diag}\\{\\sqrt{\\lambda_1}, \\ldots, \\sqrt{\\lambda_n}\\}$ and $N := DQ^T$, so that $N^TN = QD^2Q^T = Q\\operatorname{diag}\\{\\lambda_1, \\ldots, \\lambda_n\\}Q^T = M$, with $N$ nonsingular. [(iii) $\\Rightarrow M > 0$] If $M = N^TN$ for a nonsingular $N$, then for each $\\mathbf{0} \\neq \\mathbf{x}$, $\\mathbf{x}^TM\\mathbf{x} = \\mathbf{x}^TN^TN\\mathbf{x} = \\|N\\mathbf{x}\\|^2 > 0$. [(ii) $\\iff M > 0$] See F. R. Gantmacher, Theory of Matrices, Vol. 1 (Chelsea, 1960).\n\nOn the example: the leading principal minors are $1$ and $\\det M = a - 1$, both positive iff $a > 1$, in agreement with completing the square. The eigenvalues of $M$ satisfy $\\lambda_1\\lambda_2 = a - 1$ and $\\lambda_1 + \\lambda_2 = 1 + a$, both positive iff $a > 1$."
+        },
+        {
+          "type": "insight",
+          "heading": "Exam thinking",
+          "text": "- If asked to classify $M$ (definite, semi-definite, neither): eigenvalue signs; or leading principal minors for $> 0$; for $\\geq 0$, all principal minors.\n- With parameters: write each minor as an inequality in the parameters and draw the region in the parameter plane; mark separately the boundary where $M \\geq 0$ but not $> 0$.\n- Watch out: leading minors $\\geq 0$ does not imply $M \\geq 0$; the classic slip."
         },
         {
           "type": "insight",
@@ -32105,7 +32135,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "Condition number with a parameter: compute the eigenvalues of $H^TH$ as functions of the parameter, form $\\kappa^2 = \\lambda_{\\max}/\\lambda_{\\min}$ (squares avoid square roots), and minimize. $\\kappa = 1$ is the best possible and happens exactly when $H$ is a multiple of an orthogonal matrix; a large $\\kappa$ means the solution of $H\\mathbf{x} = \\mathbf{b}$ is sensitive to round-off."
+          "text": "- If asked for the condition number in terms of a parameter: eigenvalues of $H^TH$ as functions of it, $\\kappa^2 = \\lambda_{\\max}/\\lambda_{\\min}$ (squares avoid roots).\n- If asked for the parameter value minimizing $\\kappa$: minimize $\\kappa^2$; at $\\kappa = 1$, $H$ is a multiple of an orthogonal matrix, and $R$, $S$, $Q$ can be written down directly.\n- If asked what a large $\\kappa$ means: solving $H\\mathbf{x} = \\mathbf{b}$ amplifies relative errors in $\\mathbf{b}$ up to $\\kappa$ times, so round-off matters."
         },
         {
           "type": "insight",
@@ -32442,6 +32472,11 @@
         },
         {
           "type": "insight",
+          "heading": "Exam thinking",
+          "text": "- If asked for $\\mathbf{x}(t)$ under a step input: $(sI - A)^{-1}\\mathbf{x}(0) + (sI - A)^{-1}B\\frac{u_0}{s}$, entry by entry partial fractions; for an impulse input, $\\mathbf{x}(t) = e^{At}(\\mathbf{x}(0) + B)$.\n- If asked whether a drawn trajectory can be right: check that it starts at $\\mathbf{x}(0)$, ends at $-A^{-1}Bu_0$ when $A$ is Hurwitz, and does not cross itself (uniqueness, section 15).\n- Watch out: check $\\mathbf{x}(0)$ by setting $t = 0$ in the answer."
+        },
+        {
+          "type": "insight",
           "heading": "Why it matters",
           "text": "Keeping the two parts separate is how most proofs in LST 06 and 07 work: stability is about the zero-input part, BIBO stability about the zero-state part, controllability about what the input can add, observability about what the initial state contributes to the output."
         },
@@ -32551,6 +32586,11 @@
         },
         {
           "type": "insight",
+          "heading": "Exam thinking",
+          "text": "- If asked for a controllable and observable realization of a SISO $\\hat{g}$: (1) $D = \\hat{g}(\\infty)$ and the strictly proper part; (2) cancel common factors of numerator and denominator, essential, otherwise the canonical form is controllable but not observable; (3) read $A$, $B$, $C$ from the coefficients.\n- For a $1 \\times p$ or $q \\times 1$ matrix: use a common denominator, realize the column version with the block companion form and transpose if needed, then check controllability and observability.\n- Watch out: state which companion convention you use (coefficients in the first row or the last row); the feedback gain read off later depends on it. Verify one entry of $C(sI - A)^{-1}B$."
+        },
+        {
+          "type": "insight",
           "heading": "Why it matters",
           "text": "The controllable canonical form is the standard way to go from a scalar transfer function to state space, and it is the form used in LST 08 for pole placement: in it, the characteristic polynomial sits in one row and the input enters exactly there."
         },
@@ -32568,7 +32608,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "\"Can this curve be the state trajectory of an (LTI or LTV) system?\" A trajectory that passes twice through the same point while going different ways cannot be one: from that point the solution is unique (Fact 1), so both passes would have to continue identically. The state at a time determines the whole future; crossings and loops that branch are impossible."
+          "text": "- If asked \"can this curve be a state trajectory?\": no if it passes twice through the same point heading differently. From that point the solution is unique (Fact 1), so both passes would have to continue identically.\n- The same argument answers \"can two different trajectories cross?\": no, for any linear (LTI or LTV) state equation."
         },
         {
           "type": "insight",
@@ -32600,7 +32640,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "For a triangular $A(t)$ solve from the decoupled equation upward; keep $t_0$ general, and read $\\Phi(t, t_0)$ as the coefficient matrix of $\\mathbf{x}(t_0)$. A request for a transformation that turns $A(t)$ into $0$ (or into a constant $\\bar{A}$) is answered by $P(t) = X(t)^{-1}$ (or $e^{\\bar{A}t}X(t)^{-1}$), since $\\frac{d}{dt}X^{-1} = -X^{-1}A$; then ask whether it is a Lyapunov transformation (bounded with bounded inverse)."
+          "text": "- If asked for $\\Phi(t, t_0)$: triangular $A(t)$, solve the decoupled equation first and substitute upward; keep $t_0$ general and read $\\Phi$ as the coefficient matrix of $\\mathbf{x}(t_0)$.\n- If asked for the solution under an input: $\\mathbf{x}(t) = \\Phi(t, t_0)\\mathbf{x}_0 + \\int_{t_0}^t\\Phi(t, \\tau)B(\\tau)\\mathbf{u}(\\tau)d\\tau$; for an impulse at 0, $\\mathbf{x}(t) = \\Phi(t, 0)(\\mathbf{x}_0 + B(0))$.\n- If asked for $P(t)$ making $\\hat{A} = 0$ (or constant $\\bar{A}$): $P(t) = X(t)^{-1}$ (or $e^{\\bar{A}t}X(t)^{-1}$), since $\\frac{d}{dt}X^{-1} = -X^{-1}A$.\n- Watch out: check $\\Phi(t_0, t_0) = I$ and $\\partial_t\\Phi = A(t)\\Phi$."
         },
         {
           "type": "insight",
@@ -32628,6 +32668,11 @@
           "heading": "21. Lyapunov transformations",
           "text": "Definition. If $P(t)$ is nonsingular, $P(t)$ and $\\dot{P}(t)$ are continuous, and $P(t)$ and $P(t)^{-1}$ are bounded in the interval $[t_0, t_f]$ (or in $[t_0, \\infty)$), then $\\hat{\\mathbf{x}}(t) = P(t)\\mathbf{x}(t)$ is called a Lyapunov transformation.\n\nBounded in both directions means that $\\hat{\\mathbf{x}}$ is small exactly when $\\mathbf{x}$ is: a Lyapunov transformation preserves stability (an exercise of LST 06).\n\nNot all state transformations are Lyapunov. Example: let $A_0 = 0$ and consider\n\n$$P(t) = e^{A_0t}X(t)^{-1} = X(t)^{-1} = \\begin{bmatrix} 1 & 0 \\\\ \\frac{t^2 - t_0^2}{2} & 1 \\end{bmatrix}^{-1} = \\begin{bmatrix} 1 & 0 \\\\ \\frac{t_0^2 - t^2}{2} & 1 \\end{bmatrix}$$\n\nas the transformation; it is the inverse of the state transition matrix of $A(t) = \\begin{bmatrix} 0 & 0 \\\\ t & 0 \\end{bmatrix}$. Both $X(t)$ and $X(t)^{-1}$ are unbounded as $t \\to \\infty$, because the entry $\\pm t^2/2$ grows, so this $P$ is not a Lyapunov transformation.",
           "exam": "M12 S"
+        },
+        {
+          "type": "insight",
+          "heading": "Exam thinking",
+          "text": "- If asked for a time-varying Lyapunov transformation making $\\hat{A}$, $\\hat{B}$ constant: when $A(t)$ contains $\\sin t$, $\\cos t$, try a rotation $P(t) = \\begin{bsmallmatrix} \\cos t & \\sin t \\\\ -\\sin t & \\cos t \\end{bsmallmatrix}$; compute $\\hat{A} = (PA + \\dot{P})P^{-1}$, $\\hat{B} = PB$.\n- Then solve the constant system and transform back, $\\mathbf{x} = P^{-1}\\hat{\\mathbf{x}}$.\n- Watch out: state why it is a Lyapunov transformation ($P$ and $P^{-1}$ are bounded, e.g. orthogonal)."
         },
         {
           "type": "insight",
@@ -32946,7 +32991,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "For an uncontrollable combination of states $\\tilde{x} = \\mathbf{v}^T\\mathbf{x}$ (with $\\mathbf{v}^T$ a left eigenvector of $A$ orthogonal to $B$), $\\dot{\\tilde{x}} = \\mathbf{v}^TA\\mathbf{x} + \\mathbf{v}^TB\\mathbf{u} = \\lambda\\tilde{x}$: it evolves as $e^{\\lambda t}\\tilde{x}(0)$ whatever the input. Whether it tends to zero is decided by that single eigenvalue, while the stability of the reduced controllable part is decided by the remaining ones; the two questions are separate."
+          "text": "- If asked about an uncontrollable combination of states $\\tilde{x} = \\mathbf{v}^T\\mathbf{x}$ ($\\mathbf{v}^T$ a left eigenvector of $A$ orthogonal to $B$): $\\dot{\\tilde{x}} = \\lambda\\tilde{x}$ whatever the input, so $\\tilde{x}(t) = e^{\\lambda t}\\tilde{x}(0)$; whether it tends to zero depends on this one eigenvalue.\n- If asked whether a reduced pair $(\\hat{A}, \\hat{\\mathbf{b}})$ is asymptotically stable: look only at its own eigenvalues; it can be unstable while some other combination of states decays, and vice versa.\n- Watch out: \"asymptotically stable\" is a property of $A$ (all eigenvalues), not of one state."
         },
         {
           "type": "insight",
@@ -33036,6 +33081,11 @@
           "type": "insight",
           "heading": "The notes ask: why does a Lyapunov transformation preserve stability? (Exercise)",
           "text": "Let $\\hat{\\mathbf{x}} = P(t)\\mathbf{x}$ be a Lyapunov transformation (LST 05, section 21): $\\|P(t)\\| \\leq p$ and $\\|P(t)^{-1}\\| \\leq q$ for all $t$.\n\nStep 1. The transition matrices are related by\n\n$$\\hat{\\Phi}(t, t_0) = P(t)\\Phi(t, t_0)P(t_0)^{-1}$$\n\nsince $\\hat{\\mathbf{x}}(t) = P(t)\\mathbf{x}(t) = P(t)\\Phi(t, t_0)\\mathbf{x}(t_0) = P(t)\\Phi(t, t_0)P(t_0)^{-1}\\hat{\\mathbf{x}}(t_0)$.\n\nStep 2. Bound in both directions:\n\n$$\\|\\hat{\\Phi}(t, t_0)\\| \\leq pq\\,\\|\\Phi(t, t_0)\\|, \\qquad \\|\\Phi(t, t_0)\\| = \\|P(t)^{-1}\\hat{\\Phi}(t, t_0)P(t_0)\\| \\leq qp\\,\\|\\hat{\\Phi}(t, t_0)\\|$$\n\nWhat it means. If $\\Phi$ is bounded, so is $\\hat{\\Phi}$, and conversely (marginal stability). If $\\|\\Phi(t, t_0)\\| \\to 0$, so does $\\|\\hat{\\Phi}(t, t_0)\\|$, and conversely (asymptotic stability). The bounds $p$, $q$ are exactly what a Lyapunov transformation guarantees and what the counterexample of LST 05, section 21 lacks."
+        },
+        {
+          "type": "insight",
+          "heading": "Exam thinking",
+          "text": "- If asked whether an LTV system is marginally or asymptotically stable: compute $\\Phi(t, t_0)$ and let $t \\to \\infty$ entry by entry: all entries bounded, marginal; all entries tend to 0, asymptotic.\n- Watch out: do not use the eigenvalues of $A(t)$ at frozen times; they do not decide."
         },
         {
           "type": "insight",
@@ -33287,6 +33337,11 @@
         },
         {
           "type": "insight",
+          "heading": "Exam thinking",
+          "text": "- If asked to prove $\\operatorname{rank}\\mathcal{C} = n \\Rightarrow \\operatorname{rank}[sI - A \\ \\ B] = n$ for all $s$: contrapositive. A rank drop gives $\\mathbf{v} \\neq \\mathbf{0}$ with $\\mathbf{v}^T(sI - A) = \\mathbf{0}^T$, $\\mathbf{v}^TB = \\mathbf{0}^T$; then $\\mathbf{v}^TA^kB = s^k\\mathbf{v}^TB = \\mathbf{0}^T$, so $\\mathbf{v}^T\\mathcal{C} = \\mathbf{0}^T$.\n- For the converse: the decomposition argument (box above), or the polynomial matrices $M(s)$, $N(s)$ if the exam gives them as a hint.\n- The observability versions follow by duality (transpose everything). If the matrix is given in Jordan form, controllability can be read from the rows of $B$ at the last rows of the Jordan blocks (LST 08)."
+        },
+        {
+          "type": "insight",
           "heading": "Why it matters",
           "text": "Use the tests by purpose. Rank of $\\mathcal{C}$: the standard hand computation. Hautus test: when the eigenvalues are known, and to identify which mode is uncontrollable (the $\\lambda$ where the rank drops). Gramian: to construct the input, and to measure how hard control is (a nearly singular $W_c$ means huge inputs)."
         },
@@ -33341,7 +33396,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "\"Can $\\mathbf{x}(0)$ be determined from the output on an interval?\" With zero input $\\mathbf{y}(t) = Ce^{At}\\mathbf{x}(0)$; evaluating $\\mathbf{y}$, $\\dot{\\mathbf{y}}$, $\\ddot{\\mathbf{y}}, \\ldots$ at $t = 0$ gives $[C; CA; CA^2; \\ldots]\\mathbf{x}(0)$, so the answer is \"uniquely, iff $\\mathcal{O}$ has full column rank\", and the computation is solving that linear system. For \"design an experiment to decide whether $\\mathbf{x}(0)$ has a given form\", apply zero input and check whether the output stays zero: the states that give zero output are exactly $\\mathcal{N}(\\mathcal{O})$."
+          "text": "- If asked whether $\\mathbf{x}(0)$ can be determined from the output on an interval: with zero input $\\mathbf{y}(t) = Ce^{At}\\mathbf{x}(0)$; $\\mathbf{y}$, $\\dot{\\mathbf{y}}$, $\\ddot{\\mathbf{y}}, \\ldots$ at $t = 0$ give $\\mathcal{O}\\mathbf{x}(0)$. Uniquely iff $\\mathcal{O}$ has full column rank; the computation is solving that system.\n- If asked to design an experiment deciding whether $\\mathbf{x}(0)$ has a given form: apply zero input and check whether the output stays zero; zero-output initial states are exactly $\\mathcal{N}(\\mathcal{O})$.\n- If asked whether an estimator's resulting system is controllable: compute it; observability of the plant says nothing about it."
         },
         {
           "type": "insight",
@@ -33387,7 +33442,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "Questions on \"the uncontrollable linear combination of states\": a nonzero $\\mathbf{v}$ with $\\mathbf{v}^T\\mathcal{C} = \\mathbf{0}^T$ gives it, $\\tilde{x} = \\mathbf{v}^T\\mathbf{x}$; equivalently, it is the last coordinate of $\\hat{\\mathbf{x}} = P\\mathbf{x}$ in the decomposition. Combined with the transfer function, counting gives observability without computing $\\mathcal{O}$: if $\\hat{G}$ has order $k$ and $n - n_1$ modes are uncontrollable, then $n - k - (n - n_1)$ further modes must be unobservable; a positive count means \"not observable\"."
+          "text": "- If asked for a transformation identifying the uncontrollable part: $P^{-1}$ = the independent columns of $\\mathcal{C}$, completed with unit vectors; compute $\\hat{A} = PAP^{-1}$, $\\hat{B} = PB$, $\\hat{C} = CP^{-1}$; the zero blocks confirm it.\n- If asked for \"the uncontrollable linear combination of states\": $\\tilde{x} = \\mathbf{v}^T\\mathbf{x}$ with $\\mathbf{v}^T\\mathcal{C} = \\mathbf{0}^T$; it is the last coordinate of $\\hat{\\mathbf{x}}$.\n- If asked for observability \"using (i) and (ii)\": count. $\\hat{G}$ of order $k$, $n - n_1$ uncontrollable modes, so $n_1 - k$ further modes must be unobservable; a positive count means not observable."
         },
         {
           "type": "insight",
@@ -33418,6 +33473,11 @@
         },
         {
           "type": "insight",
+          "heading": "Exam thinking",
+          "text": "- If asked for a transformation achieving the Kalman canonical decomposition: compute $\\mathcal{C}$ and $\\mathcal{O}$; choose basis vectors in the order $c\\bar{o}$ ($\\mathcal{R}(\\mathcal{C}) \\cap \\mathcal{N}(\\mathcal{O})$), completing $co$, then $\\bar{c}\\bar{o}$ (rest of $\\mathcal{N}(\\mathcal{O})$), then $\\bar{c}o$ (the rest), and order them as the notes do.\n- Often the system is already decomposed up to a reordering of the states: try a permutation $P$ first.\n- Watch out: check with the transfer matrix, $\\hat{C}_{co}(sI - \\hat{A}_{co})^{-1}\\hat{B}_{co} = C(sI - A)^{-1}B$."
+        },
+        {
+          "type": "insight",
           "heading": "Why it matters",
           "text": "The Kalman decomposition is the complete answer to \"what part of the system does the transfer matrix see?\": only the controllable and observable part. It also gives the criterion for minimality: a realization is minimal exactly when it is controllable and observable."
         },
@@ -33435,7 +33495,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "Three LTV questions recur. Drive $\\mathbf{x}_0$ to the origin: use the Gramian input $\\mathbf{u}(t) = -B^T(t)\\Phi^T(t_1, t)W_c^{-1}(t_0, t_1)\\Phi(t_1, t_0)\\mathbf{x}_0$. Can a constant input do it? Solve the state equation explicitly with $\\mathbf{u} = u_0$ and see whether some $t_f$ and $u_0$ make every component vanish; if one component evolves independently of the input (e.g. $x_2(t) = e^{-t}b$), states with that component nonzero can never be driven to zero, which also proves uncontrollability. Observability at $t_0$: check $N_0$, $N_1$ (or the functions in $C(t)\\Phi(t, t_0)$) for linear independence."
+          "text": "- If asked for an input driving $\\mathbf{x}_0$ to the origin: $\\mathbf{u}(t) = -B^T(t)\\Phi^T(t_1, t)W_c^{-1}(t_0, t_1)\\Phi(t_1, t_0)\\mathbf{x}_0$; compute $\\Phi(t_1, \\tau)B(\\tau)$ first, then $W_c$.\n- If asked whether a constant input can do it: solve with $\\mathbf{u} = u_0$ explicitly and see whether some $t_f$, $u_0$ make every component vanish. A component that evolves independently of the input (e.g. $x_2(t) = e^{-t}b$) can never be driven to zero unless it starts at zero, which also proves uncontrollability.\n- Watch out: controllability of LTV depends on $t_0$; state the $t_0$ you checked."
         },
         {
           "type": "insight",
@@ -33472,6 +33532,11 @@
           "type": "insight",
           "heading": "The notes ask: why is (8) equivalent to Theorem 6.O11 of Chen? (Exercise)",
           "text": "Chen's condition uses the Gramian with $\\Phi(\\tau, t_0)$, the notes' (8) uses $\\Phi(\\tau, t)$:\n\n$$W_{\\text{Chen}}(t_0, t) = \\int_{t_0}^{t}\\Phi(\\tau, t_0)^TC^T(\\tau)C(\\tau)\\Phi(\\tau, t_0)d\\tau, \\qquad W_o(t_0, t) = \\int_{t_0}^{t}\\Phi(\\tau, t)^TC^T(\\tau)C(\\tau)\\Phi(\\tau, t)d\\tau$$\n\nBy the composition property, $\\Phi(\\tau, t) = \\Phi(\\tau, t_0)\\Phi(t_0, t)$, and $\\Phi(t_0, t)$ does not depend on $\\tau$, so it comes out of the integral:\n\n$$W_o(t_0, t) = \\Phi(t_0, t)^T\\,W_{\\text{Chen}}(t_0, t)\\,\\Phi(t_0, t)$$\n\n$\\Phi(t_0, t)$ is nonsingular, so the two Gramians have the same rank: one is nonsingular iff the other is. The notes' version reconstructs the state at the end time $t$, Chen's the initial state $\\mathbf{x}(t_0)$; knowing either is the same, since $\\mathbf{x}(t) = \\Phi(t, t_0)\\mathbf{x}(t_0) + (\\text{known input part})$."
+        },
+        {
+          "type": "insight",
+          "heading": "Exam thinking",
+          "text": "- If asked whether an LTV system is observable at $t_0$: $N_0 = C$, $N_1 = N_0A + \\dot{N}_0$, ...; rank $n$ at some $t_1 > t_0$ proves observability.\n- If the rank test fails, it proves nothing (only sufficient): look at the columns of $C(t)\\Phi(t, t_0)$ as functions of $t$; linearly independent functions mean observable, proportional ones mean not observable (equivalently $W_o$ singular for all $t$).\n- If asked for which parameters $a$, $b$ in $C = [a \\ b]$ the system is observable: write $C(t)\\Phi(t, t_0)$ and find when its entries are dependent functions."
         },
         {
           "type": "insight",
@@ -33704,7 +33769,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "\"Can a state feedback make a controllable system uncontrollable?\" No: $[\\lambda I - A + BK \\ \\ B] = [\\lambda I - A \\ \\ B]\\begin{bsmallmatrix} I & 0 \\\\ K & I \\end{bsmallmatrix}$, and the last factor is nonsingular, so the Hautus ranks are unchanged for every $\\lambda$. (Observability, in contrast, can be lost under feedback: pole-zero cancellations can appear.)"
+          "text": "- If asked \"can a state feedback make a controllable system uncontrollable?\": no. $[\\lambda I - A + BK \\ \\ B] = [\\lambda I - A \\ \\ B]\\begin{bsmallmatrix} I & 0 \\\\ K & I \\end{bsmallmatrix}$, and the last factor is nonsingular, so the Hautus ranks are unchanged for every $\\lambda$.\n- Watch out: observability can be lost under feedback (pole-zero cancellations), so do not claim it is preserved."
         },
         {
           "type": "insight",
@@ -33746,7 +33811,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "Uniqueness of $\\mathbf{k}$ for one input: if $\\mathbf{k}_1$ and $\\mathbf{k}_2$ both give $\\hat{\\varphi}$, then $\\mathbf{k}_1^T(sI - A)^{-1}\\mathbf{b} = \\mathbf{k}_2^T(sI - A)^{-1}\\mathbf{b}$ (use $\\det(I + GH) = \\det(I + HG)$). Expanding $(sI - A)^{-1} = \\sum A^ks^{-k-1}$ gives $(\\mathbf{k}_1 - \\mathbf{k}_2)^T[\\mathbf{b} \\ A\\mathbf{b} \\cdots A^{n-1}\\mathbf{b}] = \\mathbf{0}^T$, and $\\mathcal{C}$ is nonsingular, so $\\mathbf{k}_1 = \\mathbf{k}_2$."
+          "text": "- If asked for $\\mathbf{k}$ placing given eigenvalues ($n \\leq 3$): write $\\det(sI - A + \\mathbf{b}\\mathbf{k}^T)$ with unknown $k_i$ and match coefficients with $\\hat{\\varphi}(s)$; the equations are linear in the $k_i$.\n- If $(A, \\mathbf{b})$ is in companion form: $\\mathbf{k}$ is the difference of the coefficient vectors, read off directly. Watch the convention: with the coefficients in the first row of $A$ the entries appear in the reverse order.\n- If asked to prove uniqueness of $\\mathbf{k}$: two gains give $\\mathbf{k}_1^T(sI - A)^{-1}\\mathbf{b} = \\mathbf{k}_2^T(sI - A)^{-1}\\mathbf{b}$; expand in powers of $s^{-1}$ to get $(\\mathbf{k}_1 - \\mathbf{k}_2)^T\\mathcal{C} = \\mathbf{0}^T$, and $\\mathcal{C}$ is nonsingular.\n- Watch out: check that $(A, \\mathbf{b})$ is controllable first, and verify the final $\\det(sI - A + \\mathbf{b}\\mathbf{k}^T)$."
         },
         {
           "type": "insight",
@@ -33776,6 +33841,11 @@
         },
         {
           "type": "insight",
+          "heading": "Exam thinking",
+          "text": "- If asked for a state feedback with several inputs: (1) if $A$ is cyclic skip to (2), else choose a simple $K_0$ making $A - BK_0$ cyclic (distinct eigenvalues); (2) choose $\\mathbf{v}$ (a unit vector often works) so that $(A - BK_0, B\\mathbf{v})$ is controllable, check $\\det\\mathcal{C}$; (3) single-input pole placement for $\\mathbf{k}^T$; (4) $K = K_0 + \\mathbf{v}\\mathbf{k}^T$.\n- The dual recipe gives a multi-output observer: $J_0$, $\\mathbf{w}^T$, $\\mathbf{l}$, $L = J_0 + \\mathbf{l}\\mathbf{w}^T$.\n- Watch out: $K$ is not unique; any $K$ with the right $\\det(sI - A + BK)$ is correct."
+        },
+        {
+          "type": "insight",
           "heading": "Why it matters",
           "text": "With several inputs the feedback gain is not unique, and the cyclic-matrix argument is a way to reduce to a single combined input. It is a proof device; in practice multi-input gains are chosen by other criteria (optimal control) among the many that place the poles."
         },
@@ -33794,7 +33864,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "Proofs of \"stabilizable iff $\\operatorname{rank}[\\lambda I - A \\ \\ B] = n$ for every $\\lambda$ with $\\operatorname{Re}\\lambda \\geq 0$\" (and the dual \"detectable iff $\\operatorname{rank}\\begin{bsmallmatrix} \\lambda I - A \\\\ C \\end{bsmallmatrix} = n$\") follow one pattern: write $[\\lambda I - A \\ \\ B]$ in decomposed coordinates, where it is block triangular with $\\lambda I - \\hat{A}_{\\bar{c}}$ in the corner. The controllable part has full rank at every $\\lambda$, so the rank can drop only where $\\lambda I - \\hat{A}_{\\bar{c}}$ is singular, i.e. at the uncontrollable eigenvalues; restricting $\\lambda$ to the closed right half-plane is exactly asking that none of them lies there."
+          "text": "- If asked to prove \"stabilizable iff $\\operatorname{rank}[\\lambda I - A \\ \\ B] = n$ for all $\\operatorname{Re}\\lambda \\geq 0$\" (or the detectability dual): write the matrix in decomposed coordinates. It is block triangular with $\\lambda I - \\hat{A}_{\\bar{c}}$ in the corner, the controllable part has full rank at every $\\lambda$, so the rank drops exactly at the uncontrollable eigenvalues. Restricting to $\\operatorname{Re}\\lambda \\geq 0$ asks that none of them lies there.\n- If asked why a stabilizing feedback exists iff the uncontrollable part is stable: $\\hat{A}_{\\bar{c}}$ is untouched by any $K$, and $(\\hat{A}_c, \\hat{B}_c)$ can be placed freely."
         },
         {
           "type": "insight",
@@ -33827,7 +33897,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "\"Explain why your estimator is fast\": the error obeys $\\dot{\\mathbf{e}} = (A - LC)\\mathbf{e}$, so every entry of $\\mathbf{e}(t)$ is a combination of $t^ke^{-\\sigma t}$ when all observer eigenvalues are at $-\\sigma$; a large $\\sigma$ makes the error vanish quickly. Whether an estimator exists at all is the detectability question: the unobservable eigenvalues cannot be moved, so they must already be stable."
+          "text": "- If asked for an estimator with given eigenvalues: write $\\det(sI - A + LC)$ with unknown $L$ and match coefficients, or do pole placement on $(A^T, C^T)$ and transpose.\n- If asked to explain why your estimator is fast: the error obeys $\\dot{\\mathbf{e}} = (A - LC)\\mathbf{e}$, so its entries are combinations of $t^ke^{-\\sigma t}$ when the observer eigenvalues are at $-\\sigma$; large $\\sigma$ means fast decay.\n- If $(C, A)$ is not observable: say whether an estimator still exists, it does iff the unobservable eigenvalues are stable (detectable), and they cannot be moved."
         },
         {
           "type": "insight",
@@ -33850,6 +33920,11 @@
           "heading": "Estimator and feedback combined, as on the slide",
           "svg": "<svg width=\"640\" height=\"206\" viewBox=\"0 0 640 206\" role=\"img\" aria-label=\"estimator plus state feedback\"><defs><marker id=\"cbk\" viewBox=\"0 0 10 10\" refX=\"9\" refY=\"5\" markerWidth=\"5\" markerHeight=\"5\" orient=\"auto-start-reverse\"><path d=\"M0,0 L10,5 L0,10 z\" fill=\"#8a8f98\"/></marker><marker id=\"cbb\" viewBox=\"0 0 10 10\" refX=\"9\" refY=\"5\" markerWidth=\"5\" markerHeight=\"5\" orient=\"auto-start-reverse\"><path d=\"M0,0 L10,5 L0,10 z\" fill=\"#4f8ef7\"/></marker><marker id=\"cbg\" viewBox=\"0 0 10 10\" refX=\"9\" refY=\"5\" markerWidth=\"5\" markerHeight=\"5\" orient=\"auto-start-reverse\"><path d=\"M0,0 L10,5 L0,10 z\" fill=\"#22a06b\"/></marker><marker id=\"cba\" viewBox=\"0 0 10 10\" refX=\"9\" refY=\"5\" markerWidth=\"5\" markerHeight=\"5\" orient=\"auto-start-reverse\"><path d=\"M0,0 L10,5 L0,10 z\" fill=\"#e0a12a\"/></marker><marker id=\"cbp\" viewBox=\"0 0 10 10\" refX=\"9\" refY=\"5\" markerWidth=\"5\" markerHeight=\"5\" orient=\"auto-start-reverse\"><path d=\"M0,0 L10,5 L0,10 z\" fill=\"#a855f7\"/></marker><marker id=\"cbr\" viewBox=\"0 0 10 10\" refX=\"9\" refY=\"5\" markerWidth=\"5\" markerHeight=\"5\" orient=\"auto-start-reverse\"><path d=\"M0,0 L10,5 L0,10 z\" fill=\"#d9534f\"/></marker><marker id=\"cbt\" viewBox=\"0 0 10 10\" refX=\"9\" refY=\"5\" markerWidth=\"5\" markerHeight=\"5\" orient=\"auto-start-reverse\"><path d=\"M0,0 L10,5 L0,10 z\" fill=\"#2bb3a3\"/></marker><marker id=\"cbc\" viewBox=\"0 0 10 10\" refX=\"9\" refY=\"5\" markerWidth=\"5\" markerHeight=\"5\" orient=\"auto-start-reverse\"><path d=\"M0,0 L10,5 L0,10 z\" fill=\"currentColor\"/></marker></defs><text x=\"30.0\" y=\"54.0\" text-anchor=\"end\" font-size=\"11\" fill=\"currentColor\" font-style=\"italic\">r(t)</text><path d=\"M34.0,50.0 L62.0,50.0\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\" marker-end=\"url(#cbc)\"/><circle cx=\"70\" cy=\"50\" r=\"8\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.3\"/><text x=\"56.0\" y=\"44.0\" text-anchor=\"middle\" font-size=\"11\" fill=\"currentColor\" font-weight=\"600\">+</text><text x=\"78.0\" y=\"72.0\" text-anchor=\"middle\" font-size=\"11\" fill=\"currentColor\" font-weight=\"600\">−</text><path d=\"M78.0,50.0 L176.0,50.0\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\" marker-end=\"url(#cbc)\"/><text x=\"120.0\" y=\"42.0\" text-anchor=\"middle\" font-size=\"11\" fill=\"currentColor\" font-style=\"italic\">u(t)</text><circle cx=\"140\" cy=\"50\" r=\"2.6\" fill=\"currentColor\"/><rect x=\"180\" y=\"36\" width=\"40\" height=\"28\" rx=\"4\" fill=\"#4f8ef7\" fill-opacity=\"0.12\" stroke=\"#4f8ef7\" stroke-width=\"1.3\"/><text x=\"200.0\" y=\"54.0\" text-anchor=\"middle\" font-size=\"11\" fill=\"currentColor\" font-weight=\"600\">B</text><path d=\"M220.0,50.0 L242.0,50.0\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\" marker-end=\"url(#cbc)\"/><circle cx=\"250\" cy=\"50\" r=\"8\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.3\"/><path d=\"M258.0,50.0 L280.0,50.0\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\" marker-end=\"url(#cbc)\"/><rect x=\"284\" y=\"36\" width=\"40\" height=\"28\" rx=\"4\" fill=\"#4f8ef7\" fill-opacity=\"0.12\" stroke=\"#4f8ef7\" stroke-width=\"1.3\"/><text x=\"304.0\" y=\"54.0\" text-anchor=\"middle\" font-size=\"11\" fill=\"currentColor\" font-weight=\"600\">1/s</text><text x=\"270.0\" y=\"32.0\" text-anchor=\"middle\" font-size=\"11\" fill=\"currentColor\" font-style=\"italic\">ẋ</text><text x=\"340.0\" y=\"32.0\" text-anchor=\"middle\" font-size=\"11\" fill=\"currentColor\" font-style=\"italic\">x</text><path d=\"M324.0,50.0 L366.0,50.0\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\" marker-end=\"url(#cbc)\"/><rect x=\"370\" y=\"36\" width=\"40\" height=\"28\" rx=\"4\" fill=\"#4f8ef7\" fill-opacity=\"0.12\" stroke=\"#4f8ef7\" stroke-width=\"1.3\"/><text x=\"390.0\" y=\"54.0\" text-anchor=\"middle\" font-size=\"11\" fill=\"currentColor\" font-weight=\"600\">C</text><rect x=\"284\" y=\"76\" width=\"40\" height=\"26\" rx=\"4\" fill=\"#4f8ef7\" fill-opacity=\"0.12\" stroke=\"#4f8ef7\" stroke-width=\"1.3\"/><text x=\"304.0\" y=\"93.0\" text-anchor=\"middle\" font-size=\"11\" fill=\"currentColor\" font-weight=\"600\">A</text><circle cx=\"346\" cy=\"50\" r=\"2.6\" fill=\"currentColor\"/><path d=\"M346.0,50.0 L346.0,89.0 L326.0,89.0\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\" marker-end=\"url(#cbc)\"/><path d=\"M284.0,89.0 L250.0,89.0 L250.0,59.0\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\" marker-end=\"url(#cbc)\"/><path d=\"M410.0,50.0 L450.0,50.0\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\" marker-end=\"url(#cbc)\"/><text x=\"430.0\" y=\"42.0\" text-anchor=\"middle\" font-size=\"11\" fill=\"currentColor\" font-style=\"italic\">y(t)</text><rect x=\"454\" y=\"30\" width=\"80\" height=\"80\" rx=\"4\" fill=\"#a855f7\" fill-opacity=\"0.15\" stroke=\"#a855f7\" stroke-width=\"1.3\"/><text x=\"494.0\" y=\"67.0\" text-anchor=\"middle\" font-size=\"11\" fill=\"currentColor\" font-weight=\"600\">State</text><text x=\"494.0\" y=\"83.0\" text-anchor=\"middle\" font-size=\"10\" fill=\"currentColor\">Estimator</text><path d=\"M140.0,50.0 L140.0,128.0 L494.0,128.0 L494.0,112.0\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\" marker-end=\"url(#cbc)\"/><path d=\"M534.0,70.0 L590.0,70.0\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\" marker-end=\"url(#cbc)\"/><text x=\"596.0\" y=\"74.0\" text-anchor=\"start\" font-size=\"11\" fill=\"currentColor\" font-style=\"italic\">x̃(t)</text><circle cx=\"565\" cy=\"70\" r=\"2.6\" fill=\"currentColor\"/><path d=\"M565.0,70.0 L565.0,170.0 L330.0,170.0\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\" marker-end=\"url(#cbc)\"/><rect x=\"280\" y=\"158\" width=\"50\" height=\"26\" rx=\"4\" fill=\"#e0a12a\" fill-opacity=\"0.15\" stroke=\"#e0a12a\" stroke-width=\"1.3\"/><text x=\"305.0\" y=\"175.0\" text-anchor=\"middle\" font-size=\"11\" fill=\"currentColor\" font-weight=\"600\">−K</text><path d=\"M280.0,171.0 L70.0,171.0 L70.0,58.0\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\" marker-end=\"url(#cbc)\"/><text x=\"330.0\" y=\"196.0\" text-anchor=\"middle\" font-size=\"10.5\" fill=\"currentColor\">u = r − K x̃: the feedback uses the estimate, not the state</text></svg>",
           "caption": "The loop of the slide: the estimator watches $\\mathbf{u}$ and $\\mathbf{y}$, and its output $\\tilde{\\mathbf{x}}$, not the inaccessible state, is fed back through $-K$."
+        },
+        {
+          "type": "insight",
+          "heading": "Exam thinking",
+          "text": "- If asked for a controller placing all $2n$ closed-loop eigenvalues: design $K$ for $n$ of them and $L$ for the other $n$ separately; the closed-loop characteristic polynomial is $\\det(sI - A + BK)\\det(sI - A + LC)$.\n- If asked for the resulting closed-loop transfer function: $C(sI - A + BK)^{-1}B$, the estimator does not appear (SISO: $p(s)/\\hat{\\varphi}(s)$)."
         },
         {
           "type": "insight",
@@ -33881,7 +33956,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "Inverse realization: if $(\\mathbf{c}^T, A, \\mathbf{b}, 1)$ realizes $G(s)$ with $G(\\infty) = 1$, then $(-\\mathbf{c}^T, A - \\mathbf{b}\\mathbf{c}^T, \\mathbf{b}, 1)$ realizes $1/G(s)$ (push-through identity). Properties then transfer: the poles of $1/G$ are the zeros of $G$ and conversely; controllability and observability are preserved ($A - \\mathbf{b}\\mathbf{c}^T$ is a state feedback by $\\mathbf{c}^T$, and dually an output injection); $1/G$ is BIBO stable iff all zeros of $G$ are in the open left half-plane (minimum phase); and for a minimal realization the eigenvalues of $A - \\mathbf{b}\\mathbf{c}^T$ are the zeros of $G$."
+          "text": "- If asked about the inverse realization $(-\\mathbf{c}^T, A - \\mathbf{b}\\mathbf{c}^T, \\mathbf{b}, 1)$ of $1/G(s)$ (with $G(\\infty) = 1$): prove it with the push-through identity.\n- Then relate the properties: the poles of $1/G$ are the zeros of $G$ and conversely; controllability and observability are preserved ($A - \\mathbf{b}\\mathbf{c}^T$ is a state feedback by $\\mathbf{c}^T$, and dually an output injection); $1/G$ is BIBO stable iff all zeros of $G$ are in the open left half-plane (minimum phase); for a minimal realization the eigenvalues of $A - \\mathbf{b}\\mathbf{c}^T$ are the zeros of $G$."
         },
         {
           "type": "insight",
@@ -33923,7 +33998,7 @@
         {
           "type": "insight",
           "heading": "Exam thinking",
-          "text": "Variants of the construction are degree bookkeeping. For a strictly proper plant ($\\deg p \\leq n - 1$, $n = \\deg q$) a Hurwitz $\\sigma$ of degree $2n - 1$ is enough: in $qd + pn_c = \\sigma$ the term $pp_0$ has degree $< 2n - 1$, so $\\deg d = n - 1$ and the controller has order $n - 1$. For \"place all closed-loop poles at a point\", take $\\sigma(s) = (s - s_0)^{2n}$ (or $(s - s_0)^{2n-1}$) and run the same steps; always finish by checking $qd + pn = \\sigma$."
+          "text": "- If asked for a dynamic output feedback controller: coprime $p$, $q$; Bezout $x$, $y$; Hurwitz $\\sigma$ of degree $2\\deg q$ with the requested roots (e.g. $(s + 1)^{2n}$, or $s^{2n}$ for \"all poles at the origin\"); divide $y\\sigma$ by $q$; $n = p_0$, $d = x\\sigma + pq_0$.\n- If asked for a controller of lower order for a strictly proper plant ($\\deg p \\leq n - 1$): take $\\sigma$ of degree $2n - 1$; then $\\deg(pp_0) < 2n - 1$ forces $\\deg d = n - 1$.\n- If asked to design \"by directly equating coefficients\": write $K = \\frac{n_1s + n_0}{s^2 + d_1s + d_0}$ (or the requested order), expand $qd + pn$, match with $\\sigma$.\n- Watch out: always finish by checking $qd + pn = \\sigma$."
         },
         {
           "type": "insight",
@@ -33940,6 +34015,11 @@
           "heading": "13. The Euclidean algorithm for polynomials",
           "text": "Fact 6. Given polynomials $p(s)$, $q(s)$ with $\\deg p \\leq \\deg q$, there exist polynomials $x(s)$, $y(s)$ satisfying\n\n$$q(s)x(s) + p(s)y(s) = \\gcd(p(s), q(s)) \\qquad (8)$$\n\nwhere $\\gcd(p(s), q(s))$ is a polynomial of the largest degree that is a factor of both polynomials.\n\nProof. Run the Euclidean algorithm, dividing repeatedly:\n\n$$q(s) = p(s)u_1(s) + r_1(s), \\ \\deg r_1 < \\deg p; \\qquad p(s) = r_1(s)u_2(s) + r_2(s), \\ \\deg r_2 < \\deg r_1; \\qquad r_1(s) = r_2(s)u_3(s) + r_3(s), \\ \\deg r_3 < \\deg r_2; \\qquad \\ldots$$\n\n$$r_{k-3}(s) = r_{k-2}(s)u_{k-1}(s) + r_{k-1}(s), \\ \\deg r_{k-1} < \\deg r_{k-2}; \\qquad r_{k-2}(s) = r_{k-1}(s)u_k(s) + r_k(s), \\ \\deg r_k = 0 \\ \\text{or} \\ r_k = 0$$\n\nEach division lowers the degree by at least one, so the chain ends after $k \\leq \\deg p$ steps. If $r_k = 0$, then $r_{k-1}(s) = \\gcd(p(s), q(s))$. Going up the chain, $r_{k-1}$ divides every $r_i$ with $i \\leq k - 1$, and finally $p(s)$ and $q(s)$. Going down the chain, every common divisor of $p(s)$ and $q(s)$ divides each $r_i$, $i \\leq k - 1$. Each $r_i(s)$, $i = 1, 2, \\ldots, k - 1$, can also be written in turn as a linear combination of $p(s)$ and $q(s)$, which gives $x(s)$, $y(s)$ as in (8). If instead $r_k(s)$ is a nonzero constant, the same back substitution for $i = 1, 2, \\ldots, k$ gives (8) for some $x(s)$, $y(s)$ (with gcd 1 after dividing by that constant), and so (7) can be solved.\n\nExample. Suppose $k = 3$ with constant $r_3(s) = r_3$ according to\n\n$$q(s) = p(s)u_1(s) + r_1(s); \\qquad p(s) = r_1(s)u_2(s) + r_2(s); \\qquad r_1(s) = r_2(s)u_3(s) + r_3, \\ \\deg r_3 = 0$$\n\nThen $x = \\frac{1 + u_2u_3}{r_3}$, $y = -\\frac{u_1 + u_3 + u_1u_2u_3}{r_3}$ would yield (7). (Substitute back: $r_3 = r_1 - r_2u_3$, $r_2 = p - r_1u_2$, $r_1 = q - pu_1$.)",
           "exam": "F12 F17 F22"
+        },
+        {
+          "type": "insight",
+          "heading": "Exam thinking",
+          "text": "- If asked for $x$, $y$ with $qx + py = 1$: divide $q$ by $p$, then $p$ by the remainder, until a constant remainder; back-substitute; divide by that constant. If $p$ is a constant, $x = 0$, $y = 1/p$.\n- Watch out: verify by multiplying out; a nonconstant gcd means $p$, $q$ are not coprime (a hidden cancellation), and then the method does not apply."
         },
         {
           "type": "insight",
