@@ -340,6 +340,7 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .sec-fig .hi-box{stroke:var(--accent);fill:none}
 .sec-fig .ahf{fill:var(--text)}
 .sec-fig .num2{fill:var(--text);font-size:11px}
+.sec-fig .slab{fill:var(--panel);fill-opacity:.6;stroke:var(--muted);stroke-width:.8}
 .sec-fig text{fill:var(--muted);font-size:13px;font-family:inherit}
 .sec-fig figcaption{font-size:13px;color:var(--muted);margin-top:4px;font-style:italic}
 /* --- adim adim diyagram (type:'anim') --- */
@@ -1446,35 +1447,35 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
   </div>
   <div id="hdr-lst01" class="section-header">
     <div class="hdr-title">LST · 01 — Mathematical Description of Systems</div>
-    <div class="hdr-sub">EEE 501, Bilkent (Özgüler) · Lecture Notes 1 — Causality · state · lumped vs distributed · linearity</div>
+    <div class="hdr-sub">Lecture Notes 1 — Causality · state · lumped vs distributed · linearity</div>
   </div>
   <div id="hdr-lst02" class="section-header">
     <div class="hdr-title">LST · 02 — Impulse Response, Transfer Matrix, State Space</div>
-    <div class="hdr-sub">EEE 501, Bilkent (Özgüler) · Lecture Notes 2 — Input-linearity · g(t,τ) · time invariance · poles/zeros · linearization</div>
+    <div class="hdr-sub">Lecture Notes 2 — Input-linearity · g(t,τ) · time invariance · poles/zeros · linearization</div>
   </div>
   <div id="hdr-lst03" class="section-header">
     <div class="hdr-title">LST · 03 — Linear Algebra I: Spaces, Rank, Jordan Form</div>
-    <div class="hdr-sub">EEE 501, Bilkent (Özgüler) · Lecture Notes 3 — Basis · norms · Gram-Schmidt · rank/nullity · Ax=y · similarity · eigen · Jordan</div>
+    <div class="hdr-sub">Lecture Notes 3 — Basis · norms · Gram-Schmidt · rank/nullity · Ax=y · similarity · eigen · Jordan</div>
   </div>
   <div id="hdr-lst04" class="section-header">
     <div class="hdr-title">LST · 04 — Linear Algebra II: Functions of a Matrix, SVD</div>
-    <div class="hdr-sub">EEE 501, Bilkent (Özgüler) · Lecture Notes 4 — Cayley-Hamilton · minimal polynomial · f(A) · e^{At} · symmetric · p.d. · SVD</div>
+    <div class="hdr-sub">Lecture Notes 4 — Cayley-Hamilton · minimal polynomial · f(A) · e^{At} · symmetric · p.d. · SVD</div>
   </div>
   <div id="hdr-lst05" class="section-header">
     <div class="hdr-title">LST · 05 — Solution, Equivalence, Realization</div>
-    <div class="hdr-sub">EEE 501, Bilkent (Özgüler) · Lecture Notes 5 — LTI solution · equivalence · realization · LTV transition matrix · Lyapunov transformations</div>
+    <div class="hdr-sub">Lecture Notes 5 — LTI solution · equivalence · realization · LTV transition matrix · Lyapunov transformations</div>
   </div>
   <div id="hdr-lst06" class="section-header">
     <div class="hdr-title">LST · 06 — Stability</div>
-    <div class="hdr-sub">EEE 501, Bilkent (Özgüler) · Lecture Notes 6-7 — BIBO · Lyapunov and asymptotic · Lyapunov equation · Routh · LTV stability</div>
+    <div class="hdr-sub">Lecture Notes 6-7 — BIBO · Lyapunov and asymptotic · Lyapunov equation · Routh · LTV stability</div>
   </div>
   <div id="hdr-lst07" class="section-header">
     <div class="hdr-title">LST · 07 — Controllability and Observability</div>
-    <div class="hdr-sub">EEE 501, Bilkent (Özgüler) · Lecture Notes 6-7 — Gramians · rank and Hautus tests · duality · Kalman decomposition · LTV</div>
+    <div class="hdr-sub">Lecture Notes 6-7 — Gramians · rank and Hautus tests · duality · Kalman decomposition · LTV</div>
   </div>
   <div id="hdr-lst08" class="section-header">
     <div class="hdr-title">LST · 08 — State Feedback, Observers, Stabilization</div>
-    <div class="hdr-sub">EEE 501, Bilkent (Özgüler) · Lecture Notes 8 — pole placement · stabilizability · observer · separation · fractional approach</div>
+    <div class="hdr-sub">Lecture Notes 8 — pole placement · stabilizability · observer · separation · fractional approach</div>
   </div>
 
   <!-- CS231n section headers -->
@@ -2226,7 +2227,17 @@ function renderLst(sec){
 /* ==================== RENDER SECTIONS ==================== */
 /* Duzyazi: \n\n -> yeni paragraf, tek \n -> satir sonu. */
 function bold(h){ return h.replace(/\*\*(?!\s)([^*\n]+?)\*\*/g, '<strong>$1</strong>'); }
+// LST: a slip of the lecture notes kept as written and marked, ⟦slip:what the notes write⟫what is correct⟧
+function slipPre(t){
+  // ⟦+ … +⟧ marks an added phrase inside a lecturer sentence (lst_marks); on the site it reads as plain text
+  return String(t||'').replace(/⟦\+|\+⟧/g,'').split(/(\$\$[\s\S]*?\$\$|\$[^$]+?\$)/).map(part=>{
+    if(part.startsWith('$')) return part.replace(/⟦slip:([\s\S]*?)⟫([\s\S]*?)⟧/g,(m,o,c)=>'\\colorbox{#fde2e2}{$\\textcolor{#c62828}{'+o+'}$}\;\\textcolor{#c62828}{\\text{(should be: }'+c+'\\text{)}}');
+    return part.replace(/⟦slip:([\s\S]*?)⟫([\s\S]*?)⟧/g,(m,o,c)=>'\u0001'+o+'\u0002'+c+'\u0003');
+  }).join('');
+}
+function slipPost(h){ return h.replace(/\u0001([\s\S]*?)\u0002([\s\S]*?)\u0003/g,'<span style="background:#fde2e2;color:#c62828">$1</span><span style="color:#c62828"> (should be: $2)</span>'); }
 function paras(txt){
+  txt = slipPre(txt);
   return String(txt||'').split(/\n\s*\n/).map(p=>p.trim()).filter(Boolean).map(p=>{
     let html = '', prevEq = false;
     p.split('\n').forEach((ln,i)=>{
@@ -2234,7 +2245,7 @@ function paras(txt){
       if(lone){ html += `<span class="eq-line">${esc(ln.trim())}</span>`; prevEq = true; }
       else { if(i>0 && !prevEq) html += '<br>'; html += bold(esc(ln)); prevEq = false; }
     });
-    return `<p class="sec-text">${html}</p>`;
+    return `<p class="sec-text">${slipPost(html)}</p>`;
   }).join('');
 }
 function renderSection(s){
@@ -2249,7 +2260,7 @@ function renderSection(s){
     case 'note':
       return `<div class="sec-block">${h}<div class="sec-note-box">${paras(s.text)}</div></div>`;
     case 'formula':
-      return `<div class="sec-block">${h}<div class="sec-formula">${esc(s.text||'').replace(/\n/g,'<br>')}</div></div>`;
+      return `<div class="sec-block">${h}<div class="sec-formula">${slipPost(esc(slipPre(s.text||'')).replace(/\n/g,'<br>'))}</div></div>`;
     case 'list':
       const lis = (s.items||[]).map(i=>`<li>${esc(i)}</li>`).join('');
       return `<div class="sec-block">${h}<ul class="sec-list">${lis}</ul></div>`;
@@ -2869,7 +2880,7 @@ function applyData(d){
 }
 
 
-fetch('./data/unified.json?v=20261010000802')
+fetch('./data/unified.json?v=20261021090343')
   .then(r => { if(!r.ok) throw new Error(r.status); return r.json() })
   .then(applyData)
   .catch(() => {
