@@ -429,8 +429,6 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
 .sec-cmp-pts li::before{content:"·";position:absolute;left:0;color:var(--accent)}
 .sec-note-box{background:var(--sec-note-bg);border:1px solid var(--sec-note-border);border-radius:8px;padding:11px 14px}
 .sec-note-box .sec-text{font-size:15px;color:var(--sec-note-text)}
-.lst-exam{float:right;margin:2px 0 4px 10px;padding:2px 8px;border:1px solid var(--sec-insight-border);border-radius:8px;font-size:12px;font-weight:600;color:var(--sec-insight-text);background:var(--sec-insight-bg)}
-.lst-exam-star{font-size:18px;color:#d4a017;vertical-align:-2px}
 .sec-insight-box{background:var(--sec-insight-bg);border-left:3px solid var(--sec-insight-border);border-radius:0 8px 8px 0;padding:11px 14px}
 .sec-insight-box .sec-text{color:var(--sec-insight-text)}
 
@@ -853,40 +851,6 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
     <span class="nav-icon">🎯</span><span class="nav-num">04</span>
     <span class="nav-label">Practice</span>
     <span class="nav-count" id="cnt-vs04">0</span>
-  </button>
-
-  <div class="course-divider">LST · Linear System Theory</div>
-  <button class="nav-btn" data-sec="lst01" onclick="switchSection('lst01');closeSidebar()">
-    <span class="nav-icon">⚙</span><span class="nav-num">01</span>
-    <span class="nav-label">Mathematical Description of Systems</span>
-  </button>
-  <button class="nav-btn" data-sec="lst02" onclick="switchSection('lst02');closeSidebar()">
-    <span class="nav-icon">📈</span><span class="nav-num">02</span>
-    <span class="nav-label">Impulse Response, Transfer Matrix, State Space</span>
-  </button>
-  <button class="nav-btn" data-sec="lst03" onclick="switchSection('lst03');closeSidebar()">
-    <span class="nav-icon">🧮</span><span class="nav-num">03</span>
-    <span class="nav-label">Linear Algebra I: Spaces, Rank, Jordan Form</span>
-  </button>
-  <button class="nav-btn" data-sec="lst04" onclick="switchSection('lst04');closeSidebar()">
-    <span class="nav-icon">∑</span><span class="nav-num">04</span>
-    <span class="nav-label">Linear Algebra II: Functions of a Matrix, SVD</span>
-  </button>
-  <button class="nav-btn" data-sec="lst05" onclick="switchSection('lst05');closeSidebar()">
-    <span class="nav-icon">📐</span><span class="nav-num">05</span>
-    <span class="nav-label">Solution, Equivalence, Realization</span>
-  </button>
-  <button class="nav-btn" data-sec="lst06" onclick="switchSection('lst06');closeSidebar()">
-    <span class="nav-icon">🛡</span><span class="nav-num">06</span>
-    <span class="nav-label">Stability</span>
-  </button>
-  <button class="nav-btn" data-sec="lst07" onclick="switchSection('lst07');closeSidebar()">
-    <span class="nav-icon">🎯</span><span class="nav-num">07</span>
-    <span class="nav-label">Controllability and Observability</span>
-  </button>
-  <button class="nav-btn" data-sec="lst08" onclick="switchSection('lst08');closeSidebar()">
-    <span class="nav-icon">🔁</span><span class="nav-num">08</span>
-    <span class="nav-label">State Feedback, Observers, Stabilization</span>
   </button>
 
   <div class="course-divider">Stanford CS231n</div>
@@ -1445,39 +1409,6 @@ button.active{background:var(--accent-bg);border-color:var(--accent)}
       <span class="pill" id="pill-vs04">0 cards</span>
     </div>
   </div>
-  <div id="hdr-lst01" class="section-header">
-    <div class="hdr-title">LST · 01 — Mathematical Description of Systems</div>
-    <div class="hdr-sub">Lecture Notes 1 — Causality · state · lumped vs distributed · linearity</div>
-  </div>
-  <div id="hdr-lst02" class="section-header">
-    <div class="hdr-title">LST · 02 — Impulse Response, Transfer Matrix, State Space</div>
-    <div class="hdr-sub">Lecture Notes 2 — Input-linearity · g(t,τ) · time invariance · poles/zeros · linearization</div>
-  </div>
-  <div id="hdr-lst03" class="section-header">
-    <div class="hdr-title">LST · 03 — Linear Algebra I: Spaces, Rank, Jordan Form</div>
-    <div class="hdr-sub">Lecture Notes 3 — Basis · norms · Gram-Schmidt · rank/nullity · Ax=y · similarity · eigen · Jordan</div>
-  </div>
-  <div id="hdr-lst04" class="section-header">
-    <div class="hdr-title">LST · 04 — Linear Algebra II: Functions of a Matrix, SVD</div>
-    <div class="hdr-sub">Lecture Notes 4 — Cayley-Hamilton · minimal polynomial · f(A) · e^{At} · symmetric · p.d. · SVD</div>
-  </div>
-  <div id="hdr-lst05" class="section-header">
-    <div class="hdr-title">LST · 05 — Solution, Equivalence, Realization</div>
-    <div class="hdr-sub">Lecture Notes 5 — LTI solution · equivalence · realization · LTV transition matrix · Lyapunov transformations</div>
-  </div>
-  <div id="hdr-lst06" class="section-header">
-    <div class="hdr-title">LST · 06 — Stability</div>
-    <div class="hdr-sub">Lecture Notes 6-7 — BIBO · Lyapunov and asymptotic · Lyapunov equation · Routh · LTV stability</div>
-  </div>
-  <div id="hdr-lst07" class="section-header">
-    <div class="hdr-title">LST · 07 — Controllability and Observability</div>
-    <div class="hdr-sub">Lecture Notes 6-7 — Gramians · rank and Hautus tests · duality · Kalman decomposition · LTV</div>
-  </div>
-  <div id="hdr-lst08" class="section-header">
-    <div class="hdr-title">LST · 08 — State Feedback, Observers, Stabilization</div>
-    <div class="hdr-sub">Lecture Notes 8 — pole placement · stabilizability · observer · separation · fractional approach</div>
-  </div>
-
   <!-- CS231n section headers -->
   <div id="hdr-cs01" class="section-header">
     <div class="hdr-title">CS231n L2 · Linear Classifiers</div>
@@ -1981,7 +1912,6 @@ function showGuide(key){
 }
 function showOverview(sec){
   const panel = $('overview-panel');
-  if(sec.startsWith('lst')){ panel.style.display = 'none'; return; }
   const body = $('ch-ov-body');
   // Girdi ya duz metin ya da {text, anim} — anim, OVERVIEWS._anims icinde anahtarla durur
   const ov   = OVERVIEWS[sec];
@@ -2071,7 +2001,6 @@ function render(){
   if(SEC === 'summary'){ renderSummary(); return; }
   if(SEC === 'ida-summary'){ renderIdaSummary(); return; }
   if(SEC === 'vs-summary'){ renderVsSummary(); return; }
-  if(SEC.startsWith('lst')){ renderLst(SEC); return; }
   renderCards(SEC);
 }
 
@@ -2200,36 +2129,11 @@ function renderCards(sec){
   initAnims(grid);
 }
 
-/* ==================== LST: ders bolumu = konu anlatiminin kendisi ==================== */
-/* guides.json'da chapters:['lstNN'] olan anlatim, kart yerine sayfanin govdesi olarak basilir.
-   Bu anlatimlar ana sayfadaki KONU ANLATIMLARI listesine girmez (home:false). */
-function renderLst(sec){
-  const grid = $('card-grid'); grid.innerHTML = '';
-  guidesFor(sec).forEach(k => {
-    const g = GUIDES[k];
-    const art = document.createElement('div'); art.className = 'wiki-article';
-    art.innerHTML = `<div class="wiki-article-header"><div class="wiki-article-title">${esc(g.title)}</div>` +
-      `<div class="wiki-article-meta"><span class="wiki-article-ctx">${esc(g.context||'')}</span></div></div>` +
-      (g.summary ? `<p class="wiki-article-lead">${esc(g.summary)}</p>` : '') +
-      `<div class="wiki-article-body">` +
-      g.sections.map((s,i) => `<div id="lst-${sec}-${i}">${s.exam?`<div class="lst-exam" title="asked in past exams"><span class="lst-exam-star">★</span> ${esc(s.exam)}</div>`:''}${renderSection(s)}</div>`).join('') + `</div>`;
-    grid.appendChild(art);
-  });
-  if(typeof renderMathInElement === 'function'){
-    renderMathInElement(grid, {
-      delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],
-      throwOnError:false
-    });
-  }
-  initAnims(grid);
-}
-
 /* ==================== RENDER SECTIONS ==================== */
 /* Duzyazi: \n\n -> yeni paragraf, tek \n -> satir sonu. */
 function bold(h){ return h.replace(/\*\*(?!\s)([^*\n]+?)\*\*/g, '<strong>$1</strong>'); }
-// LST: a slip of the lecture notes kept as written and marked, ⟦slip:what the notes write⟫what is correct⟧
+// marked corrections ⟦slip:written⟫correct⟧ and ⟦+…+⟧ phrases (no current content uses them)
 function slipPre(t){
-  // ⟦+ … +⟧ marks an added phrase inside a lecturer sentence (lst_marks); on the site it reads as plain text
   return String(t||'').replace(/⟦\+|\+⟧/g,'').split(/(\$\$[\s\S]*?\$\$|\$[^$]+?\$)/).map(part=>{
     if(part.startsWith('$')) return part.replace(/⟦slip:([\s\S]*?)⟫([\s\S]*?)⟧/g,(m,o,c)=>'\\colorbox{#fde2e2}{$\\textcolor{#c62828}{'+o+'}$}\;\\textcolor{#c62828}{\\text{(should be: }'+c+'\\text{)}}');
     return part.replace(/⟦slip:([\s\S]*?)⟫([\s\S]*?)⟧/g,(m,o,c)=>'\u0001'+o+'\u0002'+c+'\u0003');
@@ -2801,20 +2705,6 @@ function buildToc(){
   document.querySelectorAll('.toc').forEach(t => t.remove());
   document.querySelectorAll('.nav-btn[data-sec]').forEach(btn => {
     const sec = btn.dataset.sec;
-    if(sec.startsWith('lst')){
-      const ks = guidesFor(sec); if(!ks.length) return;
-      const box = document.createElement('div'); box.className = 'toc' + (sec===SEC?' open':''); box.id = 'toc-'+sec;
-      GUIDES[ks[0]].sections.forEach((s,i) => {
-        if(!s.heading || !/^\d+\./.test(s.heading)) return;
-        const a = document.createElement('a'); a.className = 'toc-item'; a.href = '#';
-        a.textContent = s.heading.replace(/\$/g,'');
-        a.onclick = (e) => { e.preventDefault(); if(SEC!==sec) switchSection(sec); closeSidebar();
-          setTimeout(() => { const el = document.getElementById('lst-'+sec+'-'+i); if(el) el.scrollIntoView({block:'start'}); }, 30); };
-        box.appendChild(a);
-      });
-      btn.insertAdjacentElement('afterend', box);
-      return;
-    }
     const cards = DATA[sec]; if(!cards || !cards.length) return;
     const box = document.createElement('div'); box.className = 'toc' + (sec===SEC?' open':''); box.id = 'toc-'+sec;
     cards.forEach(c => {
