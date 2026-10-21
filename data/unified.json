@@ -13773,6 +13773,11 @@
           "text": "İki generator: $G: A \\to B$ ve $F: B \\to A$. İki discriminator: $D_A$, $D_B$.\n\n**Forward cycle**: $x \\to G(x) \\to F(G(x)) \\approx x$\n**Backward cycle**: $y \\to F(y) \\to G(F(y)) \\approx y$\n\n$$\\mathcal{L}_{cyc}(G, F) = \\mathbb{E}_x[\\|F(G(x)) - x\\|_1] + \\mathbb{E}_y[\\|G(F(y)) - y\\|_1]$$\n\nToplam loss:\n$$\\mathcal{L} = \\mathcal{L}_{GAN}(G, D_B) + \\mathcal{L}_{GAN}(F, D_A) + \\lambda \\mathcal{L}_{cyc}(G, F)$$\n\n$\\lambda$ cycle weight, genellikle $\\lambda = 10$."
         },
         {
+          "type": "text",
+          "heading": "Identity Loss — Why Give G an Image That Is Already in B?",
+          "text": "A third, optional term. Feed $G$ a real image $y$ from domain B and ask that it comes out unchanged; likewise $F$ should leave a real $x$ from A unchanged:\n\n$$\\mathcal{L}_{id}(G, F) = \\mathbb{E}_y[\\|G(y) - y\\|_1] + \\mathbb{E}_x[\\|F(x) - x\\|_1]$$\n\nThis is not the backward cycle. In a cycle the image passes through two networks and has to return to where it started ($G(F(y)) \\approx y$). In the identity term it passes through one network and must not be changed at all ($G(y) \\approx y$).\n\nWhy it is needed: the adversarial loss only asks whether the output looks like B, and the cycle loss only asks whether $F$ can undo what $G$ did. Neither forbids changes that were never necessary. $G$ could shift the overall brightness or remap the grey levels, $F$ could shift them back, the cycle loss would be zero and the discriminator could still be fooled. The identity term tells $G$ to change only what has to change: if the input already looks like B, there is nothing to do. In practice it keeps overall intensity, contrast and colour composition; the original paper added it for photo ↔ painting, where colours otherwise drifted.\n\nIts weight is small, typically $\\lambda_{id} = 0.5\\lambda$, added to the total loss above. It is a side constraint: the translation itself is still learned by the adversarial and cycle terms."
+        },
+        {
           "type": "compare",
           "heading": "CycleGAN Bileşenleri",
           "left": {
